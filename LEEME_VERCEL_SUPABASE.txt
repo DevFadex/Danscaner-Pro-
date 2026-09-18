@@ -1,0 +1,78 @@
+DANSCANER PRO — PUBLICAR EN VERCEL CON CONTROL DE ACCESO (SUPABASE)
+===================================================================
+
+QUÉ HACE ESTE SISTEMA
+- Vos sos el administrador. Podés dar y quitar acceso a cada persona.
+- Las personas entran con su correo (les llega un enlace, sin contraseña).
+- También podés generar un enlace de invitación y pasarlo por WhatsApp:
+  quien lo abre queda habilitado automáticamente.
+- IMPORTANTE: los documentos escaneados NO se suben a ningún servidor.
+  Siguen guardándose en el teléfono o la PC de cada persona.
+  Supabase se usa solo para controlar quién puede entrar.
+
+ARCHIVOS
+  index.html              la app
+  config.js               tus datos de Supabase (lo creás en el paso 3)
+  manifest.webmanifest    para instalarla como app
+  sw.js                   funcionamiento sin conexión
+  icon-192.png / icon-512.png
+  vercel.json             seguridad del servidor (no se toca)
+  supabase.sql            la base de datos de accesos
+
+PASO 1 — CREAR EL PROYECTO EN SUPABASE
+ 1. Entrá a supabase.com y creá una cuenta gratis.
+ 2. "New project". Ponele de nombre danscaner y elegí una región cercana
+    (South America). Guardá la contraseña que te pide.
+ 3. Esperá 2 minutos a que termine de crearse.
+
+PASO 2 — CARGAR LA BASE DE ACCESOS
+ 1. En el menú de la izquierda entrá a "SQL Editor" → "New query".
+ 2. Abrí supabase.sql, copiá TODO el contenido y pegalo ahí.
+ 3. Tocá "Run". Tiene que decir "Success".
+
+PASO 3 — TUS DATOS DE CONEXIÓN
+ 1. En Supabase entrá a Project Settings → API.
+ 2. Copiá "Project URL" y la clave "anon public".
+ 3. Copiá el archivo config.example.js, renombralo a config.js y pegá
+    los dos datos adentro, entre las comillas.
+
+PASO 4 — CONFIGURAR EL CORREO DE ACCESO
+ 1. En Supabase: Authentication → Providers → Email: dejá activado
+    "Email" y "Email OTP / Magic link".
+ 2. Authentication → URL Configuration:
+    - Site URL: la dirección que te va a dar Vercel
+      (por ejemplo https://danscaner.vercel.app)
+    - Redirect URLs: agregá esa misma dirección.
+    Si todavía no la tenés, volvé a este paso después del PASO 5.
+
+PASO 5 — PUBLICAR EN VERCEL
+ 1. Subí estos archivos a un repositorio de GitHub (podés usar el que ya
+    tenés: danielkpo/Danscaner).
+ 2. Entrá a vercel.com, iniciá sesión con GitHub y tocá "Add New… → Project".
+ 3. Elegí el repositorio. Framework Preset: "Other". No hace falta build.
+ 4. Tocá "Deploy". En un minuto te da la dirección https://….vercel.app
+ 5. Volvé al PASO 4 y cargá esa dirección en Supabase.
+
+PASO 6 — PRIMERA ENTRADA (VOS)
+ 1. Abrí la dirección de Vercel, poné tu correo y tocá "Enviarme el enlace".
+ 2. Abrí el correo y tocá el enlace.
+ 3. El PRIMER usuario que entra queda como ADMINISTRADOR: ese sos vos.
+
+PASO 7 — DAR ACCESO A OTRAS PERSONAS
+ Opción A (invitación):
+   Ajustes → Seguridad y accesos → Administrar accesos →
+   "Crear enlace de invitación" → Compartir. Dura 7 días.
+ Opción B (a mano):
+   La persona entra con su correo y le aparece "Acceso pendiente".
+   Vos entrás a Administrar accesos y tocás "Dar acceso".
+ Para sacarle el acceso: "Quitar acceso". La próxima vez que abra la app
+ no va a poder entrar.
+
+RECOMENDACIONES
+- No agregues como administrador a nadie que no necesite serlo.
+- Revisá la lista de usuarios cada tanto y sacá a los que ya no trabajan
+  en la oficina.
+- Activá también el Bloqueo con PIN en cada teléfono
+  (Ajustes → Seguridad y accesos).
+- Aunque la app controle el acceso, los documentos quedan en cada
+  dispositivo: no escanees documentación reservada en teléfonos ajenos.
