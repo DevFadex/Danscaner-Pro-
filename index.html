@@ -1111,19 +1111,28 @@ function showGate(html){let d=$('#authScr');if(!d){d=document.createElement('div
 function hideGate(){const d=$('#authScr');if(d)d.remove()}
 async function sbInit(){const cfg=sbConfig();if(!cfg)return false;SB.cfg=cfg;
 showGate('<p class="muted">Verificando el acceso…</p>');
-try{await loadLib('supabase');SB.client=supabase.createClient(cfg.url,cfg.anonKey,{auth:{persistSession:true,detectSessionInUrl:true,flowType:'pkce'}})}catch(e){showGate('<p class="muted">No se pudo conectar con el servidor de acceso. Revisá tu conexión.</p><button class="btn pri block" onclick="location.reload()">Reintentar</button>');return true}
+try{await loadLib('supabase');SB.client=supabase.createClient(cfg.url,cfg.anonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}})}catch(e){showGate('<p class="muted">No se pudo conectar con el servidor de acceso. Revisá tu conexión.</p><button class="btn pri block" onclick="location.reload()">Reintentar</button>');return true}
 SB.client.auth.onAuthStateChange(()=>sbRefresh());
 await sbRefresh();return true}
-async function sbRefresh(){const {data:{session}}=await SB.client.auth.getSession();SB.user=session?.user||null;
+const _to=(p,ms,label)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('Tardó demasiado ('+label+')')),ms))]);
+function gateError(msg,extra){showGate('<h3>No se pudo verificar el acceso</h3><p class="muted">'+esc(msg)+'</p>'+(extra||'')+'<button class="btn pri block" onclick="location.reload()"><i data-ico="rotr">↻</i> Reintentar</button><button class="btn block" id="agOut">Entrar con otro correo</button>');bindOut()}
+let _sbBusy=false;
+async function sbRefresh(){if(_sbBusy)return;_sbBusy=true;try{
+const herr=new URLSearchParams((location.hash||'').replace(/^#/,'')).get('error_description')||new URLSearchParams(location.search).get('error_description');
+if(herr){history.replaceState({},'',location.pathname);return gateError(herr)}
+let session=null;
+try{const r=await _to(SB.client.auth.getSession(),12000,'sesión');session=r.data.session}catch(e){return gateError(e.message,'<p class="muted">Probá con otro navegador o desactivá el bloqueo de cookies para este sitio.</p>')}
+SB.user=session?.user||null;
 if(!SB.user)return sbLoginScreen();
 const inv=new URLSearchParams(location.search).get('invite');
 if(inv){try{await SB.client.rpc('redeem_invite',{p_token:inv});history.replaceState({},'',location.pathname)}catch(e){}}
-const {data,error}=await SB.client.from('profiles').select('*').eq('id',SB.user.id).maybeSingle();
+let data=null,error=null;
+try{const r=await _to(SB.client.from('profiles').select('*').eq('id',SB.user.id).maybeSingle(),12000,'perfil');data=r.data;error=r.error}catch(e){return gateError(e.message,'<p class="muted">La base de accesos no respondió. Revisá que el SQL se haya ejecutado en Supabase.</p>')}
 SB.profile=data||null;
-if(error)return showGate('<p>No se pudo leer tu perfil.</p><p class="muted">'+esc(error.message)+'</p><button class="btn block" id="agOut">Salir</button>'),bindOut();
+if(error)return gateError(error.message);
 if(!SB.profile||SB.profile.status!=='activo'){showGate('<h3>Acceso pendiente</h3><p class="muted">Tu cuenta <b>'+esc(SB.user.email||'')+'</b> todavía no tiene acceso habilitado. Pedile al administrador que te active o que te mande un enlace de invitación.</p><button class="btn block" id="agRe"><i data-ico="rotr">↻</i> Volver a verificar</button><button class="btn block" id="agOut">Cerrar sesión</button>');
 $('#agRe').onclick=()=>sbRefresh();return bindOut()}
-SB.ready=true;hideGate();document.documentElement.classList.toggle('is-admin',SB.profile.role==='admin')}
+SB.ready=true;hideGate();document.documentElement.classList.toggle('is-admin',SB.profile.role==='admin')}finally{_sbBusy=false}}
 function bindOut(){const b=$('#agOut');if(b)b.onclick=async()=>{await SB.client.auth.signOut();location.reload()}}
 function sbLoginScreen(){showGate('<p class="muted">Ingresá con tu correo. Vas a recibir un enlace para entrar, sin contraseña.</p><input id="agMail" type="email" inputmode="email" placeholder="tu.correo@ejemplo.com" autocomplete="email"><button class="btn pri block" id="agSend"><i data-ico="check">✓</i> Enviarme el enlace</button><div class="muted" id="agMsg"></div>');
 $('#agSend').onclick=async()=>{const email=$('#agMail').value.trim();if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))return $('#agMsg').textContent='Escribí un correo válido';$('#agSend').disabled=true;$('#agMsg').textContent='Enviando…';
