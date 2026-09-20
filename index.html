@@ -1431,30 +1431,104 @@ b.onclick=async e=>{const dl=e.target.closest('[data-stdl]'),del=e.target.closes
  if(del){const m=_metas.find(x=>x.id===del.dataset.stdel);if(!confirm('¿Borrar "'+(m?m.name:'')+'"? No se puede deshacer.'))return;await DB.delDoc(del.dataset.stdel);await refreshLists();toast('Documento borrado');await Nav.back();storageSheet()}}}
 
 /* ---------- 4. Acceso: usuario y contraseña además del enlace ---------- */
-function sbLoginScreen(){const modo=(localStorage.getItem('ds_login')||'link');
-showGate('<div class="seg lgTabs"><button data-m="link" class="'+(modo==='link'?'on':'')+'">Enlace por correo</button><button data-m="pass" class="'+(modo==='pass'?'on':'')+'">Usuario y contraseña</button></div>'
-+'<input id="agMail" type="email" inputmode="email" placeholder="tu.correo@ejemplo.com" autocomplete="email">'
-+'<div id="lgPass" '+(modo==='pass'?'':'hidden')+'><input id="agName" placeholder="Tu nombre y apellido (solo al registrarte)" autocomplete="name"><input id="agPw" type="password" placeholder="Contraseña (mínimo 8)" autocomplete="current-password"><div class="row"><button class="btn block" id="agUp">Crear cuenta</button><button class="btn pri block" id="agIn">Entrar</button></div><a class="muted" id="agReset">Olvidé mi contraseña</a></div>'
-+'<div id="lgLink" '+(modo==='link'?'':'hidden')+'><button class="btn pri block" id="agSend"><i data-ico="check">✓</i> Enviarme el enlace</button><p class="muted">Recibís un correo con un enlace y entrás sin contraseña.</p></div>'
-+'<div class="muted" id="agMsg"></div>');
-const msg=t=>$('#agMsg').textContent=t;
-const mail=()=>$('#agMail').value.trim();
-const inv=new URLSearchParams(location.search).get('invite');
-const redir=location.origin+location.pathname+(inv?'?invite='+encodeURIComponent(inv):'');
-$('.lgTabs').onclick=e=>{const b=e.target.closest('[data-m]');if(!b)return;localStorage.setItem('ds_login',b.dataset.m);$$('.lgTabs button').forEach(x=>x.classList.toggle('on',x===b));$('#lgPass').hidden=b.dataset.m!=='pass';$('#lgLink').hidden=b.dataset.m!=='link';msg('')};
-$('#agSend').onclick=async()=>{if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail()))return msg('Escribí un correo válido');msg('Enviando…');
- const {error}=await SB.client.auth.signInWithOtp({email:mail(),options:{emailRedirectTo:redir}});
- msg(error?('Error: '+error.message):'Listo: revisá tu correo y tocá el enlace (puede tardar un minuto).')};
-$('#agIn').onclick=async()=>{const pw=$('#agPw').value;if(!mail()||!pw)return msg('Completá correo y contraseña');msg('Entrando…');
- const {error}=await SB.client.auth.signInWithPassword({email:mail(),password:pw});
- if(error)msg('Error: '+(/Invalid login/i.test(error.message)?'correo o contraseña incorrectos':error.message))};
-$('#agUp').onclick=async()=>{const pw=$('#agPw').value,nm=$('#agName').value.trim();
- if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail()))return msg('Escribí un correo válido');
- if(pw.length<8)return msg('La contraseña necesita al menos 8 caracteres');
- msg('Creando la cuenta…');
- const {error}=await SB.client.auth.signUp({email:mail(),password:pw,options:{data:{full_name:nm},emailRedirectTo:redir}});
- msg(error?('Error: '+error.message):'Cuenta creada. Confirmá el correo que te llegó y después pedile el acceso al administrador.')};
-$('#agReset').onclick=async()=>{if(!mail())return msg('Escribí tu correo arriba');const {error}=await SB.client.auth.resetPasswordForEmail(mail(),{redirectTo:redir});msg(error?('Error: '+error.message):'Te mandamos un correo para poner una contraseña nueva.')}}
+function sbLoginScreen(){
+  const modo = (localStorage.getItem('ds_login') || 'pass');
+  showGate(
+    '<div class="seg lgTabs">'+
+      '<button data-m="pass" class="'+(modo==='pass'?'on':'')+'">Crear cuenta / Entrar</button>'+
+      '<button data-m="link" class="'+(modo==='link'?'on':'')+'">Enlace por correo</button>'+
+    '</div>'+
+    '<input id="agMail" type="email" inputmode="email" placeholder="tu.correo@ejemplo.com" autocomplete="email">'+
+    '<div id="lgPass" '+(modo==='pass'?'':'hidden')+'>'+
+      '<input id="agName" placeholder="Nombre y apellido (solo al crear la cuenta)" autocomplete="name">'+
+      '<input id="agPw" type="password" placeholder="Contraseña (mínimo 6 caracteres)" autocomplete="current-password">'+
+      '<div class="row">'+
+        '<button class="btn block" id="agUp"><i data-ico="plus">＋</i> Crear cuenta</button>'+
+        '<button class="btn pri block" id="agIn"><i data-ico="check">✓</i> Entrar</button>'+
+      '</div>'+
+      '<a class="muted" id="agReset">Olvidé mi contraseña</a>'+
+      '<p class="muted" style="margin-top:8px">Se pide confirmar el correo una sola vez, al crear la cuenta. Después entrás siempre con tu correo y tu contraseña.</p>'+
+    '</div>'+
+    '<div id="lgLink" '+(modo==='link'?'':'hidden')+'>'+
+      '<button class="btn pri block" id="agSend"><i data-ico="check">✓</i> Enviarme el enlace</button>'+
+      '<p class="muted">Recibís un correo con un enlace y entrás sin contraseña. Si no llega en unos minutos, usá la pestaña <b>Crear cuenta / Entrar</b>.</p>'+
+    '</div>'+
+    '<div class="muted" id="agMsg"></div>'
+  );
+  const msg = t => { const el = $('#agMsg'); if (el) el.textContent = t; };
+  const mail = () => ($('#agMail').value || '').trim();
+  const okMail = () => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail());
+  const inv = new URLSearchParams(location.search).get('invite');
+  const redir = location.origin + location.pathname + (inv ? '?invite=' + encodeURIComponent(inv) : '');
+
+  $('.lgTabs').onclick = e => {
+    const b = e.target.closest('[data-m]'); if (!b) return;
+    localStorage.setItem('ds_login', b.dataset.m);
+    $$('.lgTabs button').forEach(x => x.classList.toggle('on', x === b));
+    $('#lgPass').hidden = b.dataset.m !== 'pass';
+    $('#lgLink').hidden = b.dataset.m !== 'link';
+    msg('');
+  };
+
+  const lockBtn = (btn, on) => { if (btn) btn.disabled = !!on; };
+
+  $('#agSend').onclick = async () => {
+    if (!okMail()) return msg('Escribí un correo válido');
+    const btn = $('#agSend'); lockBtn(btn, true); msg('Enviando el enlace…');
+    try {
+      const { error } = await SB.client.auth.signInWithOtp({ email: mail(), options: { emailRedirectTo: redir, shouldCreateUser: true } });
+      if (error) {
+        if (/rate|too many|seconds|limit/i.test(error.message)) msg('Esperá un minuto antes de pedir otro enlace (el servidor limita los envíos).');
+        else if (/smtp|not configured|error sending/i.test(error.message)) msg('El servidor todavía no tiene configurado el envío de correos. Usá la pestaña "Crear cuenta / Entrar" con contraseña.');
+        else msg('Error: ' + error.message);
+      } else msg('Listo: revisá tu correo y tocá el enlace (puede tardar un minuto o caer en spam).');
+    } catch (err) { msg('Error: ' + (err.message || err)); }
+    finally { lockBtn(btn, false); }
+  };
+
+  $('#agIn').onclick = async () => {
+    if (!okMail()) return msg('Escribí un correo válido');
+    const pw = $('#agPw').value;
+    if (!pw) return msg('Escribí tu contraseña');
+    const btn = $('#agIn'); lockBtn(btn, true); msg('Entrando…');
+    try {
+      const { error } = await SB.client.auth.signInWithPassword({ email: mail(), password: pw });
+      if (error) {
+        if (/invalid login|invalid credentials/i.test(error.message)) msg('Correo o contraseña incorrectos. Si todavía no tenés cuenta, tocá "Crear cuenta".');
+        else if (/email not confirmed/i.test(error.message)) msg('Falta confirmar tu correo: abrí el mensaje que te llegó al crear la cuenta y tocá el enlace. Es una sola vez.');
+        else msg('Error: ' + error.message);
+      }
+    } catch (err) { msg('Error: ' + (err.message || err)); }
+    finally { lockBtn(btn, false); }
+  };
+
+  $('#agUp').onclick = async () => {
+    if (!okMail()) return msg('Escribí un correo válido');
+    const pw = $('#agPw').value;
+    const nm = ($('#agName').value || '').trim();
+    if (pw.length < 6) return msg('La contraseña necesita al menos 6 caracteres');
+    const btn = $('#agUp'); lockBtn(btn, true); msg('Creando la cuenta…');
+    try {
+      const { data, error } = await SB.client.auth.signUp({ email: mail(), password: pw, options: { data: { full_name: nm }, emailRedirectTo: redir } });
+      if (error) {
+        if (/already registered|already been registered|user already|already exists/i.test(error.message)) msg('Ese correo ya tiene cuenta. Probá "Entrar" o "Olvidé mi contraseña".');
+        else if (/password/i.test(error.message)) msg('Contraseña inválida: ' + error.message);
+        else msg('Error: ' + error.message);
+        return;
+      }
+      if (data && data.session) { msg('¡Cuenta creada! Entrando…'); await sbRefresh(); return; }
+      msg('Cuenta creada. Te mandamos un correo para confirmarla: abrilo y tocá el enlace. Es la única vez que hace falta; después entrás con tu correo y contraseña.');
+    } catch (err) { msg('Error: ' + (err.message || err)); }
+    finally { lockBtn(btn, false); }
+  };
+
+  $('#agReset').onclick = async () => {
+    if (!okMail()) return msg('Escribí tu correo arriba');
+    msg('Enviando…');
+    const { error } = await SB.client.auth.resetPasswordForEmail(mail(), { redirectTo: redir });
+    msg(error ? ('Error: ' + error.message) : 'Si el correo está registrado, te va a llegar un enlace para poner una contraseña nueva.');
+  };
+}
 
 /* nombre en la lista de administración */
 async function adminSheet(){if(!SB.ready||SB.profile.role!=='admin')return toast('Solo el administrador puede entrar acá');
@@ -1496,20 +1570,62 @@ iconize(document);
 function rotateDeg(c,deg){const rad=deg*Math.PI/180,w=c.width,h=c.height;const nw=Math.abs(w*Math.cos(rad))+Math.abs(h*Math.sin(rad)),nh=Math.abs(w*Math.sin(rad))+Math.abs(h*Math.cos(rad));const t=canvas(nw,nh),x=t.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,nw,nh);x.translate(nw/2,nh/2);x.rotate(rad);x.imageSmoothingQuality='high';x.drawImage(c,-w/2,-h/2);return t}
 {const _rp=renderPage;renderPage=async function(p,o){let c=await _rp(p,o);if(S.deskew!==false&&p.skew===undefined&&!(o&&o.maxSide&&o.maxSide<900)){try{p.skew=deskewAngle(c)}catch(e){p.skew=0}}if(p.skew)c=rotateDeg(c,-p.skew);return c}}
 
-/* ---------- 2. Cambiar foto: usa el mismo selector del sistema ---------- */
-function replacePagePhoto(){const p=Ed.p;if(!p)return;
-const b=openSheet('Cambiar esta foto','<div class="menu"><button data-r="cam"><b data-ico="camera">📷</b>Sacar otra foto</button><button data-r="gal"><b data-ico="image">🖼️</b>Elegir de la galería</button></div><p class="muted">Se reemplaza solo la página '+(Ed.i+1)+'. Se mantienen el filtro, los ajustes, las firmas y los textos.</p>');
-b.onclick=e=>{const r=e.target.closest('[data-r]')?.dataset.r;if(!r)return;NativeCam.pending={pageId:p.id};const inp=r==='cam'?$('#inCam'):$('#inImg');inp.click();Nav.back()}}
-{const _of=NativeCam.onFiles.bind(NativeCam);NativeCam.onFiles=async function(e){const pend=this.pending;if(!pend){return _of(e)}this.pending=null;
-try{sessionStorage.removeItem('ds_cam_wait')}catch(_){}
-const files=[...e.target.files];e.target.value='';if(!files.length)return toast('No llegó ninguna foto');
-let np=null;await withBusy(async()=>{busy('Procesando foto…');const arr=await importFiles([files[0]],{auto:S.autoCrop});np=arr&&arr[0]});
-if(!np)return toast('No se pudo leer la foto');
-const target=(DOC&&DOC.pages.find(x=>x.id===pend.pageId))||(Ed&&Ed.p);if(!target)return;
-target.orig=np.orig;target.quad=np.quad;target.rot=0;delete target.skew;
-Ed.touch(true);toast('Foto reemplazada. Ajustá el recorte si hace falta.');
-if(await cropPage(target))Ed.touch(true)}}
-$('#inImg').addEventListener('change',e=>{if(NativeCam.pending){e.stopImmediatePropagation();NativeCam.onFiles(e)}},true);
+/* ---------- 2. Cambiar foto: selector propio, uno por vez ---------- */
+function replacePagePhoto(){
+  const p = Ed.p;
+  if (!p) return;
+  const b = openSheet('Cambiar esta foto',
+    '<div class="menu">'+
+      '<button data-r="cam"><b data-ico="camera">📷</b>Sacar otra foto</button>'+
+      '<button data-r="gal"><b data-ico="image">🖼️</b>Elegir de la galería</button>'+
+    '</div>'+
+    '<p class="muted">Se reemplaza solo la página '+(Ed.i+1)+'. Se mantienen el filtro, los ajustes, las firmas y los textos.</p>');
+  b.onclick = async e => {
+    const r = e.target.closest('[data-r]')?.dataset.r;
+    if (!r) return;
+    await Nav.back();
+    const inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = 'image/*';
+    if (r === 'cam') inp.setAttribute('capture', 'environment');
+    inp.style.cssText = 'position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0';
+    document.body.appendChild(inp);
+    const cleanup = () => { try { inp.remove(); } catch(_){} };
+    let done = false;
+    const finish = async files => {
+      if (done) return; done = true;
+      cleanup();
+      if (!files || !files.length) return;
+      let np = null;
+      await withBusy(async () => {
+        busy('Procesando foto…');
+        try {
+          const arr = await importFiles(files.slice(0,1), {auto: S.autoCrop});
+          np = arr && arr[0];
+        } catch (err) {
+          console.error(err);
+          toast('Error: ' + (err.message || err), 4500);
+        }
+      });
+      if (!np) { toast('No se pudo leer la foto', 4000); return; }
+      const target = (DOC && DOC.pages.find(x => x.id === p.id)) || p;
+      if (!target) return;
+      target.orig = np.orig;
+      target.quad = np.quad;
+      target.rot = 0;
+      delete target.skew;
+      Ed.touch(true);
+      toast('Foto reemplazada. Ajustá el recorte si hace falta.');
+      if (await cropPage(target)) Ed.touch(true);
+    };
+    inp.addEventListener('change', () => finish([...inp.files]));
+    inp.addEventListener('cancel', cleanup);
+    window.addEventListener('focus', () => {
+      setTimeout(() => { if (!done && !inp.files.length) cleanup(); }, 1500);
+    }, {once:true});
+    inp.click();
+  };
+}
 
 /* ---------- 3. Ajustes del editor con − y + ---------- */
 function addStepButtons(root){$$('input[type=range]',root).forEach(r=>{if(r.dataset.pm)return;r.dataset.pm='1';
@@ -1756,7 +1872,7 @@ let session=null,fallback=false;
 try{const r=await _to(SB.client.auth.getSession(),7000,'sesión');session=r.data.session}
 catch(e){sbLog('getSession falló: '+e.message);const ls=localSession();
  if(ls&&ls.exp>Date.now()){fallback=true;SB.user={id:ls.id,email:ls.email};sbLog('uso sesión guardada de '+ls.email)}
- else{const cp=cachedProfile();if(cp&&Date.now()-(cp._at||0)<30*24*3600e3&&cp.status==='activo'){SB.user={id:cp.id,email:cp.email};SB.profile=cp;SB.ready=true;hideGate();applyPerms();sbLog('entrada con permiso guardado');toast('Sin conexión con el servidor de acceso: entraste con el permiso guardado',5000);return}
+ else{const cp=cachedProfile();if(cp&&Date.now()-(cp._at||0)<180*24*3600e3&&cp.status==='activo'){SB.user={id:cp.id,email:cp.email};SB.profile=cp;SB.ready=true;hideGate();applyPerms();sbLog('entrada con permiso guardado');toast('Sin conexión con el servidor de acceso: entraste con el permiso guardado',5000);return}
   return sbLoginScreen()}}
 if(!fallback)SB.user=session?.user||null;
 if(!SB.user)return sbLoginScreen();
