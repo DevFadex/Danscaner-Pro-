@@ -12,6 +12,7 @@
 <script>(function(){var t='light';try{t=(JSON.parse(localStorage.getItem('ds_settings')||'{}').theme)||'system'}catch(e){}if(t==='system')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t)})()</script>
 <script>if(location.protocol==='https:'){const l=document.createElement('link');l.rel='manifest';l.href='manifest.webmanifest';document.head.appendChild(l);if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}</script>
 <link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" onload="if(document.fonts)Promise.all(['900 1em &quot;Font Awesome 6 Free&quot;','400 1em &quot;Font Awesome 6 Free&quot;'].map(f=>document.fonts.load(f))).then(r=>{if(r.every(x=>x.some(y=>y.status==='loaded')))document.documentElement.classList.add('fa-on')}).catch(()=>{})">
 <style>
 :root{
@@ -304,6 +305,177 @@ html[data-density="amplio"] .item{padding:14px}
 #docList.grid .item{flex-direction:column;align-items:stretch;gap:6px;position:relative}
 #docList.grid .item img{width:100%;height:150px;object-fit:cover;border-radius:10px}
 #docList.grid .item [data-menu]{position:absolute;top:6px;right:6px;background:#000a;color:#fff;border-radius:8px}
+/* v16: panel de administración */
+.admin-wrap{display:flex;flex-direction:column;gap:14px}
+.admin-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media(max-width:600px){.admin-stats{grid-template-columns:repeat(2,1fr)}}
+.stat-card{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:2px}
+.stat-card b{font-size:23px;font-weight:800;line-height:1}
+.stat-card small{font-size:10.5px;color:var(--tx2);text-transform:uppercase;font-weight:700;letter-spacing:.5px}
+.stat-card[data-tone="ok"] b{color:#10b981}.stat-card[data-tone="red"] b{color:var(--red)}
+.stat-card[data-tone="info"] b{color:#3b82f6}.stat-card[data-tone="ac"] b{color:var(--ac)}
+.admin-search{position:relative}.admin-search input{padding-left:38px}
+.admin-search::before{content:"🔎";position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.5;pointer-events:none}
+.admin-filters{display:flex;gap:6px;flex-wrap:wrap}
+.admin-list{display:flex;flex-direction:column;gap:8px}
+.admin-user{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:11px;display:flex;gap:11px;align-items:center;cursor:pointer}
+.admin-user:active{transform:scale(.99)}
+.admin-user[data-status="bloqueado"]{opacity:.6}
+.admin-user[data-status="pendiente"]{border-left:3px solid #f59e0b}
+.avatar{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:15px;color:#fff;flex:none}
+.avatar.lg{width:68px;height:68px;font-size:24px}
+.admin-user .inf{flex:1;min-width:0}
+.admin-user .nm{font-weight:700;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.admin-user .em{font-size:12.5px;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.admin-user .meta{font-size:11px;color:var(--tx2);margin-top:3px}
+.admin-user .chev{color:var(--tx2);font-size:20px;opacity:.6}
+.admin-badges{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px}
+.badge.admin{background:var(--soft);color:var(--ac)}
+.badge.user{background:var(--bg3);color:var(--tx2)}
+.badge.activo{background:#10b98126;color:#0f7a5a}
+.badge.pendiente{background:#f59e0b26;color:#b45309}
+.badge.bloqueado{background:#ef444426;color:#b91c1c}
+.badge.you{background:var(--soft);color:var(--ac)}
+[data-theme="dark"] .badge.activo{color:#34d399}[data-theme="dark"] .badge.pendiente{color:#fbbf24}[data-theme="dark"] .badge.bloqueado{color:#f87171}
+.invite-cta{background:linear-gradient(135deg,var(--ac),#00000055);border-radius:14px;padding:16px;color:#fff;display:flex;gap:12px;align-items:center;cursor:pointer}
+.invite-cta .ic{width:44px;height:44px;border-radius:50%;background:#ffffff33;display:grid;place-items:center;font-size:22px;flex:none}
+.invite-cta .txt{flex:1;min-width:0}.invite-cta .txt b{display:block;font-size:15.5px;margin-bottom:2px}
+.invite-cta .txt small{opacity:.9;font-size:12.5px}.invite-cta .arrow{font-size:22px;opacity:.85}
+.inv-step{display:flex;gap:11px;align-items:flex-start;padding:12px;background:var(--bg3);border-radius:12px;margin:10px 0}
+.inv-step .num{width:26px;height:26px;border-radius:50%;background:var(--ac);color:#fff;display:grid;place-items:center;font-weight:800;font-size:12.5px;flex:none}
+.inv-step .txt{flex:1;font-size:13px;line-height:1.5}.inv-step .txt b{display:block;margin-bottom:2px;font-size:14px}
+.inv-result{background:var(--soft);border:1px dashed var(--soft-line);border-radius:14px;padding:14px;margin:12px 0}
+.inv-result .qr-wrap{display:grid;place-items:center;margin-bottom:10px}
+.inv-result .qr-wrap img,.inv-result .qr-wrap canvas{background:#fff;padding:8px;border-radius:12px}
+.inv-link{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;line-height:1.5;background:var(--bg2);padding:10px;border-radius:10px;word-break:break-all;border:1px solid var(--line);margin-bottom:10px}
+.udetail-head{display:flex;gap:14px;align-items:center;padding:12px 0 18px;border-bottom:1px solid var(--line)}
+.udetail-head h3{margin:0 0 4px;font-size:17px;word-break:break-word}
+.udetail-head .em{color:var(--tx2);font-size:13px;word-break:break-all}
+.udetail-row{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+.udetail-row .label{color:var(--tx2);font-size:12px;width:110px;flex:none;font-weight:700;text-transform:uppercase}
+.udetail-row .val{flex:1;font-size:13.5px;word-break:break-word}
+.udetail-row .val code{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;background:var(--bg3);padding:3px 6px;border-radius:6px}
+.udetail-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px}
+.admin-empty{text-align:center;padding:40px 20px;color:var(--tx2)}
+.admin-empty .big{font-size:46px;margin-bottom:10px}
+.admin-selbar{background:var(--ac);color:#fff;border-radius:12px;padding:10px 12px;display:flex;gap:8px;align-items:center}
+.admin-selbar b{flex:1;font-size:13.5px}
+.admin-selbar button{background:#ffffff33;color:#fff;padding:7px 11px;border-radius:10px;font-size:12.5px;font-weight:700}
+.admin-actions-top{display:flex;gap:8px;flex-wrap:wrap}.admin-actions-top .btn{flex:1;min-width:120px}
+.admin-user .cb{width:20px;height:20px;flex:none}
+/* ===== Plantilla "Industrial" (diseño Danscaner Pro · blueprint) ===== */
+html[data-skin="industrial"]{
+  --color-primario:#41617f;
+  --ind-ink:#1d2d3d;--ind-acc:#5980a6;--ind-acc2:#b5d9fd;
+  --bg:#f2f2f3;--bg2:#ffffff;--bg3:#e9e9ea;--bg4:#d4d4d7;
+  --line:#c9cbcd;--stage:#e3e4e6;
+  --tx:#1d1f20;--tx2:#5d5d60;--texto-principal:#1d1f20;
+  --soft:#eef6ff;--soft-line:#b5d9fd;
+  --ui-font:"Barlow","Barlow Condensed",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  --ind-head:"Barlow Condensed","Arial Narrow",var(--ui-font);
+  --r-btn:2px;
+}
+html[data-skin="industrial"][data-theme="dark"]{
+  --bg:#141619;--bg2:#1b1e22;--bg3:#23272c;--bg4:#2e333a;
+  --line:#343a41;--stage:#101215;--tx:#eceff2;--tx2:#9aa3ad;--texto-principal:#eceff2;
+  --color-primario:#7ea8cd;--soft:#1e2a36;--soft-line:#2f4459;
+}
+/* títulos y etiquetas en condensada mayúscula */
+html[data-skin="industrial"] #topTitle,
+html[data-skin="industrial"] .hero-t,
+html[data-skin="industrial"] .sec,
+html[data-skin="industrial"] .shead .t,
+html[data-skin="industrial"] .shh b,
+html[data-skin="industrial"] .catt,
+html[data-skin="industrial"] .cph{
+  font-family:var(--ind-head);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+html[data-skin="industrial"] .hero-t{font-size:26px;letter-spacing:.02em}
+html[data-skin="industrial"] .sec{font-size:15px;letter-spacing:.14em;border-bottom:1px solid var(--line);padding-bottom:6px}
+html[data-skin="industrial"] .hero-s,
+html[data-skin="industrial"] .hbtn small,
+html[data-skin="industrial"] .item .muted,
+html[data-skin="industrial"] .tb{letter-spacing:.09em;text-transform:uppercase;font-size:10.5px}
+/* esquinas rectas y marcos finos */
+html[data-skin="industrial"] .hero,
+html[data-skin="industrial"] .hbtn,
+html[data-skin="industrial"] .btn,
+html[data-skin="industrial"] .item,
+html[data-skin="industrial"] .pg,
+html[data-skin="industrial"] .frow,
+html[data-skin="industrial"] .rcard,
+html[data-skin="industrial"] .chip,
+html[data-skin="industrial"] .drop,
+html[data-skin="industrial"] .stat-card,
+html[data-skin="industrial"] .admin-user,
+html[data-skin="industrial"] .compopt,
+html[data-skin="industrial"] input,
+html[data-skin="industrial"] select,
+html[data-skin="industrial"] textarea,
+html[data-skin="industrial"] .tool .ic,
+html[data-skin="industrial"] .mitem .ic{border-radius:2px}
+html[data-skin="industrial"] .sheet{border-radius:4px 4px 0 0}
+html[data-skin="industrial"] .hero{position:relative;background:var(--bg2);box-shadow:none;border:1px solid var(--line)}
+/* marcas de esquina tipo plano técnico */
+html[data-skin="industrial"] .hero::after{content:"";position:absolute;inset:-6px;pointer-events:none;
+  background:
+   linear-gradient(var(--tx2),var(--tx2)) left 0 top 6px/1px 11px no-repeat,
+   linear-gradient(var(--tx2),var(--tx2)) left 6px top 0/11px 1px no-repeat,
+   linear-gradient(var(--tx2),var(--tx2)) right 0 top 6px/1px 11px no-repeat,
+   linear-gradient(var(--tx2),var(--tx2)) right 6px top 0/11px 1px no-repeat,
+   linear-gradient(var(--tx2),var(--tx2)) left 0 bottom 6px/1px 11px no-repeat,
+   linear-gradient(var(--tx2),var(--tx2)) left 6px bottom 0/11px 1px no-repeat,
+   linear-gradient(var(--tx2),var(--tx2)) right 0 bottom 6px/1px 11px no-repeat,
+   linear-gradient(var(--tx2),var(--tx2)) right 6px bottom 0/11px 1px no-repeat;
+  opacity:.55}
+/* accesos del hero como retícula de 1px */
+html[data-skin="industrial"] .hero-btns{gap:1px;background:var(--line);border:1px solid var(--line)}
+html[data-skin="industrial"] .hbtn{background:var(--bg2);border:0;box-shadow:none}
+html[data-skin="industrial"] .hbtn.big{background:var(--ind-ink);color:#fff}
+html[data-skin="industrial"] .hbtn.big small{color:#ffffffb0}
+html[data-skin="industrial"] .hbtn.big .icono-camara{background:#fff}
+html[data-skin="industrial"] .hbtn>i[data-ico]{color:var(--ind-acc)}
+/* íconos de herramientas: marco fino en vez de bloque de color */
+html[data-skin="industrial"] .tool .ic,
+html[data-skin="industrial"] .mitem .ic{background:transparent!important;border:1px solid var(--line);
+  color:var(--ind-acc);box-shadow:none}
+html[data-skin="industrial"] .tool .ic .ico,
+html[data-skin="industrial"] .mitem .ic .ico{stroke-width:2}
+html[data-skin="industrial"] .grid4{gap:1px;background:var(--line);border:1px solid var(--line)}
+html[data-skin="industrial"] .tool{background:var(--bg2);padding:12px 4px}
+/* listas y documentos */
+html[data-skin="industrial"] .doclist{gap:0}
+html[data-skin="industrial"] .item{border:0;border-bottom:1px solid var(--line);border-radius:0;box-shadow:none;background:transparent}
+html[data-skin="industrial"] .item img{border-radius:0;border:1px solid var(--line)}
+html[data-skin="industrial"] #docList.grid .item{border:1px solid var(--line);padding:8px}
+/* botones */
+html[data-skin="industrial"] .btn{border:1px solid var(--line);background:var(--bg2);text-transform:uppercase;letter-spacing:.09em;font-size:12.5px}
+html[data-skin="industrial"] .btn.pri{background:var(--ind-ink);color:#fff;border-color:var(--ind-ink);box-shadow:none}
+html[data-skin="industrial"] .btn.red{background:#9b2c2c;border-color:#9b2c2c}
+html[data-skin="industrial"] .chip.on{background:var(--ind-ink);color:#fff}
+html[data-skin="industrial"] .ib{border-radius:2px}
+html[data-skin="industrial"] .ib.pri{background:var(--ind-ink)}
+/* barras */
+html[data-skin="industrial"] .top,
+html[data-skin="industrial"] .nav,
+html[data-skin="industrial"] .shead,
+html[data-skin="industrial"] .sfoot{background:var(--bg2);border-color:var(--line)}
+html[data-skin="industrial"] .logo{border-radius:2px;background:var(--ind-ink)}
+html[data-skin="industrial"] .nav button.on{color:var(--ind-acc)}
+html[data-skin="industrial"] .fab,
+html[data-skin="industrial"] .fab.fabcam{background:var(--ind-ink)!important;border:0!important;border-radius:2px!important;
+  box-shadow:0 6px 16px #0000002e!important}
+html[data-skin="industrial"] .fab .icono-camara{background:#fff}
+/* páginas y editor */
+html[data-skin="industrial"] .pg{border-radius:2px;box-shadow:none;border:1px solid var(--line)}
+html[data-skin="industrial"] .pgn{border-radius:2px;background:var(--ind-ink)}
+html[data-skin="industrial"] .flt img{border-radius:2px}
+html[data-skin="industrial"] .flt.on img{border-color:var(--ind-acc);box-shadow:0 0 0 3px #5980a633}
+html[data-skin="industrial"] .tb.on{background:var(--soft);color:var(--ind-acc)}
+/* tarjetas del panel de administración */
+html[data-skin="industrial"] .stat-card b{font-family:var(--ind-head)}
+html[data-skin="industrial"] .invite-cta{background:var(--ind-ink);border-radius:2px}
+html[data-skin="industrial"] .badge{border-radius:2px}
 </style>
 </head>
 <body>
@@ -1158,7 +1330,7 @@ if(error)return gateError(error.message);
 if(!SB.profile||SB.profile.status!=='activo'){showGate('<h3>Acceso pendiente</h3><p class="muted">Tu cuenta <b>'+esc(SB.user.email||'')+'</b> todavía no tiene acceso habilitado. Pedile al administrador que te active o que te mande un enlace de invitación.</p><button class="btn block" id="agRe"><i data-ico="rotr">↻</i> Volver a verificar</button><button class="btn block" id="agOut">Cerrar sesión</button>');
 $('#agRe').onclick=()=>sbRefresh();return bindOut()}
 SB.ready=true;hideGate();document.documentElement.classList.toggle('is-admin',SB.profile.role==='admin')}finally{_sbBusy=false}}
-function bindOut(){const b=$('#agOut');if(b)b.onclick=async()=>{await SB.client.auth.signOut();location.reload()}}
+function bindOut(){const b=$('#agOut');if(b)b.onclick=async()=>{await sbSignOut();location.reload()}}
 function sbLoginScreen(){showGate('<p class="muted">Ingresá con tu correo. Vas a recibir un enlace para entrar, sin contraseña.</p><input id="agMail" type="email" inputmode="email" placeholder="tu.correo@ejemplo.com" autocomplete="email"><button class="btn pri block" id="agSend"><i data-ico="check">✓</i> Enviarme el enlace</button><div class="muted" id="agMsg"></div>');
 $('#agSend').onclick=async()=>{const email=$('#agMail').value.trim();if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))return $('#agMsg').textContent='Escribí un correo válido';$('#agSend').disabled=true;$('#agMsg').textContent='Enviando…';
 const inv=new URLSearchParams(location.search).get('invite');
@@ -1189,13 +1361,15 @@ if(ev.target.closest('#ivShare')){try{await navigator.share({title:'Acceso a Dan
 function securitySheet(){const b=openSheet('🔐 Seguridad y accesos','<button class="btn block" id="seLock"><i data-ico="lock">🔒</i> Bloqueo con PIN <small class="muted">'+(Lock.cfg?'(activado)':'(desactivado)')+'</small></button>'
 +(SB.ready&&SB.profile?.role==='admin'?'<button class="btn pri block" id="seAdmin" style="margin-top:8px"><i data-ico="users">👤</i> Administrar accesos</button>':'')
 +'<button class="btn block" id="seSb" style="margin-top:8px"><i data-ico="settings">⚙️</i> Servidor de acceso (Supabase)</button>'
-+(SB.user?'<button class="btn block" id="seOut" style="margin-top:8px"><i data-ico="x">✕</i> Cerrar sesión ('+esc(SB.user.email||'')+')</button>':'')
++'<button class="btn block" id="seInstall"><i data-ico="import">📲</i> Instalar la app en este dispositivo</button><button class="btn block" id="seDiag"><i data-ico="settings">🩺</i> Diagnóstico de acceso</button>'+(SB.user?'<button class="btn block" id="seOut" style="margin-top:8px"><i data-ico="x">✕</i> Cerrar sesión ('+esc(SB.user.email||'')+')</button>':'')
 +'<div class="cph">Datos enviados a internet</div><label class="chk"><input type="checkbox" id="seCon" '+((S.consent&&(S.consent.trad||S.consent.ia))?'checked':'')+'> Ya acepté enviar texto al traductor / a la IA</label><p class="muted">Destildando esto vuelve a preguntarte antes de cada envío. El escaneo, los filtros, el OCR y los PDF funcionan siempre sin internet: nada de eso sale del teléfono.</p>'
 +'<div class="cph">Clave de IA</div><label class="chk"><input type="checkbox" id="seKeep" '+(S.ai&&S.ai.remember!==false?'checked':'')+'> Recordar la clave en este dispositivo</label><p class="muted">Si la destildás, la clave se borra al cerrar la app y hay que pegarla de nuevo.</p>');
 b.onclick=async e=>{if(e.target.closest('#seLock')){await Nav.back();lockSheet()}
 if(e.target.closest('#seAdmin')){await Nav.back();adminSheet()}
 if(e.target.closest('#seSb')){await Nav.back();sbConfigSheet()}
-if(e.target.closest('#seOut')){await SB.client.auth.signOut();location.reload()}};
+if(e.target.closest('#seDiag')){await Nav.back();accessDiagSheet()}
+if(e.target.closest('#seInstall')){await Nav.back();installApp()}
+if(e.target.closest('#seOut')){await sbSignOut();location.reload()}};
 b.onchange=e=>{if(e.target.id==='seCon'){S.consent={trad:e.target.checked,ia:e.target.checked};saveS()}
 if(e.target.id==='seKeep'){S.ai=S.ai||{};S.ai.remember=e.target.checked;if(!e.target.checked){try{sessionStorage.setItem('ds_aikey',S.ai.key||'')}catch(x){}S.ai.key=''}saveS()}}}
 ICONS.lock='<rect x="4.5" y="10" width="15" height="10.5" rx="2.5"/><path d="M8 10V7.5a4 4 0 0 1 8 0V10"/><circle cx="12" cy="15.2" r="1.3"/>';
@@ -1484,9 +1658,10 @@ var PRESETS={
  institucional:{label:'Institucional',color:'#1e4fa3',shape:'square',ico:22,stroke:2,iconStyle:'line',anim:true,uifont:'serif',density:'normal',zoom:1,bg:'plano',contrast:true,docView:'list',theme:'light'},
  papel:{label:'Papel',color:'#8d6e37',shape:'round',ico:22,stroke:1.7,iconStyle:'line',anim:true,uifont:'serif',density:'amplio',zoom:1.05,bg:'papel',contrast:false,docView:'grid',theme:'light'},
  nocturno:{label:'Nocturno',color:'#ff5252',shape:'round',ico:23,stroke:1.9,iconStyle:'line',anim:true,uifont:'sys',density:'normal',zoom:1,bg:'plano',contrast:false,docView:'grid',theme:'dark'},
+ industrial:{label:'Industrial',skin:'industrial',color:'#41617f',shape:'square',ico:22,stroke:2,iconStyle:'line',anim:true,uifont:'sys',density:'normal',zoom:1,bg:'plano',contrast:false,docView:'list',theme:'light'},
  grande:{label:'Letra grande',color:'#e53935',shape:'round',ico:27,stroke:2.2,iconStyle:'line',anim:false,uifont:'sys',density:'amplio',zoom:1.18,bg:'plano',contrast:true,docView:'list',theme:'light'}
 };
-Object.assign(DESIGN_DEF,{uifont:'sys',density:'normal',zoom:1,bg:'plano',contrast:false,docView:'list'});
+Object.assign(DESIGN_DEF,{uifont:'sys',density:'normal',zoom:1,bg:'plano',contrast:false,docView:'list',skin:'suave'});
 var UIFONTS={sys:'system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif',serif:'Georgia,"Times New Roman",serif',round:'"Trebuchet MS",Verdana,system-ui,sans-serif',mono:'"Courier New",monospace'};
 function applyDesign(){const d=D(),r=document.documentElement;
 if(d.color)r.style.setProperty('--color-primario',d.color);else r.style.removeProperty('--color-primario');
@@ -1497,7 +1672,7 @@ r.style.setProperty('--zoom',d.zoom||1);
 r.classList.toggle('ico-emoji',d.iconStyle==='emoji');
 r.classList.toggle('no-anim',!d.anim);
 r.classList.toggle('hi-contrast',!!d.contrast);
-r.dataset.shape=d.shape;r.dataset.density=d.density||'normal';r.dataset.bg=d.bg||'plano';
+r.dataset.shape=d.shape;r.dataset.density=d.density||'normal';r.dataset.bg=d.bg||'plano';r.dataset.skin=d.skin||'suave';
 const dl=$('#docList');if(dl)dl.classList.toggle('grid',d.docView==='grid');
 const foot=$('#editor .sfoot');if(foot){for(const t of d.edTools){const btn=foot.querySelector('[data-ed="'+t.k+'"]');if(btn){foot.appendChild(btn);btn.hidden=!t.on}}}
 if(typeof renderTools==='function')try{renderTools()}catch(e){}}
@@ -1509,6 +1684,7 @@ const b=openSheet('🎨 Diseño y visualización',
 +'<div class="muted">Vista previa · tocá los botones</div><div class="dprev"><div class="hero-btns"><button class="hbtn big"><i class="icono-camara"></i><span>Escanear</span><small>Individual</small></button><button class="hbtn"><i data-ico="files">🗂️</i><span>Lote</span><small>Varias fotos</small></button><button class="hbtn"><i data-ico="image">🖼️</i><span>Galería</span><small>Imágenes</small></button></div><div class="dbar"><button class="tb"><b data-ico="crop">✂️</b>Recortar</button><button class="tb"><b data-ico="replace">🔁</b>Cambiar</button><button class="tb"><b data-ico="sign">✍️</b>Firmar</button><button class="tb"><b data-ico="adjust">🎚️</b>Ajustes</button></div><div class="item" style="pointer-events:none"><img src="'+((_metas[0]&&_metas[0].thumb)||'')+'" alt=""><div class="inf"><div class="nm">Documento de ejemplo</div><div class="muted">hoy · 3 pág. · 480 KB</div></div></div><button class="btn pri block"><i data-ico="save">💾</i> Botón principal</button></div>'
 +'<div class="cph">Tema</div>'+seg('theme',[['light','Claro'],['dark','Oscuro'],['system','Automático']])
 +'<div class="cph">Color principal</div><div class="swatches">'+cols.map(c=>'<button class="sw '+(d.color===c?'on':'')+'" data-col="'+c+'" style="background:'+c+'"></button>').join('')+'<label class="sw pick"><input type="color" id="dsCol" value="'+(d.color||'#e53935')+'"></label><button class="chip" data-col="">Por defecto</button></div>'
++'<div class="cph">Estilo visual</div>'+seg('skin',[['suave','Actual'],['industrial','Industrial']])
 +'<div class="cph">Fondo</div>'+seg('bg',[['plano','Plano'],['suave','Degradado'],['papel','Papel']])
 +'<div class="cph">Tipografía de la app</div>'+seg('uifont',[['sys','Moderna'],['serif','Formal'],['round','Redondeada'],['mono','Máquina']])
 +'<div class="cph">Tamaño general</div>'+seg('zoom',[[0.9,'Compacto'],[1,'Normal'],[1.1,'Grande'],[1.25,'Muy grande']])
@@ -1539,6 +1715,193 @@ const up=e.target.closest('[data-eup]'),dn=e.target.closest('[data-edn]');if(up|
 const q=e.target.closest('[data-q]');if(q){let arr=d.quick.length?d.quick.slice():QDEF.slice();const n=q.dataset.q;if(arr.includes(n))arr=arr.filter(x=>x!==n);else{if(arr.length>=8)return toast('Máximo 8 accesos. Quitá uno primero');arr.push(n)}d.quick=arr;drawQuick();commit();return}
 if(e.target.closest('#dsReset')){if(!confirm('¿Volver al diseño original?'))return;S.design=JSON.parse(JSON.stringify(DESIGN_DEF));saveS();applyDesign();cambiarTema('system');Nav.back().then(designSheet)}}}
 applyDesign();
+
+
+/* ===== Danscaner Pro v13: sesión que no se cae ===== */
+const SBSTORE=(()=>{const mem={};
+const ck={get(k){const m=document.cookie.match('(^|;)\\s*'+k.replace(/[-.]/g,'\\$&')+'=([^;]*)');return m?decodeURIComponent(m[2]):null},
+set(k,v){try{document.cookie=k+'='+encodeURIComponent(v)+';path=/;max-age='+60*60*24*60+';SameSite=Lax'+(location.protocol==='https:'?';Secure':'')}catch(e){}},
+del(k){try{document.cookie=k+'=;path=/;max-age=0'}catch(e){}}};
+return {getItem(k){try{const v=localStorage.getItem(k);if(v!=null)return v}catch(e){}
+try{const v=sessionStorage.getItem(k);if(v!=null)return v}catch(e){}
+const c=ck.get(k);if(c!=null)return c;return mem[k]!=null?mem[k]:null},
+setItem(k,v){mem[k]=v;try{localStorage.setItem(k,v)}catch(e){}try{sessionStorage.setItem(k,v)}catch(e){}if(String(v).length<3500)ck.set(k,v)},
+removeItem(k){delete mem[k];try{localStorage.removeItem(k)}catch(e){}try{sessionStorage.removeItem(k)}catch(e){}ck.del(k)}}})();
+const SBLOG=[];
+function sbLog(t){SBLOG.push(new Date().toLocaleTimeString('es-AR')+' · '+t);if(SBLOG.length>40)SBLOG.shift();try{SBSTORE.setItem('ds_authlog',JSON.stringify(SBLOG.slice(-20)))}catch(e){}}
+async function sbInit(){const cfg=sbConfig();if(!cfg)return false;SB.cfg=cfg;
+showGate('<p class="muted">Verificando el acceso…</p>');
+try{await loadLib('supabase');
+SB.client=supabase.createClient(cfg.url,cfg.anonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:'ds_auth',storage:SBSTORE,lock:(_n,_a,fn)=>fn()}})}
+catch(e){showGate('<p class="muted">No se pudo conectar con el servidor de acceso. Revisá tu conexión.</p><button class="btn pri block" onclick="location.reload()">Reintentar</button>');return true}
+SB.client.auth.onAuthStateChange((ev,sess)=>{sbLog(ev+(sess?' · con sesión':' · sin sesión'));
+if(ev==='SIGNED_OUT'&&!SB.userSignOut){sbLog('cierre inesperado: intento recuperar');const bk=SBSTORE.getItem('ds_auth');if(bk){try{const j=JSON.parse(bk);if(j&&(j.access_token||j.currentSession)){SBSTORE.setItem('ds_auth',bk);return}}catch(e){}}}
+sbRefresh()});
+sbLog('inicio');await sbRefresh();return true}
+function sbSignOut(){SB.userSignOut=true;return SB.client.auth.signOut()}
+function accessDiagSheet(){const st=(()=>{try{localStorage.setItem('__t','1');localStorage.removeItem('__t');return 'sí'}catch(e){return 'NO (el navegador bloquea el guardado)'}})();
+let log=[];try{log=JSON.parse(SBSTORE.getItem('ds_authlog')||'[]')}catch(e){}
+openSheet('Diagnóstico de acceso','<div class="muted">Sirve para entender por qué se cierra la sesión.</div><div class="frow"><span style="flex:1">Guardado del navegador</span><b>'+esc(st)+'</b></div><div class="frow"><span style="flex:1">Sesión activa</span><b>'+(SB.user?'sí ('+esc(SB.user.email||'')+')':'no')+'</b></div><div class="frow"><span style="flex:1">Copia de respaldo</span><b>'+(SBSTORE.getItem('ds_auth')?'sí':'no')+'</b></div><div class="frow"><span style="flex:1">Modo instalado</span><b>'+(matchMedia('(display-mode: standalone)').matches?'sí':'no (abierto en el navegador)')+'</b></div><div class="cph">Últimos eventos</div><pre class="pvtxt">'+esc((log.concat(SBLOG).slice(-20).join('\n'))||'sin datos')+'</pre><p class="muted">Si el guardado dice NO, hay que permitir cookies para este sitio o instalar la app desde ⋮ → Instalar app.</p>')}
+
+
+/* ===== Danscaner Pro v14: acceso tolerante a fallas + instalar ===== */
+function jwtInfo(tok){try{const p=JSON.parse(atob(String(tok).split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));return {id:p.sub,email:p.email,exp:p.exp*1000}}catch(e){return null}}
+function localSession(){try{const raw=SBSTORE.getItem('ds_auth');if(!raw)return null;const j=JSON.parse(raw);const tok=j.access_token||j.currentSession?.access_token;if(!tok)return null;const i=jwtInfo(tok);if(!i)return null;return i}catch(e){return null}}
+function cachedProfile(){try{return JSON.parse(SBSTORE.getItem('ds_profile')||'null')}catch(e){return null}}
+function cacheProfile(p){try{SBSTORE.setItem('ds_profile',JSON.stringify({...p,_at:Date.now()}))}catch(e){}}
+async function sbRefresh(){if(_sbBusy)return;_sbBusy=true;try{
+const herr=new URLSearchParams((location.hash||'').replace(/^#/,'')).get('error_description')||new URLSearchParams(location.search).get('error_description');
+if(herr){history.replaceState({},'',location.pathname);sbLog('error url: '+herr);return gateError(herr)}
+let session=null,fallback=false;
+try{const r=await _to(SB.client.auth.getSession(),7000,'sesión');session=r.data.session}
+catch(e){sbLog('getSession falló: '+e.message);const ls=localSession();
+ if(ls&&ls.exp>Date.now()){fallback=true;SB.user={id:ls.id,email:ls.email};sbLog('uso sesión guardada de '+ls.email)}
+ else{const cp=cachedProfile();if(cp&&Date.now()-(cp._at||0)<30*24*3600e3&&cp.status==='activo'){SB.user={id:cp.id,email:cp.email};SB.profile=cp;SB.ready=true;hideGate();applyPerms();sbLog('entrada con permiso guardado');toast('Sin conexión con el servidor de acceso: entraste con el permiso guardado',5000);return}
+  return sbLoginScreen()}}
+if(!fallback)SB.user=session?.user||null;
+if(!SB.user)return sbLoginScreen();
+const inv=new URLSearchParams(location.search).get('invite');
+if(inv){try{await _to(SB.client.rpc('redeem_invite',{p_token:inv}),8000,'invitación');history.replaceState({},'',location.pathname)}catch(e){}}
+let data=null,error=null;
+try{const r=await _to(SB.client.from('profiles').select('*').eq('id',SB.user.id).maybeSingle(),9000,'perfil');data=r.data;error=r.error}
+catch(e){sbLog('perfil falló: '+e.message);const cp=cachedProfile();
+ if(cp&&cp.id===SB.user.id&&cp.status==='activo'){SB.profile=cp;SB.ready=true;hideGate();applyPerms();toast('Servidor lento: entraste con el permiso guardado',4000);return}
+ return gateError(e.message,'<p class="muted">La base de accesos no respondió.</p>')}
+SB.profile=data||null;
+if(error){sbLog('perfil error: '+error.message);const cp=cachedProfile();if(cp&&cp.id===SB.user.id&&cp.status==='activo'){SB.profile=cp;SB.ready=true;hideGate();applyPerms();return}return gateError(error.message)}
+if(!SB.profile||SB.profile.status!=='activo'){try{SBSTORE.removeItem('ds_profile')}catch(e){}
+ showGate('<h3>Acceso pendiente</h3><p class="muted">Tu cuenta <b>'+esc(SB.user.email||'')+'</b> no tiene acceso habilitado. Pedile al administrador que te active.</p><button class="btn block" id="agRe"><i data-ico="rotr">↻</i> Volver a verificar</button><button class="btn block" id="agOut">Cerrar sesión</button>');
+ $('#agRe').onclick=()=>sbRefresh();return bindOut()}
+cacheProfile(SB.profile);SB.ready=true;hideGate();applyPerms();sbLog('acceso ok');
+document.documentElement.classList.toggle('is-admin',SB.profile.role==='admin')}finally{_sbBusy=false}}
+{const _so=sbSignOut;sbSignOut=function(){try{SBSTORE.removeItem('ds_profile')}catch(e){}return _so()}}
+
+/* instalar la app desde Ajustes */
+let _installEvt=null;
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();_installEvt=e;const b=$('#seInstall');if(b)b.hidden=false});
+async function installApp(){if(_installEvt){_installEvt.prompt();const r=await _installEvt.userChoice;_installEvt=null;toast(r&&r.outcome==='accepted'?'Instalando…':'Podés instalarla después desde el menú ⋮ del navegador',4000);return}
+const std=matchMedia('(display-mode: standalone)').matches;
+openSheet('Instalar la app',std?'<p>Ya la estás usando instalada.</p>':'<p class="muted">Si el botón no aparece, se instala desde el navegador:</p><ol class="muted" style="padding-left:18px;line-height:1.7"><li>Chrome en Android: menú <b>⋮</b> → <b>Instalar app</b> o <b>Agregar a pantalla principal</b>.</li><li>Si no figura: puede que ya esté instalada (buscá el ícono) o que la hayas abierto en una ventana de incógnito.</li><li>iPhone: Safari → botón compartir → <b>Agregar a inicio</b>.</li></ol><p class="muted">Tiene que ser la dirección con https, no un archivo descargado.</p>')}
+
+
+/* ===== Danscaner Pro v16: panel de administración + cámara + OCR ===== */
+LIBS.qrcode=['https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js','https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js'];
+
+/* ---------- cámara: cambiar entre trasera y frontal ---------- */
+Cam.facing='environment';
+{const _gs=Cam.getStream.bind(Cam);Cam.getStream=async function(){const f=this.facing||'environment';
+ const tries=[{facingMode:{ideal:f},width:{ideal:3840},height:{ideal:2160}},{facingMode:{ideal:f},width:{ideal:1920},height:{ideal:1080}},{facingMode:f},true];
+ let last;for(const video of tries){try{return await navigator.mediaDevices.getUserMedia({audio:false,video})}catch(e){last=e;if(e.name==='NotAllowedError'||e.name==='SecurityError')throw e}}throw last}}
+async function camFlip(){if(!Cam.stream)return;Cam.facing=Cam.facing==='user'?'environment':'user';
+ await withBusy(async()=>{busy('Cambiando cámara…');try{Cam.stream.getTracks().forEach(t=>t.stop());Cam.stream=await Cam.getStream();Cam.track=Cam.stream.getVideoTracks()[0];const v=$('#camVideo');v.srcObject=Cam.stream;await v.play().catch(()=>{});busy(false);toast(Cam.facing==='user'?'Cámara frontal':'Cámara trasera')}catch(e){busy(false);toast('No se pudo cambiar de cámara')}})}
+(function(){const top=$('#camCfg');if(!top)return;const b=document.createElement('button');b.className='ib';b.id='camSwitch';b.title='Cambiar cámara';b.hidden=true;b.innerHTML='<i data-ico="replace">🔄</i>';top.parentNode.insertBefore(b,top);b.onclick=camFlip;iconize(top.parentNode);
+ if(navigator.mediaDevices&&navigator.mediaDevices.enumerateDevices)navigator.mediaDevices.enumerateDevices().then(d=>{b.hidden=d.filter(x=>x.kind==='videoinput').length<2}).catch(()=>{})})();
+
+/* ---------- OCR: binarizado adaptativo ---------- */
+function prepOcr(c){let out=c;const short=Math.min(out.width,out.height);const k=Math.max(1,Math.min(4,1800/short));
+if(k>1.05){const t=canvas(Math.round(out.width*k),Math.round(out.height*k)),x=t.getContext('2d');x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';x.drawImage(out,0,0,t.width,t.height);out=t}
+const x=out.getContext('2d',{willReadFrequently:true}),id=x.getImageData(0,0,out.width,out.height),d=id.data;
+try{bgDivide(out,d,true)}catch(e){}
+autoLevels(d,.02,.98);unsharp(d,out.width,out.height,.55,1);
+try{const hist=new Uint32Array(256),N=out.width*out.height;
+ for(let i=0;i<d.length;i+=4)hist[(d[i]*77+d[i+1]*150+d[i+2]*29)>>8]++;
+ const o=otsu(hist,N),th=(o&&o.diff>18)?o.th:(typeof o==='number'?o:145);
+ for(let i=0;i<d.length;i+=4){const v=(d[i]*77+d[i+1]*150+d[i+2]*29)>>8,b=v>th?255:0;d[i]=d[i+1]=d[i+2]=b}}
+catch(e){lutApply(d,makeLut(v=>v>190?255:v<90?0:(v-90)*255/100))}
+x.putImageData(id,0,0);return out}
+
+/* ---------- panel de administración ---------- */
+function admInitials(n,e){const base=(n||'').trim()||(e||'').split('@')[0]||'?';const p=base.split(/[\s._-]+/).filter(Boolean);return (p.length>=2?p[0][0]+p[1][0]:base.slice(0,2)).toUpperCase()}
+function admColor(seed){const pal=['#e53935','#d81b60','#8e24aa','#5e35b1','#3949ab','#1e88e5','#039be5','#00897b','#43a047','#f4511e','#6d4c41','#546e7a'];let h=0;for(const c of String(seed||''))h=(h*31+c.charCodeAt(0))>>>0;return pal[h%pal.length]}
+function admAvatar(u,lg){return '<div class="avatar'+(lg?' lg':'')+'" style="background:'+admColor(u.id||u.email||'')+'">'+esc(admInitials(u.full_name,u.email))+'</div>'}
+function admDate(iso){if(!iso)return '—';try{return new Date(iso).toLocaleDateString('es-AR',{day:'2-digit',month:'short',year:'numeric'})}catch(e){return '—'}}
+function admRel(iso){if(!iso)return '';try{const d=new Date(iso),s=Math.floor((Date.now()-d)/1000);if(s<3600)return 'hace '+Math.max(1,Math.floor(s/60))+' min';if(s<86400)return 'hace '+Math.floor(s/3600)+' h';if(s<2592000)return 'hace '+Math.floor(s/86400)+' días';return 'el '+d.toLocaleDateString('es-AR')}catch(e){return ''}}
+function admBadges(u,isMe){const st={activo:['activo','Activo'],pendiente:['pendiente','Pendiente'],bloqueado:['bloqueado','Bloqueado']}[u.status]||['user',u.status||'—'];
+return '<span class="badge '+(u.role==='admin'?'admin':'user')+'">'+(u.role==='admin'?'Admin':'Usuario')+'</span><span class="badge '+st[0]+'">'+esc(st[1])+'</span>'+(isMe?'<span class="badge you">Vos</span>':'')}
+async function adminSheet(){if(!SB.ready||!SB.profile||SB.profile.role!=='admin')return toast('Solo el administrador puede entrar acá');
+let users=[],filter='todos',query='',bulk=false;const sel=new Set();
+const b=openSheet('👤 Administración de accesos','<div class="admin-wrap" id="admRoot"><div class="admin-empty"><div class="big">⏳</div>Cargando…</div></div>');
+const draw=()=>{const st={total:users.length,activos:users.filter(u=>u.status==='activo').length,pend:users.filter(u=>u.status==='pendiente').length,bloq:users.filter(u=>u.status==='bloqueado').length,admins:users.filter(u=>u.role==='admin').length};
+let list=users.filter(u=>{if(filter==='activos'&&u.status!=='activo')return false;if(filter==='pendientes'&&u.status!=='pendiente')return false;if(filter==='bloqueados'&&u.status!=='bloqueado')return false;if(filter==='admins'&&u.role!=='admin')return false;
+if(query)return ((u.email||'')+' '+(u.full_name||'')).toLowerCase().includes(query.toLowerCase());return true});
+list.sort((a,c)=>a.role!==c.role?(a.role==='admin'?-1:1):new Date(c.created_at||0)-new Date(a.created_at||0));
+$('#admRoot',b).innerHTML='<div class="admin-stats">'
++'<div class="stat-card" data-tone="ac"><b>'+st.total+'</b><small>Total</small></div>'
++'<div class="stat-card" data-tone="ok"><b>'+st.activos+'</b><small>Activos</small></div>'
++'<div class="stat-card" data-tone="red"><b>'+st.bloq+'</b><small>Bloqueados</small></div>'
++'<div class="stat-card" data-tone="info"><b>'+st.admins+'</b><small>Admins</small></div></div>'
++'<div class="invite-cta" id="admInvite"><div class="ic">＋</div><div class="txt"><b>Invitar a alguien</b><small>Enlace o código QR para dar acceso</small></div><div class="arrow">›</div></div>'
++'<div class="admin-search"><input id="admQ" placeholder="Buscar por nombre o correo…" value="'+esc(query)+'"></div>'
++'<div class="admin-filters">'+[['todos','Todos',st.total],['activos','Activos',st.activos],['pendientes','Pendientes',st.pend],['bloqueados','Bloqueados',st.bloq],['admins','Admins',st.admins]].map(([k,l,n])=>'<button class="chip '+(filter===k?'on':'')+'" data-fl="'+k+'">'+l+' · '+n+'</button>').join('')+'</div>'
++(bulk&&sel.size?'<div class="admin-selbar"><b>'+sel.size+' seleccionado(s)</b><button data-bulk="activo">✓ Dar acceso</button><button data-bulk="bloqueado">✕ Quitar</button><button data-bulk="cancel">Cancelar</button></div>':'')
++'<div class="admin-list">'+(list.length?list.map(u=>{const isMe=u.id===SB.user.id;
+return '<div class="admin-user" data-id="'+u.id+'" data-status="'+esc(u.status||'')+'" data-role="'+esc(u.role||'')+'">'
++(bulk&&!isMe?'<input type="checkbox" class="cb" data-cb="'+u.id+'" '+(sel.has(u.id)?'checked':'')+'>':'')
++admAvatar(u)+'<div class="inf"><div class="nm">'+esc(u.full_name||u.email||'(sin nombre)')+'</div><div class="em">'+esc(u.email||'')+'</div><div class="admin-badges">'+admBadges(u,isMe)+'</div>'+(u.created_at?'<div class="meta">Se registró '+admRel(u.created_at)+'</div>':'')+'</div><div class="chev">›</div></div>'}).join('')
+:'<div class="admin-empty"><div class="big">🔎</div>No hay usuarios que coincidan.</div>')+'</div>'
++'<div class="admin-actions-top" style="margin-top:10px"><button class="btn" id="admBulk">'+(bulk?'✕ Cancelar':'☑️ Seleccionar')+'</button><button class="btn" id="admCsv">📥 CSV</button><button class="btn" id="admRef">↻ Actualizar</button></div>';
+const q=$('#admQ',b);if(q)q.oninput=e=>{query=e.target.value;const p=e.target.selectionStart;draw();const n=$('#admQ',b);n.focus();try{n.setSelectionRange(p,p)}catch(x){}}};
+const load=async(silent)=>{if(!silent)$('#admRoot',b).innerHTML='<div class="admin-empty"><div class="big">⏳</div>Cargando…</div>';
+try{const r=await _to(SB.client.from('profiles').select('*').order('created_at',{ascending:false}),20000,'usuarios');
+ if(r.error)throw r.error;users=r.data||[];draw()}
+catch(e){$('#admRoot',b).innerHTML='<div class="admin-empty"><div class="big">⚠️</div>'+esc(e.message||e)+'<br><button class="btn pri" style="margin-top:12px" id="admRetry">↻ Reintentar</button></div>'}};
+b.onclick=async e=>{
+ if(e.target.closest('#admRetry'))return load();
+ const f=e.target.closest('[data-fl]');if(f){filter=f.dataset.fl;return draw()}
+ if(e.target.closest('#admInvite'))return adminInviteSheet();
+ if(e.target.closest('#admRef'))return load(true);
+ if(e.target.closest('#admBulk')){bulk=!bulk;if(!bulk)sel.clear();return draw()}
+ if(e.target.closest('#admCsv'))return admCsv(users);
+ const cb=e.target.closest('[data-cb]');if(cb){e.stopPropagation();cb.checked?sel.add(cb.dataset.cb):sel.delete(cb.dataset.cb);return draw()}
+ const bl=e.target.closest('[data-bulk]');if(bl){const a=bl.dataset.bulk;if(a==='cancel'){bulk=false;sel.clear();return draw()}
+  await withBusy(async()=>{let i=0;for(const id of sel){busy('Actualizando '+(++i)+'/'+sel.size);await SB.client.from('profiles').update({status:a}).eq('id',id)}});
+  sel.clear();bulk=false;toast(a==='activo'?'Acceso habilitado':'Acceso quitado');return load(true)}
+ const row=e.target.closest('.admin-user');if(row){const u=users.find(x=>x.id===row.dataset.id);if(u)adminUserDetail(u,()=>load(true),$('#admRoot',b))}};
+await load()}
+function adminUserDetail(u,onChange,host){const isMe=u.id===SB.user.id;
+const b=host||openSheet('Detalle del usuario','');if(host)host.innerHTML='<button class="btn sm" data-act="back" style="margin-bottom:10px">← Volver a la lista</button>'+('<div class="udetail-head">'+admAvatar(u,true)+'<div class="txt"><h3>'+esc(u.full_name||u.email||'(sin nombre)')+'</h3><div class="em">'+esc(u.email||'')+'</div><div class="admin-badges" style="margin-top:8px">'+admBadges(u,isMe)+'</div></div></div>'
++'<div class="udetail-row"><span class="label">Rol</span><span class="val">'+(u.role==='admin'?'Administrador':'Usuario')+'</span></div>'
++'<div class="udetail-row"><span class="label">Estado</span><span class="val">'+(u.status==='activo'?'Puede entrar':u.status==='pendiente'?'Esperando autorización':'Bloqueado')+'</span></div>'
++'<div class="udetail-row"><span class="label">Registrado</span><span class="val">'+admDate(u.created_at)+' · '+admRel(u.created_at)+'</span></div>'
++'<div class="udetail-row"><span class="label">ID</span><span class="val"><code>'+esc(u.id)+'</code></span></div>'
++(isMe?'<p class="muted" style="margin-top:16px;text-align:center">Es tu propia cuenta: no podés quitarte el acceso.</p>'
+ :'<div class="udetail-actions"><button class="btn '+(u.status==='activo'?'red':'pri')+'" data-act="st">'+(u.status==='activo'?'🚫 Quitar acceso':'✓ Dar acceso')+'</button><button class="btn" data-act="rol">'+(u.role==='admin'?'👤 Quitar admin':'👑 Hacer admin')+'</button><button class="btn" data-act="mail">📋 Copiar correo</button><button class="btn" data-act="del">🗑 Eliminar</button></div>'));
+b.onclick=async e=>{const a=e.target.closest('[data-act]')?.dataset.act;if(!a)return;
+if(a==='mail'){try{await navigator.clipboard.writeText(u.email||'');toast('Correo copiado')}catch(x){toast('No se pudo copiar')}return}
+if(a==='back'){onChange&&onChange();return}
+if(a==='st'){const n=u.status==='activo'?'bloqueado':'activo';const {error}=await SB.client.from('profiles').update({status:n}).eq('id',u.id);if(error)return toast('Error: '+error.message);toast(n==='activo'?'Acceso habilitado':'Acceso quitado');if(!host)await Nav.back();onChange&&onChange();return}
+if(a==='rol'){const n=u.role==='admin'?'usuario':'admin';if(n==='admin'&&!confirm('¿Convertir a '+(u.email||'')+' en administrador? Va a poder dar y quitar accesos.'))return;const {error}=await SB.client.from('profiles').update({role:n}).eq('id',u.id);if(error)return toast('Error: '+error.message);toast(n==='admin'?'Ahora es administrador':'Ya no es administrador');if(!host)await Nav.back();onChange&&onChange();return}
+if(a==='del'){if(!confirm('¿Eliminar el perfil de '+(u.email||'')+'? Si vuelve a entrar con su correo, se crea de nuevo.'))return;const {error}=await SB.client.from('profiles').delete().eq('id',u.id);if(error)return toast('Error: '+error.message);toast('Perfil eliminado');if(!host)await Nav.back();onChange&&onChange()}}}
+function adminInviteSheet(){let role='usuario',days=7;
+const b=openSheet('Invitar persona','<p class="muted" style="margin-top:0">La persona abre el enlace, entra con su correo y queda habilitada.</p>'
++'<div class="inv-step"><span class="num">1</span><div class="txt"><b>Correo (opcional)</b>Vacío = sirve para cualquiera.</div></div><input id="invEmail" type="email" inputmode="email" placeholder="correo@ejemplo.com">'
++'<div class="inv-step"><span class="num">2</span><div class="txt"><b>Rol</b>Con qué permisos entra.</div></div><div class="seg" id="invRole"><button data-r="usuario" class="on">👤 Usuario</button><button data-r="admin">👑 Admin</button></div>'
++'<div class="inv-step"><span class="num">3</span><div class="txt"><b>Vencimiento</b>Después de ese plazo el enlace no sirve más.</div></div><div class="seg" id="invDays"><button data-d="1">1 día</button><button data-d="7" class="on">7 días</button><button data-d="30">30 días</button></div>'
++'<button class="btn pri block" style="margin-top:16px" id="invGo"><i data-ico="check">✨</i> Generar enlace</button>');
+b.onclick=async e=>{const r=e.target.closest('#invRole [data-r]');if(r){role=r.dataset.r;$$('#invRole button',b).forEach(x=>x.classList.toggle('on',x===r));return}
+const d=e.target.closest('#invDays [data-d]');if(d){days=+d.dataset.d;$$('#invDays button',b).forEach(x=>x.classList.toggle('on',x===d));return}
+if(!e.target.closest('#invGo'))return;
+const email=($('#invEmail',b).value||'').trim()||null;
+if(email&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))return toast('Escribí un correo válido');
+await withBusy(async()=>{busy('Generando…');const {data,error}=await SB.client.rpc('create_invite',{p_email:email,p_days:days});
+if(error)throw new Error(error.message);
+const link=location.origin+location.pathname+'?invite='+data;busy('Armando el código QR…');
+b.innerHTML='<div style="text-align:center;margin-bottom:8px"><div style="font-size:48px">🎉</div><h3 style="margin:8px 0 4px">Invitación lista</h3><p class="muted" style="margin:0">'+(email?'Solo para <b>'+esc(email)+'</b>':'Enlace abierto')+' · vence en '+days+' día(s)'+(role==='admin'?' · entra como administrador':'')+'</p></div>'
++'<div class="inv-result"><div class="qr-wrap" id="invQr"></div><div class="inv-link">'+esc(link)+'</div><div class="row" style="margin:0"><button class="btn block" id="invCopy"><i data-ico="type">📋</i> Copiar</button><button class="btn pri block" id="invShare"><i data-ico="share">📤</i> Compartir</button></div></div>'
++'<div class="inv-step"><span class="num">💡</span><div class="txt"><b>Cómo se usa</b>Mandaselo por WhatsApp, o que escanee el QR con la cámara del teléfono.</div></div>'
++'<div class="row"><button class="btn block" id="invNew">➕ Otra invitación</button><button class="btn pri block" data-back><i data-ico="check">✓</i> Listo</button></div>';
+iconize(b);
+try{await loadLib('qrcode');new QRCode($('#invQr',b),{text:link,width:190,height:190,correctLevel:QRCode.CorrectLevel.M})}
+catch(x){$('#invQr',b).innerHTML='<p class="muted">El código QR necesita internet la primera vez. Usá el enlace de abajo.</p>'}
+busy(false);
+$('#invCopy',b).onclick=async()=>{try{await navigator.clipboard.writeText(link);toast('Enlace copiado')}catch(x){toast('Copialo del recuadro')}};
+$('#invShare',b).onclick=async()=>{const txt='Te comparto el acceso a Danscaner Pro: '+link;try{if(navigator.share)return void await navigator.share({title:'Acceso a Danscaner Pro',text:txt,url:link});await navigator.clipboard.writeText(txt);toast('Copiado')}catch(x){}};
+$('#invNew',b).onclick=()=>Nav.back().then(adminInviteSheet)})}}
+function admCsv(list){if(!list||!list.length)return toast('No hay usuarios para exportar');
+const head=['Nombre','Correo','Rol','Estado','Registrado','ID'];
+const rows=list.map(u=>[u.full_name||'',u.email||'',u.role||'',u.status||'',admDate(u.created_at),u.id]);
+const csv=[head,...rows].map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(';')).join('\n');
+download(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),'usuarios_'+new Date().toISOString().slice(0,10)+'.csv');toast('CSV descargado')}
 
 </script>
 </body>
