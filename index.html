@@ -12,8 +12,8 @@
 <script>(function(){var t='light';try{t=(JSON.parse(localStorage.getItem('ds_settings')||'{}').theme)||'system'}catch(e){}if(t==='system')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t)})()</script>
 <script>if(location.protocol==='https:'){const l=document.createElement('link');l.rel='manifest';l.href='manifest.webmanifest';document.head.appendChild(l);if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}</script>
 <link rel="apple-touch-icon" href="icon-192.png">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" onload="if(document.fonts)Promise.all(['900 1em &quot;Font Awesome 6 Free&quot;','400 1em &quot;Font Awesome 6 Free&quot;'].map(f=>document.fonts.load(f))).then(r=>{if(r.every(x=>x.some(y=>y.status==='loaded')))document.documentElement.classList.add('fa-on')}).catch(()=>{})">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all';if(document.fonts)Promise.all(['900 1em &quot;Font Awesome 6 Free&quot;','400 1em &quot;Font Awesome 6 Free&quot;'].map(f=>document.fonts.load(f))).then(r=>{if(r.every(x=>x.some(y=>y.status==='loaded')))document.documentElement.classList.add('fa-on')}).catch(()=>{})">
 <style>
 :root{
   /* Variables por defecto (Tema Claro) */
@@ -647,10 +647,11 @@ const PAGE_MM={a4:[210,297],carta:[216,279],oficio:[216,356]};
 const FILTERS=[['original','Original'],['aclarar','Aclarar'],['mejorar','Mejorar'],['magia','Magia Pro'],['sinsombra','Sin sombras'],['gris','Gris'],['bn','B/N'],['ahorro','Ahorro tinta']];
 const NAME_TEMPLATES=['Escaneo','Recibo','Factura','Contrato','Documento','DNI','Apunte'];
 const LIBS={pdfjs:['https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js','https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js'],pdflib:['https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js','https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js'],tess:['https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js'],mammoth:['https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js'],html2pdf:['https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js'],jsqr:['https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js'],xlsx:['https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'],jszip:['https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'],pptx:['https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js'],pdfsec:['https://cdn.jsdelivr.net/npm/@cantoo/pdf-lib@2.11.1/dist/pdf-lib.min.js','https://unpkg.com/@cantoo/pdf-lib@2.11.1/dist/pdf-lib.min.js']};
+const LOCAL_LIBS={pdfjs:'libs/pdf.min.js',pdflib:'libs/pdf-lib.min.js',tess:'libs/tesseract.min.js',mammoth:'libs/mammoth.browser.min.js',html2pdf:'libs/html2pdf.bundle.min.js',jsqr:'libs/jsQR.js',xlsx:'libs/xlsx.full.min.js',jszip:'libs/jszip.min.js',pptx:'libs/pptxgen.bundle.js',pdfsec:'libs/pdf-lib-cifrado.min.js',docxprev:'libs/docx-preview.min.js',h2c:'libs/html2canvas.min.js',supabase:'libs/supabase.js',qrcode:'libs/qrcode.min.js'};
 const _libs={};
-function loadLib(k){if(_libs[k])return _libs[k];return _libs[k]=(async()=>{for(const url of LIBS[k]){const ok=await new Promise(res=>{const s=document.createElement('script');s.src=url;s.onload=()=>res(true);s.onerror=()=>{s.remove();res(false)};document.head.appendChild(s)});if(ok)return true}delete _libs[k];throw new Error('No se pudo cargar "'+k+'". Verificá internet.')})()}
+function loadLib(k){if(_libs[k])return _libs[k];return _libs[k]=(async()=>{const urls=[...(LOCAL_LIBS[k]?[LOCAL_LIBS[k]]:[]),...(LIBS[k]||[])];for(const url of urls){const ok=await new Promise(res=>{const s=document.createElement('script');s.src=url;s.onload=()=>res(true);s.onerror=()=>{s.remove();res(false)};document.head.appendChild(s)});if(ok)return true}delete _libs[k];throw new Error('No se pudo cargar "'+k+'". Verificá internet.')})()}
 let _pdfjs=null;
-function getPdfjs(){return _pdfjs||(_pdfjs=(async()=>{await loadLib('pdfjs');const w='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';try{if(location.protocol==='file:'||location.origin==='null')throw 0;const t=await (await fetch(w)).text();pdfjsLib.GlobalWorkerOptions.workerSrc=URL.createObjectURL(new Blob([t],{type:'text/javascript'}))}catch(e){pdfjsLib.GlobalWorkerOptions.workerSrc=w}return pdfjsLib})().catch(e=>{_pdfjs=null;throw e}))}
+function getPdfjs(){return _pdfjs||(_pdfjs=(async()=>{await loadLib('pdfjs');try{if(location.protocol.startsWith('http')){const loc=new URL('libs/pdf.worker.min.js',location.href).href;const r=await fetch(loc,{method:'HEAD'});if(r.ok){pdfjsLib.GlobalWorkerOptions.workerSrc=loc;return pdfjsLib}}}catch(e){}const w='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';try{if(location.protocol==='file:'||location.origin==='null')throw 0;const t=await (await fetch(w)).text();pdfjsLib.GlobalWorkerOptions.workerSrc=URL.createObjectURL(new Blob([t],{type:'text/javascript'}))}catch(e){pdfjsLib.GlobalWorkerOptions.workerSrc=w}return pdfjsLib})().catch(e=>{_pdfjs=null;throw e}))}
 async function openPdfjs(ab){const lib=await getPdfjs();return lib.getDocument({data:new Uint8Array(ab.slice(0))}).promise}
 async function renderPdfPage(pdf,n,scale){const pg=await pdf.getPage(n);const vp1=pg.getViewport({scale:1});const vp=pg.getViewport({scale});const c=canvas(Math.ceil(vp.width),Math.ceil(vp.height));const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);await pg.render({canvasContext:x,viewport:vp}).promise;return {c,vp1}}
 async function pdfEachPage(ab,scale,fn){const pdf=await openPdfjs(ab);for(let i=1;i<=pdf.numPages;i++){const {c,vp1}=await renderPdfPage(pdf,i,scale);await fn(c,i,pdf.numPages,vp1);c.width=c.height=1}return pdf.numPages}
@@ -677,7 +678,7 @@ function bgDivide(c,d,gray){const w=c.width,h=c.height;let cur=c,cw=w,ch=h;while
 function clahe(d,w,h,clipLimit=2.5,tiles=8){const tileW=Math.ceil(w/tiles),tileH=Math.ceil(h/tiles);for(let ty=0;ty<tiles;ty++)for(let tx=0;tx<tiles;tx++){const x0=tx*tileW,y0=ty*tileH,x1=Math.min(w,x0+tileW),y1=Math.min(h,y0+tileH);const hist=new Uint32Array(256);for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){const i=(y*w+x)*4;hist[(d[i]*77+d[i+1]*150+d[i+2]*29)>>8]++}const total=(x1-x0)*(y1-y0);const limit=Math.max(1,Math.floor(clipLimit*total/256));let excess=0;for(let i=0;i<256;i++){if(hist[i]>limit){excess+=hist[i]-limit;hist[i]=limit}}const inc=Math.floor(excess/256);for(let i=0;i<256;i++)hist[i]+=inc;const cdf=new Uint32Array(256);let acc=0;for(let i=0;i<256;i++){acc+=hist[i];cdf[i]=acc}if(!acc)continue;for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){const i=(y*w+x)*4;const l=(d[i]*77+d[i+1]*150+d[i+2]*29)>>8;const nl=(cdf[l]*255/acc)|0;const s=(nl-l)/255;d[i]=clamp(d[i]+s*(255-d[i]),0,255);d[i+1]=clamp(d[i+1]+s*(255-d[i+1]),0,255);d[i+2]=clamp(d[i+2]+s*(255-d[i+2]),0,255)}}}
 function unsharp(d,w,h,amount=0.6,radius=1){const copy=new Uint8ClampedArray(d);sepFilter(copy,w,h,radius,false);for(let i=0;i<d.length;i+=4){for(let c=0;c<3;c++){const diff=d[i+c]-copy[i+c];d[i+c]=clamp(d[i+c]+diff*amount,0,255)}}}
 function applyFilter(c,f,bright=0,contrast=0,o){o=o||{};const sat=+o.sat||0,sharp=+o.sharp||0,temp=+o.temp||0,inten=o.intensity==null?100:+o.intensity;if((!f||f==='original')&&!bright&&!contrast&&!sat&&!sharp&&!temp)return;const x=c.getContext('2d',{willReadFrequently:true}),id=x.getImageData(0,0,c.width,c.height),d=id.data;const base=(inten<100&&f&&f!=='original')?new Uint8ClampedArray(d):null;if(typeof applyExtraFilter==='function'&&applyExtraFilter(c,d,f)){}else switch(f){case 'aclarar':lutApply(d,makeLut(v=>255*Math.pow(v/255,.72)+10));break;case 'mejorar':autoLevels(d,.005,.995);lutApply(d,makeLut(v=>sCurve(v,.35)));saturate(d,1.15);unsharp(d,c.width,c.height,.4,1);break;case 'magia':bgDivide(c,d,false);clahe(d,c.width,c.height,2.5,8);lutApply(d,makeLut(v=>sCurve((v-30)*255/220,.5)));saturate(d,1.4);unsharp(d,c.width,c.height,.7,1);break;case 'sinsombra':bgDivide(c,d,false);lutApply(d,makeLut(v=>(v-12)*255/236));break;case 'gris':toGray(d);autoLevels(d);lutApply(d,makeLut(v=>sCurve(v,.3)));break;case 'bn':bgDivide(c,d,true);lutApply(d,makeLut(v=>v<150?0:v>212?255:(v-150)*255/62));break;case 'ahorro':bgDivide(c,d,true);lutApply(d,makeLut(v=>v>215?255:105+v*.62));break}if(base){const k=inten/100;for(let i=0;i<d.length;i+=4){d[i]=base[i]+(d[i]-base[i])*k;d[i+1]=base[i+1]+(d[i+1]-base[i+1])*k;d[i+2]=base[i+2]+(d[i+2]-base[i+2])*k}}if(bright||contrast){const k=(100+contrast)/100;lutApply(d,makeLut(v=>(v-128)*k*k+128+bright*1.3))}if(sat)saturate(d,1+sat/100);if(temp){for(let i=0;i<d.length;i+=4){d[i]=d[i]+temp*.7;d[i+2]=d[i+2]-temp*.7}}if(sharp)unsharp(d,c.width,c.height,sharp/55,1);x.putImageData(id,0,0)}
-async function renderPage(p,{maxSide=0,noOverlays=false}={}){const img=await loadImg(p.orig);let src=img,iw=img.naturalWidth,ih=img.naturalHeight;if(maxSide&&Math.max(iw,ih)>maxSide*1.15){const s=maxSide*1.15/Math.max(iw,ih);const t=canvas(iw*s,ih*s);const tx=t.getContext('2d');tx.imageSmoothingQuality='high';tx.drawImage(img,0,0,t.width,t.height);src=t;iw=t.width;ih=t.height}let c;if(p.quad)c=warp(src,p.quad.map(o=>({x:o.x*iw,y:o.y*ih})),maxSide||5000);else{c=canvas(iw,ih);c.getContext('2d').drawImage(src,0,0)}if(maxSide&&Math.max(c.width,c.height)>maxSide)c=scaleCanvas(c,maxSide/Math.max(c.width,c.height));if(p.rot)c=rotateCanvas(c,p.rot);applyFilter(c,p.filter,p.bright,p.contrast,p);if(!noOverlays&&p.overlays&&p.overlays.length){const x=c.getContext('2d');for(const o of p.overlays){const oi=await loadImg(o.src);x.drawImage(oi,o.x*c.width,o.y*c.height,o.w*c.width,o.h*c.height)}}return c}
+async function renderPage(p,{maxSide=0,noOverlays=false}={}){const img=await loadImg(p.orig);let src=img,iw=img.naturalWidth,ih=img.naturalHeight;if(maxSide&&Math.max(iw,ih)>maxSide*1.15){const s=maxSide*1.15/Math.max(iw,ih);const t=canvas(iw*s,ih*s);const tx=t.getContext('2d');tx.imageSmoothingQuality='high';tx.drawImage(img,0,0,t.width,t.height);src=t;iw=t.width;ih=t.height}let c;if(p.quad)c=warp(src,p.quad.map(o=>({x:o.x*iw,y:o.y*ih})),maxSide||5000);else{c=canvas(iw,ih);c.getContext('2d').drawImage(src,0,0)}if(maxSide&&Math.max(c.width,c.height)>maxSide)c=scaleCanvas(c,maxSide/Math.max(c.width,c.height));if(p.rot)c=rotateCanvas(c,p.rot);await applyFilterAsync(c,p.filter,p.bright,p.contrast,{sat:p.sat,sharp:p.sharp,temp:p.temp,intensity:p.intensity});if(!noOverlays&&p.overlays&&p.overlays.length){const x=c.getContext('2d');for(const o of p.overlays){const oi=await loadImg(o.src);x.drawImage(oi,o.x*c.width,o.y*c.height,o.w*c.width,o.h*c.height)}}return c}
 async function makeThumb(p){const c=await renderPage(p,{maxSide:520});p.thumb=c.toDataURL('image/jpeg',.8)}
 async function makePage(src,{auto=S.autoCrop,filter=S.filter}={}){const img=await loadImg(src);const s=Math.min(1,S.maxCap/Math.max(img.naturalWidth,img.naturalHeight));const c=canvas(img.naturalWidth*s,img.naturalHeight*s),x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.imageSmoothingQuality='high';x.drawImage(img,0,0,c.width,c.height);const p={id:uid(),orig:c.toDataURL('image/jpeg',.93),quad:auto?detectQuad(c):null,rot:0,filter,bright:0,contrast:0,overlays:[]};if(auto&&!p.quad)toast('No se detectaron bordes: ajustá el recorte manualmente',3500);c.width=c.height=1;await makeThumb(p);return p}
 function trimCanvas(c,padding=10){const x=c.getContext('2d'),d=x.getImageData(0,0,c.width,c.height).data;let x0=c.width,y0=c.height,x1=-1,y1=-1;for(let y=0;y<c.height;y++)for(let xx=0;xx<c.width;xx++)if(d[(y*c.width+xx)*4+3]>10){if(xx<x0)x0=xx;if(xx>x1)x1=xx;if(y<y0)y0=y;if(y>y1)y1=y}if(x1<0)return null;x0=Math.max(0,x0-padding);y0=Math.max(0,y0-padding);x1=Math.min(c.width-1,x1+padding);y1=Math.min(c.height-1,y1+padding);const n=canvas(x1-x0+1,y1-y0+1);n.getContext('2d').drawImage(c,x0,y0,n.width,n.height,0,0,n.width,n.height);return n}
@@ -814,13 +815,6 @@ function diffLines(a,b){const n=a.length,m=b.length,ops=[];if((n+1)*(m+1)>6e6){c
 const STOPW=new Set('de la que el en y a los del se las por un para con no una su al lo como mas más pero sus le ya o este si sí porque esta entre cuando muy sin sobre tambien también me hasta hay donde quien desde todo nos durante todos uno les ni contra otros ese eso ante ellos e esto mi mí antes algunos que qué unos yo otro otras otra el él tanto esa estos mucho quienes nada muchos cual poco ella estar estas algunas algo nosotros mis tu tú te ti tus ellas esos esas estoy esta está estan están ser es son fue fueron era han ha haber sido cada dicho dicha debe deben puede pueden the of and to in is for on that with as by it be are this from or at an'.split(' '));
 function summarize(text,n){const clean=text.replace(/-\n(?=\p{L})/gu,'').replace(/\s+/g,' ').trim();const sents=(clean.match(/[^.!?]+(?:[.!?]+|$)/g)||[]).map(s=>s.trim()).filter(s=>s.split(' ').length>=5);const words=s=>(s.toLowerCase().match(/[\p{L}\d]{3,}/gu)||[]).filter(w=>!STOPW.has(w));const freq={};for(const s of sents)for(const w of words(s))freq[w]=(freq[w]||0)+1;let max=1;for(const v of Object.values(freq))if(v>max)max=v;const sc=sents.map((s,i)=>{const ws=words(s);return {s,i,v:ws.reduce((a,w)=>a+freq[w]/max,0)/Math.pow(Math.max(ws.length,1),.6)+(i<2?.2:0)}});const pick=[...sc].sort((a,b)=>b.v-a.v).slice(0,n).sort((a,b)=>a.i-b.i).map(x=>x.s);const keys=Object.entries(freq).filter(([w])=>!/^\d+$/.test(w)).sort((a,b)=>b[1]-a[1]).slice(0,12).map(x=>x[0]);return {pick,keys,total:sents.length}}
 function pagesToMarkdown(pages){let out=[];for(const [pi,lines] of pages.entries()){const hs=lines.map(l=>l.h).sort((a,b)=>a-b);const med=hs[Math.floor(hs.length/2)]||10;let table=[];const flush=()=>{if(table.length>=2){const cols=Math.max(...table.map(r=>r.length));const row=r=>'| '+Array.from({length:cols},(_,k)=>(r[k]||'').replace(/\|/g,'\\|')).join(' | ')+' |';out.push(row(table[0]),'|'+' --- |'.repeat(cols),...table.slice(1).map(row),'')}else table.forEach(r=>out.push(r.join(' ')));table=[]};for(const l of lines){const t=l.text.trim();if(!t)continue;if(l.cells.filter(Boolean).length>=3){table.push(l.cells.filter(Boolean));continue}flush();if(l.h>=med*1.6&&t.length<120)out.push('','# '+t,'');else if(l.h>=med*1.25&&t.length<140)out.push('','## '+t,'');else if(/^[•●▪◦·\-–*]\s*/.test(t))out.push('- '+t.replace(/^[•●▪◦·\-–*]\s*/,''));else if(/^\d+[.)]\s+/.test(t))out.push(t.replace(/^(\d+)[)]/,'$1.'));else out.push(t)}flush();if(pi<pages.length-1)out.push('','---','')}return out.join('\n').replace(/\n{3,}/g,'\n\n').trim()+'\n'}
-async function pptxRender(ab,onSlide){await loadLib('jszip');const z=await JSZip.loadAsync(ab),P=new DOMParser(),xml=async p=>{const f=z.file(p);return f?P.parseFromString(await f.async('string'),'application/xml'):null};const tag=(n,t)=>[...n.getElementsByTagName(t)];const first=(n,t)=>n.getElementsByTagName(t)[0];const pres=await xml('ppt/presentation.xml');if(!pres)throw new Error('No es un PowerPoint (.pptx) válido');const sz=first(pres,'p:sldSz'),CX=+(sz?.getAttribute('cx')||12192000),CY=+(sz?.getAttribute('cy')||6858000);const rels=await xml('ppt/_rels/presentation.xml.rels'),rmap={};tag(rels,'Relationship').forEach(r=>rmap[r.getAttribute('Id')]=r.getAttribute('Target'));const ids=tag(pres,'p:sldId').map(s=>s.getAttribute('r:id'));const resolve=(base,t)=>{if(t.startsWith('/'))return t.slice(1);const parts=base.split('/');parts.pop();for(const s of t.split('/')){if(s==='..')parts.pop();else if(s!=='.')parts.push(s)}return parts.join('/')};const W=1600,K=W/CX,H=Math.round(CY*K);
-for(const [si,id] of ids.entries()){const path=resolve('ppt/presentation.xml',rmap[id]);const sl=await xml(path);if(!sl)continue;const srels=await xml(resolve(path,'_rels/'+path.split('/').pop()+'.rels')),sm={};if(srels)tag(srels,'Relationship').forEach(r=>sm[r.getAttribute('Id')]=r.getAttribute('Target'));const c=canvas(W,H),x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,W,H);const bgc=first(sl,'p:bg')&&first(first(sl,'p:bg'),'a:srgbClr');if(bgc){x.fillStyle='#'+bgc.getAttribute('val');x.fillRect(0,0,W,H)}let flowY=H*.08;
-const xf=n=>{const sp=first(n,'p:spPr')||first(n,'p:xfrm')?.parentNode||n;const o=first(sp,'a:off'),e=first(sp,'a:ext');return o&&e?{x:+o.getAttribute('x')*K,y:+o.getAttribute('y')*K,w:+e.getAttribute('cx')*K,h:+e.getAttribute('cy')*K}:null};
-const wrapDraw=(paras,box)=>{let y=box.y+8;for(const p of paras){const lines=[];let fs=18,bold=false,col='#222';const words=[];for(const r of p.runs){fs=r.fs;bold=r.b;col=r.c;for(const w of r.t.split(/(\s+)/))if(w)words.push({w,fs,b:r.b,c:r.c})}const px=(fs*12700*K);const lh=px*1.2;x.font=(bold?'700 ':'')+px+'px Arial, sans-serif';let line='';for(const wd of words){const test=line+wd.w;if(x.measureText(test).width>box.w-16&&line.trim()){lines.push(line);line=wd.w.trimStart()}else line=test}if(line.trim()||!words.length)lines.push(line);x.fillStyle=col;x.textBaseline='top';for(const ln of lines){const tw=x.measureText(ln).width;const lx=p.al==='ctr'?box.x+(box.w-tw)/2:p.al==='r'?box.x+box.w-8-tw:box.x+8;if(p.bul&&ln===lines[0]){x.fillText('•',lx-px*.7,y)}x.fillText(ln,lx,y);y+=lh}}return y};
-const paras=tb=>tag(tb,'a:p').map(p=>{const pPr=first(p,'a:pPr');return {al:pPr?.getAttribute('algn'),bul:!!(pPr&&first(pPr,'a:buChar')),runs:tag(p,'a:r').concat(tag(p,'a:fld')).map(r=>{const rp=first(r,'a:rPr'),cl=rp&&first(rp,'a:srgbClr');return {t:tag(r,'a:t').map(t=>t.textContent).join(''),fs:+(rp?.getAttribute('sz')||1800)/100,b:rp?.getAttribute('b')==='1',c:cl?'#'+cl.getAttribute('val'):'#222'}})}});
-const walk=async node=>{for(const n of [...node.children]){const nm=n.tagName;if(nm==='p:grpSp'){await walk(n);continue}if(nm==='p:sp'){let b=xf(n);const sp=first(n,'p:spPr');const fill=sp&&[...sp.children].find(k=>k.tagName==='a:solidFill');const fc=fill&&first(fill,'a:srgbClr');const tb=first(n,'p:txBody');const ph=first(n,'p:ph');const hasText=tb&&tag(tb,'a:t').some(t=>t.textContent.trim());if(!b){if(!hasText)continue;const tp=ph?.getAttribute('type')||'';b=/title/i.test(tp)?{x:W*.06,y:H*.05,w:W*.88,h:H*.18}:{x:W*.06,y:Math.max(flowY,H*.25),w:W*.88,h:H*.65}}if(fc){x.fillStyle='#'+fc.getAttribute('val');x.fillRect(b.x,b.y,b.w,b.h)}if(hasText){const ps=paras(tb);if(ph&&/title/i.test(ph.getAttribute('type')||''))ps.forEach(p=>p.runs.forEach(r=>{if(!first(n,'a:rPr')?.getAttribute('sz'))r.fs=Math.max(r.fs,36);r.b=true}));const end=wrapDraw(ps,b);flowY=Math.max(flowY,end)}continue}if(nm==='p:pic'){const b=xf(n),bl=first(n,'a:blip'),rid=bl&&(bl.getAttribute('r:embed'));if(!b||!rid||!sm[rid])continue;const mp=resolve(path,sm[rid]),mf=z.file(mp);if(!mf||/\.(emf|wmf|tiff?)$/i.test(mp))continue;const u=URL.createObjectURL(await mf.async('blob'));try{const im=await loadImg(u);x.drawImage(im,b.x,b.y,b.w,b.h)}catch(e){}finally{URL.revokeObjectURL(u);_imgCache.delete(u)}continue}if(nm==='p:graphicFrame'){const b=xf(n);const rows=tag(n,'a:tr');if(!b||!rows.length)continue;const rh=b.h/rows.length;x.strokeStyle='#999';x.lineWidth=1;rows.forEach((tr,ri)=>{const cells=tag(tr,'a:tc'),cw=b.w/Math.max(1,cells.length);cells.forEach((tc,ci)=>{x.strokeRect(b.x+ci*cw,b.y+ri*rh,cw,rh);const t=tag(tc,'a:t').map(t=>t.textContent).join(' ');const px=Math.min(rh*.45,14*12700*K);x.font=px+'px Arial, sans-serif';x.fillStyle='#222';x.textBaseline='middle';let s=t;while(s&&x.measureText(s).width>cw-10)s=s.slice(0,-1);x.fillText(s,b.x+ci*cw+5,b.y+ri*rh+rh/2)})})}}};
-const tree=first(sl,'p:spTree');if(tree)await walk(tree);await onSlide(c,si+1,ids.length,{w:CX/12700,h:CY/12700})}return ids.length}
 const NEW_TOOLS={
 'Reparar PDF':{desc:'Reconstruye PDF dañados o que no abren bien.',ui:el=>simpleTool(el,{accept:'.pdf,application/pdf',multi:true,btn:'Reparar PDF',run:async files=>{await loadLib('pdflib');const outs=[];for(const f of files){busy('Reparando '+f.name);const ab=await f.arrayBuffer();try{const src=await PDFLib.PDFDocument.load(ab,{ignoreEncryption:true,throwOnInvalidObject:false,updateMetadata:false});const o=await PDFLib.PDFDocument.create();(await o.copyPages(src,src.getPageIndices())).forEach(p=>o.addPage(p));if(!o.getPageCount())throw new Error('sin páginas');outs.push({blob:pdfBlob(await o.save()),name:baseName(f)+'_reparado.pdf',note:'Estructura reconstruida · '+o.getPageCount()+' página(s)'})}catch(e){try{const o=await PDFLib.PDFDocument.create();const n=await pdfEachPage(ab,2,async(c,i,t,vp)=>{busy(f.name+': página '+i+'/'+t);const img=await o.embedJpg(new Uint8Array(await (await canvasBlob(c,'image/jpeg',.85)).arrayBuffer()));o.addPage([vp.width,vp.height]).drawImage(img,{x:0,y:0,width:vp.width,height:vp.height})});outs.push({blob:pdfBlob(await o.save()),name:baseName(f)+'_reparado.pdf',note:'Reconstruido como imagen · '+n+' página(s)'})}catch(e2){throw new Error('No se pudo reparar '+f.name+': el archivo está demasiado dañado')}}}return outs}})},
 'POWERPOINT a PDF':{desc:'Convertí presentaciones .pptx a PDF (textos, imágenes, fondos y tablas).',ui:el=>simpleTool(el,{accept:'.pptx',multi:true,btn:'Convertir a PDF',run:async files=>{await loadLib('pdflib');const outs=[];for(const f of files){const o=await PDFLib.PDFDocument.create();await pptxRender(await f.arrayBuffer(),async(c,i,n,sz)=>{busy(f.name+': diapositiva '+i+'/'+n);const img=await o.embedJpg(new Uint8Array(await (await canvasBlob(c,'image/jpeg',.9)).arrayBuffer()));o.addPage([sz.w,sz.h]).drawImage(img,{x:0,y:0,width:sz.w,height:sz.h})});if(!o.getPageCount())throw new Error('La presentación no tiene diapositivas');outs.push({blob:pdfBlob(await o.save()),name:baseName(f)+'.pdf',note:o.getPageCount()+' diapositiva(s)'})}return outs}})},
@@ -878,7 +872,7 @@ function toolRow(t,i){return '<button class="mitem" data-tool="'+i+'">'+toolIc(t
 function renderTools(){const cats=[...new Set(TOOLS.map(t=>t.cat))];$('#toolsGrid').innerHTML=cats.map(c=>'<div class="catt">'+c+'</div><div class="mlist">'+TOOLS.map((t,i)=>t.cat===c?toolRow(t,i):'').join('')+'</div>').join('')+'<p class="muted" style="margin-top:24px;text-align:center">Todo se procesa en tu dispositivo. Algunas funciones descargan módulos la primera vez (requiere internet).</p>';const quick=(S.design&&S.design.quick&&S.design.quick.length)?S.design.quick:['Escanea a PDF','Unir PDF','PDF a WORD','Firmar PDF','Comprimir PDF','OCR PDF','JPG a PDF','Editar PDF'];$('#quickTools').innerHTML=quick.map(n=>{const i=TOOLS.findIndex(t=>t.name===n);return i>=0?toolTile(TOOLS[i],i):''}).join('')}
 function openTool(i){const t=TOOLS[i];if(t.direct)return t.direct();$('#toolTitle').textContent=t.name;$('#toolBody').innerHTML='<div class="tdesc">'+(t.desc||'')+'</div><div id="tMain"></div>';Nav.push('toolScreen');t.ui($('#tMain'))}
 document.addEventListener('click',e=>{const t=e.target.closest('[data-tool]');if(t)openTool(+t.dataset.tool)});
-async function settingsSheet(){let est='';try{const q=await navigator.storage.estimate();est='Espacio usado: '+fmtSize(q.usage||0)}catch(e){}const b=openSheet('Ajustes','<button class="btn pri block" id="sDesign" style="margin:4px 0 8px"><i data-ico="palette">🎨</i> Diseño de botones y funciones</button><button class="btn block" id="sAI" style="margin:0 0 8px"><i data-ico="brain">🧠</i> Inteligencia artificial</button><button class="btn block" id="sSec" style="margin:0 0 8px"><i data-ico="lock">🔐</i> Seguridad y accesos</button><button class="btn block" id="sSpace" style="margin:0 0 12px"><i data-ico="hdd">💾</i> Espacio usado y limpieza</button>'+opt('Plantilla de nombre por defecto',sel('sTpl',NAME_TEMPLATES.map(t=>[t,t])))+opt('Filtro por defecto al escanear',sel('sFilter',FILTERS))+opt('Resolución máxima',sel('sMax',[['2000','2000 px (liviano)'],['3000','3000 px (recomendado)'],['4200','4200 px (máxima)']]))+'<label class="chk"><input type="checkbox" id="sAuto"> Encuadre automático de bordes</label><label class="chk"><input type="checkbox" id="sAutoCap"> Auto-captura en modo lote</label><label class="chk"><input type="checkbox" id="sHd"> Foto HD (máxima resolución del sensor)</label><label class="chk"><input type="checkbox" id="sDeskew"> Enderezar documentos torcidos automáticamente</label>'+opt('<i data-ico="theme">🌓</i> Tema',sel('sTheme',[['system','Automático (según el teléfono)'],['light','Claro'],['dark','Oscuro']]))+'<label class="chk"><input type="checkbox" id="sNative"> Usar siempre la cámara del teléfono</label><p class="muted" style="margin:-4px 0 8px">'+(camSecure()?'Página segura (https): cámara integrada disponible ✅':'Página no segura ('+esc(location.protocol)+'): se usa la cámara del teléfono')+'</p>'+opt('Idioma OCR',sel('sLang',[['spa','Español'],['eng','Inglés'],['spa+eng','Español + Inglés'],['por','Portugués']]))+'<div class="row">'+opt('Hoja PDF por defecto',sel('sSize',[['a4','A4'],['oficio','Oficio'],['carta','Carta'],['original','Tamaño imagen']]))+opt('Calidad PDF',sel('sQ',Object.entries(QUAL).map(([k,v])=>[k,v.label])))+'</div>'+opt('Márgenes por defecto (mm)','<input type="number" id="sMargin" min="0" max="40">')+'<p class="muted">'+est+'</p><button class="btn red block" id="sWipe">🗑 Borrar todos los documentos</button><p class="muted">Danscaner Pro · funciona en celular y PC · los documentos se guardan en este navegador.</p>');$('.sTpl',b).value=S.nameTemplate;$('.sFilter',b).value=S.filter;$('.sMax',b).value=String(S.maxCap);$('#sAuto').checked=S.autoCrop;$('#sAutoCap').checked=S.autoCapture;$('#sHd').checked=S.hd;$('#sDeskew').checked=S.deskew!==false;$('#sNative').checked=!!S.camNative;$('.sTheme',b).value=S.theme||'system';$('.sLang',b).value=S.lang;$('.sSize',b).value=S.size;$('.sQ',b).value=S.quality;$('#sMargin').value=S.margin;b.onchange=()=>{S.nameTemplate=$('.sTpl',b).value;S.filter=$('.sFilter',b).value;S.maxCap=+$('.sMax',b).value;S.autoCrop=$('#sAuto').checked;S.camNative=$('#sNative').checked;if(($('.sTheme',b).value)!==(S.theme||'system'))cambiarTema($('.sTheme',b).value);S.autoCapture=$('#sAutoCap').checked;S.hd=$('#sHd').checked;S.deskew=$('#sDeskew').checked;S.lang=$('.sLang',b).value;S.size=$('.sSize',b).value;S.quality=$('.sQ',b).value;S.margin=+$('#sMargin').value||0;saveS();toast('Guardado')};$('#sDesign').onclick=async()=>{await Nav.back();designSheet()};$('#sAI').onclick=async()=>{await Nav.back();aiSheet()};$('#sSec').onclick=async()=>{await Nav.back();securitySheet()};$('#sSpace').onclick=async()=>{await Nav.back();storageSheet()};$('#sWipe').onclick=async()=>{if(!confirm('¿Borrar TODOS los documentos guardados?'))return;for(const m of await DB.metas())await DB.delDoc(m.id);refreshLists();toast('Documentos borrados')}}
+async function settingsSheet(){let est='';try{const q=await navigator.storage.estimate();est='Espacio usado: '+fmtSize(q.usage||0)}catch(e){}const b=openSheet('Ajustes','<button class="btn pri block" id="sDesign" style="margin:4px 0 8px"><i data-ico="palette">🎨</i> Diseño de botones y funciones</button><button class="btn block" id="sAI" style="margin:0 0 8px"><i data-ico="brain">🧠</i> Inteligencia artificial</button><button class="btn block" id="sSec" style="margin:0 0 8px"><i data-ico="lock">🔐</i> Seguridad y accesos</button><button class="btn block" id="sSpace" style="margin:0 0 12px"><i data-ico="hdd">💾</i> Espacio usado y limpieza</button>'+opt('Plantilla de nombre por defecto',sel('sTpl',NAME_TEMPLATES.map(t=>[t,t])))+opt('Filtro por defecto al escanear',sel('sFilter',FILTERS))+opt('Resolución máxima',sel('sMax',[['2000','2000 px (liviano)'],['3000','3000 px (recomendado)'],['4200','4200 px (máxima)']]))+'<label class="chk"><input type="checkbox" id="sAuto"> Encuadre automático de bordes</label><label class="chk"><input type="checkbox" id="sAutoCap"> Auto-captura en modo lote</label><label class="chk"><input type="checkbox" id="sHd"> Foto HD (máxima resolución del sensor)</label><label class="chk"><input type="checkbox" id="sDeskew"> Enderezar documentos torcidos automáticamente</label><label class="chk"><input type="checkbox" id="sPro"> Filtros y detección de bordes profesionales</label>'+opt('<i data-ico="theme">🌓</i> Tema',sel('sTheme',[['system','Automático (según el teléfono)'],['light','Claro'],['dark','Oscuro']]))+'<label class="chk"><input type="checkbox" id="sNative"> Usar siempre la cámara del teléfono</label><p class="muted" style="margin:-4px 0 8px">'+(camSecure()?'Página segura (https): cámara integrada disponible ✅':'Página no segura ('+esc(location.protocol)+'): se usa la cámara del teléfono')+'</p>'+opt('Idioma OCR',sel('sLang',[['spa','Español'],['eng','Inglés'],['spa+eng','Español + Inglés'],['por','Portugués']]))+'<div class="row">'+opt('Hoja PDF por defecto',sel('sSize',[['a4','A4'],['oficio','Oficio'],['carta','Carta'],['original','Tamaño imagen']]))+opt('Calidad PDF',sel('sQ',Object.entries(QUAL).map(([k,v])=>[k,v.label])))+'</div>'+opt('Márgenes por defecto (mm)','<input type="number" id="sMargin" min="0" max="40">')+'<p class="muted">'+est+'</p><button class="btn red block" id="sWipe">🗑 Borrar todos los documentos</button><p class="muted">Danscaner Pro · funciona en celular y PC · los documentos se guardan en este navegador.</p>');$('.sTpl',b).value=S.nameTemplate;$('.sFilter',b).value=S.filter;$('.sMax',b).value=String(S.maxCap);$('#sAuto').checked=S.autoCrop;$('#sAutoCap').checked=S.autoCapture;$('#sHd').checked=S.hd;$('#sDeskew').checked=S.deskew!==false;$('#sPro').checked=S.proFilters!==false;$('#sNative').checked=!!S.camNative;$('.sTheme',b).value=S.theme||'system';$('.sLang',b).value=S.lang;$('.sSize',b).value=S.size;$('.sQ',b).value=S.quality;$('#sMargin').value=S.margin;b.onchange=()=>{S.nameTemplate=$('.sTpl',b).value;S.filter=$('.sFilter',b).value;S.maxCap=+$('.sMax',b).value;S.autoCrop=$('#sAuto').checked;S.camNative=$('#sNative').checked;if(($('.sTheme',b).value)!==(S.theme||'system'))cambiarTema($('.sTheme',b).value);S.autoCapture=$('#sAutoCap').checked;S.hd=$('#sHd').checked;S.deskew=$('#sDeskew').checked;if((S.proFilters!==false)!==$('#sPro').checked){S.proFilters=$('#sPro').checked;useProFilters(S.proFilters)}S.lang=$('.sLang',b).value;S.size=$('.sSize',b).value;S.quality=$('.sQ',b).value;S.margin=+$('#sMargin').value||0;saveS();toast('Guardado')};$('#sDesign').onclick=async()=>{await Nav.back();designSheet()};$('#sAI').onclick=async()=>{await Nav.back();aiSheet()};$('#sSec').onclick=async()=>{await Nav.back();securitySheet()};$('#sSpace').onclick=async()=>{await Nav.back();storageSheet()};$('#sWipe').onclick=async()=>{if(!confirm('¿Borrar TODOS los documentos guardados?'))return;for(const m of await DB.metas())await DB.delDoc(m.id);refreshLists();toast('Documentos borrados')}}
 $('#btnSettings').onclick=settingsSheet;$('#navSettings').onclick=settingsSheet;
 function go(v){$$('.view').forEach(x=>x.classList.toggle('active',x.id==='v-'+v));$$('.nav [data-go]').forEach(b=>b.classList.toggle('on',b.dataset.go===v));$('#topTitle').textContent={home:'Danscaner Pro',docs:'Documentos',tools:'Herramientas'}[v];window.scrollTo(0,0)}
 async function doAction(a){if(a==='cam-single')Cam.open('single');else if(a==='cam-batch')Cam.open('batch');else if(a==='import-img')$('#inImg').click();else if(a==='import-any')$('#inAny').click()}
@@ -1128,28 +1122,6 @@ const pc=canvas(W,PH),x=pc.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,W,
 return {blob:pdfBlob(await pdf.save()),pages:pn}}finally{host.remove()}}
 
 /* ---------- Excel → PDF con vista previa, tamaño de hoja y márgenes ---------- */
-function uiExcelPdf(el){let wb=null,file=null,tmr=0,pages=[];
-el.innerHTML='<div class="fp"></div><div class="xlopts" hidden><div class="row">'+opt('Hoja','<select class="xsh"></select>')+opt('Tamaño de hoja',sel('xsz',[['a4','A4'],['oficio','Oficio'],['carta','Carta']]))+'</div><div class="row">'+opt('Orientación',sel('xor',[['h','Horizontal'],['v','Vertical']]))+opt('Escala',sel('xfit',[['ancho','Ajustar al ancho'],['pagina','Todo en una página'],['100','100 %'],['custom','Personalizada']]))+'</div><label class="opt xzw" hidden><span>Zoom: <b class="xzv">80</b> %</span><input type="range" class="xz" min="25" max="160" value="80"></label><label class="opt"><span>Márgenes: <b class="xmv">10</b> mm</span><input type="range" class="xm" min="0" max="30" value="10"></label><label class="chk"><input type="checkbox" class="xgrid" checked> Mostrar cuadrícula</label><label class="chk"><input type="checkbox" class="xhead" checked> Repetir la primera fila en cada hoja</label><label class="chk"><input type="checkbox" class="xcen" checked> Centrar en la hoja</label><label class="chk"><input type="checkbox" class="xnum"> Numerar páginas</label><div class="cph">Vista previa <span class="muted xinfo"></span></div><div class="xlprev"><div class="xlpages"></div></div></div><button class="btn pri block run">Generar PDF</button><div class="result"></div>';
-const O=()=>({sheet:$('.xsh',el).value,size:$('.xsz',el).value,land:$('.xor',el).value==='h',fit:$('.xfit',el).value,zoom:+$('.xz',el).value,margin:+$('.xm',el).value,grid:$('.xgrid',el).checked,head:$('.xhead',el).checked,center:$('.xcen',el).checked,num:$('.xnum',el).checked});
-const layout=()=>{if(!wb)return;const o=O();$('.xmv',el).textContent=o.margin;$('.xzv',el).textContent=o.zoom;$('.xzw',el).hidden=o.fit!=='custom';const names=o.sheet==='*'?wb.SheetNames:[o.sheet];let [w,h]=PAGE_MM[o.size]||PAGE_MM.a4;if(o.land)[w,h]=[h,w];pages=[];for(const nm of names)pages.push(...xlPagesFor(wb.Sheets[nm],nm,w,h,o));pages.forEach((p,i)=>{if(o.num){const f=document.createElement('div');f.className='xlnum';f.textContent=(i+1)+' / '+pages.length;p.appendChild(f)}});const wrap=$('.xlpages',el);wrap.innerHTML='';pages.forEach(p=>{const holder=document.createElement('div');holder.className='xlhold';holder.appendChild(p);wrap.appendChild(holder)});const pw=mm2px(w);wrap.style.zoom=Math.min(1,($('.xlprev',el).clientWidth-24)/pw);$('.xinfo',el).textContent='· '+pages.length+' página(s) · '+w+'×'+h+' mm'};
-const relayout=()=>{clearTimeout(tmr);tmr=setTimeout(layout,120)};
-filePicker($('.fp',el),{accept:'.xlsx,.xls,.xlsm,.csv,.ods',multi:false,onChange:files=>{file=files[0];wb=null;$('.result',el).innerHTML='';$('.xlopts',el).hidden=!file;if(!file)return;withBusy(async()=>{busy('Leyendo planilla…');await loadLib('xlsx');wb=XLSX.read(await file.arrayBuffer(),{cellDates:true});$('.xsh',el).innerHTML=(wb.SheetNames.length>1?'<option value="*">Todas las hojas</option>':'')+wb.SheetNames.map(n=>'<option>'+esc(n)+'</option>').join('');const ws=wb.Sheets[wb.SheetNames[0]],r=XLSX.utils.decode_range(ws['!ref']||'A1');$('.xor',el).value=(r.e.c-r.s.c)>6?'h':'v';busy(false);layout()})}});
-el.addEventListener('input',e=>{if(e.target.closest('.xlopts'))relayout()});el.addEventListener('change',e=>{if(e.target.closest('.xlopts'))relayout()});
-new ResizeObserver(()=>{if(wb)relayout()}).observe(el);
-$('.run',el).onclick=()=>withBusy(async()=>{if(!wb)return toast('Primero seleccioná una planilla');layout();if(!pages.length)return toast('La hoja está vacía');await loadLib('h2c');await loadLib('pdflib');const pdf=await PDFLib.PDFDocument.create();const host=document.createElement('div');host.className='dxhost';document.body.appendChild(host);const o=O();let [w,h]=PAGE_MM[o.size]||PAGE_MM.a4;if(o.land)[w,h]=[h,w];
-try{for(const [i,p] of pages.entries()){busy('Generando página '+(i+1)+'/'+pages.length);const cl=p.cloneNode(true);host.innerHTML='';host.appendChild(cl);const c=await html2canvas(cl,{scale:2,backgroundColor:'#ffffff',logging:false});await canvasToPdfPage(pdf,c,w*72/25.4,h*72/25.4)}}finally{host.remove()}
-busy(false);showResults($('.result',el),[{blob:pdfBlob(await pdf.save()),name:baseName(file)+'.pdf',note:pages.length+' página(s) · '+o.size.toUpperCase()+' '+(o.land?'horizontal':'vertical')+' · márgenes '+o.margin+' mm'}])})}
-function xlPagesFor(ws,name,wmm,hmm,o){if(!ws||!ws['!ref'])return[];const html=(XLSX.utils.sheet_to_html(ws).match(/<table[\s\S]*<\/table>/i)||[''])[0];if(!html)return[];
-const meas=document.createElement('div');meas.className='dxhost';meas.innerHTML=html;document.body.appendChild(meas);const table=meas.querySelector('table');table.className='xltab'+(o.grid?' grid':'');
-const cols=ws['!cols'];if(cols&&cols.length){const cg=document.createElement('colgroup');const r=XLSX.utils.decode_range(ws['!ref']);for(let c=r.s.c;c<=r.e.c;c++){const cc=cols[c]||{};const px=cc.wpx||(cc.wch?cc.wch*7+10:(cc.width?cc.width*7:0));const col=document.createElement('col');if(px)col.style.width=px+'px';if(cc.hidden)col.style.visibility='collapse';cg.appendChild(col)}table.prepend(cg)}
-const rowsMeta=ws['!rows'];const rows=[...table.rows];if(rowsMeta)rows.forEach((tr,i)=>{const m=rowsMeta[i];if(m&&m.hpx)tr.style.height=m.hpx+'px';if(m&&m.hidden)tr.style.visibility='collapse'});
-const Tw=table.offsetWidth,rowH=rows.map(r=>r.offsetHeight),totalH=rowH.reduce((a,b)=>a+b,0);meas.remove();
-const pageW=mm2px(wmm),pageH=mm2px(hmm),m=mm2px(o.margin),cw=pageW-2*m,ch=pageH-2*m-(o.num?14:0);
-let s=o.fit==='ancho'?Math.min(2.2,cw/Tw):o.fit==='pagina'?Math.min(2.2,cw/Tw,ch/totalH):o.fit==='100'?1:o.zoom/100;
-const avail=ch/s,headH=o.head&&rows.length>1?rowH[0]:0;const groups=[];let cur=[],hh=0;
-for(let i=0;i<rows.length;i++){if(cur.length&&hh+rowH[i]>avail&&!(o.head&&cur.length===1&&cur[0]===0&&i===1)){groups.push(cur);cur=[];hh=0;if(headH&&i>0){cur.push(0);hh=headH}}cur.push(i);hh+=rowH[i]}if(cur.length)groups.push(cur);
-return groups.map(idx=>{const pg=document.createElement('div');pg.className='xlpage';pg.style.cssText='width:'+pageW+'px;height:'+pageH+'px;padding:'+m+'px';const inner=document.createElement('div');const offX=o.center?Math.max(0,(cw-Tw*s)/2):0;inner.style.cssText='width:'+Tw+'px;transform:scale('+s+');transform-origin:0 0;margin-left:'+offX+'px';const tb=table.cloneNode(true);const set=new Set(idx);[...tb.rows].forEach((r,k)=>{if(!set.has(k))r.style.visibility='collapse'});inner.appendChild(tb);pg.appendChild(inner);return pg})}
-
 /* ---------- conectar con las herramientas ---------- */
 {const setUi=(name,ui,desc)=>{for(const arr of [TOOLS,BASE_TOOLS]){const t=arr.find(x=>x.name===name);if(t){t.ui=ui;if(desc)t.desc=desc}}};
 setUi('WORD a PDF',el=>simpleTool(el,{accept:'.docx',multi:true,btn:'Convertir a PDF',opts:opt('Calidad',sel('wq',[['2','Alta (recomendada)'],['3','Máxima (más pesado)'],['1.5','Liviana']]))+'<p class="muted">Respeta tamaño de hoja, márgenes, encabezados con logos, tablas y espacios del documento.</p>',run:async(files,el)=>{const outs=[];for(const f of files){busy('Convirtiendo '+f.name);try{const r=await docxToPdfBlob(await f.arrayBuffer(),{scale:+$('.wq',el).value,onProg:(i,n)=>busy(f.name+': sección '+i+'/'+n)});outs.push({blob:r.blob,name:baseName(f)+'.pdf',note:r.pages+' página(s) · diseño original'})}catch(e){console.warn(e);busy('Modo simple: '+f.name);await loadLib('mammoth');const r=await mammoth.convertToHtml({arrayBuffer:await f.arrayBuffer()});outs.push({blob:await htmlToPdfBlob(r.value),name:baseName(f)+'.pdf',note:'Modo simple (sin diseño completo)'})}}return outs}}),'Convertí .docx a PDF manteniendo logos, márgenes y tamaño de hoja.');
@@ -1807,43 +1779,7 @@ const dl=$('#docList');if(dl)dl.classList.toggle('grid',d.docView==='grid');
 const foot=$('#editor .sfoot');if(foot){for(const t of d.edTools){const btn=foot.querySelector('[data-ed="'+t.k+'"]');if(btn){foot.appendChild(btn);btn.hidden=!t.on}}}
 if(typeof renderTools==='function')try{renderTools()}catch(e){}}
 {const _rl=renderDocList;renderDocList=function(){_rl();const d=S.design||{};const dl=$('#docList');if(dl)dl.classList.toggle('grid',d.docView==='grid')}}
-function designSheet(){const d=D();const cols=['#e53935','#d81b60','#8e24aa','#3949ab','#1e88e5','#00897b','#43a047','#fb8c00','#6d4c41','#212121'];
-const seg=(k,opts)=>'<div class="seg" data-k="'+k+'">'+opts.map(([v,n])=>'<button data-v="'+v+'" class="'+(String(d[k])===String(v)?'on':'')+'">'+n+'</button>').join('')+'</div>';
-const b=openSheet('🎨 Diseño y visualización',
-'<div class="cph">Plantillas listas</div><div class="chips" id="dsPre">'+Object.entries(PRESETS).map(([k,v])=>'<button class="chip" data-pre="'+k+'">'+v.label+'</button>').join('')+'</div>'
-+'<div class="muted">Vista previa · tocá los botones</div><div class="dprev"><div class="hero-btns"><button class="hbtn big"><i class="icono-camara"></i><span>Escanear</span><small>Individual</small></button><button class="hbtn"><i data-ico="files">🗂️</i><span>Lote</span><small>Varias fotos</small></button><button class="hbtn"><i data-ico="image">🖼️</i><span>Galería</span><small>Imágenes</small></button></div><div class="dbar"><button class="tb"><b data-ico="crop">✂️</b>Recortar</button><button class="tb"><b data-ico="replace">🔁</b>Cambiar</button><button class="tb"><b data-ico="sign">✍️</b>Firmar</button><button class="tb"><b data-ico="adjust">🎚️</b>Ajustes</button></div><div class="item" style="pointer-events:none"><img src="'+((_metas[0]&&_metas[0].thumb)||'')+'" alt=""><div class="inf"><div class="nm">Documento de ejemplo</div><div class="muted">hoy · 3 pág. · 480 KB</div></div></div><button class="btn pri block"><i data-ico="save">💾</i> Botón principal</button></div>'
-+'<div class="cph">Tema</div>'+seg('theme',[['light','Claro'],['dark','Oscuro'],['system','Automático']])
-+'<div class="cph">Color principal</div><div class="swatches">'+cols.map(c=>'<button class="sw '+(d.color===c?'on':'')+'" data-col="'+c+'" style="background:'+c+'"></button>').join('')+'<label class="sw pick"><input type="color" id="dsCol" value="'+(d.color||'#e53935')+'"></label><button class="chip" data-col="">Por defecto</button></div>'
-+'<div class="cph">Estilo visual</div>'+seg('skin',[['suave','Actual'],['industrial','Industrial']])
-+'<div class="cph">Fondo</div>'+seg('bg',[['plano','Plano'],['suave','Degradado'],['papel','Papel']])
-+'<div class="cph">Tipografía de la app</div>'+seg('uifont',[['sys','Moderna'],['serif','Formal'],['round','Redondeada'],['mono','Máquina']])
-+'<div class="cph">Tamaño general</div>'+seg('zoom',[[0.9,'Compacto'],[1,'Normal'],[1.1,'Grande'],[1.25,'Muy grande']])
-+'<div class="cph">Espaciado</div>'+seg('density',[['comp','Ajustado'],['normal','Normal'],['amplio','Amplio']])
-+'<div class="cph">Documentos se ven como</div>'+seg('docView',[['list','Lista'],['grid','Cuadrícula']])
-+'<div class="cph">Botones</div>'+seg('shape',[['round','Redondeado'],['square','Cuadrado'],['circle','Circular']])
-+'<div class="cph">Íconos</div>'+seg('iconStyle',[['line','Profesional'],['emoji','Emoji']])+seg('ico',[[18,'Chicos'],[22,'Normales'],[27,'Grandes']])+seg('stroke',[[1.5,'Finos'],[1.9,'Normales'],[2.4,'Gruesos']])
-+'<label class="chk"><input type="checkbox" id="dsCon" '+(d.contrast?'checked':'')+'> Contraste alto (letras más marcadas)</label>'
-+'<label class="chk"><input type="checkbox" id="dsAnim" '+(d.anim?'checked':'')+'> Animación al tocar</label>'
-+'<div class="cph">Botones de la barra de edición</div><div id="dsEd"></div>'
-+'<div class="cph">Accesos rápidos del inicio <small class="muted">(hasta 8)</small></div><div class="chips" id="dsQuick"></div>'
-+'<div class="row" style="margin-top:14px"><button class="btn block" id="dsReset"><i data-ico="rotl">↺</i> Restablecer</button><button class="btn pri block" data-back><i data-ico="check">✓</i> Listo</button></div>');
-const drawEd=()=>{$('#dsEd',b).innerHTML=d.edTools.map((t,i)=>{const n=(ED_TOOLS.find(x=>x[0]===t.k)||[])[1];return '<div class="frow dsrow"><label class="chk" style="flex:1;margin:0"><input type="checkbox" data-eon="'+i+'" '+(t.on?'checked':'')+'> '+n+'</label><button class="ib" data-eup="'+i+'" '+(i?'':'disabled')+'>▲</button><button class="ib" data-edn="'+i+'" '+(i<d.edTools.length-1?'':'disabled')+'>▼</button></div>'}).join('')};
-const QDEF=['Escanea a PDF','Unir PDF','PDF a WORD','Firmar PDF','Comprimir PDF','OCR PDF','JPG a PDF','Editar PDF'];
-const drawQuick=()=>{const q=d.quick.length?d.quick:QDEF;$('#dsQuick',b).innerHTML=TOOLS.map(t=>'<button class="chip '+(q.includes(t.name)?'on':'')+'" data-q="'+esc(t.name)+'">'+esc(t.name)+'</button>').join('')};
-const refresh=()=>{$$('.seg[data-k]',b).forEach(sg=>{const k=sg.dataset.k;$$('button',sg).forEach(x=>x.classList.toggle('on',String(x.dataset.v)===String(d[k])))});$$('.sw',b).forEach(x=>x.classList.toggle('on',x.dataset.col===d.color));const c=$('#dsCon',b),a=$('#dsAnim',b);if(c)c.checked=!!d.contrast;if(a)a.checked=!!d.anim};
-drawEd();drawQuick();
-const commit=()=>{saveS();applyDesign();if(d.theme)cambiarTema(d.theme)};
-b.oninput=e=>{if(e.target.id==='dsCol'){d.color=e.target.value;commit();refresh()}};
-b.onclick=e=>{const btn=e.target.closest('button,input');if(btn&&btn.closest('.dprev')){btn.classList.remove('pulse');void btn.offsetWidth;btn.classList.add('pulse');return}
-const pre=e.target.closest('[data-pre]');if(pre){Object.assign(d,JSON.parse(JSON.stringify(PRESETS[pre.dataset.pre])));delete d.label;commit();refresh();toast('Plantilla aplicada');return}
-const c=e.target.closest('[data-col]');if(c){d.color=c.dataset.col;commit();refresh();return}
-const sv=e.target.closest('.seg[data-k] [data-v]');if(sv){const k=sv.parentNode.dataset.k;const v=sv.dataset.v;d[k]=isNaN(+v)?v:+v;commit();refresh();return}
-if(e.target.id==='dsAnim'){d.anim=e.target.checked;commit();return}
-if(e.target.id==='dsCon'){d.contrast=e.target.checked;commit();return}
-const on=e.target.closest('[data-eon]');if(on){d.edTools[+on.dataset.eon].on=on.checked;commit();return}
-const up=e.target.closest('[data-eup]'),dn=e.target.closest('[data-edn]');if(up||dn){const i=+(up||dn).dataset[up?'eup':'edn'],j=up?i-1:i+1;[d.edTools[i],d.edTools[j]]=[d.edTools[j],d.edTools[i]];drawEd();commit();return}
-const q=e.target.closest('[data-q]');if(q){let arr=d.quick.length?d.quick.slice():QDEF.slice();const n=q.dataset.q;if(arr.includes(n))arr=arr.filter(x=>x!==n);else{if(arr.length>=8)return toast('Máximo 8 accesos. Quitá uno primero');arr.push(n)}d.quick=arr;drawQuick();commit();return}
-if(e.target.closest('#dsReset')){if(!confirm('¿Volver al diseño original?'))return;S.design=JSON.parse(JSON.stringify(DESIGN_DEF));saveS();applyDesign();cambiarTema('system');Nav.back().then(designSheet)}}}
+
 applyDesign();
 
 
@@ -1940,100 +1876,6 @@ try{const hist=new Uint32Array(256),N=out.width*out.height;
 catch(e){lutApply(d,makeLut(v=>v>190?255:v<90?0:(v-90)*255/100))}
 x.putImageData(id,0,0);return out}
 
-/* ---------- panel de administración ---------- */
-function admInitials(n,e){const base=(n||'').trim()||(e||'').split('@')[0]||'?';const p=base.split(/[\s._-]+/).filter(Boolean);return (p.length>=2?p[0][0]+p[1][0]:base.slice(0,2)).toUpperCase()}
-function admColor(seed){const pal=['#e53935','#d81b60','#8e24aa','#5e35b1','#3949ab','#1e88e5','#039be5','#00897b','#43a047','#f4511e','#6d4c41','#546e7a'];let h=0;for(const c of String(seed||''))h=(h*31+c.charCodeAt(0))>>>0;return pal[h%pal.length]}
-function admAvatar(u,lg){return '<div class="avatar'+(lg?' lg':'')+'" style="background:'+admColor(u.id||u.email||'')+'">'+esc(admInitials(u.full_name,u.email))+'</div>'}
-function admDate(iso){if(!iso)return '—';try{return new Date(iso).toLocaleDateString('es-AR',{day:'2-digit',month:'short',year:'numeric'})}catch(e){return '—'}}
-function admRel(iso){if(!iso)return '';try{const d=new Date(iso),s=Math.floor((Date.now()-d)/1000);if(s<3600)return 'hace '+Math.max(1,Math.floor(s/60))+' min';if(s<86400)return 'hace '+Math.floor(s/3600)+' h';if(s<2592000)return 'hace '+Math.floor(s/86400)+' días';return 'el '+d.toLocaleDateString('es-AR')}catch(e){return ''}}
-function admBadges(u,isMe){const st={activo:['activo','Activo'],pendiente:['pendiente','Pendiente'],bloqueado:['bloqueado','Bloqueado']}[u.status]||['user',u.status||'—'];
-return '<span class="badge '+(u.role==='admin'?'admin':'user')+'">'+(u.role==='admin'?'Admin':'Usuario')+'</span><span class="badge '+st[0]+'">'+esc(st[1])+'</span>'+(isMe?'<span class="badge you">Vos</span>':'')}
-async function adminSheet(){if(!SB.ready||!SB.profile||SB.profile.role!=='admin')return toast('Solo el administrador puede entrar acá');
-let users=[],filter='todos',query='',bulk=false;const sel=new Set();
-const b=openSheet('👤 Administración de accesos','<div class="admin-wrap" id="admRoot"><div class="admin-empty"><div class="big">⏳</div>Cargando…</div></div>');
-const draw=()=>{const st={total:users.length,activos:users.filter(u=>u.status==='activo').length,pend:users.filter(u=>u.status==='pendiente').length,bloq:users.filter(u=>u.status==='bloqueado').length,admins:users.filter(u=>u.role==='admin').length};
-let list=users.filter(u=>{if(filter==='activos'&&u.status!=='activo')return false;if(filter==='pendientes'&&u.status!=='pendiente')return false;if(filter==='bloqueados'&&u.status!=='bloqueado')return false;if(filter==='admins'&&u.role!=='admin')return false;
-if(query)return ((u.email||'')+' '+(u.full_name||'')).toLowerCase().includes(query.toLowerCase());return true});
-list.sort((a,c)=>a.role!==c.role?(a.role==='admin'?-1:1):new Date(c.created_at||0)-new Date(a.created_at||0));
-$('#admRoot',b).innerHTML='<div class="admin-stats">'
-+'<div class="stat-card" data-tone="ac"><b>'+st.total+'</b><small>Total</small></div>'
-+'<div class="stat-card" data-tone="ok"><b>'+st.activos+'</b><small>Activos</small></div>'
-+'<div class="stat-card" data-tone="red"><b>'+st.bloq+'</b><small>Bloqueados</small></div>'
-+'<div class="stat-card" data-tone="info"><b>'+st.admins+'</b><small>Admins</small></div></div>'
-+'<div class="invite-cta" id="admInvite"><div class="ic">＋</div><div class="txt"><b>Invitar a alguien</b><small>Enlace o código QR para dar acceso</small></div><div class="arrow">›</div></div>'
-+'<div class="admin-search"><input id="admQ" placeholder="Buscar por nombre o correo…" value="'+esc(query)+'"></div>'
-+'<div class="admin-filters">'+[['todos','Todos',st.total],['activos','Activos',st.activos],['pendientes','Pendientes',st.pend],['bloqueados','Bloqueados',st.bloq],['admins','Admins',st.admins]].map(([k,l,n])=>'<button class="chip '+(filter===k?'on':'')+'" data-fl="'+k+'">'+l+' · '+n+'</button>').join('')+'</div>'
-+(bulk&&sel.size?'<div class="admin-selbar"><b>'+sel.size+' seleccionado(s)</b><button data-bulk="activo">✓ Dar acceso</button><button data-bulk="bloqueado">✕ Quitar</button><button data-bulk="cancel">Cancelar</button></div>':'')
-+'<div class="admin-list">'+(list.length?list.map(u=>{const isMe=u.id===SB.user.id;
-return '<div class="admin-user" data-id="'+u.id+'" data-status="'+esc(u.status||'')+'" data-role="'+esc(u.role||'')+'">'
-+(bulk&&!isMe?'<input type="checkbox" class="cb" data-cb="'+u.id+'" '+(sel.has(u.id)?'checked':'')+'>':'')
-+admAvatar(u)+'<div class="inf"><div class="nm">'+esc(u.full_name||u.email||'(sin nombre)')+'</div><div class="em">'+esc(u.email||'')+'</div><div class="admin-badges">'+admBadges(u,isMe)+'</div>'+(u.created_at?'<div class="meta">Se registró '+admRel(u.created_at)+'</div>':'')+'</div><div class="chev">›</div></div>'}).join('')
-:'<div class="admin-empty"><div class="big">🔎</div>No hay usuarios que coincidan.</div>')+'</div>'
-+'<div class="admin-actions-top" style="margin-top:10px"><button class="btn" id="admBulk">'+(bulk?'✕ Cancelar':'☑️ Seleccionar')+'</button><button class="btn" id="admCsv">📥 CSV</button><button class="btn" id="admRef">↻ Actualizar</button></div>';
-const q=$('#admQ',b);if(q)q.oninput=e=>{query=e.target.value;const p=e.target.selectionStart;draw();const n=$('#admQ',b);n.focus();try{n.setSelectionRange(p,p)}catch(x){}}};
-const load=async(silent)=>{if(!silent)$('#admRoot',b).innerHTML='<div class="admin-empty"><div class="big">⏳</div>Cargando…</div>';
-try{const r=await _to(SB.client.from('profiles').select('*').order('created_at',{ascending:false}),20000,'usuarios');
- if(r.error)throw r.error;users=r.data||[];draw()}
-catch(e){$('#admRoot',b).innerHTML='<div class="admin-empty"><div class="big">⚠️</div>'+esc(e.message||e)+'<br><button class="btn pri" style="margin-top:12px" id="admRetry">↻ Reintentar</button></div>'}};
-b.onclick=async e=>{
- if(e.target.closest('#admRetry'))return load();
- const f=e.target.closest('[data-fl]');if(f){filter=f.dataset.fl;return draw()}
- if(e.target.closest('#admInvite'))return adminInviteSheet();
- if(e.target.closest('#admRef'))return load(true);
- if(e.target.closest('#admBulk')){bulk=!bulk;if(!bulk)sel.clear();return draw()}
- if(e.target.closest('#admCsv'))return admCsv(users);
- const cb=e.target.closest('[data-cb]');if(cb){e.stopPropagation();cb.checked?sel.add(cb.dataset.cb):sel.delete(cb.dataset.cb);return draw()}
- const bl=e.target.closest('[data-bulk]');if(bl){const a=bl.dataset.bulk;if(a==='cancel'){bulk=false;sel.clear();return draw()}
-  await withBusy(async()=>{let i=0;for(const id of sel){busy('Actualizando '+(++i)+'/'+sel.size);await SB.client.from('profiles').update({status:a}).eq('id',id)}});
-  sel.clear();bulk=false;toast(a==='activo'?'Acceso habilitado':'Acceso quitado');return load(true)}
- const row=e.target.closest('.admin-user');if(row){const u=users.find(x=>x.id===row.dataset.id);if(u)adminUserDetail(u,()=>load(true),$('#admRoot',b))}};
-await load()}
-function adminUserDetail(u,onChange,host){const isMe=u.id===SB.user.id;
-const b=host||openSheet('Detalle del usuario','');if(host)host.innerHTML='<button class="btn sm" data-act="back" style="margin-bottom:10px">← Volver a la lista</button>'+('<div class="udetail-head">'+admAvatar(u,true)+'<div class="txt"><h3>'+esc(u.full_name||u.email||'(sin nombre)')+'</h3><div class="em">'+esc(u.email||'')+'</div><div class="admin-badges" style="margin-top:8px">'+admBadges(u,isMe)+'</div></div></div>'
-+'<div class="udetail-row"><span class="label">Rol</span><span class="val">'+(u.role==='admin'?'Administrador':'Usuario')+'</span></div>'
-+'<div class="udetail-row"><span class="label">Estado</span><span class="val">'+(u.status==='activo'?'Puede entrar':u.status==='pendiente'?'Esperando autorización':'Bloqueado')+'</span></div>'
-+'<div class="udetail-row"><span class="label">Registrado</span><span class="val">'+admDate(u.created_at)+' · '+admRel(u.created_at)+'</span></div>'
-+'<div class="udetail-row"><span class="label">ID</span><span class="val"><code>'+esc(u.id)+'</code></span></div>'
-+(isMe?'<p class="muted" style="margin-top:16px;text-align:center">Es tu propia cuenta: no podés quitarte el acceso.</p>'
- :'<div class="udetail-actions"><button class="btn '+(u.status==='activo'?'red':'pri')+'" data-act="st">'+(u.status==='activo'?'🚫 Quitar acceso':'✓ Dar acceso')+'</button><button class="btn" data-act="rol">'+(u.role==='admin'?'👤 Quitar admin':'👑 Hacer admin')+'</button><button class="btn" data-act="mail">📋 Copiar correo</button><button class="btn" data-act="del">🗑 Eliminar</button></div>'));
-b.onclick=async e=>{const a=e.target.closest('[data-act]')?.dataset.act;if(!a)return;
-if(a==='mail'){try{await navigator.clipboard.writeText(u.email||'');toast('Correo copiado')}catch(x){toast('No se pudo copiar')}return}
-if(a==='back'){onChange&&onChange();return}
-if(a==='st'){const n=u.status==='activo'?'bloqueado':'activo';const {error}=await SB.client.from('profiles').update({status:n}).eq('id',u.id);if(error)return toast('Error: '+error.message);toast(n==='activo'?'Acceso habilitado':'Acceso quitado');if(!host)await Nav.back();onChange&&onChange();return}
-if(a==='rol'){const n=u.role==='admin'?'usuario':'admin';if(n==='admin'&&!confirm('¿Convertir a '+(u.email||'')+' en administrador? Va a poder dar y quitar accesos.'))return;const {error}=await SB.client.from('profiles').update({role:n}).eq('id',u.id);if(error)return toast('Error: '+error.message);toast(n==='admin'?'Ahora es administrador':'Ya no es administrador');if(!host)await Nav.back();onChange&&onChange();return}
-if(a==='del'){if(!confirm('¿Eliminar el perfil de '+(u.email||'')+'? Si vuelve a entrar con su correo, se crea de nuevo.'))return;const {error}=await SB.client.from('profiles').delete().eq('id',u.id);if(error)return toast('Error: '+error.message);toast('Perfil eliminado');if(!host)await Nav.back();onChange&&onChange()}}}
-function adminInviteSheet(){let role='usuario',days=7;
-const b=openSheet('Invitar persona','<p class="muted" style="margin-top:0">La persona abre el enlace, entra con su correo y queda habilitada.</p>'
-+'<div class="inv-step"><span class="num">1</span><div class="txt"><b>Correo (opcional)</b>Vacío = sirve para cualquiera.</div></div><input id="invEmail" type="email" inputmode="email" placeholder="correo@ejemplo.com">'
-+'<div class="inv-step"><span class="num">2</span><div class="txt"><b>Rol</b>Con qué permisos entra.</div></div><div class="seg" id="invRole"><button data-r="usuario" class="on">👤 Usuario</button><button data-r="admin">👑 Admin</button></div>'
-+'<div class="inv-step"><span class="num">3</span><div class="txt"><b>Vencimiento</b>Después de ese plazo el enlace no sirve más.</div></div><div class="seg" id="invDays"><button data-d="1">1 día</button><button data-d="7" class="on">7 días</button><button data-d="30">30 días</button></div>'
-+'<button class="btn pri block" style="margin-top:16px" id="invGo"><i data-ico="check">✨</i> Generar enlace</button>');
-b.onclick=async e=>{const r=e.target.closest('#invRole [data-r]');if(r){role=r.dataset.r;$$('#invRole button',b).forEach(x=>x.classList.toggle('on',x===r));return}
-const d=e.target.closest('#invDays [data-d]');if(d){days=+d.dataset.d;$$('#invDays button',b).forEach(x=>x.classList.toggle('on',x===d));return}
-if(!e.target.closest('#invGo'))return;
-const email=($('#invEmail',b).value||'').trim()||null;
-if(email&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))return toast('Escribí un correo válido');
-await withBusy(async()=>{busy('Generando…');const {data,error}=await SB.client.rpc('create_invite',{p_email:email,p_days:days});
-if(error)throw new Error(error.message);
-const link=location.origin+location.pathname+'?invite='+data;busy('Armando el código QR…');
-b.innerHTML='<div style="text-align:center;margin-bottom:8px"><div style="font-size:48px">🎉</div><h3 style="margin:8px 0 4px">Invitación lista</h3><p class="muted" style="margin:0">'+(email?'Solo para <b>'+esc(email)+'</b>':'Enlace abierto')+' · vence en '+days+' día(s)'+(role==='admin'?' · entra como administrador':'')+'</p></div>'
-+'<div class="inv-result"><div class="qr-wrap" id="invQr"></div><div class="inv-link">'+esc(link)+'</div><div class="row" style="margin:0"><button class="btn block" id="invCopy"><i data-ico="type">📋</i> Copiar</button><button class="btn pri block" id="invShare"><i data-ico="share">📤</i> Compartir</button></div></div>'
-+'<div class="inv-step"><span class="num">💡</span><div class="txt"><b>Cómo se usa</b>Mandaselo por WhatsApp, o que escanee el QR con la cámara del teléfono.</div></div>'
-+'<div class="row"><button class="btn block" id="invNew">➕ Otra invitación</button><button class="btn pri block" data-back><i data-ico="check">✓</i> Listo</button></div>';
-iconize(b);
-try{await loadLib('qrcode');new QRCode($('#invQr',b),{text:link,width:190,height:190,correctLevel:QRCode.CorrectLevel.M})}
-catch(x){$('#invQr',b).innerHTML='<p class="muted">El código QR necesita internet la primera vez. Usá el enlace de abajo.</p>'}
-busy(false);
-$('#invCopy',b).onclick=async()=>{try{await navigator.clipboard.writeText(link);toast('Enlace copiado')}catch(x){toast('Copialo del recuadro')}};
-$('#invShare',b).onclick=async()=>{const txt='Te comparto el acceso a Danscaner Pro: '+link;try{if(navigator.share)return void await navigator.share({title:'Acceso a Danscaner Pro',text:txt,url:link});await navigator.clipboard.writeText(txt);toast('Copiado')}catch(x){}};
-$('#invNew',b).onclick=()=>Nav.back().then(adminInviteSheet)})}}
-function admCsv(list){if(!list||!list.length)return toast('No hay usuarios para exportar');
-const head=['Nombre','Correo','Rol','Estado','Registrado','ID'];
-const rows=list.map(u=>[u.full_name||'',u.email||'',u.role||'',u.status||'',admDate(u.created_at),u.id]);
-const csv=[head,...rows].map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(';')).join('\n');
-download(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),'usuarios_'+new Date().toISOString().slice(0,10)+'.csv');toast('CSV descargado')}
-
-
 /* ===== Danscaner Pro v19 ===== */
 const IS_IOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 if(IS_IOS){document.documentElement.classList.add('ios');if((S.maxCap||0)>3000){S.maxCap=3000;saveS()}}
@@ -2095,54 +1937,187 @@ async function ocrCanvases(getImgs,lang,total){busy('Cargando motor OCR (la prim
   texts.push(ocrLayout(r.data))})}finally{await w.terminate()}
  return texts}
 
-/* ---------- 5. Editor de texto tipo Word ---------- */
-function rtHtmlFromText(text){return String(text||'').split(/\n{2,}/).map(p=>'<p>'+esc(p).replace(/\n/g,'<br>')+'</p>').join('')||'<p><br></p>'}
-function rtDocHtml(inner,title){return '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>@page{size:21cm 29.7cm;margin:2.5cm 2cm 2cm 3cm}body{font-family:Calibri,Arial,sans-serif;font-size:11pt;line-height:1.15}p{margin:0 0 8pt}</style></head><body>'+inner+'</body></html>'}
-function showText(text,name){const txt=String(text||'');
- const fonts=[['Calibri, Carlito, Arial, sans-serif','Calibri'],['Arial, Helvetica, sans-serif','Arial'],['"Times New Roman", Times, serif','Times New Roman'],['Georgia, serif','Georgia'],['Verdana, sans-serif','Verdana'],['"Courier New", monospace','Courier New']];
- const b=openSheet('Texto extraído',
- '<div class="rtbar">'
- +'<select class="rtsel" data-rt="font" title="Tipo de letra">'+fonts.map(([v,n])=>'<option value=\''+v+'\'>'+n+'</option>').join('')+'</select>'
- +'<select class="rtsel" data-rt="size" title="Tamaño">'+[8,9,10,11,12,14,16,18,20,24,28].map(s=>'<option'+(s===11?' selected':'')+'>'+s+'</option>').join('')+'</select>'
- +'<span class="rtsep"></span>'
- +'<button data-cmd="bold" title="Negrita"><b>N</b></button><button data-cmd="italic" title="Cursiva"><i>K</i></button><button data-cmd="underline" title="Subrayado"><u>S</u></button><button data-cmd="strikeThrough" title="Tachado"><s>ab</s></button>'
- +'<label class="rtcol" title="Color de letra">A<input type="color" data-rt="color" value="#c00000"></label><label class="rtcol hl" title="Resaltar">✎<input type="color" data-rt="hilite" value="#ffff00"></label>'
- +'<span class="rtsep"></span>'
- +'<button data-cmd="justifyLeft" title="Alinear a la izquierda"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 5 H20"/><path d="M4 9 H14"/><path d="M4 13 H20"/><path d="M4 17 H12"/></svg></button><button data-cmd="justifyCenter" title="Centrar"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 5 H20"/><path d="M7 9 H17"/><path d="M4 13 H20"/><path d="M8 17 H16"/></svg></button><button data-cmd="justifyRight" title="Alinear a la derecha"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 5 H20"/><path d="M10 9 H20"/><path d="M4 13 H20"/><path d="M12 17 H20"/></svg></button><button data-cmd="justifyFull" title="Justificar" class="on"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 5 H20"/><path d="M4 9 H20"/><path d="M4 13 H20"/><path d="M4 17 H20"/></svg></button>'
- +'<span class="rtsep"></span>'
- +'<button data-cmd="insertUnorderedList" title="Viñetas">•</button><button data-cmd="insertOrderedList" title="Numeración">1.</button><button data-cmd="outdent" title="Disminuir sangría">⇤</button><button data-cmd="indent" title="Aumentar sangría">⇥</button>'
- +'<select class="rtsel" data-rt="lh" title="Interlineado"><option value="1">1,0</option><option value="1.15" selected>1,15</option><option value="1.5">1,5</option><option value="2">2,0</option></select>'
- +'<span class="rtsep"></span>'
- +'<button data-cmd="removeFormat" title="Borrar formato">⌫A</button><button data-cmd="undo" title="Deshacer">↶</button><button data-cmd="redo" title="Rehacer">↷</button>'
- +'<button data-rt="joinlines" title="Unir renglones cortados en párrafos">¶</button>'
- +'</div>'
- +'<div class="rtpage"><div class="rtdoc" id="rtDoc" contenteditable="true" spellcheck="true" lang="es"></div></div>'
- +'<textarea id="ocrTxt" hidden></textarea>'
- +'<div class="row"><button class="btn block" data-t="copy"><i data-ico="type">📋</i> Copiar</button><button class="btn pri block" data-t="doc"><i data-ico="word">📝</i> Word</button></div>'
- +'<div class="row"><button class="btn block" data-t="pdf"><i data-ico="save">📄</i> PDF</button><button class="btn block" data-t="txt"><i data-ico="save">⬇</i> .txt</button><button class="btn block" data-t="share"><i data-ico="share">📤</i></button></div>'
- +'<p class="muted">'+(txt.trim()?'Editalo como en Word: elegí letra, tamaño, alineación (justificado viene activado), listas, sangría e interlineado. El botón ¶ une los renglones cortados en párrafos.':'No se detectó texto. Probá con más luz, la foto quieta y el filtro "Nítido" o "B/N".')+'</p>');
- const doc=$('#rtDoc',b),mirror=$('#ocrTxt',b);
- doc.innerHTML=rtHtmlFromText(txt);doc.style.textAlign='justify';doc.style.lineHeight='1.15';doc.style.fontFamily=fonts[0][0];
- const sync=()=>{mirror.value=doc.innerText};sync();doc.addEventListener('input',sync);
- try{document.execCommand('styleWithCSS',false,true)}catch(e){}
- const exec=(c,v)=>{doc.focus();try{document.execCommand(c,false,v)}catch(e){}sync()};
- b.onmousedown=e=>{if(e.target.closest('.rtbar button'))e.preventDefault()};
- b.onchange=e=>{const t=e.target.dataset.rt;if(!t)return;const v=e.target.value;
-  if(t==='font')exec('fontName',v);
-  if(t==='size'){exec('fontSize','7');doc.querySelectorAll('font[size="7"],span[style*="xxx-large"]').forEach(n=>{n.removeAttribute('size');n.style.fontSize=v+'pt'})}
-  if(t==='color')exec('foreColor',v);
-  if(t==='hilite')exec('hiliteColor',v);
-  if(t==='lh'){doc.style.lineHeight=v}};
- b.onclick=async e=>{const c=e.target.closest('[data-cmd]');
-  if(c){exec(c.dataset.cmd);if(/^justify/.test(c.dataset.cmd)){$$('.rtbar [data-cmd^="justify"]',b).forEach(x=>x.classList.toggle('on',x===c))}return}
-  if(e.target.closest('[data-rt="joinlines"]')){doc.innerHTML=rtHtmlFromText(doc.innerText.replace(/(\w)-\n(\w)/g,'$1$2').replace(/([^\n.:;!?])\n(?!\n)/g,'$1 '));sync();toast('Renglones unidos en párrafos');return}
-  const t=e.target.closest('[data-t]')?.dataset.t;if(!t)return;const nm=safeName(name||'texto'),plain=doc.innerText;
-  if(t==='copy'){try{await navigator.clipboard.writeText(plain);toast('Copiado')}catch(er){toast('No se pudo copiar')}}
-  if(t==='txt')download(new Blob([plain],{type:'text/plain;charset=utf-8'}),nm+'.txt');
-  if(t==='doc'){const html=rtDocHtml('<div style="text-align:'+(doc.style.textAlign||'justify')+';line-height:'+doc.style.lineHeight+';font-family:'+doc.style.fontFamily.replace(/"/g,"'")+'">'+sanitizeHtml(doc.innerHTML)+'</div>',nm);download(new Blob(['\ufeff'+html],{type:'application/msword'}),nm+'.doc');toast('Se abre en Word con el formato')}
-  if(t==='pdf')withBusy(async()=>{busy('Armando PDF…');const blob=await htmlToPdfBlob('<div style="text-align:'+(doc.style.textAlign||'justify')+';line-height:'+doc.style.lineHeight+';font-family:'+doc.style.fontFamily.replace(/"/g,"'")+';font-size:11pt">'+sanitizeHtml(doc.innerHTML)+'</div>');busy(false);download(blob,nm+'.pdf')});
-  if(t==='share')share(new Blob([plain],{type:'text/plain;charset=utf-8'}),nm+'.txt')};
- return b}
+/* ===== Danscaner Pro v20: filtros de imagen en segundo plano (Web Worker) ===== */
+const FW={w:null,ok:null,seq:0,pend:new Map(),
+ build(){if(this.ok===false)return null;if(this.w)return this.w;
+  try{if(typeof Worker==='undefined'||typeof OffscreenCanvas==='undefined')throw new Error('sin soporte');
+   const names=['lutApply','makeLut','sCurve','autoLevels','saturate','unsharp','bgDivide','sepFilter','clahe','toGray','applyExtraFilter','applyFilter','clamp','otsu','_v21_lum','_v21_lut','_v21_applyLUT','binarizeSauvola','clahePro','autoLevelsPro','sCurveLUT','unsharpPro','removeShadows','adjustSaturation','adjustTemperature','_origApplyFilter'];
+   let src="'use strict';self.canvas=(w,h)=>new OffscreenCanvas(Math.max(1,Math.round(w)),Math.max(1,Math.round(h)));\n";
+   const T={lutApply:(typeof lutApply!=='undefined'?lutApply:null),makeLut:(typeof makeLut!=='undefined'?makeLut:null),sCurve:(typeof sCurve!=='undefined'?sCurve:null),autoLevels:(typeof autoLevels!=='undefined'?autoLevels:null),saturate:(typeof saturate!=='undefined'?saturate:null),unsharp:(typeof unsharp!=='undefined'?unsharp:null),bgDivide:(typeof bgDivide!=='undefined'?bgDivide:null),sepFilter:(typeof sepFilter!=='undefined'?sepFilter:null),clahe:(typeof clahe!=='undefined'?clahe:null),toGray:(typeof toGray!=='undefined'?toGray:null),applyExtraFilter:(typeof applyExtraFilter!=='undefined'?applyExtraFilter:null),applyFilter:(typeof applyFilter!=='undefined'?applyFilter:null),clamp:(typeof clamp!=='undefined'?clamp:null),otsu:(typeof otsu!=='undefined'?otsu:null),_v21_lum:(typeof _v21_lum!=='undefined'?_v21_lum:null),_v21_lut:(typeof _v21_lut!=='undefined'?_v21_lut:null),_v21_applyLUT:(typeof _v21_applyLUT!=='undefined'?_v21_applyLUT:null),binarizeSauvola:(typeof binarizeSauvola!=='undefined'?binarizeSauvola:null),clahePro:(typeof clahePro!=='undefined'?clahePro:null),autoLevelsPro:(typeof autoLevelsPro!=='undefined'?autoLevelsPro:null),sCurveLUT:(typeof sCurveLUT!=='undefined'?sCurveLUT:null),unsharpPro:(typeof unsharpPro!=='undefined'?unsharpPro:null),removeShadows:(typeof removeShadows!=='undefined'?removeShadows:null),adjustSaturation:(typeof adjustSaturation!=='undefined'?adjustSaturation:null),adjustTemperature:(typeof adjustTemperature!=='undefined'?adjustTemperature:null),_origApplyFilter:(typeof _origApplyFilter!=='undefined'?_origApplyFilter:null)};for(const n of names){const f=T[n];if(typeof f!=='function')continue;const s=f.toString();src+='var '+n+'=('+s+');\n'}
+   src+="onmessage=e=>{const m=e.data;try{const oc=canvas(m.w,m.h),x=oc.getContext('2d',{willReadFrequently:true});x.putImageData(new ImageData(new Uint8ClampedArray(m.buf),m.w,m.h),0,0);applyFilter(oc,m.f,m.b,m.c,m.o);const out=x.getImageData(0,0,m.w,m.h);postMessage({id:m.id,buf:out.data.buffer},[out.data.buffer])}catch(err){postMessage({id:m.id,err:String(err&&err.message||err)})}};";
+   const url=URL.createObjectURL(new Blob([src],{type:'text/javascript'}));
+   this.w=new Worker(url);
+   this.w.onmessage=e=>{const r=this.pend.get(e.data.id);if(!r)return;this.pend.delete(e.data.id);e.data.err?r.rej(new Error(e.data.err)):r.res(e.data.buf)};
+   this.w.onerror=e=>{this.ok=false;for(const r of this.pend.values())r.rej(new Error('worker'));this.pend.clear()};
+   this.ok=true;return this.w}
+  catch(e){this.ok=false;return null}},
+ run(w,h,buf,f,b,c,o){const wk=this.build();if(!wk)return Promise.reject(new Error('sin worker'));const id=++this.seq;
+  return new Promise((res,rej)=>{this.pend.set(id,{res,rej});wk.postMessage({id,w,h,buf,f,b,c,o},[buf]);setTimeout(()=>{if(this.pend.has(id)){this.pend.delete(id);rej(new Error('tiempo'))}},60000)})}};
+async function applyFilterAsync(c,f,bright=0,contrast=0,o){o=o||{};
+ const opts={sat:+o.sat||0,sharp:+o.sharp||0,temp:+o.temp||0,intensity:o.intensity==null?100:+o.intensity};
+ if((!f||f==='original')&&!bright&&!contrast&&!opts.sat&&!opts.sharp&&!opts.temp)return;
+ if(c.width*c.height<250000||FW.ok===false)return applyFilter(c,f,bright,contrast,opts);
+ const x=c.getContext('2d',{willReadFrequently:true}),id=x.getImageData(0,0,c.width,c.height);
+ try{const buf=await FW.run(c.width,c.height,id.data.buffer,f,bright,contrast,opts);x.putImageData(new ImageData(new Uint8ClampedArray(buf),c.width,c.height),0,0)}
+ catch(e){console.warn('filtro en segundo plano falló, uso el principal:',e.message);FW.ok=false;applyFilter(c,f,bright,contrast,opts)}}
+
+
+/* ===== Danscaner Pro v20: módulos que se cargan cuando se usan ===== */
+window.__mods=window.__mods||{};
+const _modP={};
+function lazyMod(n){if(_modP[n])return _modP[n];return _modP[n]=new Promise((res,rej)=>{const s=document.createElement('script');s.src='mod/'+n+'.js';s.onload=()=>res();s.onerror=()=>{delete _modP[n];s.remove();rej(new Error('Falta el módulo "'+n+'". Subí la carpeta mod a GitHub.'))};document.head.appendChild(s)})}
+async function modCall(n,fn,self,args){try{await lazyMod(n)}catch(e){toast(e.message,6000);throw e}return __mods[fn].apply(self,args)}
+function adminSheet(){return modCall('admin','adminSheet',this,arguments)}
+function showText(){return modCall('texto','showText',this,arguments)}
+function pptxRender(){return modCall('pptx','pptxRender',this,arguments)}
+function designSheet(){return modCall('diseno','designSheet',this,arguments)}
+function uiExcelPdf(el){el.innerHTML='<div class="muted" style="padding:20px;text-align:center">Cargando…</div>';lazyMod('excel').then(()=>__mods.uiExcelPdf(el)).catch(e=>{el.innerHTML='<div class="hint">'+esc(e.message)+'</div>'})}
+
+
+/* ============================================================
+   Danscaner Pro v21 · Detección de bordes y filtros profesionales
+   (integrado y adaptado: funciona también dentro del worker)
+   ============================================================ */
+
+/* ---------- A. utilidades ---------- */
+function _v21_lum(r,g,b){return r*0.299+g*0.587+b*0.114}
+function _v21_lut(fn){const l=new Uint8ClampedArray(256);for(let i=0;i<256;i++)l[i]=fn(i);return l}
+function _v21_applyLUT(d,l){for(let i=0;i<d.length;i+=4){d[i]=l[d[i]];d[i+1]=l[d[i+1]];d[i+2]=l[d[i+2]]}}
+
+/* ---------- B. detección de bordes ---------- */
+const detectQuadOrig=detectQuad;
+function _v21_detect(src){
+ const _old=detectQuadOrig;
+ function blurGray(s,w,h,dst){for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){const i=y*w+x;dst[i]=(s[i-w-1]+2*s[i-w]+s[i-w+1]+2*s[i-1]+4*s[i]+2*s[i+1]+s[i+w-1]+2*s[i+w]+s[i+w+1])>>4}
+  for(let x=0;x<w;x++){dst[x]=s[x];dst[(h-1)*w+x]=s[(h-1)*w+x]}for(let y=0;y<h;y++){dst[y*w]=s[y*w];dst[y*w+w-1]=s[y*w+w-1]}}
+ function sobel(g,w,h){const m=new Uint16Array(w*h);for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){const i=y*w+x;const tl=g[i-w-1],t=g[i-w],tr=g[i-w+1],l=g[i-1],r=g[i+1],bl=g[i+w-1],b=g[i+w],br=g[i+w+1];const gx=(tr+2*r+br)-(tl+2*l+bl),gy=(bl+2*b+br)-(tl+2*t+tr);m[i]=Math.min(65535,Math.abs(gx)+Math.abs(gy))}return m}
+ function otsuL(hist,total){let sum=0;for(let i=0;i<256;i++)sum+=i*hist[i];let sB=0,wB=0,best=-1,th=127,mb=0,mf=0;for(let t=0;t<256;t++){wB+=hist[t];if(!wB)continue;const wF=total-wB;if(!wF)break;sB+=t*hist[t];const a=sB/wB,b=(sum-sB)/wF,v=wB*wF*(a-b)*(a-b);if(v>best){best=v;th=t;mb=a;mf=b}}return {th,diff:mf-mb}}
+ function dilate(bin,w,h,out){for(let y=0;y<h;y++)for(let x=0;x<w;x++){let v=0;for(let ky=-1;ky<=1&&!v;ky++)for(let kx=-1;kx<=1&&!v;kx++){const yy=y+ky,xx=x+kx;if(yy<0||yy>=h||xx<0||xx>=w)continue;if(bin[yy*w+xx])v=1}out[y*w+x]=v}}
+ function orderPoints(p){const cx=(p[0].x+p[1].x+p[2].x+p[3].x)/4,cy=(p[0].y+p[1].y+p[2].y+p[3].y)/4;const s=p.slice().sort((a,b)=>Math.atan2(a.y-cy,a.x-cx)-Math.atan2(b.y-cy,b.x-cx));let k=0,mn=1e9;s.forEach((q,i)=>{if(q.x+q.y<mn){mn=q.x+q.y;k=i}});return s.slice(k).concat(s.slice(0,k))}
+ function quadArea(q){let a=0;for(let i=0;i<4;i++){const p1=q[i],p2=q[(i+1)%4];a+=p1.x*p2.y-p2.x*p1.y}return Math.abs(a)/2}
+ function validateQuad(q){if(!q||q.length!==4)return false;let sign=0;for(let i=0;i<4;i++){const a=q[i],b=q[(i+1)%4],c=q[(i+2)%4];const cr=(b.x-a.x)*(c.y-b.y)-(b.y-a.y)*(c.x-b.x);if(Math.abs(cr)<1e-7)return false;const s=Math.sign(cr);if(!sign)sign=s;else if(s!==sign)return false}
+  const area=quadArea(q);if(area<0.10||area>0.98)return false;for(let i=0;i<4;i++){const a=q[i],b=q[(i+1)%4];if(Math.hypot(a.x-b.x,a.y-b.y)<0.08)return false}
+  const wT=Math.hypot(q[0].x-q[1].x,q[0].y-q[1].y),wB=Math.hypot(q[2].x-q[3].x,q[2].y-q[3].y),hL=Math.hypot(q[0].x-q[3].x,q[0].y-q[3].y),hR=Math.hypot(q[1].x-q[2].x,q[1].y-q[2].y);const ar=((wT+wB)/2)/Math.max((hL+hR)/2,1e-6);return ar>=0.15&&ar<=6.5}
+ try{const W0=src.videoWidth||src.naturalWidth||src.width,H0=src.videoHeight||src.naturalHeight||src.height;if(!W0||!H0)return null;
+  const s=Math.min(1,360/Math.max(W0,H0)),w=Math.max(40,Math.round(W0*s)),h=Math.max(40,Math.round(H0*s));
+  const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(src,0,0,w,h);
+  const id=x.getImageData(0,0,w,h).data,N=w*h,gray=new Uint8Array(N),hist=new Uint32Array(256);
+  for(let i=0,j=0;i<N;i++,j+=4){const v=(id[j]*77+id[j+1]*150+id[j+2]*29)>>8;gray[i]=v;hist[v]++}
+  const o=otsuL(hist,N);if(o.diff<22)return _old(src);
+  const smooth=new Uint8Array(N);blurGray(gray,w,h,smooth);const mag=sobel(smooth,w,h);
+  const mHist=new Uint32Array(512);let maxMag=0;for(let i=0;i<N;i++){mHist[Math.min(511,mag[i]>>5)]++;if(mag[i]>maxMag)maxMag=mag[i]}
+  let acc=0,thMag=maxMag*0.3;for(let i=511;i>=0;i--){acc+=mHist[i];if(acc>N*0.15){thMag=i*32;break}}
+  const edges=new Uint8Array(N);for(let i=0;i<N;i++)edges[i]=mag[i]>=thMag?1:0;
+  const dil=new Uint8Array(N);dilate(edges,w,h,dil);
+  const lab=new Int32Array(N),stack=new Int32Array(N);let best=0,bestLabel=0,cur=0;
+  for(let p=0;p<N;p++){if(!dil[p]||lab[p])continue;cur++;let sp=0,cnt=0;stack[sp++]=p;lab[p]=cur;
+   while(sp){const q=stack[--sp];cnt++;const qx=q%w;if(qx>0&&dil[q-1]&&!lab[q-1]){lab[q-1]=cur;stack[sp++]=q-1}if(qx<w-1&&dil[q+1]&&!lab[q+1]){lab[q+1]=cur;stack[sp++]=q+1}if(q>=w&&dil[q-w]&&!lab[q-w]){lab[q-w]=cur;stack[sp++]=q-w}if(q<N-w&&dil[q+w]&&!lab[q+w]){lab[q+w]=cur;stack[sp++]=q+w}}
+   if(cnt>best){best=cnt;bestLabel=cur}}
+  if(best<N*0.05)return _old(src);
+  let minSum=1e9,maxSum=-1e9,minDif=1e9,maxDif=-1e9,tl=null,br=null,tr=null,bl=null;
+  for(let y=0;y<h;y++)for(let xx=0;xx<w;xx++){if(lab[y*w+xx]!==bestLabel)continue;const sum=xx+y,dif=xx-y;if(sum<minSum){minSum=sum;tl={x:xx,y}}if(sum>maxSum){maxSum=sum;br={x:xx,y}}if(dif>maxDif){maxDif=dif;tr={x:xx,y}}if(dif<minDif){minDif=dif;bl={x:xx,y}}}
+  const norm=pts=>pts.map(p=>({x:Math.max(0,Math.min(1,(p.x+0.5)/w)),y:Math.max(0,Math.min(1,(p.y+0.5)/h))}));
+  const cands=[];
+  if(tl&&tr&&br&&bl)cands.push(orderPoints(norm([tl,tr,br,bl])));
+  /* envolvente convexa del borde + simplificación a 4 vértices (sirve con hojas muy giradas) */
+  try{const pts=[];for(let y=0;y<h;y++){let a=-1,b=-1;for(let xx=0;xx<w;xx++)if(lab[y*w+xx]===bestLabel){if(a<0)a=xx;b=xx}if(a>=0){pts.push({x:a,y});if(b!==a)pts.push({x:b,y})}}
+   pts.sort((p,q)=>p.x-q.x||p.y-q.y);const cr=(o,a,b)=>(a.x-o.x)*(b.y-o.y)-(a.y-o.y)*(b.x-o.x);const lo=[],up=[];
+   for(const pt of pts){while(lo.length>=2&&cr(lo[lo.length-2],lo[lo.length-1],pt)<=0)lo.pop();lo.push(pt)}
+   for(let i=pts.length-1;i>=0;i--){const pt=pts[i];while(up.length>=2&&cr(up[up.length-2],up[up.length-1],pt)<=0)up.pop();up.push(pt)}
+   const hull=lo.slice(0,-1).concat(up.slice(0,-1));
+   if(hull.length>=4){let bestA=-1,bq=null;const n=hull.length,step=Math.max(1,Math.floor(n/40));const H=[];for(let i=0;i<n;i+=step)H.push(hull[i]);
+    const m=H.length,area4=(a,b,c,d)=>Math.abs((a.x*b.y-b.x*a.y)+(b.x*c.y-c.x*b.y)+(c.x*d.y-d.x*c.y)+(d.x*a.y-a.x*d.y))/2;
+    for(let i=0;i<m;i++)for(let j=i+1;j<m;j++)for(let k2=j+1;k2<m;k2++)for(let l=k2+1;l<m;l++){const A=area4(H[i],H[j],H[k2],H[l]);if(A>bestA){bestA=A;bq=[H[i],H[j],H[k2],H[l]]}}
+    if(bq)cands.push(orderPoints(norm(bq)))}}catch(e){}
+  try{const oq=_old(src);if(oq)cands.push(oq)}catch(e){}
+  /* elegir el candidato con más "borde" real a lo largo de su perímetro */
+  const score=q=>{let s=0,n=0;for(let i=0;i<4;i++){const a=q[i],b=q[(i+1)%4];for(let t=0.08;t<=0.92;t+=0.04){const px=Math.round((a.x+(b.x-a.x)*t)*w-0.5),py=Math.round((a.y+(b.y-a.y)*t)*h-0.5);let mx=0;for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const xx=px+dx,yy=py+dy;if(xx>0&&yy>0&&xx<w-1&&yy<h-1&&mag[yy*w+xx]>mx)mx=mag[yy*w+xx]}s+=mx;n++}}return s/n};
+  let bestQ=null,bestS=-1;for(const q of cands){if(!validateQuad(q))continue;const sc=score(q)*(0.85+0.15*Math.min(1,quadArea(q)/0.5));if(sc>bestS){bestS=sc;bestQ=q}}
+  return bestQ||_old(src)}
+ catch(e){console.warn('[v21] detección de bordes: uso la anterior',e);return _old(src)}}
+
+/* ---------- C. filtros profesionales ---------- */
+/* Sauvola: binarización adaptativa. Versión liviana en memoria (ventana deslizante),
+   mismo resultado que con imágenes integrales pero sin reservar cientos de MB. */
+function binarizeSauvola(d,w,h,windowSize,k){windowSize=Math.max(7,windowSize|0)|1;k=k==null?0.34:k;const half=windowSize>>1,R=128;
+ const gray=new Float32Array(w*h);for(let i=0;i<w*h;i++)gray[i]=_v21_lum(d[i*4],d[i*4+1],d[i*4+2]);
+ const cs=new Float64Array(w),cs2=new Float64Array(w),P=new Float64Array(w+1),P2=new Float64Array(w+1);
+ let top=0,bot=-1;
+ for(let y=0;y<h;y++){const y1=Math.max(0,y-half),y2=Math.min(h-1,y+half);
+  while(bot<y2){bot++;const o=bot*w;for(let x=0;x<w;x++){const v=gray[o+x];cs[x]+=v;cs2[x]+=v*v}}
+  while(top<y1){const o=top*w;for(let x=0;x<w;x++){const v=gray[o+x];cs[x]-=v;cs2[x]-=v*v}top++}
+  for(let x=0;x<w;x++){P[x+1]=P[x]+cs[x];P2[x+1]=P2[x]+cs2[x]}
+  const rows=y2-y1+1;
+  for(let x=0;x<w;x++){const x1=Math.max(0,x-half),x2=Math.min(w-1,x+half),cnt=(x2-x1+1)*rows;
+   const sum=P[x2+1]-P[x1],sum2=P2[x2+1]-P2[x1],mean=sum/cnt,std=Math.sqrt(Math.max(0,sum2/cnt-mean*mean));
+   const T=mean*(1+k*(std/R-1)),b=gray[y*w+x]>T?255:0,i=(y*w+x)*4;d[i]=d[i+1]=d[i+2]=b}}}
+function clahePro(d,w,h,clipLimit,tiles){clipLimit=clipLimit==null?2.5:clipLimit;tiles=tiles==null?8:tiles;const tw=Math.ceil(w/tiles),th=Math.ceil(h/tiles),luts=[];
+ for(let ty=0;ty<tiles;ty++){const row=[];for(let tx=0;tx<tiles;tx++){const x0=tx*tw,y0=ty*th,x1=Math.min(w,x0+tw),y1=Math.min(h,y0+th);const hist=new Uint32Array(256);let total=0;
+  for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){const i=(y*w+x)*4;hist[_v21_lum(d[i],d[i+1],d[i+2])|0]++;total++}
+  const lut=new Float32Array(256);if(!total){for(let i=0;i<256;i++)lut[i]=i;row.push(lut);continue}
+  const limit=Math.max(1,Math.floor(clipLimit*total/256));let excess=0;for(let i=0;i<256;i++)if(hist[i]>limit){excess+=hist[i]-limit;hist[i]=limit}
+  const inc=Math.floor(excess/256);let acc=0;for(let i=0;i<256;i++){hist[i]+=inc;acc+=hist[i];lut[i]=acc/total*255}row.push(lut)}luts.push(row)}
+ for(let y=0;y<h;y++){const tyF=(y/th)-0.5,ty0=Math.max(0,Math.min(tiles-1,Math.floor(tyF))),ty1=Math.max(0,Math.min(tiles-1,ty0+1)),wy=Math.max(0,Math.min(1,tyF-ty0));
+  for(let x=0;x<w;x++){const txF=(x/tw)-0.5,tx0=Math.max(0,Math.min(tiles-1,Math.floor(txF))),tx1=Math.max(0,Math.min(tiles-1,tx0+1)),wx=Math.max(0,Math.min(1,txF-tx0));
+   const i=(y*w+x)*4,v=_v21_lum(d[i],d[i+1],d[i+2])|0;const a=luts[ty0][tx0][v],b=luts[ty0][tx1][v],c=luts[ty1][tx0][v],e=luts[ty1][tx1][v];
+   const nv=(a*(1-wx)+b*wx)*(1-wy)+(c*(1-wx)+e*wx)*wy,delta=nv-v;d[i]=Math.max(0,Math.min(255,d[i]+delta));d[i+1]=Math.max(0,Math.min(255,d[i+1]+delta));d[i+2]=Math.max(0,Math.min(255,d[i+2]+delta))}}}
+function autoLevelsPro(d,lp,hp){lp=lp==null?0.01:lp;hp=hp==null?0.99:hp;const hist=new Uint32Array(256),N=d.length/4;for(let i=0;i<d.length;i+=4)hist[_v21_lum(d[i],d[i+1],d[i+2])|0]++;
+ let acc=0,lo=0,hi=255;for(let v=0;v<256;v++){acc+=hist[v];if(acc>=N*lp){lo=v;break}}acc=0;for(let v=255;v>=0;v--){acc+=hist[v];if(acc>=N*(1-hp)){hi=v;break}}
+ if(hi-lo<30)return;const range=hi-lo;_v21_applyLUT(d,_v21_lut(v=>Math.max(0,Math.min(255,(v-lo)*255/range))))}
+function sCurveLUT(strength){const a=strength==null?0.4:strength;return _v21_lut(v=>{const t=Math.max(0,Math.min(1,v/255));return (t<0.5?0.5*Math.pow(2*t,1+a):1-0.5*Math.pow(2*(1-t),1+a))*255})}
+function unsharpPro(d,w,h,amount,radius){amount=amount==null?0.6:amount;radius=Math.max(1,radius|0);const copy=new Uint8ClampedArray(d),tmp=new Uint8ClampedArray(copy.length);
+ for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=(y*w+x)*4;let r=0,g=0,b=0,n=0;for(let k=-radius;k<=radius;k++){const xx=Math.max(0,Math.min(w-1,x+k)),j=(y*w+xx)*4;r+=copy[j];g+=copy[j+1];b+=copy[j+2];n++}tmp[i]=r/n;tmp[i+1]=g/n;tmp[i+2]=b/n;tmp[i+3]=255}
+ for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=(y*w+x)*4;let r=0,g=0,b=0,n=0;for(let k=-radius;k<=radius;k++){const yy=Math.max(0,Math.min(h-1,y+k)),j=(yy*w+x)*4;r+=tmp[j];g+=tmp[j+1];b+=tmp[j+2];n++}
+  d[i]=Math.max(0,Math.min(255,d[i]+(d[i]-r/n)*amount));d[i+1]=Math.max(0,Math.min(255,d[i+1]+(d[i+1]-g/n)*amount));d[i+2]=Math.max(0,Math.min(255,d[i+2]+(d[i+2]-b/n)*amount))}}
+/* Quitar sombras: fondo estimado por bloques y escalado con interpolación bilineal
+   (sin la interpolación quedaban cuadraditos visibles en las zonas con degradé). */
+function removeShadows(d,w,h,grayOut){const sw=Math.max(8,Math.ceil(w/8)),sh=Math.max(8,Math.ceil(h/8)),bg=new Float32Array(sw*sh);
+ for(let sy=0;sy<sh;sy++)for(let sx=0;sx<sw;sx++){const x0=Math.floor(sx*w/sw),x1=Math.max(x0+1,Math.floor((sx+1)*w/sw)),y0=Math.floor(sy*h/sh),y1=Math.max(y0+1,Math.floor((sy+1)*h/sh));let mx=0;
+  for(let y=y0;y<y1&&y<h;y++)for(let x=x0;x<x1&&x<w;x++){const i=(y*w+x)*4,v=_v21_lum(d[i],d[i+1],d[i+2]);if(v>mx)mx=v}bg[sy*sw+sx]=mx||128}
+ let b2=new Float32Array(sw*sh);for(let pass=0;pass<2;pass++){for(let y=0;y<sh;y++)for(let x=0;x<sw;x++){let s=0,n=0;for(let ky=-1;ky<=1;ky++)for(let kx=-1;kx<=1;kx++){const yy=y+ky,xx=x+kx;if(yy<0||yy>=sh||xx<0||xx>=sw)continue;s+=bg[yy*sw+xx];n++}b2[y*sw+x]=s/n}bg.set(b2)}
+ for(let y=0;y<h;y++){const fy=Math.max(0,Math.min(sh-1,(y+0.5)*sh/h-0.5)),y0=Math.floor(fy),y1=Math.min(sh-1,y0+1),wy=fy-y0;
+  for(let x=0;x<w;x++){const fx=Math.max(0,Math.min(sw-1,(x+0.5)*sw/w-0.5)),x0=Math.floor(fx),x1=Math.min(sw-1,x0+1),wx=fx-x0;
+   const b=Math.max(1,(bg[y0*sw+x0]*(1-wx)+bg[y0*sw+x1]*wx)*(1-wy)+(bg[y1*sw+x0]*(1-wx)+bg[y1*sw+x1]*wx)*wy),i=(y*w+x)*4;
+   if(grayOut){const g=_v21_lum(d[i],d[i+1],d[i+2]),v=Math.max(0,Math.min(255,(g/b)*255));d[i]=d[i+1]=d[i+2]=v}
+   else{d[i]=Math.max(0,Math.min(255,(d[i]/b)*255));d[i+1]=Math.max(0,Math.min(255,(d[i+1]/b)*255));d[i+2]=Math.max(0,Math.min(255,(d[i+2]/b)*255))}}}}
+function adjustSaturation(d,f){for(let i=0;i<d.length;i+=4){const g=_v21_lum(d[i],d[i+1],d[i+2]);d[i]=Math.max(0,Math.min(255,g+(d[i]-g)*f));d[i+1]=Math.max(0,Math.min(255,g+(d[i+1]-g)*f));d[i+2]=Math.max(0,Math.min(255,g+(d[i+2]-g)*f))}}
+function adjustTemperature(d,a){const rM=1+a/255,bM=1-a/255;for(let i=0;i<d.length;i+=4){d[i]=Math.max(0,Math.min(255,d[i]*rM));d[i+2]=Math.max(0,Math.min(255,d[i+2]*bM))}}
+
+/* ---------- D. applyFilter profesional (con respaldo al anterior) ---------- */
+const _origApplyFilter=applyFilter;
+function applyFilterPro(c,f,bright,contrast,o){o=o||{};bright=+bright||0;contrast=+contrast||0;
+ const sat=+o.sat||0,sharp=+o.sharp||0,temp=+o.temp||0,inten=o.intensity==null?100:+o.intensity;
+ if((!f||f==='original')&&!bright&&!contrast&&!sat&&!sharp&&!temp)return;
+ let ctx,id,d;try{ctx=c.getContext('2d',{willReadFrequently:true});id=ctx.getImageData(0,0,c.width,c.height);d=id.data}catch(e){return _origApplyFilter(c,f,bright,contrast,o)}
+ const w=c.width,h=c.height,base=(inten<100&&f&&f!=='original')?new Uint8ClampedArray(d):null;
+ try{switch(f){
+  case 'original':break;
+  case 'aclarar':_v21_applyLUT(d,_v21_lut(v=>255*Math.pow(v/255,0.72)+10));break;
+  case 'mejorar':removeShadows(d,w,h,false);clahePro(d,w,h,2.2,8);autoLevelsPro(d,0.005,0.995);_v21_applyLUT(d,sCurveLUT(0.35));adjustSaturation(d,1.15);unsharpPro(d,w,h,0.55,1);break;
+  case 'magia':removeShadows(d,w,h,false);clahePro(d,w,h,2.8,8);autoLevelsPro(d,0.005,0.995);_v21_applyLUT(d,sCurveLUT(0.5));adjustSaturation(d,1.35);unsharpPro(d,w,h,0.85,1);break;
+  case 'sinsombra':removeShadows(d,w,h,false);autoLevelsPro(d,0.02,0.98);_v21_applyLUT(d,sCurveLUT(0.25));break;
+  case 'gris':for(let i=0;i<d.length;i+=4){const g=_v21_lum(d[i],d[i+1],d[i+2])|0;d[i]=d[i+1]=d[i+2]=g}clahePro(d,w,h,2.0,8);autoLevelsPro(d,0.01,0.99);_v21_applyLUT(d,sCurveLUT(0.35));break;
+  case 'bn':removeShadows(d,w,h,true);binarizeSauvola(d,w,h,25,0.34);unsharpPro(d,w,h,0.3,1);break;
+  case 'ahorro':removeShadows(d,w,h,true);binarizeSauvola(d,w,h,21,0.22);_v21_applyLUT(d,_v21_lut(v=>v>200?255:Math.max(90,v*0.75+90)));break;
+  case 'nitido':autoLevelsPro(d,0.008,0.992);unsharpPro(d,w,h,1.3,1);adjustSaturation(d,1.08);break;
+  case 'color':removeShadows(d,w,h,false);autoLevelsPro(d,0.008,0.992);adjustSaturation(d,1.3);_v21_applyLUT(d,sCurveLUT(0.3));break;
+  case 'contraste':clahePro(d,w,h,3.0,8);autoLevelsPro(d,0.02,0.98);_v21_applyLUT(d,sCurveLUT(0.85));break;
+  case 'vivo':autoLevelsPro(d,0.004,0.996);adjustSaturation(d,1.6);_v21_applyLUT(d,sCurveLUT(0.4));break;
+  case 'pizarra':removeShadows(d,w,h,false);autoLevelsPro(d,0.005,0.995);adjustSaturation(d,1.9);_v21_applyLUT(d,_v21_lut(v=>v>210?255:v));unsharpPro(d,w,h,0.5,1);break;
+  case 'calido':adjustTemperature(d,12);autoLevelsPro(d,0.01,0.99);break;
+  case 'frio':adjustTemperature(d,-12);autoLevelsPro(d,0.01,0.99);break;
+  case 'sepia':for(let i=0;i<d.length;i+=4){const r=d[i],g=d[i+1],b=d[i+2];d[i]=Math.min(255,r*0.393+g*0.769+b*0.189);d[i+1]=Math.min(255,r*0.349+g*0.686+b*0.168);d[i+2]=Math.min(255,r*0.272+g*0.534+b*0.131)}break;
+  case 'invertir':for(let i=0;i<d.length;i+=4){d[i]=255-d[i];d[i+1]=255-d[i+1];d[i+2]=255-d[i+2]}break;
+  default:return _origApplyFilter(c,f,bright,contrast,o)}
+  if(base){const k=inten/100;for(let i=0;i<d.length;i+=4){d[i]=base[i]+(d[i]-base[i])*k;d[i+1]=base[i+1]+(d[i+1]-base[i+1])*k;d[i+2]=base[i+2]+(d[i+2]-base[i+2])*k}}
+  if(bright||contrast){const k=(100+contrast)/100,b=bright*1.3;_v21_applyLUT(d,_v21_lut(v=>Math.max(0,Math.min(255,(v-128)*k*k+128+b))))}
+  if(sat)adjustSaturation(d,1+sat/100);if(temp)adjustTemperature(d,temp*0.7);if(sharp)unsharpPro(d,w,h,sharp/55,1);
+  ctx.putImageData(id,0,0)}
+ catch(e){console.warn('[v21] filtro nuevo falló, uso el anterior:',e);_origApplyFilter(c,f,bright,contrast,o)}}
+
+/* ---------- E. activar (con interruptor para volver a los anteriores) ---------- */
+function useProFilters(on){applyFilter=on?applyFilterPro:_origApplyFilter;detectQuad=on?(src=>(typeof HTMLVideoElement!=='undefined'&&src instanceof HTMLVideoElement)?detectQuadOrig(src):_v21_detect(src)):detectQuadOrig;if(FW.w){try{FW.w.terminate()}catch(e){}FW.w=null;FW.ok=null}}
+useProFilters(S.proFilters!==false);
 
 </script>
 </body>
