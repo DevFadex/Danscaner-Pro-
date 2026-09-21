@@ -476,6 +476,20 @@ html[data-skin="industrial"] .tb.on{background:var(--soft);color:var(--ind-acc)}
 html[data-skin="industrial"] .stat-card b{font-family:var(--ind-head)}
 html[data-skin="industrial"] .invite-cta{background:var(--ind-ink);border-radius:2px}
 html[data-skin="industrial"] .badge{border-radius:2px}
+/* v19: editor de texto tipo Word */
+.rtbar{display:flex;flex-wrap:wrap;gap:4px;align-items:center;background:var(--bg3);border:1px solid var(--line);border-radius:10px;padding:6px;position:sticky;top:0;z-index:2}
+.rtbar button{min-width:34px;height:34px;border-radius:7px;background:var(--bg2);border:1px solid var(--line);font-size:14px;color:var(--tx)}
+.rtbar button svg{pointer-events:none;display:block;margin:auto}
+.rtbar button.on{background:var(--soft);border-color:var(--ac);color:var(--ac)}
+.rtsel{width:auto!important;padding:6px 8px!important;font-size:13px!important;height:34px;border-radius:7px!important}
+.rtsep{width:1px;height:24px;background:var(--line);margin:0 2px}
+.rtcol{position:relative;min-width:34px;height:34px;display:grid;place-items:center;border-radius:7px;background:var(--bg2);border:1px solid var(--line);font-weight:700;color:#c00000;overflow:hidden;cursor:pointer}
+.rtcol.hl{color:var(--tx);background:linear-gradient(transparent 60%,#ffff0088 60%)}
+.rtcol input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.rtpage{background:var(--stage);padding:12px;border-radius:10px;margin:10px 0;max-height:52vh;overflow:auto}
+.rtdoc{background:#fff;color:#111;min-height:40vh;padding:22px 20px;box-shadow:0 2px 10px #0002;font-size:11pt;outline:none;border-radius:2px}
+.rtdoc p{margin:0 0 8pt}
+.rtdoc ul,.rtdoc ol{margin:0 0 8pt 18pt}
 </style>
 </head>
 <body>
@@ -1693,8 +1707,8 @@ function finishSheet(){if(!DOC||!DOC.pages.length)return;let lvl=S.quality||'med
 const b=openSheet('✅ Documento listo','<div style="display:flex;gap:12px;align-items:center;margin-bottom:10px"><img src="'+(DOC.pages[0].thumb||'')+'" style="width:64px;height:84px;object-fit:cover;border-radius:8px;border:1px solid var(--line)"><div><b>'+esc(DOC.name)+'</b><div class="muted">'+DOC.pages.length+' página(s)</div></div></div><div class="muted" style="margin:6px 0">Calidad y tamaño del PDF</div><div class="complist">'+COMP.map(([k,n,d])=>'<button class="compopt" data-lv="'+k+'"><b>'+n+'</b><small>'+d+'</small><em id="cz_'+k+'">calculando…</em></button>').join('')+'</div><div class="row" style="margin-top:8px"><button class="btn pri block" id="fnSave"><i data-ico="save">💾</i> Guardar PDF</button><button class="btn block" id="fnShare"><i data-ico="share">📤</i> Compartir</button></div><div class="row"><button class="btn block" id="fnWa"><i data-ico="share">💬</i> WhatsApp</button><button class="btn block" id="fnMore"><i data-ico="settings">⚙️</i> Más formatos</button></div><div class="cph">Dividir en partes</div><div class="row"><label class="opt" style="flex:1"><span>Cantidad de partes</span><input type="number" id="fnN" min="2" max="20" value="2"></label><button class="btn block" id="fnSplit" style="align-self:flex-end"><i data-ico="crop">✂️</i> Dividir</button></div><div class="muted">'+DOC.pages.length+' páginas · se reparten lo más parejo posible.</div><div class="result" id="fnRes"></div><button class="btn block" data-back style="margin-top:8px"><i data-ico="pencil">✏️</i> Seguir editando</button>');
 const mark=()=>$$('.compopt',b).forEach(x=>x.classList.toggle('on',x.dataset.lv===lvl));mark();
 const build=async(k,silent)=>{if(cache[k])return cache[k];const bytes=await buildPDF(DOC.pages,{size:S.size,orient:S.orient,margin:S.margin,quality:k,title:DOC.name},silent?null:(i,n)=>busy('Generando PDF '+i+'/'+n));return cache[k]=pdfBlob(bytes)};
-(async()=>{for(const [k] of COMP){try{const bl=await build(k,true);const el=$('#cz_'+k,b);if(el)el.textContent=fmtSize(bl.size)}catch(e){const el=$('#cz_'+k,b);if(el)el.textContent='—'}}})();
-b.onclick=async e=>{const o=e.target.closest('[data-lv]');if(o){lvl=o.dataset.lv;mark();return}
+(async()=>{for(const [k] of ((typeof IS_IOS!=='undefined'&&IS_IOS)?COMP.filter(x=>x[0]===lvl):COMP)){try{const bl=await build(k,true);const el=$('#cz_'+k,b);if(el)el.textContent=fmtSize(bl.size)}catch(e){const el=$('#cz_'+k,b);if(el)el.textContent='—'}}})();
+b.onclick=async e=>{const o=e.target.closest('[data-lv]');if(o){lvl=o.dataset.lv;mark();const el=$('#cz_'+lvl,b);if(el&&!cache[lvl]){el.textContent='calculando…';build(lvl,true).then(bl=>{el.textContent=fmtSize(bl.size)}).catch(()=>{el.textContent='—'})}return}
 if(e.target.closest('#fnSave'))return withBusy(async()=>{busy('Preparando…');const bl=await build(lvl);busy(false);download(bl,safeName(DOC.name)+'.pdf');toast('Guardado · '+fmtSize(bl.size))});
 if(e.target.closest('#fnShare'))return withBusy(async()=>{busy('Preparando…');const bl=await build(lvl);busy(false);share(bl,safeName(DOC.name)+'.pdf')});
 if(e.target.closest('#fnWa'))return withBusy(async()=>{busy('Preparando…');const bl=await build(lvl);busy(false);shareWhatsApp(bl,safeName(DOC.name)+'.pdf')});
@@ -2018,6 +2032,117 @@ const head=['Nombre','Correo','Rol','Estado','Registrado','ID'];
 const rows=list.map(u=>[u.full_name||'',u.email||'',u.role||'',u.status||'',admDate(u.created_at),u.id]);
 const csv=[head,...rows].map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(';')).join('\n');
 download(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),'usuarios_'+new Date().toISOString().slice(0,10)+'.csv');toast('CSV descargado')}
+
+
+/* ===== Danscaner Pro v19 ===== */
+const IS_IOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+if(IS_IOS){document.documentElement.classList.add('ios');if((S.maxCap||0)>3000){S.maxCap=3000;saveS()}}
+
+/* ---------- 1. Compartir: si el navegador pide un toque nuevo, se lo damos ---------- */
+async function shareWhatsApp(blob,name,texto){
+ const f=new File([blob],name,{type:blob.type||'application/pdf'});
+ const can=!!(navigator.canShare&&navigator.canShare({files:[f]}));
+ if(can){
+  try{await navigator.share({files:[f],title:name,text:texto||''});return true}
+  catch(e){if(e.name==='AbortError')return true;
+   if(e.name==='NotAllowedError'||e.name==='InvalidStateError'||/gesture|activation|user/i.test(e.message||'')){
+    return new Promise(res=>{const b=openSheet('Enviar por WhatsApp','<div style="text-align:center"><div style="font-size:44px">📄</div><p><b>'+esc(name)+'</b><br><span class="muted">'+fmtSize(blob.size)+' · listo para enviar</span></p></div><button class="btn pri block" id="waGo"><i data-ico="share">📤</i> Enviar ahora</button><button class="btn block" id="waDl" style="margin-top:8px"><i data-ico="save">⬇</i> Descargar</button><p class="muted">Tocá "Enviar ahora" y elegí WhatsApp en la lista.</p>');
+     b.onclick=async ev=>{if(ev.target.closest('#waGo')){try{await navigator.share({files:[f],title:name,text:texto||''});Nav.back();res(true)}catch(x){if(x.name!=='AbortError'){download(blob,name);toast('Se descargó: adjuntalo desde WhatsApp',4500)}Nav.back();res(false)}}
+      if(ev.target.closest('#waDl')){download(blob,name);Nav.back();res(false)}}})}}
+ }
+ download(blob,name);
+ const msg=encodeURIComponent((texto?texto+'\n':'')+'Te envío: '+name);
+ openSheet('Compartir por WhatsApp','<p>El archivo <b>'+esc(name)+'</b> se descargó en este dispositivo.</p><p class="muted">Este navegador no comparte archivos directamente. Abrí WhatsApp y adjuntalo desde Descargas (en iPhone: app Archivos → Descargas).</p><a class="btn pri block" target="_blank" rel="noopener" href="https://wa.me/?text='+msg+'"><i data-ico="share">📤</i> Abrir WhatsApp</a>');
+ return false}
+{const _sh=share;share=async function(blob,name){const f=new File([blob],name,{type:blob.type});if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],title:name});return}catch(e){if(e.name==='AbortError')return;if(e.name==='NotAllowedError')return shareWhatsApp(blob,name)}}return _sh(blob,name)}}
+
+/* ---------- 2. Cambiar foto con la cámara de la app ---------- */
+async function replaceWithPage(id,np){const target=(DOC&&DOC.pages.find(x=>x.id===id))||Ed.p;if(!target||!np)return;
+ target.orig=np.orig;target.quad=np.quad;target.rot=0;delete target.skew;Ed.touch(true);toast('Foto reemplazada. Ajustá el recorte si hace falta.');if(await cropPage(target))Ed.touch(true)}
+function replacePagePhoto(){const p=Ed.p;if(!p)return;const appCam=camSecure();
+ const b=openSheet('Cambiar esta foto','<div class="menu">'+(appCam?'<button data-r="app"><b data-ico="camera">📷</b>Cámara de la app <small class="muted">&nbsp;(recomendada)</small></button>':'')+'<button data-r="cam"><b data-ico="camera">📱</b>Cámara del teléfono</button><button data-r="gal"><b data-ico="image">🖼️</b>Elegir de la galería</button></div><p class="muted">Se reemplaza solo la página '+(Ed.i+1)+'. Se mantienen el filtro, los ajustes, las firmas y los textos.</p>');
+ b.onclick=async e=>{const r=e.target.closest('[data-r]')?.dataset.r;if(!r)return;
+  if(r==='app'){await Nav.back();Cam.replaceId=p.id;Cam.open('single');return}
+  const inp=document.createElement('input');inp.type='file';inp.accept='image/*';if(r==='cam')inp.setAttribute('capture','environment');
+  inp.style.cssText='position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0';document.body.appendChild(inp);
+  let done=false;const cleanup=()=>{try{inp.remove()}catch(_){}};
+  inp.addEventListener('change',async()=>{if(done)return;done=true;const files=[...inp.files];cleanup();if(!files.length)return;let np=null;
+   await withBusy(async()=>{busy('Procesando foto…');try{const arr=await importFiles(files.slice(0,1),{auto:S.autoCrop});np=arr&&arr[0]}catch(err){toast('Error: '+(err.message||err),4500)}});
+   if(!np)return toast('No se pudo leer la foto',4000);await replaceWithPage(p.id,np)});
+  inp.addEventListener('cancel',cleanup);window.addEventListener('focus',()=>setTimeout(()=>{if(!done&&!inp.files.length)cleanup()},1500),{once:true});
+  inp.click();Nav.back()}}
+{const _stop=Cam.stop;Cam.stop=function(){const r=_stop.apply(this,arguments);if(!this._shooting)this.replaceId=null;return r}}
+Cam.shoot=async function(){if(!this.stream){const m=this.mode;NativeCam.open(m);Nav.back();return}if(this.busy)return;this.busy=true;const fl=$('#camera .flash');fl.classList.remove('go');void fl.offsetWidth;fl.classList.add('go');
+ try{let src=null;if(S.hd&&'ImageCapture' in window){try{const blob=await Promise.race([new ImageCapture(this.track).takePhoto(),sleep(5000).then(()=>null)]);if(blob&&blob.size>1000)src=await imageBlobToSrc(blob)}catch(e){}}
+ if(!src){const v=$('#camVideo');if(!v.videoWidth)throw new Error('La cámara no está lista');const c=canvas(v.videoWidth,v.videoHeight);c.getContext('2d').drawImage(v,0,0);src=c.toDataURL('image/jpeg',.95)}
+ $('#camHint').textContent='Procesando…';const p=await makePage(src);if(src.startsWith('blob:')){URL.revokeObjectURL(src);_imgCache.delete(src)}navigator.vibrate&&navigator.vibrate(40);
+ if(this.replaceId){const rid=this.replaceId;this._shooting=true;this.busy=false;await Nav.back();this._shooting=false;this.replaceId=null;await replaceWithPage(rid,p);return}
+ if(this.mode==='single'){this.busy=false;await Nav.back();await addPages([p],true);return}
+ this.batch.push(p);this.updUI()}catch(e){toast('Error al capturar: '+e.message)}this.busy=false};
+$('#camShot').onclick=()=>Cam.shoot();
+
+/* ---------- 4. OCR: respeta los párrafos ---------- */
+function ocrLayout(data){let paras=[];
+ if(data&&Array.isArray(data.blocks)&&data.blocks.length)paras=data.blocks.flatMap(b=>b.paragraphs||[]);
+ else if(data&&Array.isArray(data.paragraphs))paras=data.paragraphs;
+ if(!paras.length)return (data&&data.text||'').replace(/[ \t]+\n/g,'\n').trim();
+ return paras.map(p=>String(p.text||'').replace(/(\w)-\s*\n\s*(\w)/g,'$1$2').replace(/\s*\n\s*/g,' ').replace(/\s{2,}/g,' ').trim()).filter(t=>t.length>1).join('\n\n')}
+async function ocrCanvases(getImgs,lang,total){busy('Cargando motor OCR (la primera vez descarga el idioma)…');await loadLib('tess');let cur=0;
+ const w=await Tesseract.createWorker(lang||S.lang,1,{logger:m=>{if(m.status==='recognizing text')busy('Reconociendo texto · página '+cur+(total?'/'+total:'')+' · '+Math.round(m.progress*100)+'%')}});
+ try{await w.setParameters({preserve_interword_spaces:'1',tessedit_pageseg_mode:'3',user_defined_dpi:'300'})}catch(e){}
+ const texts=[];try{await getImgs(async img=>{cur++;busy('Preparando imagen '+cur+(total?'/'+total:'')+'…');const prep=(img&&img.getContext)?prepOcr(img):img;
+  let r;try{r=await w.recognize(prep,{},{text:true,blocks:true})}catch(e){r=await w.recognize(prep)}
+  texts.push(ocrLayout(r.data))})}finally{await w.terminate()}
+ return texts}
+
+/* ---------- 5. Editor de texto tipo Word ---------- */
+function rtHtmlFromText(text){return String(text||'').split(/\n{2,}/).map(p=>'<p>'+esc(p).replace(/\n/g,'<br>')+'</p>').join('')||'<p><br></p>'}
+function rtDocHtml(inner,title){return '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>@page{size:21cm 29.7cm;margin:2.5cm 2cm 2cm 3cm}body{font-family:Calibri,Arial,sans-serif;font-size:11pt;line-height:1.15}p{margin:0 0 8pt}</style></head><body>'+inner+'</body></html>'}
+function showText(text,name){const txt=String(text||'');
+ const fonts=[['Calibri, Carlito, Arial, sans-serif','Calibri'],['Arial, Helvetica, sans-serif','Arial'],['"Times New Roman", Times, serif','Times New Roman'],['Georgia, serif','Georgia'],['Verdana, sans-serif','Verdana'],['"Courier New", monospace','Courier New']];
+ const b=openSheet('Texto extraído',
+ '<div class="rtbar">'
+ +'<select class="rtsel" data-rt="font" title="Tipo de letra">'+fonts.map(([v,n])=>'<option value=\''+v+'\'>'+n+'</option>').join('')+'</select>'
+ +'<select class="rtsel" data-rt="size" title="Tamaño">'+[8,9,10,11,12,14,16,18,20,24,28].map(s=>'<option'+(s===11?' selected':'')+'>'+s+'</option>').join('')+'</select>'
+ +'<span class="rtsep"></span>'
+ +'<button data-cmd="bold" title="Negrita"><b>N</b></button><button data-cmd="italic" title="Cursiva"><i>K</i></button><button data-cmd="underline" title="Subrayado"><u>S</u></button><button data-cmd="strikeThrough" title="Tachado"><s>ab</s></button>'
+ +'<label class="rtcol" title="Color de letra">A<input type="color" data-rt="color" value="#c00000"></label><label class="rtcol hl" title="Resaltar">✎<input type="color" data-rt="hilite" value="#ffff00"></label>'
+ +'<span class="rtsep"></span>'
+ +'<button data-cmd="justifyLeft" title="Alinear a la izquierda"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 5 H20"/><path d="M4 9 H14"/><path d="M4 13 H20"/><path d="M4 17 H12"/></svg></button><button data-cmd="justifyCenter" title="Centrar"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 5 H20"/><path d="M7 9 H17"/><path d="M4 13 H20"/><path d="M8 17 H16"/></svg></button><button data-cmd="justifyRight" title="Alinear a la derecha"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 5 H20"/><path d="M10 9 H20"/><path d="M4 13 H20"/><path d="M12 17 H20"/></svg></button><button data-cmd="justifyFull" title="Justificar" class="on"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 5 H20"/><path d="M4 9 H20"/><path d="M4 13 H20"/><path d="M4 17 H20"/></svg></button>'
+ +'<span class="rtsep"></span>'
+ +'<button data-cmd="insertUnorderedList" title="Viñetas">•</button><button data-cmd="insertOrderedList" title="Numeración">1.</button><button data-cmd="outdent" title="Disminuir sangría">⇤</button><button data-cmd="indent" title="Aumentar sangría">⇥</button>'
+ +'<select class="rtsel" data-rt="lh" title="Interlineado"><option value="1">1,0</option><option value="1.15" selected>1,15</option><option value="1.5">1,5</option><option value="2">2,0</option></select>'
+ +'<span class="rtsep"></span>'
+ +'<button data-cmd="removeFormat" title="Borrar formato">⌫A</button><button data-cmd="undo" title="Deshacer">↶</button><button data-cmd="redo" title="Rehacer">↷</button>'
+ +'<button data-rt="joinlines" title="Unir renglones cortados en párrafos">¶</button>'
+ +'</div>'
+ +'<div class="rtpage"><div class="rtdoc" id="rtDoc" contenteditable="true" spellcheck="true" lang="es"></div></div>'
+ +'<textarea id="ocrTxt" hidden></textarea>'
+ +'<div class="row"><button class="btn block" data-t="copy"><i data-ico="type">📋</i> Copiar</button><button class="btn pri block" data-t="doc"><i data-ico="word">📝</i> Word</button></div>'
+ +'<div class="row"><button class="btn block" data-t="pdf"><i data-ico="save">📄</i> PDF</button><button class="btn block" data-t="txt"><i data-ico="save">⬇</i> .txt</button><button class="btn block" data-t="share"><i data-ico="share">📤</i></button></div>'
+ +'<p class="muted">'+(txt.trim()?'Editalo como en Word: elegí letra, tamaño, alineación (justificado viene activado), listas, sangría e interlineado. El botón ¶ une los renglones cortados en párrafos.':'No se detectó texto. Probá con más luz, la foto quieta y el filtro "Nítido" o "B/N".')+'</p>');
+ const doc=$('#rtDoc',b),mirror=$('#ocrTxt',b);
+ doc.innerHTML=rtHtmlFromText(txt);doc.style.textAlign='justify';doc.style.lineHeight='1.15';doc.style.fontFamily=fonts[0][0];
+ const sync=()=>{mirror.value=doc.innerText};sync();doc.addEventListener('input',sync);
+ try{document.execCommand('styleWithCSS',false,true)}catch(e){}
+ const exec=(c,v)=>{doc.focus();try{document.execCommand(c,false,v)}catch(e){}sync()};
+ b.onmousedown=e=>{if(e.target.closest('.rtbar button'))e.preventDefault()};
+ b.onchange=e=>{const t=e.target.dataset.rt;if(!t)return;const v=e.target.value;
+  if(t==='font')exec('fontName',v);
+  if(t==='size'){exec('fontSize','7');doc.querySelectorAll('font[size="7"],span[style*="xxx-large"]').forEach(n=>{n.removeAttribute('size');n.style.fontSize=v+'pt'})}
+  if(t==='color')exec('foreColor',v);
+  if(t==='hilite')exec('hiliteColor',v);
+  if(t==='lh'){doc.style.lineHeight=v}};
+ b.onclick=async e=>{const c=e.target.closest('[data-cmd]');
+  if(c){exec(c.dataset.cmd);if(/^justify/.test(c.dataset.cmd)){$$('.rtbar [data-cmd^="justify"]',b).forEach(x=>x.classList.toggle('on',x===c))}return}
+  if(e.target.closest('[data-rt="joinlines"]')){doc.innerHTML=rtHtmlFromText(doc.innerText.replace(/(\w)-\n(\w)/g,'$1$2').replace(/([^\n.:;!?])\n(?!\n)/g,'$1 '));sync();toast('Renglones unidos en párrafos');return}
+  const t=e.target.closest('[data-t]')?.dataset.t;if(!t)return;const nm=safeName(name||'texto'),plain=doc.innerText;
+  if(t==='copy'){try{await navigator.clipboard.writeText(plain);toast('Copiado')}catch(er){toast('No se pudo copiar')}}
+  if(t==='txt')download(new Blob([plain],{type:'text/plain;charset=utf-8'}),nm+'.txt');
+  if(t==='doc'){const html=rtDocHtml('<div style="text-align:'+(doc.style.textAlign||'justify')+';line-height:'+doc.style.lineHeight+';font-family:'+doc.style.fontFamily.replace(/"/g,"'")+'">'+sanitizeHtml(doc.innerHTML)+'</div>',nm);download(new Blob(['\ufeff'+html],{type:'application/msword'}),nm+'.doc');toast('Se abre en Word con el formato')}
+  if(t==='pdf')withBusy(async()=>{busy('Armando PDF…');const blob=await htmlToPdfBlob('<div style="text-align:'+(doc.style.textAlign||'justify')+';line-height:'+doc.style.lineHeight+';font-family:'+doc.style.fontFamily.replace(/"/g,"'")+';font-size:11pt">'+sanitizeHtml(doc.innerHTML)+'</div>');busy(false);download(blob,nm+'.pdf')});
+  if(t==='share')share(new Blob([plain],{type:'text/plain;charset=utf-8'}),nm+'.txt')};
+ return b}
 
 </script>
 </body>
