@@ -7,7 +7,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self' blob: data:; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' data: https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob: data:; connect-src 'self' data: blob: https:; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="referrer" content="no-referrer">
 <title>Danscaner Pro</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%22-6 -6 112 112%22%3E%3Crect x=%22-6%22 y=%22-6%22 width=%22112%22 height=%22112%22 rx=%2222%22 fill=%22%23f7f8fa%22/%3E%3Cg%3E%3Cg stroke=%22%23e8222a%22 stroke-width=%227.5%22 stroke-linecap=%22round%22 fill=%22none%22%3E%3Cpath d=%22M14 34V20a6 6 0 0 1 6-6h14%22/%3E%3Cpath d=%22M86 34V20a6 6 0 0 0-6-6H66%22/%3E%3Cpath d=%22M14 66v14a6 6 0 0 0 6 6h14%22/%3E%3Cpath d=%22M86 66v14a6 6 0 0 1-6 6H66%22/%3E%3C/g%3E%3Cpath d=%22M32 24h24l14 14v36a4 4 0 0 1-4 4H32a4 4 0 0 1-4-4V28a4 4 0 0 1 4-4z%22 fill=%22%23171c24%22/%3E%3Cpath d=%22M56 24l14 14H58a2 2 0 0 1-2-2z%22 fill=%22%233c4450%22/%3E%3Cg fill=%22%23ffffff%22 opacity=%22.93%22%3E%3Crect x=%2236%22 y=%2238%22 width=%2220%22 height=%224.6%22 rx=%222.3%22/%3E%3Crect x=%2236%22 y=%2259%22 width=%2226%22 height=%224.6%22 rx=%222.3%22/%3E%3Crect x=%2236%22 y=%2268%22 width=%2217%22 height=%224.6%22 rx=%222.3%22/%3E%3C/g%3E%3Crect x=%2234%22 y=%2247%22 width=%2230%22 height=%224.6%22 rx=%222.3%22 fill=%22%23c9ced6%22/%3E%3Crect x=%2218%22 y=%2248.2%22 width=%2264%22 height=%223.4%22 rx=%221.7%22 fill=%22%23e8222a%22/%3E%3C/g%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 290 290%22%3E%3Crect width=%22290%22 height=%22290%22 rx=%2268%22 fill=%22%23f0f9ff%22 stroke=%22%23bae6fd%22 stroke-width=%223%22/%3E%3Cg fill=%22none%22 stroke=%22%230284c7%22 stroke-width=%229%22 stroke-linecap=%22round%22%3E%3Cpath d=%22M54 84V58q0-8 8-8h26%22/%3E%3Cpath d=%22M202 50h26q8 0 8 8v26%22/%3E%3Cpath d=%22M236 206v26q0 8-8 8h-26%22/%3E%3Cpath d=%22M88 240H62q-8 0-8-8v-26%22/%3E%3C/g%3E%3Crect x=%2270%22 y=%2248%22 width=%22150%22 height=%22194%22 rx=%2216%22 fill=%22%23fff%22 stroke=%22%23cbd5e1%22 stroke-width=%223%22/%3E%3Crect x=%2288%22 y=%2270%22 width=%2254%22 height=%2212%22 rx=%226%22 fill=%22%230ea5e9%22/%3E%3Cg fill=%22%2394a3b8%22%3E%3Crect x=%2288%22 y=%22100%22 width=%22114%22 height=%228%22 rx=%224%22/%3E%3Crect x=%2288%22 y=%22122%22 width=%2296%22 height=%228%22 rx=%224%22/%3E%3Crect x=%2288%22 y=%22144%22 width=%22106%22 height=%228%22 rx=%224%22/%3E%3Crect x=%2288%22 y=%22166%22 width=%2280%22 height=%228%22 rx=%224%22/%3E%3C/g%3E%3Crect x=%2260%22 y=%22134%22 width=%22170%22 height=%225%22 rx=%222.5%22 fill=%22%2338bdf8%22/%3E%3Crect x=%22195%22 y=%22202%22 width=%2262%22 height=%2228%22 rx=%2210%22 fill=%22%230284c7%22/%3E%3Ctext x=%22226%22 y=%22221%22 fill=%22%23fff%22 font-family=%22Arial%22 font-weight=%22900%22 font-size=%2213%22 text-anchor=%22middle%22%3EPRO%3C/text%3E%3C/svg%3E">
 <script src="config.js" onerror="void 0"></script>
 <script>(function(){var t='light';try{t=(JSON.parse(localStorage.getItem('ds_settings')||'{}').theme)||'system'}catch(e){}if(t==='system')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t)})()</script>
 <script>if(location.protocol==='https:'){const l=document.createElement('link');l.rel='manifest';l.href='manifest.webmanifest';document.head.appendChild(l);if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}</script>
@@ -531,6 +531,27 @@ html[data-skin="industrial"] .nav.nav2 .fab.fabcam{border-radius:4px!important;b
 [data-theme="dark"] .aicard-pro{background:#0c4a6e;color:#7dd3fc}
 .aicard-btn{flex:none;background:#0ea5e9;color:#fff;font-size:12px;font-weight:700;padding:9px 12px;border-radius:12px;box-shadow:0 2px 6px #0ea5e944}
 .aicard:active{transform:scale(.99)}
+/* v23: estilo Celeste Clásico (tokens del diseño) */
+html[data-skin="celeste"]{--cam-mask-url:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3E%3Cpath fill-rule=%22evenodd%22 d=%22M9.5 3.5 8 5.5H5A2.5 2.5 0 0 0 2.5 8v10A2.5 2.5 0 0 0 5 20.5h14a2.5 2.5 0 0 0 2.5-2.5V8A2.5 2.5 0 0 0 19 5.5h-3l-1.5-2zM12 8.7a4.3 4.3 0 1 0 0 8.6 4.3 4.3 0 0 0 0-8.6zM12 10.4a2.6 2.6 0 1 1 0 5.2 2.6 2.6 0 0 1 0-5.2zM18 7.3a1 1 0 1 0 0 2 1 1 0 0 0 0-2z%22/%3E%3C/svg%3E");--color-primario:#0ea5e9;--bg:#f8fafc;--bg-principal:#ffffff;--bg2:#ffffff;--bg3:#f1f5f9;--bg4:#e2e8f0;--line:#e2e8f0;--stage:#eef4f9;
+ --tx:#0f172a;--tx2:#64748b;--texto-principal:#0f172a;--soft:#e0f2fe;--soft-line:#bae6fd}
+html[data-skin="celeste"][data-theme="dark"]{--color-primario:#38bdf8;--bg:#0a0e14;--bg-principal:#10141a;--bg2:#10141a;--bg3:#161c24;--bg4:#1e293b;--line:#1e293b;--stage:#0b1016;
+ --tx:#f8fafc;--tx2:#94a3b8;--texto-principal:#f8fafc;--soft:rgba(56,189,248,.15);--soft-line:rgba(56,189,248,.3)}
+html[data-skin="celeste"] .hbtn.big{background:linear-gradient(45deg,#0284c7,#38bdf8);border-color:transparent}
+html[data-skin="celeste"] .btn.pri,html[data-skin="celeste"] .ib.pri{background:#0ea5e9}
+html[data-skin="celeste"][data-theme="dark"] .hbtn.big{background:linear-gradient(45deg,#0284c7,#38bdf8);color:#fff;border-color:transparent;box-shadow:0 6px 18px #0ea5e944}
+html[data-skin="celeste"][data-theme="dark"] .hbtn.big small{color:#e0f2fe}
+html[data-skin="celeste"] .hbtn.big .icono-camara,html[data-skin="celeste"][data-theme="dark"] .hbtn.big .icono-camara{background:#fff;-webkit-mask:var(--cam-mask-url) center/contain no-repeat;mask:var(--cam-mask-url) center/contain no-repeat;filter:none}
+html[data-skin="celeste"] .btn.pri:active{background:#0284c7}
+/* barra de edición del diseño: botones tipo píldora, desplazable */
+#editor .sfoot{gap:10px;padding:10px 10px calc(10px + env(safe-area-inset-bottom));justify-content:flex-start;scrollbar-width:none}
+#editor .sfoot::-webkit-scrollbar{display:none}
+#editor .sfoot .tb{min-width:68px;padding:7px 8px;border-radius:12px;background:var(--bg3);color:var(--tx);font-size:11px;font-weight:600}
+#editor .sfoot .tb:active{background:var(--soft);color:var(--ac)}
+#editor .sfoot .tb.on,#editor .sfoot .tb[data-ed="adj"].on{background:var(--soft);color:var(--ac);outline:1px solid var(--soft-line)}
+#editor .sfoot .tb b .ico{width:20px;height:20px}
+/* logo en la cabecera: isotipo nuevo, quieto */
+.logo .dlogo{width:34px;height:34px}.logo .dlogo *{animation:none!important}
+html[data-skin="celeste"] .logo{background:#fff;border-color:#bae6fd}
 </style>
 </head>
 <body>
@@ -1802,7 +1823,7 @@ var PRESETS={
  papel:{label:'Papel',color:'#8d6e37',shape:'round',ico:22,stroke:1.7,iconStyle:'line',anim:true,uifont:'serif',density:'amplio',zoom:1.05,bg:'papel',contrast:false,docView:'grid',theme:'light'},
  nocturno:{label:'Nocturno',color:'#ff5252',shape:'round',ico:23,stroke:1.9,iconStyle:'line',anim:true,uifont:'sys',density:'normal',zoom:1,bg:'plano',contrast:false,docView:'grid',theme:'dark'},
  industrial:{label:'Industrial',skin:'industrial',color:'#41617f',shape:'square',ico:22,stroke:2,iconStyle:'line',anim:true,uifont:'sys',density:'normal',zoom:1,bg:'plano',contrast:false,docView:'list',theme:'light'},
- celeste:{label:'Celeste Pro',skin:'suave',color:'#0ea5e9',shape:'round',ico:22,stroke:2,iconStyle:'line',anim:true,uifont:'sys',density:'normal',zoom:1,bg:'plano',contrast:false,docView:'list',theme:'light'},
+ celeste:{label:'Celeste Pro',skin:'celeste',color:'#0ea5e9',shape:'round',ico:22,stroke:2,iconStyle:'line',anim:true,uifont:'sys',density:'normal',zoom:1,bg:'plano',contrast:false,docView:'list',theme:'light'},
  grande:{label:'Letra grande',color:'#e53935',shape:'round',ico:27,stroke:2.2,iconStyle:'line',anim:false,uifont:'sys',density:'amplio',zoom:1.18,bg:'plano',contrast:true,docView:'list',theme:'light'}
 };
 Object.assign(DESIGN_DEF,{uifont:'sys',density:'normal',zoom:1,bg:'plano',contrast:false,docView:'list',skin:'suave'});
@@ -2007,7 +2028,7 @@ async function applyFilterAsync(c,f,bright=0,contrast=0,o){o=o||{};
 /* ===== Danscaner Pro v20: módulos que se cargan cuando se usan ===== */
 window.__mods=window.__mods||{};
 const _modP={};
-function lazyMod(n){if(_modP[n])return _modP[n];return _modP[n]=new Promise((res,rej)=>{const s=document.createElement('script');s.src='mod/'+n+'.js';s.onload=()=>res();s.onerror=()=>{delete _modP[n];s.remove();rej(new Error('Falta el módulo "'+n+'". Subí la carpeta mod a GitHub.'))};document.head.appendChild(s)})}
+function lazyMod(n){if(_modP[n])return _modP[n];return _modP[n]=new Promise((res,rej)=>{const s=document.createElement('script');s.src='mod/'+n+'.js';s.onload=()=>res();s.onerror=()=>{s.remove();const emb=document.getElementById('modsrc-'+n);if(emb){const u=URL.createObjectURL(new Blob([emb.textContent],{type:'text/javascript'}));const s2=document.createElement('script');s2.src=u;s2.onload=()=>{URL.revokeObjectURL(u);res()};s2.onerror=()=>{delete _modP[n];rej(new Error('No se pudo cargar "'+n+'"'))};document.head.appendChild(s2);return}delete _modP[n];rej(new Error('Falta el módulo "'+n+'". Subí la carpeta mod a GitHub.'))};document.head.appendChild(s)})}
 async function modCall(n,fn,self,args){try{await lazyMod(n)}catch(e){toast(e.message,6000);throw e}return __mods[fn].apply(self,args)}
 function adminSheet(){return modCall('admin','adminSheet',this,arguments)}
 function showText(){return modCall('texto','showText',this,arguments)}
@@ -2215,6 +2236,240 @@ Object.assign(ICONS,{
 /* ---------- Acerca de ---------- */
 function aboutSheet(){openSheet('Acerca de Danscaner Pro',logoFullHtml()+'<p class="muted" style="text-align:center;margin-top:14px">Los documentos se procesan y se guardan solo en este dispositivo.</p>')}
 
+
+/* ===== Danscaner Pro v23: diseño nuevo por defecto ===== */
+(function(){try{if(!S.v23){const d=D();Object.assign(d,JSON.parse(JSON.stringify(PRESETS.celeste)));delete d.label;S.v23=true;S.theme=S.theme||'system';saveS();applyDesign();cambiarTema(d.theme||'light')}}catch(e){console.warn(e)}
+ const lg=document.querySelector('.top .logo');if(lg)lg.innerHTML=logoIsoSvg(34);
+ const m=document.querySelector('meta[name="theme-color"]');if(m&&document.documentElement.dataset.skin==='celeste')m.content='#0ea5e9'})();
+</script>
+<script type="text/plain" id="modsrc-admin">/* Danscaner Pro · módulo que se carga solo cuando se usa */
+window.__mods=window.__mods||{};
+/* ---------- panel de administración ---------- */
+function admInitials(n,e){const base=(n||'').trim()||(e||'').split('@')[0]||'?';const p=base.split(/[\s._-]+/).filter(Boolean);return (p.length>=2?p[0][0]+p[1][0]:base.slice(0,2)).toUpperCase()}
+function admColor(seed){const pal=['#e53935','#d81b60','#8e24aa','#5e35b1','#3949ab','#1e88e5','#039be5','#00897b','#43a047','#f4511e','#6d4c41','#546e7a'];let h=0;for(const c of String(seed||''))h=(h*31+c.charCodeAt(0))>>>0;return pal[h%pal.length]}
+function admAvatar(u,lg){return '<div class="avatar'+(lg?' lg':'')+'" style="background:'+admColor(u.id||u.email||'')+'">'+esc(admInitials(u.full_name,u.email))+'</div>'}
+function admDate(iso){if(!iso)return '—';try{return new Date(iso).toLocaleDateString('es-AR',{day:'2-digit',month:'short',year:'numeric'})}catch(e){return '—'}}
+function admRel(iso){if(!iso)return '';try{const d=new Date(iso),s=Math.floor((Date.now()-d)/1000);if(s<3600)return 'hace '+Math.max(1,Math.floor(s/60))+' min';if(s<86400)return 'hace '+Math.floor(s/3600)+' h';if(s<2592000)return 'hace '+Math.floor(s/86400)+' días';return 'el '+d.toLocaleDateString('es-AR')}catch(e){return ''}}
+function admBadges(u,isMe){const st={activo:['activo','Activo'],pendiente:['pendiente','Pendiente'],bloqueado:['bloqueado','Bloqueado']}[u.status]||['user',u.status||'—'];
+return '<span class="badge '+(u.role==='admin'?'admin':'user')+'">'+(u.role==='admin'?'Admin':'Usuario')+'</span><span class="badge '+st[0]+'">'+esc(st[1])+'</span>'+(isMe?'<span class="badge you">Vos</span>':'')}
+__mods.adminSheet=async function(){if(!SB.ready||!SB.profile||SB.profile.role!=='admin')return toast('Solo el administrador puede entrar acá');
+let users=[],filter='todos',query='',bulk=false;const sel=new Set();
+const b=openSheet('👤 Administración de accesos','<div class="admin-wrap" id="admRoot"><div class="admin-empty"><div class="big">⏳</div>Cargando…</div></div>');
+const draw=()=>{const st={total:users.length,activos:users.filter(u=>u.status==='activo').length,pend:users.filter(u=>u.status==='pendiente').length,bloq:users.filter(u=>u.status==='bloqueado').length,admins:users.filter(u=>u.role==='admin').length};
+let list=users.filter(u=>{if(filter==='activos'&&u.status!=='activo')return false;if(filter==='pendientes'&&u.status!=='pendiente')return false;if(filter==='bloqueados'&&u.status!=='bloqueado')return false;if(filter==='admins'&&u.role!=='admin')return false;
+if(query)return ((u.email||'')+' '+(u.full_name||'')).toLowerCase().includes(query.toLowerCase());return true});
+list.sort((a,c)=>a.role!==c.role?(a.role==='admin'?-1:1):new Date(c.created_at||0)-new Date(a.created_at||0));
+$('#admRoot',b).innerHTML='<div class="admin-stats">'
++'<div class="stat-card" data-tone="ac"><b>'+st.total+'</b><small>Total</small></div>'
++'<div class="stat-card" data-tone="ok"><b>'+st.activos+'</b><small>Activos</small></div>'
++'<div class="stat-card" data-tone="red"><b>'+st.bloq+'</b><small>Bloqueados</small></div>'
++'<div class="stat-card" data-tone="info"><b>'+st.admins+'</b><small>Admins</small></div></div>'
++'<div class="invite-cta" id="admInvite"><div class="ic">＋</div><div class="txt"><b>Invitar a alguien</b><small>Enlace o código QR para dar acceso</small></div><div class="arrow">›</div></div>'
++'<div class="admin-search"><input id="admQ" placeholder="Buscar por nombre o correo…" value="'+esc(query)+'"></div>'
++'<div class="admin-filters">'+[['todos','Todos',st.total],['activos','Activos',st.activos],['pendientes','Pendientes',st.pend],['bloqueados','Bloqueados',st.bloq],['admins','Admins',st.admins]].map(([k,l,n])=>'<button class="chip '+(filter===k?'on':'')+'" data-fl="'+k+'">'+l+' · '+n+'</button>').join('')+'</div>'
++(bulk&&sel.size?'<div class="admin-selbar"><b>'+sel.size+' seleccionado(s)</b><button data-bulk="activo">✓ Dar acceso</button><button data-bulk="bloqueado">✕ Quitar</button><button data-bulk="cancel">Cancelar</button></div>':'')
++'<div class="admin-list">'+(list.length?list.map(u=>{const isMe=u.id===SB.user.id;
+return '<div class="admin-user" data-id="'+u.id+'" data-status="'+esc(u.status||'')+'" data-role="'+esc(u.role||'')+'">'
++(bulk&&!isMe?'<input type="checkbox" class="cb" data-cb="'+u.id+'" '+(sel.has(u.id)?'checked':'')+'>':'')
++admAvatar(u)+'<div class="inf"><div class="nm">'+esc(u.full_name||u.email||'(sin nombre)')+'</div><div class="em">'+esc(u.email||'')+'</div><div class="admin-badges">'+admBadges(u,isMe)+'</div>'+(u.created_at?'<div class="meta">Se registró '+admRel(u.created_at)+'</div>':'')+'</div><div class="chev">›</div></div>'}).join('')
+:'<div class="admin-empty"><div class="big">🔎</div>No hay usuarios que coincidan.</div>')+'</div>'
++'<div class="admin-actions-top" style="margin-top:10px"><button class="btn" id="admBulk">'+(bulk?'✕ Cancelar':'☑️ Seleccionar')+'</button><button class="btn" id="admCsv">📥 CSV</button><button class="btn" id="admRef">↻ Actualizar</button></div>';
+const q=$('#admQ',b);if(q)q.oninput=e=>{query=e.target.value;const p=e.target.selectionStart;draw();const n=$('#admQ',b);n.focus();try{n.setSelectionRange(p,p)}catch(x){}}};
+const load=async(silent)=>{if(!silent)$('#admRoot',b).innerHTML='<div class="admin-empty"><div class="big">⏳</div>Cargando…</div>';
+try{const r=await _to(SB.client.from('profiles').select('*').order('created_at',{ascending:false}),20000,'usuarios');
+ if(r.error)throw r.error;users=r.data||[];draw()}
+catch(e){$('#admRoot',b).innerHTML='<div class="admin-empty"><div class="big">⚠️</div>'+esc(e.message||e)+'<br><button class="btn pri" style="margin-top:12px" id="admRetry">↻ Reintentar</button></div>'}};
+b.onclick=async e=>{
+ if(e.target.closest('#admRetry'))return load();
+ const f=e.target.closest('[data-fl]');if(f){filter=f.dataset.fl;return draw()}
+ if(e.target.closest('#admInvite'))return adminInviteSheet();
+ if(e.target.closest('#admRef'))return load(true);
+ if(e.target.closest('#admBulk')){bulk=!bulk;if(!bulk)sel.clear();return draw()}
+ if(e.target.closest('#admCsv'))return admCsv(users);
+ const cb=e.target.closest('[data-cb]');if(cb){e.stopPropagation();cb.checked?sel.add(cb.dataset.cb):sel.delete(cb.dataset.cb);return draw()}
+ const bl=e.target.closest('[data-bulk]');if(bl){const a=bl.dataset.bulk;if(a==='cancel'){bulk=false;sel.clear();return draw()}
+  await withBusy(async()=>{let i=0;for(const id of sel){busy('Actualizando '+(++i)+'/'+sel.size);await SB.client.from('profiles').update({status:a}).eq('id',id)}});
+  sel.clear();bulk=false;toast(a==='activo'?'Acceso habilitado':'Acceso quitado');return load(true)}
+ const row=e.target.closest('.admin-user');if(row){const u=users.find(x=>x.id===row.dataset.id);if(u)adminUserDetail(u,()=>load(true),$('#admRoot',b))}};
+await load()}
+function adminUserDetail(u,onChange,host){const isMe=u.id===SB.user.id;
+const b=host||openSheet('Detalle del usuario','');if(host)host.innerHTML='<button class="btn sm" data-act="back" style="margin-bottom:10px">← Volver a la lista</button>'+('<div class="udetail-head">'+admAvatar(u,true)+'<div class="txt"><h3>'+esc(u.full_name||u.email||'(sin nombre)')+'</h3><div class="em">'+esc(u.email||'')+'</div><div class="admin-badges" style="margin-top:8px">'+admBadges(u,isMe)+'</div></div></div>'
++'<div class="udetail-row"><span class="label">Rol</span><span class="val">'+(u.role==='admin'?'Administrador':'Usuario')+'</span></div>'
++'<div class="udetail-row"><span class="label">Estado</span><span class="val">'+(u.status==='activo'?'Puede entrar':u.status==='pendiente'?'Esperando autorización':'Bloqueado')+'</span></div>'
++'<div class="udetail-row"><span class="label">Registrado</span><span class="val">'+admDate(u.created_at)+' · '+admRel(u.created_at)+'</span></div>'
++'<div class="udetail-row"><span class="label">ID</span><span class="val"><code>'+esc(u.id)+'</code></span></div>'
++(isMe?'<p class="muted" style="margin-top:16px;text-align:center">Es tu propia cuenta: no podés quitarte el acceso.</p>'
+ :'<div class="udetail-actions"><button class="btn '+(u.status==='activo'?'red':'pri')+'" data-act="st">'+(u.status==='activo'?'🚫 Quitar acceso':'✓ Dar acceso')+'</button><button class="btn" data-act="rol">'+(u.role==='admin'?'👤 Quitar admin':'👑 Hacer admin')+'</button><button class="btn" data-act="mail">📋 Copiar correo</button><button class="btn" data-act="del">🗑 Eliminar</button></div>'));
+b.onclick=async e=>{const a=e.target.closest('[data-act]')?.dataset.act;if(!a)return;
+if(a==='mail'){try{await navigator.clipboard.writeText(u.email||'');toast('Correo copiado')}catch(x){toast('No se pudo copiar')}return}
+if(a==='back'){onChange&&onChange();return}
+if(a==='st'){const n=u.status==='activo'?'bloqueado':'activo';const {error}=await SB.client.from('profiles').update({status:n}).eq('id',u.id);if(error)return toast('Error: '+error.message);toast(n==='activo'?'Acceso habilitado':'Acceso quitado');if(!host)await Nav.back();onChange&&onChange();return}
+if(a==='rol'){const n=u.role==='admin'?'usuario':'admin';if(n==='admin'&&!confirm('¿Convertir a '+(u.email||'')+' en administrador? Va a poder dar y quitar accesos.'))return;const {error}=await SB.client.from('profiles').update({role:n}).eq('id',u.id);if(error)return toast('Error: '+error.message);toast(n==='admin'?'Ahora es administrador':'Ya no es administrador');if(!host)await Nav.back();onChange&&onChange();return}
+if(a==='del'){if(!confirm('¿Eliminar el perfil de '+(u.email||'')+'? Si vuelve a entrar con su correo, se crea de nuevo.'))return;const {error}=await SB.client.from('profiles').delete().eq('id',u.id);if(error)return toast('Error: '+error.message);toast('Perfil eliminado');if(!host)await Nav.back();onChange&&onChange()}}}
+function adminInviteSheet(){let role='usuario',days=7;
+const b=openSheet('Invitar persona','<p class="muted" style="margin-top:0">La persona abre el enlace, entra con su correo y queda habilitada.</p>'
++'<div class="inv-step"><span class="num">1</span><div class="txt"><b>Correo (opcional)</b>Vacío = sirve para cualquiera.</div></div><input id="invEmail" type="email" inputmode="email" placeholder="correo@ejemplo.com">'
++'<div class="inv-step"><span class="num">2</span><div class="txt"><b>Rol</b>Con qué permisos entra.</div></div><div class="seg" id="invRole"><button data-r="usuario" class="on">👤 Usuario</button><button data-r="admin">👑 Admin</button></div>'
++'<div class="inv-step"><span class="num">3</span><div class="txt"><b>Vencimiento</b>Después de ese plazo el enlace no sirve más.</div></div><div class="seg" id="invDays"><button data-d="1">1 día</button><button data-d="7" class="on">7 días</button><button data-d="30">30 días</button></div>'
++'<button class="btn pri block" style="margin-top:16px" id="invGo"><i data-ico="check">✨</i> Generar enlace</button>');
+b.onclick=async e=>{const r=e.target.closest('#invRole [data-r]');if(r){role=r.dataset.r;$$('#invRole button',b).forEach(x=>x.classList.toggle('on',x===r));return}
+const d=e.target.closest('#invDays [data-d]');if(d){days=+d.dataset.d;$$('#invDays button',b).forEach(x=>x.classList.toggle('on',x===d));return}
+if(!e.target.closest('#invGo'))return;
+const email=($('#invEmail',b).value||'').trim()||null;
+if(email&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))return toast('Escribí un correo válido');
+await withBusy(async()=>{busy('Generando…');const {data,error}=await SB.client.rpc('create_invite',{p_email:email,p_days:days});
+if(error)throw new Error(error.message);
+const link=location.origin+location.pathname+'?invite='+data;busy('Armando el código QR…');
+b.innerHTML='<div style="text-align:center;margin-bottom:8px"><div style="font-size:48px">🎉</div><h3 style="margin:8px 0 4px">Invitación lista</h3><p class="muted" style="margin:0">'+(email?'Solo para <b>'+esc(email)+'</b>':'Enlace abierto')+' · vence en '+days+' día(s)'+(role==='admin'?' · entra como administrador':'')+'</p></div>'
++'<div class="inv-result"><div class="qr-wrap" id="invQr"></div><div class="inv-link">'+esc(link)+'</div><div class="row" style="margin:0"><button class="btn block" id="invCopy"><i data-ico="type">📋</i> Copiar</button><button class="btn pri block" id="invShare"><i data-ico="share">📤</i> Compartir</button></div></div>'
++'<div class="inv-step"><span class="num">💡</span><div class="txt"><b>Cómo se usa</b>Mandaselo por WhatsApp, o que escanee el QR con la cámara del teléfono.</div></div>'
++'<div class="row"><button class="btn block" id="invNew">➕ Otra invitación</button><button class="btn pri block" data-back><i data-ico="check">✓</i> Listo</button></div>';
+iconize(b);
+try{await loadLib('qrcode');new QRCode($('#invQr',b),{text:link,width:190,height:190,correctLevel:QRCode.CorrectLevel.M})}
+catch(x){$('#invQr',b).innerHTML='<p class="muted">El código QR necesita internet la primera vez. Usá el enlace de abajo.</p>'}
+busy(false);
+$('#invCopy',b).onclick=async()=>{try{await navigator.clipboard.writeText(link);toast('Enlace copiado')}catch(x){toast('Copialo del recuadro')}};
+$('#invShare',b).onclick=async()=>{const txt='Te comparto el acceso a Danscaner Pro: '+link;try{if(navigator.share)return void await navigator.share({title:'Acceso a Danscaner Pro',text:txt,url:link});await navigator.clipboard.writeText(txt);toast('Copiado')}catch(x){}};
+$('#invNew',b).onclick=()=>Nav.back().then(adminInviteSheet)})}}
+function admCsv(list){if(!list||!list.length)return toast('No hay usuarios para exportar');
+const head=['Nombre','Correo','Rol','Estado','Registrado','ID'];
+const rows=list.map(u=>[u.full_name||'',u.email||'',u.role||'',u.status||'',admDate(u.created_at),u.id]);
+const csv=[head,...rows].map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(';')).join('\n');
+download(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),'usuarios_'+new Date().toISOString().slice(0,10)+'.csv');toast('CSV descargado')}
+
+
+
+</script>
+<script type="text/plain" id="modsrc-texto">/* Danscaner Pro · módulo que se carga solo cuando se usa */
+window.__mods=window.__mods||{};
+/* ---------- 5. Editor de texto tipo Word ---------- */
+function rtHtmlFromText(text){return String(text||'').split(/\n{2,}/).map(p=>'<p>'+esc(p).replace(/\n/g,'<br>')+'</p>').join('')||'<p><br></p>'}
+function rtDocHtml(inner,title){return '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>@page{size:21cm 29.7cm;margin:2.5cm 2cm 2cm 3cm}body{font-family:Calibri,Arial,sans-serif;font-size:11pt;line-height:1.15}p{margin:0 0 8pt}</style></head><body>'+inner+'</body></html>'}
+__mods.showText=function(text,name){const txt=String(text||'');
+ const fonts=[['Calibri, Carlito, Arial, sans-serif','Calibri'],['Arial, Helvetica, sans-serif','Arial'],['"Times New Roman", Times, serif','Times New Roman'],['Georgia, serif','Georgia'],['Verdana, sans-serif','Verdana'],['"Courier New", monospace','Courier New']];
+ const b=openSheet('Texto extraído',
+ '<div class="rtbar">'
+ +'<select class="rtsel" data-rt="font" title="Tipo de letra">'+fonts.map(([v,n])=>'<option value=\''+v+'\'>'+n+'</option>').join('')+'</select>'
+ +'<select class="rtsel" data-rt="size" title="Tamaño">'+[8,9,10,11,12,14,16,18,20,24,28].map(s=>'<option'+(s===11?' selected':'')+'>'+s+'</option>').join('')+'</select>'
+ +'<span class="rtsep"></span>'
+ +'<button data-cmd="bold" title="Negrita"><b>N</b></button><button data-cmd="italic" title="Cursiva"><i>K</i></button><button data-cmd="underline" title="Subrayado"><u>S</u></button><button data-cmd="strikeThrough" title="Tachado"><s>ab</s></button>'
+ +'<label class="rtcol" title="Color de letra">A<input type="color" data-rt="color" value="#c00000"></label><label class="rtcol hl" title="Resaltar">✎<input type="color" data-rt="hilite" value="#ffff00"></label>'
+ +'<span class="rtsep"></span>'
+ +'<button data-cmd="justifyLeft" title="Alinear a la izquierda"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 5 H20"/><path d="M4 9 H14"/><path d="M4 13 H20"/><path d="M4 17 H12"/></svg></button><button data-cmd="justifyCenter" title="Centrar"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 5 H20"/><path d="M7 9 H17"/><path d="M4 13 H20"/><path d="M8 17 H16"/></svg></button><button data-cmd="justifyRight" title="Alinear a la derecha"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 5 H20"/><path d="M10 9 H20"/><path d="M4 13 H20"/><path d="M12 17 H20"/></svg></button><button data-cmd="justifyFull" title="Justificar" class="on"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 5 H20"/><path d="M4 9 H20"/><path d="M4 13 H20"/><path d="M4 17 H20"/></svg></button>'
+ +'<span class="rtsep"></span>'
+ +'<button data-cmd="insertUnorderedList" title="Viñetas">•</button><button data-cmd="insertOrderedList" title="Numeración">1.</button><button data-cmd="outdent" title="Disminuir sangría">⇤</button><button data-cmd="indent" title="Aumentar sangría">⇥</button>'
+ +'<select class="rtsel" data-rt="lh" title="Interlineado"><option value="1">1,0</option><option value="1.15" selected>1,15</option><option value="1.5">1,5</option><option value="2">2,0</option></select>'
+ +'<span class="rtsep"></span>'
+ +'<button data-cmd="removeFormat" title="Borrar formato">⌫A</button><button data-cmd="undo" title="Deshacer">↶</button><button data-cmd="redo" title="Rehacer">↷</button>'
+ +'<button data-rt="joinlines" title="Unir renglones cortados en párrafos">¶</button>'
+ +'</div>'
+ +'<div class="rtpage"><div class="rtdoc" id="rtDoc" contenteditable="true" spellcheck="true" lang="es"></div></div>'
+ +'<textarea id="ocrTxt" hidden></textarea>'
+ +'<div class="row"><button class="btn block" data-t="copy"><i data-ico="type">📋</i> Copiar</button><button class="btn pri block" data-t="doc"><i data-ico="word">📝</i> Word</button></div>'
+ +'<div class="row"><button class="btn block" data-t="pdf"><i data-ico="save">📄</i> PDF</button><button class="btn block" data-t="txt"><i data-ico="save">⬇</i> .txt</button><button class="btn block" data-t="share"><i data-ico="share">📤</i></button></div>'
+ +'<p class="muted">'+(txt.trim()?'Editalo como en Word: elegí letra, tamaño, alineación (justificado viene activado), listas, sangría e interlineado. El botón ¶ une los renglones cortados en párrafos.':'No se detectó texto. Probá con más luz, la foto quieta y el filtro "Nítido" o "B/N".')+'</p>');
+ const doc=$('#rtDoc',b),mirror=$('#ocrTxt',b);
+ doc.innerHTML=rtHtmlFromText(txt);doc.style.textAlign='justify';doc.style.lineHeight='1.15';doc.style.fontFamily=fonts[0][0];
+ const sync=()=>{mirror.value=doc.innerText};sync();doc.addEventListener('input',sync);
+ try{document.execCommand('styleWithCSS',false,true)}catch(e){}
+ const exec=(c,v)=>{doc.focus();try{document.execCommand(c,false,v)}catch(e){}sync()};
+ b.onmousedown=e=>{if(e.target.closest('.rtbar button'))e.preventDefault()};
+ b.onchange=e=>{const t=e.target.dataset.rt;if(!t)return;const v=e.target.value;
+  if(t==='font')exec('fontName',v);
+  if(t==='size'){exec('fontSize','7');doc.querySelectorAll('font[size="7"],span[style*="xxx-large"]').forEach(n=>{n.removeAttribute('size');n.style.fontSize=v+'pt'})}
+  if(t==='color')exec('foreColor',v);
+  if(t==='hilite')exec('hiliteColor',v);
+  if(t==='lh'){doc.style.lineHeight=v}};
+ b.onclick=async e=>{const c=e.target.closest('[data-cmd]');
+  if(c){exec(c.dataset.cmd);if(/^justify/.test(c.dataset.cmd)){$$('.rtbar [data-cmd^="justify"]',b).forEach(x=>x.classList.toggle('on',x===c))}return}
+  if(e.target.closest('[data-rt="joinlines"]')){doc.innerHTML=rtHtmlFromText(doc.innerText.replace(/(\w)-\n(\w)/g,'$1$2').replace(/([^\n.:;!?])\n(?!\n)/g,'$1 '));sync();toast('Renglones unidos en párrafos');return}
+  const t=e.target.closest('[data-t]')?.dataset.t;if(!t)return;const nm=safeName(name||'texto'),plain=doc.innerText;
+  if(t==='copy'){try{await navigator.clipboard.writeText(plain);toast('Copiado')}catch(er){toast('No se pudo copiar')}}
+  if(t==='txt')download(new Blob([plain],{type:'text/plain;charset=utf-8'}),nm+'.txt');
+  if(t==='doc'){const html=rtDocHtml('<div style="text-align:'+(doc.style.textAlign||'justify')+';line-height:'+doc.style.lineHeight+';font-family:'+doc.style.fontFamily.replace(/"/g,"'")+'">'+sanitizeHtml(doc.innerHTML)+'</div>',nm);download(new Blob(['\ufeff'+html],{type:'application/msword'}),nm+'.doc');toast('Se abre en Word con el formato')}
+  if(t==='pdf')withBusy(async()=>{busy('Armando PDF…');const blob=await htmlToPdfBlob('<div style="text-align:'+(doc.style.textAlign||'justify')+';line-height:'+doc.style.lineHeight+';font-family:'+doc.style.fontFamily.replace(/"/g,"'")+';font-size:11pt">'+sanitizeHtml(doc.innerHTML)+'</div>');busy(false);download(blob,nm+'.pdf')});
+  if(t==='share')share(new Blob([plain],{type:'text/plain;charset=utf-8'}),nm+'.txt')};
+ return b}
+
+
+
+</script>
+<script type="text/plain" id="modsrc-excel">/* Danscaner Pro · módulo que se carga solo cuando se usa */
+window.__mods=window.__mods||{};
+__mods.uiExcelPdf=function(el){let wb=null,file=null,tmr=0,pages=[];
+el.innerHTML='<div class="fp"></div><div class="xlopts" hidden><div class="row">'+opt('Hoja','<select class="xsh"></select>')+opt('Tamaño de hoja',sel('xsz',[['a4','A4'],['oficio','Oficio'],['carta','Carta']]))+'</div><div class="row">'+opt('Orientación',sel('xor',[['h','Horizontal'],['v','Vertical']]))+opt('Escala',sel('xfit',[['ancho','Ajustar al ancho'],['pagina','Todo en una página'],['100','100 %'],['custom','Personalizada']]))+'</div><label class="opt xzw" hidden><span>Zoom: <b class="xzv">80</b> %</span><input type="range" class="xz" min="25" max="160" value="80"></label><label class="opt"><span>Márgenes: <b class="xmv">10</b> mm</span><input type="range" class="xm" min="0" max="30" value="10"></label><label class="chk"><input type="checkbox" class="xgrid" checked> Mostrar cuadrícula</label><label class="chk"><input type="checkbox" class="xhead" checked> Repetir la primera fila en cada hoja</label><label class="chk"><input type="checkbox" class="xcen" checked> Centrar en la hoja</label><label class="chk"><input type="checkbox" class="xnum"> Numerar páginas</label><div class="cph">Vista previa <span class="muted xinfo"></span></div><div class="xlprev"><div class="xlpages"></div></div></div><button class="btn pri block run">Generar PDF</button><div class="result"></div>';
+const O=()=>({sheet:$('.xsh',el).value,size:$('.xsz',el).value,land:$('.xor',el).value==='h',fit:$('.xfit',el).value,zoom:+$('.xz',el).value,margin:+$('.xm',el).value,grid:$('.xgrid',el).checked,head:$('.xhead',el).checked,center:$('.xcen',el).checked,num:$('.xnum',el).checked});
+const layout=()=>{if(!wb)return;const o=O();$('.xmv',el).textContent=o.margin;$('.xzv',el).textContent=o.zoom;$('.xzw',el).hidden=o.fit!=='custom';const names=o.sheet==='*'?wb.SheetNames:[o.sheet];let [w,h]=PAGE_MM[o.size]||PAGE_MM.a4;if(o.land)[w,h]=[h,w];pages=[];for(const nm of names)pages.push(...xlPagesFor(wb.Sheets[nm],nm,w,h,o));pages.forEach((p,i)=>{if(o.num){const f=document.createElement('div');f.className='xlnum';f.textContent=(i+1)+' / '+pages.length;p.appendChild(f)}});const wrap=$('.xlpages',el);wrap.innerHTML='';pages.forEach(p=>{const holder=document.createElement('div');holder.className='xlhold';holder.appendChild(p);wrap.appendChild(holder)});const pw=mm2px(w);wrap.style.zoom=Math.min(1,($('.xlprev',el).clientWidth-24)/pw);$('.xinfo',el).textContent='· '+pages.length+' página(s) · '+w+'×'+h+' mm'};
+const relayout=()=>{clearTimeout(tmr);tmr=setTimeout(layout,120)};
+filePicker($('.fp',el),{accept:'.xlsx,.xls,.xlsm,.csv,.ods',multi:false,onChange:files=>{file=files[0];wb=null;$('.result',el).innerHTML='';$('.xlopts',el).hidden=!file;if(!file)return;withBusy(async()=>{busy('Leyendo planilla…');await loadLib('xlsx');wb=XLSX.read(await file.arrayBuffer(),{cellDates:true});$('.xsh',el).innerHTML=(wb.SheetNames.length>1?'<option value="*">Todas las hojas</option>':'')+wb.SheetNames.map(n=>'<option>'+esc(n)+'</option>').join('');const ws=wb.Sheets[wb.SheetNames[0]],r=XLSX.utils.decode_range(ws['!ref']||'A1');$('.xor',el).value=(r.e.c-r.s.c)>6?'h':'v';busy(false);layout()})}});
+el.addEventListener('input',e=>{if(e.target.closest('.xlopts'))relayout()});el.addEventListener('change',e=>{if(e.target.closest('.xlopts'))relayout()});
+new ResizeObserver(()=>{if(wb)relayout()}).observe(el);
+$('.run',el).onclick=()=>withBusy(async()=>{if(!wb)return toast('Primero seleccioná una planilla');layout();if(!pages.length)return toast('La hoja está vacía');await loadLib('h2c');await loadLib('pdflib');const pdf=await PDFLib.PDFDocument.create();const host=document.createElement('div');host.className='dxhost';document.body.appendChild(host);const o=O();let [w,h]=PAGE_MM[o.size]||PAGE_MM.a4;if(o.land)[w,h]=[h,w];
+try{for(const [i,p] of pages.entries()){busy('Generando página '+(i+1)+'/'+pages.length);const cl=p.cloneNode(true);host.innerHTML='';host.appendChild(cl);const c=await html2canvas(cl,{scale:2,backgroundColor:'#ffffff',logging:false});await canvasToPdfPage(pdf,c,w*72/25.4,h*72/25.4)}}finally{host.remove()}
+busy(false);showResults($('.result',el),[{blob:pdfBlob(await pdf.save()),name:baseName(file)+'.pdf',note:pages.length+' página(s) · '+o.size.toUpperCase()+' '+(o.land?'horizontal':'vertical')+' · márgenes '+o.margin+' mm'}])})}
+function xlPagesFor(ws,name,wmm,hmm,o){if(!ws||!ws['!ref'])return[];const html=(XLSX.utils.sheet_to_html(ws).match(/<table[\s\S]*<\/table>/i)||[''])[0];if(!html)return[];
+const meas=document.createElement('div');meas.className='dxhost';meas.innerHTML=html;document.body.appendChild(meas);const table=meas.querySelector('table');table.className='xltab'+(o.grid?' grid':'');
+const cols=ws['!cols'];if(cols&&cols.length){const cg=document.createElement('colgroup');const r=XLSX.utils.decode_range(ws['!ref']);for(let c=r.s.c;c<=r.e.c;c++){const cc=cols[c]||{};const px=cc.wpx||(cc.wch?cc.wch*7+10:(cc.width?cc.width*7:0));const col=document.createElement('col');if(px)col.style.width=px+'px';if(cc.hidden)col.style.visibility='collapse';cg.appendChild(col)}table.prepend(cg)}
+const rowsMeta=ws['!rows'];const rows=[...table.rows];if(rowsMeta)rows.forEach((tr,i)=>{const m=rowsMeta[i];if(m&&m.hpx)tr.style.height=m.hpx+'px';if(m&&m.hidden)tr.style.visibility='collapse'});
+const Tw=table.offsetWidth,rowH=rows.map(r=>r.offsetHeight),totalH=rowH.reduce((a,b)=>a+b,0);meas.remove();
+const pageW=mm2px(wmm),pageH=mm2px(hmm),m=mm2px(o.margin),cw=pageW-2*m,ch=pageH-2*m-(o.num?14:0);
+let s=o.fit==='ancho'?Math.min(2.2,cw/Tw):o.fit==='pagina'?Math.min(2.2,cw/Tw,ch/totalH):o.fit==='100'?1:o.zoom/100;
+const avail=ch/s,headH=o.head&&rows.length>1?rowH[0]:0;const groups=[];let cur=[],hh=0;
+for(let i=0;i<rows.length;i++){if(cur.length&&hh+rowH[i]>avail&&!(o.head&&cur.length===1&&cur[0]===0&&i===1)){groups.push(cur);cur=[];hh=0;if(headH&&i>0){cur.push(0);hh=headH}}cur.push(i);hh+=rowH[i]}if(cur.length)groups.push(cur);
+return groups.map(idx=>{const pg=document.createElement('div');pg.className='xlpage';pg.style.cssText='width:'+pageW+'px;height:'+pageH+'px;padding:'+m+'px';const inner=document.createElement('div');const offX=o.center?Math.max(0,(cw-Tw*s)/2):0;inner.style.cssText='width:'+Tw+'px;transform:scale('+s+');transform-origin:0 0;margin-left:'+offX+'px';const tb=table.cloneNode(true);const set=new Set(idx);[...tb.rows].forEach((r,k)=>{if(!set.has(k))r.style.visibility='collapse'});inner.appendChild(tb);pg.appendChild(inner);return pg})}
+
+
+</script>
+<script type="text/plain" id="modsrc-pptx">/* Danscaner Pro · módulo que se carga solo cuando se usa */
+window.__mods=window.__mods||{};
+__mods.pptxRender=async function(ab,onSlide){await loadLib('jszip');const z=await JSZip.loadAsync(ab),P=new DOMParser(),xml=async p=>{const f=z.file(p);return f?P.parseFromString(await f.async('string'),'application/xml'):null};const tag=(n,t)=>[...n.getElementsByTagName(t)];const first=(n,t)=>n.getElementsByTagName(t)[0];const pres=await xml('ppt/presentation.xml');if(!pres)throw new Error('No es un PowerPoint (.pptx) válido');const sz=first(pres,'p:sldSz'),CX=+(sz?.getAttribute('cx')||12192000),CY=+(sz?.getAttribute('cy')||6858000);const rels=await xml('ppt/_rels/presentation.xml.rels'),rmap={};tag(rels,'Relationship').forEach(r=>rmap[r.getAttribute('Id')]=r.getAttribute('Target'));const ids=tag(pres,'p:sldId').map(s=>s.getAttribute('r:id'));const resolve=(base,t)=>{if(t.startsWith('/'))return t.slice(1);const parts=base.split('/');parts.pop();for(const s of t.split('/')){if(s==='..')parts.pop();else if(s!=='.')parts.push(s)}return parts.join('/')};const W=1600,K=W/CX,H=Math.round(CY*K);
+for(const [si,id] of ids.entries()){const path=resolve('ppt/presentation.xml',rmap[id]);const sl=await xml(path);if(!sl)continue;const srels=await xml(resolve(path,'_rels/'+path.split('/').pop()+'.rels')),sm={};if(srels)tag(srels,'Relationship').forEach(r=>sm[r.getAttribute('Id')]=r.getAttribute('Target'));const c=canvas(W,H),x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,W,H);const bgc=first(sl,'p:bg')&&first(first(sl,'p:bg'),'a:srgbClr');if(bgc){x.fillStyle='#'+bgc.getAttribute('val');x.fillRect(0,0,W,H)}let flowY=H*.08;
+const xf=n=>{const sp=first(n,'p:spPr')||first(n,'p:xfrm')?.parentNode||n;const o=first(sp,'a:off'),e=first(sp,'a:ext');return o&&e?{x:+o.getAttribute('x')*K,y:+o.getAttribute('y')*K,w:+e.getAttribute('cx')*K,h:+e.getAttribute('cy')*K}:null};
+const wrapDraw=(paras,box)=>{let y=box.y+8;for(const p of paras){const lines=[];let fs=18,bold=false,col='#222';const words=[];for(const r of p.runs){fs=r.fs;bold=r.b;col=r.c;for(const w of r.t.split(/(\s+)/))if(w)words.push({w,fs,b:r.b,c:r.c})}const px=(fs*12700*K);const lh=px*1.2;x.font=(bold?'700 ':'')+px+'px Arial, sans-serif';let line='';for(const wd of words){const test=line+wd.w;if(x.measureText(test).width>box.w-16&&line.trim()){lines.push(line);line=wd.w.trimStart()}else line=test}if(line.trim()||!words.length)lines.push(line);x.fillStyle=col;x.textBaseline='top';for(const ln of lines){const tw=x.measureText(ln).width;const lx=p.al==='ctr'?box.x+(box.w-tw)/2:p.al==='r'?box.x+box.w-8-tw:box.x+8;if(p.bul&&ln===lines[0]){x.fillText('•',lx-px*.7,y)}x.fillText(ln,lx,y);y+=lh}}return y};
+const paras=tb=>tag(tb,'a:p').map(p=>{const pPr=first(p,'a:pPr');return {al:pPr?.getAttribute('algn'),bul:!!(pPr&&first(pPr,'a:buChar')),runs:tag(p,'a:r').concat(tag(p,'a:fld')).map(r=>{const rp=first(r,'a:rPr'),cl=rp&&first(rp,'a:srgbClr');return {t:tag(r,'a:t').map(t=>t.textContent).join(''),fs:+(rp?.getAttribute('sz')||1800)/100,b:rp?.getAttribute('b')==='1',c:cl?'#'+cl.getAttribute('val'):'#222'}})}});
+const walk=async node=>{for(const n of [...node.children]){const nm=n.tagName;if(nm==='p:grpSp'){await walk(n);continue}if(nm==='p:sp'){let b=xf(n);const sp=first(n,'p:spPr');const fill=sp&&[...sp.children].find(k=>k.tagName==='a:solidFill');const fc=fill&&first(fill,'a:srgbClr');const tb=first(n,'p:txBody');const ph=first(n,'p:ph');const hasText=tb&&tag(tb,'a:t').some(t=>t.textContent.trim());if(!b){if(!hasText)continue;const tp=ph?.getAttribute('type')||'';b=/title/i.test(tp)?{x:W*.06,y:H*.05,w:W*.88,h:H*.18}:{x:W*.06,y:Math.max(flowY,H*.25),w:W*.88,h:H*.65}}if(fc){x.fillStyle='#'+fc.getAttribute('val');x.fillRect(b.x,b.y,b.w,b.h)}if(hasText){const ps=paras(tb);if(ph&&/title/i.test(ph.getAttribute('type')||''))ps.forEach(p=>p.runs.forEach(r=>{if(!first(n,'a:rPr')?.getAttribute('sz'))r.fs=Math.max(r.fs,36);r.b=true}));const end=wrapDraw(ps,b);flowY=Math.max(flowY,end)}continue}if(nm==='p:pic'){const b=xf(n),bl=first(n,'a:blip'),rid=bl&&(bl.getAttribute('r:embed'));if(!b||!rid||!sm[rid])continue;const mp=resolve(path,sm[rid]),mf=z.file(mp);if(!mf||/\.(emf|wmf|tiff?)$/i.test(mp))continue;const u=URL.createObjectURL(await mf.async('blob'));try{const im=await loadImg(u);x.drawImage(im,b.x,b.y,b.w,b.h)}catch(e){}finally{URL.revokeObjectURL(u);_imgCache.delete(u)}continue}if(nm==='p:graphicFrame'){const b=xf(n);const rows=tag(n,'a:tr');if(!b||!rows.length)continue;const rh=b.h/rows.length;x.strokeStyle='#999';x.lineWidth=1;rows.forEach((tr,ri)=>{const cells=tag(tr,'a:tc'),cw=b.w/Math.max(1,cells.length);cells.forEach((tc,ci)=>{x.strokeRect(b.x+ci*cw,b.y+ri*rh,cw,rh);const t=tag(tc,'a:t').map(t=>t.textContent).join(' ');const px=Math.min(rh*.45,14*12700*K);x.font=px+'px Arial, sans-serif';x.fillStyle='#222';x.textBaseline='middle';let s=t;while(s&&x.measureText(s).width>cw-10)s=s.slice(0,-1);x.fillText(s,b.x+ci*cw+5,b.y+ri*rh+rh/2)})})}}};
+const tree=first(sl,'p:spTree');if(tree)await walk(tree);await onSlide(c,si+1,ids.length,{w:CX/12700,h:CY/12700})}return ids.length}
+
+</script>
+<script type="text/plain" id="modsrc-diseno">/* Danscaner Pro · módulo que se carga solo cuando se usa */
+window.__mods=window.__mods||{};
+__mods.designSheet=function(){const d=D();const cols=['#e53935','#d81b60','#8e24aa','#3949ab','#1e88e5','#00897b','#43a047','#fb8c00','#6d4c41','#212121'];
+const seg=(k,opts)=>'<div class="seg" data-k="'+k+'">'+opts.map(([v,n])=>'<button data-v="'+v+'" class="'+(String(d[k])===String(v)?'on':'')+'">'+n+'</button>').join('')+'</div>';
+const b=openSheet('🎨 Diseño y visualización',
+'<div class="cph">Plantillas listas</div><div class="chips" id="dsPre">'+Object.entries(PRESETS).map(([k,v])=>'<button class="chip" data-pre="'+k+'">'+v.label+'</button>').join('')+'</div>'
++'<div class="muted">Vista previa · tocá los botones</div><div class="dprev"><div class="hero-btns"><button class="hbtn big"><i class="icono-camara"></i><span>Escanear</span><small>Individual</small></button><button class="hbtn"><i data-ico="files">🗂️</i><span>Lote</span><small>Varias fotos</small></button><button class="hbtn"><i data-ico="image">🖼️</i><span>Galería</span><small>Imágenes</small></button></div><div class="dbar"><button class="tb"><b data-ico="crop">✂️</b>Recortar</button><button class="tb"><b data-ico="replace">🔁</b>Cambiar</button><button class="tb"><b data-ico="sign">✍️</b>Firmar</button><button class="tb"><b data-ico="adjust">🎚️</b>Ajustes</button></div><div class="item" style="pointer-events:none"><img src="'+((_metas[0]&&_metas[0].thumb)||'')+'" alt=""><div class="inf"><div class="nm">Documento de ejemplo</div><div class="muted">hoy · 3 pág. · 480 KB</div></div></div><button class="btn pri block"><i data-ico="save">💾</i> Botón principal</button></div>'
++'<div class="cph">Tema</div>'+seg('theme',[['light','Claro'],['dark','Oscuro'],['system','Automático']])
++'<div class="cph">Color principal</div><div class="swatches">'+cols.map(c=>'<button class="sw '+(d.color===c?'on':'')+'" data-col="'+c+'" style="background:'+c+'"></button>').join('')+'<label class="sw pick"><input type="color" id="dsCol" value="'+(d.color||'#e53935')+'"></label><button class="chip" data-col="">Por defecto</button></div>'
++'<div class="cph">Estilo visual</div>'+seg('skin',[['suave','Actual'],['industrial','Industrial']])
++'<div class="cph">Fondo</div>'+seg('bg',[['plano','Plano'],['suave','Degradado'],['papel','Papel']])
++'<div class="cph">Tipografía de la app</div>'+seg('uifont',[['sys','Moderna'],['serif','Formal'],['round','Redondeada'],['mono','Máquina']])
++'<div class="cph">Tamaño general</div>'+seg('zoom',[[0.9,'Compacto'],[1,'Normal'],[1.1,'Grande'],[1.25,'Muy grande']])
++'<div class="cph">Espaciado</div>'+seg('density',[['comp','Ajustado'],['normal','Normal'],['amplio','Amplio']])
++'<div class="cph">Documentos se ven como</div>'+seg('docView',[['list','Lista'],['grid','Cuadrícula']])
++'<div class="cph">Botones</div>'+seg('shape',[['round','Redondeado'],['square','Cuadrado'],['circle','Circular']])
++'<div class="cph">Íconos</div>'+seg('iconStyle',[['line','Profesional'],['emoji','Emoji']])+seg('ico',[[18,'Chicos'],[22,'Normales'],[27,'Grandes']])+seg('stroke',[[1.5,'Finos'],[1.9,'Normales'],[2.4,'Gruesos']])
++'<label class="chk"><input type="checkbox" id="dsCon" '+(d.contrast?'checked':'')+'> Contraste alto (letras más marcadas)</label>'
++'<label class="chk"><input type="checkbox" id="dsAnim" '+(d.anim?'checked':'')+'> Animación al tocar</label>'
++'<div class="cph">Botones de la barra de edición</div><div id="dsEd"></div>'
++'<div class="cph">Accesos rápidos del inicio <small class="muted">(hasta 8)</small></div><div class="chips" id="dsQuick"></div>'
++'<div class="row" style="margin-top:14px"><button class="btn block" id="dsReset"><i data-ico="rotl">↺</i> Restablecer</button><button class="btn pri block" data-back><i data-ico="check">✓</i> Listo</button></div>');
+const drawEd=()=>{$('#dsEd',b).innerHTML=d.edTools.map((t,i)=>{const n=(ED_TOOLS.find(x=>x[0]===t.k)||[])[1];return '<div class="frow dsrow"><label class="chk" style="flex:1;margin:0"><input type="checkbox" data-eon="'+i+'" '+(t.on?'checked':'')+'> '+n+'</label><button class="ib" data-eup="'+i+'" '+(i?'':'disabled')+'>▲</button><button class="ib" data-edn="'+i+'" '+(i<d.edTools.length-1?'':'disabled')+'>▼</button></div>'}).join('')};
+const QDEF=['Escanea a PDF','Unir PDF','PDF a WORD','Firmar PDF','Comprimir PDF','OCR PDF','JPG a PDF','Editar PDF'];
+const drawQuick=()=>{const q=d.quick.length?d.quick:QDEF;$('#dsQuick',b).innerHTML=TOOLS.map(t=>'<button class="chip '+(q.includes(t.name)?'on':'')+'" data-q="'+esc(t.name)+'">'+esc(t.name)+'</button>').join('')};
+const refresh=()=>{$$('.seg[data-k]',b).forEach(sg=>{const k=sg.dataset.k;$$('button',sg).forEach(x=>x.classList.toggle('on',String(x.dataset.v)===String(d[k])))});$$('.sw',b).forEach(x=>x.classList.toggle('on',x.dataset.col===d.color));const c=$('#dsCon',b),a=$('#dsAnim',b);if(c)c.checked=!!d.contrast;if(a)a.checked=!!d.anim};
+drawEd();drawQuick();
+const commit=()=>{saveS();applyDesign();if(d.theme)cambiarTema(d.theme)};
+b.oninput=e=>{if(e.target.id==='dsCol'){d.color=e.target.value;commit();refresh()}};
+b.onclick=e=>{const btn=e.target.closest('button,input');if(btn&&btn.closest('.dprev')){btn.classList.remove('pulse');void btn.offsetWidth;btn.classList.add('pulse');return}
+const pre=e.target.closest('[data-pre]');if(pre){Object.assign(d,JSON.parse(JSON.stringify(PRESETS[pre.dataset.pre])));delete d.label;commit();refresh();toast('Plantilla aplicada');return}
+const c=e.target.closest('[data-col]');if(c){d.color=c.dataset.col;commit();refresh();return}
+const sv=e.target.closest('.seg[data-k] [data-v]');if(sv){const k=sv.parentNode.dataset.k;const v=sv.dataset.v;d[k]=isNaN(+v)?v:+v;commit();refresh();return}
+if(e.target.id==='dsAnim'){d.anim=e.target.checked;commit();return}
+if(e.target.id==='dsCon'){d.contrast=e.target.checked;commit();return}
+const on=e.target.closest('[data-eon]');if(on){d.edTools[+on.dataset.eon].on=on.checked;commit();return}
+const up=e.target.closest('[data-eup]'),dn=e.target.closest('[data-edn]');if(up||dn){const i=+(up||dn).dataset[up?'eup':'edn'],j=up?i-1:i+1;[d.edTools[i],d.edTools[j]]=[d.edTools[j],d.edTools[i]];drawEd();commit();return}
+const q=e.target.closest('[data-q]');if(q){let arr=d.quick.length?d.quick.slice():QDEF.slice();const n=q.dataset.q;if(arr.includes(n))arr=arr.filter(x=>x!==n);else{if(arr.length>=8)return toast('Máximo 8 accesos. Quitá uno primero');arr.push(n)}d.quick=arr;drawQuick();commit();return}
+if(e.target.closest('#dsReset')){if(!confirm('¿Volver al diseño original?'))return;S.design=JSON.parse(JSON.stringify(DESIGN_DEF));saveS();applyDesign();cambiarTema('system');Nav.back().then(designSheet)}}}
 </script>
 </body>
 </html>
