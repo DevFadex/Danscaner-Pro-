@@ -1,5 +1,5 @@
 // Danscaner Pro — funcionamiento sin conexión
-const VERSION = 'danscaner-v4';
+const VERSION = 'danscaner-v5';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 const CDN = /(cdnjs\.cloudflare\.com|cdn\.jsdelivr\.net|unpkg\.com|tessdata\.projectnaptha\.com|fonts\.gstatic\.com|fonts\.googleapis\.com)$/;
 
@@ -17,6 +17,15 @@ self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
+
+  // Librerías propias: primero la copia guardada (no cambian)
+  if (url.origin === location.origin && url.pathname.includes('/libs/')) {
+    e.respondWith(caches.match(req).then(hit => hit || fetch(req).then(r => {
+      if (r.ok) { const cp = r.clone(); caches.open(VERSION).then(c => c.put(req, cp)); }
+      return r;
+    })));
+    return;
+  }
 
   // La app: primero internet (para tener siempre la última versión), si no hay, la copia guardada
   if (url.origin === location.origin) {
