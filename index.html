@@ -495,6 +495,8 @@ html[data-skin="industrial"] .badge{border-radius:2px}
 .dlogo .dl-target{animation:dlPulse 2.8s ease-in-out infinite;transform-origin:145px 142px;transform-box:view-box}
 .dlogo .dl-spin{animation:dlRot 14s linear infinite;transform-origin:145px 142px;transform-box:view-box}
 .dlogo .dl-grid{animation:dlGrid 4s ease-in-out infinite}
+.dlogo .dl-bracket{animation:dlBreathe 3s ease-in-out infinite}
+@keyframes dlBreathe{0%,100%{stroke:#0284c7;opacity:.95}50%{stroke:#0ea5e9;opacity:1}}
 @keyframes dlScan{0%{transform:translateY(14px);opacity:.2}12%{opacity:1}48%{opacity:1}50%{transform:translateY(148px);opacity:.25}52%{opacity:1}90%{opacity:1}100%{transform:translateY(14px);opacity:.2}}
 @keyframes dlPulse{0%,100%{transform:scale(1);opacity:.9}50%{transform:scale(1.08);opacity:1}}
 @keyframes dlRot{to{transform:rotate(360deg)}}
@@ -502,6 +504,9 @@ html[data-skin="industrial"] .badge{border-radius:2px}
 @media (prefers-reduced-motion:reduce){.dlogo *{animation:none!important}}
 .authlogo .dlogo{filter:drop-shadow(0 10px 18px #0284c722)}
 .dbrand{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;padding:6px 0}
+.dlogo-full{width:100%;height:auto;max-width:760px}
+.dlf-name{fill:#0f172a}.dlf-sub{fill:#64748b}.dlf-tag{fill:#f8fafc;stroke:#e2e8f0}.dlf-tagt{fill:#475569}
+[data-theme="dark"] .dlf-name{fill:#f8fafc}[data-theme="dark"] .dlf-sub{fill:#94a3b8}[data-theme="dark"] .dlf-tag{fill:#161c24;stroke:#1e293b}[data-theme="dark"] .dlf-tagt{fill:#cbd5e1}
 .dbrand-chip{display:inline-flex;align-items:center;gap:6px;background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;border-radius:14px;padding:3px 12px;font-size:10.5px;font-weight:700;letter-spacing:1.2px}
 .dbrand-chip i{width:8px;height:8px;border-radius:50%;background:#0ea5e9}
 .dbrand-t b{display:block;font-size:32px;font-weight:800;letter-spacing:-1px;color:var(--tx);margin:8px 0 2px}
@@ -552,6 +557,31 @@ html[data-skin="celeste"] .btn.pri:active{background:#0284c7}
 /* logo en la cabecera: isotipo nuevo, quieto */
 .logo .dlogo{width:34px;height:34px}.logo .dlogo *{animation:none!important}
 html[data-skin="celeste"] .logo{background:#fff;border-color:#bae6fd}
+/* v24: chip de filtro en la cámara */
+.camchip{background:rgba(255,255,255,.14);color:#fff;border-radius:22px;padding:9px 14px;font-size:12.5px;font-weight:600;display:inline-flex;align-items:center;gap:6px;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.camchip b{color:#7dd3fc;font-weight:700}
+/* v25: almacenamiento y envío */
+.stcard{background:var(--bg2);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+.sttop{display:flex;align-items:baseline;gap:8px}.sttop b{font-size:26px;font-weight:800}
+.stbar{display:flex;height:10px;border-radius:6px;overflow:hidden;background:var(--bg3);margin:12px 0 8px}
+.stbar i{display:block;height:100%}
+.stleg{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:var(--tx2)}
+.stleg span{display:inline-flex;align-items:center;gap:5px}.stleg i{width:9px;height:9px;border-radius:3px;display:inline-block}
+.stclean{background:var(--soft);border:1px solid var(--soft-line);border-radius:16px;padding:14px;display:grid;gap:10px;margin-bottom:8px}
+.stclean small{display:block;margin-top:3px;line-height:1.45}
+.stok{text-align:center;display:grid;gap:8px;padding:10px 0}
+.stok-ic{font-size:46px}.stok h3{margin:0}.stok b{font-size:28px;color:var(--ac);font-weight:800}
+.savedok{text-align:center;display:grid;gap:8px}.savedok-ic{font-size:42px}
+.savedok>b{font-size:15px;word-break:break-word}
+.savedpath{display:flex;gap:10px;align-items:flex-start;text-align:left;background:var(--bg3);border-radius:12px;padding:12px;margin:8px 0}
+.savedpath .ico{width:20px;height:20px;color:var(--ac)}
+.sndhead{display:flex;gap:12px;align-items:center;margin-bottom:12px}
+.sndic{width:46px;height:46px;border-radius:12px;background:var(--soft);display:grid;place-items:center;font-size:22px}
+.sndlist{display:grid;gap:8px}
+.sndopt{display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left;padding:12px;border-radius:14px;border:2px solid var(--line);background:var(--bg2);color:var(--tx)}
+.sndopt small{display:block;color:var(--tx2);font-size:11.5px;margin-top:2px}
+.sndopt em{font-style:normal;font-weight:800;color:var(--ac);font-size:13px;white-space:nowrap}
+.sndopt.on{border-color:var(--ac);background:var(--soft)}
 </style>
 </head>
 <body>
@@ -639,7 +669,7 @@ html[data-skin="celeste"] .logo{background:#fff;border-color:#bae6fd}
   </div>
   <div class="campanel" id="camPanel" hidden></div>
   <div class="cam-stage"><video id="camVideo" playsinline muted autoplay></video><div class="gridl" id="camGridL" hidden></div><svg id="camSvg"></svg><div class="flash"></div><div class="cam-hint" id="camHint">Buscando documento…</div><div id="camErr" hidden style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center;color:#fff;background:rgba(0,0,0,.85);z-index:3"><div style="font-size:42px">📷</div><div id="camErrMsg" style="max-width:320px;line-height:1.4"></div><button class="btn pri" id="camRetry">↻ Reintentar</button><button class="btn" id="camNative" style="background:#fff;color:#1e293b">📱 Usar cámara del teléfono</button></div></div>
-  <div class="cam-modes"><button data-mode="single">Individual</button><button data-mode="batch">Lote</button></div>
+  <div class="cam-modes"><button data-mode="single">Individual</button><button data-mode="batch">Lote</button><button id="camFilterChip" class="camchip"></button></div>
   <div class="cam-bot">
     <button id="camGallery"><i data-ico="image">🖼️</i><small>Galería</small></button>
     <button id="camShot" class="shutter"></button>
@@ -2196,8 +2226,9 @@ return '<svg class="dlogo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 290 2
 +'<filter id="'+u+'glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="6" result="a"/><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="a"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'
 +'<filter id="'+u+'doc" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="12" stdDeviation="10" flood-color="#0369a1" flood-opacity=".14"/><feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#0f172a" flood-opacity=".06"/></filter>'
 +'<filter id="'+u+'br" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0284c7" flood-opacity=".25"/></filter>'
++'<filter id="'+u+'ish" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#0284c7" flood-opacity=".12"/><feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0f172a" flood-opacity=".05"/></filter>'
 +'<clipPath id="'+u+'clip"><rect x="0" y="0" width="150" height="194" rx="16"/></clipPath></defs>'
-+'<rect x="1.25" y="1.25" width="287.5" height="287.5" rx="68" fill="url(#'+u+'bg)" stroke="#bae6fd" stroke-width="2.5"/>'
++'<rect x="1.25" y="1.25" width="287.5" height="287.5" rx="68" fill="url(#'+u+'bg)" stroke="#bae6fd" stroke-width="2.5"'+(size>=80?' filter="url(#'+u+'ish)"':'')+'/>'
 +'<g class="dl-grid" stroke="#0284c7" stroke-width=".8" stroke-dasharray="2.5 5"><line x1="45" y1="70" x2="245" y2="70"/><line x1="45" y1="120" x2="245" y2="120"/><line x1="45" y1="170" x2="245" y2="170"/><line x1="45" y1="220" x2="245" y2="220"/><line x1="70" y1="45" x2="70" y2="245"/><line x1="120" y1="45" x2="120" y2="245"/><line x1="170" y1="45" x2="170" y2="245"/><line x1="220" y1="45" x2="220" y2="245"/></g>'
 +'<g class="dl-bracket" filter="url(#'+u+'br)" fill="none" stroke="#0284c7" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><path d="M54 84V58q0-8 8-8h26"/><path d="M202 50h26q8 0 8 8v26"/><path d="M236 206v26q0 8-8 8h-26"/><path d="M88 240H62q-8 0-8-8v-26"/></g>'
 +'<g transform="translate(70 48)" filter="url(#'+u+'doc)"><rect width="150" height="194" rx="16" fill="#fff" stroke="#e2e8f0" stroke-width="1.2"/><path d="M112 0l38 38h-25q-13 0-13-13z" fill="#f1f5f9"/><path d="M112 0l38 38" fill="none" stroke="#cbd5e1" stroke-width="1.2"/>'
@@ -2207,7 +2238,16 @@ return '<svg class="dlogo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 290 2
 +'<g clip-path="url(#'+u+'clip)"><g class="dl-laser"><rect x="-10" y="-30" width="170" height="30" fill="url(#'+u+'sweep)"/><line x1="-15" y1="0" x2="165" y2="0" stroke="url(#'+u+'beam)" stroke-width="4" filter="url(#'+u+'glow)"/><circle cx="75" cy="0" r="3.8" fill="#fff" filter="url(#'+u+'glow)"/></g></g></g>'
 +'<g transform="translate(195 202)" filter="url(#'+u+'br)"><rect width="62" height="28" rx="10" fill="url(#'+u+'pri)" stroke="#bae6fd" stroke-width="1.2"/><path d="M8 3h46" stroke="#fff" stroke-linecap="round" opacity=".6"/><text x="31" y="19" fill="#fff" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-weight="900" font-size="12" letter-spacing="1.5" text-anchor="middle">PRO</text></g></svg>'}
 /* Logo completo con nombre y lema */
-function logoFullHtml(){return '<div class="dbrand">'+logoIsoSvg(120)+'<div class="dbrand-t"><span class="dbrand-chip"><i></i>PRECISION SCANNER</span><b>Danscaner <em>Pro</em></b><small>Escáner inteligente <i>·</i> OCR <i>·</i> Gestión PDF</small><div class="dbrand-tags"><span>✓ Motor óptico HD</span><span><i class="dot"></i>Privacidad en dispositivo</span></div></div></div>'}
+function logoFullSvg(){const iso=logoIsoSvg(290);const inner=iso.slice(iso.indexOf('>')+1,iso.lastIndexOf('</svg>'));const f='-apple-system,BlinkMacSystemFont,Inter,Segoe UI,sans-serif';const u='dt'+(++_logoN);
+return '<svg class="dlogo dlogo-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 380" role="img" aria-label="Danscaner Pro · Escáner inteligente, OCR, gestión PDF"><defs><linearGradient id="'+u+'tg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0ea5e9"/><stop offset="1" stop-color="#0284c7"/></linearGradient></defs>'
++'<g transform="translate(45 45)">'+inner+'</g>'
++'<g transform="translate(375 110)"><rect width="176" height="28" rx="14" fill="#e0f2fe" fill-opacity=".85" stroke="#bae6fd"/><circle cx="14" cy="14" r="4.5" fill="#0ea5e9"/><text x="96" y="18" fill="#0369a1" font-family="'+f+'" font-size="11" font-weight="700" letter-spacing="1.2" text-anchor="middle">PRECISION SCANNER</text>'
++'<text x="0" y="72" class="dlf-name" font-family="'+f+'" font-size="52" font-weight="800" letter-spacing="-1">Danscaner</text><text x="268" y="72" fill="url(#'+u+'tg)" font-family="'+f+'" font-size="52" font-weight="900" letter-spacing="-.5">Pro</text>'
++'<text x="0" y="110" class="dlf-sub" font-family="'+f+'" font-size="17" font-weight="600">Escáner Inteligente <tspan fill="#38bdf8" font-weight="bold">·</tspan> OCR <tspan fill="#38bdf8" font-weight="bold">·</tspan> Gestión PDF</text>'
++'<g transform="translate(0 134)"><rect width="118" height="26" rx="8" class="dlf-tag"/><path d="M12 13l3 3 6-6" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><text x="64" y="17" class="dlf-tagt" font-family="'+f+'" font-size="11" font-weight="600" text-anchor="middle">Motor Óptico HD</text>'
++'<g transform="translate(126 0)"><rect width="134" height="26" rx="8" class="dlf-tag"/><circle cx="16" cy="13" r="3.5" fill="#10b981"/><text x="74" y="17" class="dlf-tagt" font-family="'+f+'" font-size="11" font-weight="600" text-anchor="middle">Privacidad en Dispositivo</text></g></g></g></svg>'}
+function logoFullHtml(){return '<div class="dbrand dbrand-svg">'+logoFullSvg()+'</div>'}
+function logoFullHtmlOld(){return '<div class="dbrand">'+logoIsoSvg(120)+'<div class="dbrand-t"><span class="dbrand-chip"><i></i>PRECISION SCANNER</span><b>Danscaner <em>Pro</em></b><small>Escáner inteligente <i>·</i> OCR <i>·</i> Gestión PDF</small><div class="dbrand-tags"><span>✓ Motor óptico HD</span><span><i class="dot"></i>Privacidad en dispositivo</span></div></div></div>'}
 
 /* ---------- pantalla de acceso con el logo animado ---------- */
 function authGateHtml(state,extra){return '<div class="authbox"><div class="authlogo">'+logoIsoSvg(92)+'</div><h2>Danscaner Pro</h2>'+state+(extra||'')+'</div>'}
@@ -2241,6 +2281,98 @@ function aboutSheet(){openSheet('Acerca de Danscaner Pro',logoFullHtml()+'<p cla
 (function(){try{if(!S.v23){const d=D();Object.assign(d,JSON.parse(JSON.stringify(PRESETS.celeste)));delete d.label;S.v23=true;S.theme=S.theme||'system';saveS();applyDesign();cambiarTema(d.theme||'light')}}catch(e){console.warn(e)}
  const lg=document.querySelector('.top .logo');if(lg)lg.innerHTML=logoIsoSvg(34);
  const m=document.querySelector('meta[name="theme-color"]');if(m&&document.documentElement.dataset.skin==='celeste')m.content='#0ea5e9'})();
+
+/* ===== v24: la cámara escanea, no solo saca la foto ===== */
+/* Si la detección de bordes falla, estimamos la hoja por su brillo para no dejar la foto sin recortar. */
+function estimateDocBox(src){try{const W0=src.naturalWidth||src.width,H0=src.naturalHeight||src.height;if(!W0)return null;
+ const s=Math.min(1,320/Math.max(W0,H0)),w=Math.max(40,Math.round(W0*s)),h=Math.max(40,Math.round(H0*s));
+ const c=canvas(w,h),x=c.getContext('2d',{willReadFrequently:true});x.drawImage(src,0,0,w,h);
+ const d=x.getImageData(0,0,w,h).data,N=w*h,g=new Uint8Array(N),hist=new Uint32Array(256);
+ for(let i=0,j=0;i<N;i++,j+=4){const v=(d[j]*77+d[j+1]*150+d[j+2]*29)>>8;g[i]=v;hist[v]++}
+ const o=otsu(hist,N);const th=(o&&o.th!=null?o.th:(typeof o==='number'?o:140));
+ if(o&&o.diff!=null&&o.diff<20)return null;
+ const bin=new Uint8Array(N);for(let i=0;i<N;i++)bin[i]=g[i]>th?1:0;
+ const lab=new Int32Array(N),st=new Int32Array(N);let best=0,bestL=0,cur=0;
+ for(let i=0;i<N;i++){if(!bin[i]||lab[i])continue;cur++;let sp=0,cnt=0;st[sp++]=i;lab[i]=cur;
+  while(sp){const q=st[--sp];cnt++;const qx=q%w;
+   if(qx>0&&bin[q-1]&&!lab[q-1]){lab[q-1]=cur;st[sp++]=q-1}
+   if(qx<w-1&&bin[q+1]&&!lab[q+1]){lab[q+1]=cur;st[sp++]=q+1}
+   if(q>=w&&bin[q-w]&&!lab[q-w]){lab[q-w]=cur;st[sp++]=q-w}
+   if(q<N-w&&bin[q+w]&&!lab[q+w]){lab[q+w]=cur;st[sp++]=q+w}}
+  if(cnt>best){best=cnt;bestL=cur}}
+ if(best<N*0.12)return null;
+ let x0=w,y0=h,x1=-1,y1=-1;for(let y=0;y<h;y++)for(let xx=0;xx<w;xx++)if(lab[y*w+xx]===bestL){if(xx<x0)x0=xx;if(xx>x1)x1=xx;if(y<y0)y0=y;if(y>y1)y1=y}
+ const pad=1.5,ax=Math.max(0,(x0-pad)/w),bx=Math.min(1,(x1+pad)/w),ay=Math.max(0,(y0-pad)/h),by=Math.min(1,(y1+pad)/h);
+ if((bx-ax)*(by-ay)<0.12||(bx-ax)>0.995&&(by-ay)>0.995)return null;
+ return [{x:ax,y:ay},{x:bx,y:ay},{x:bx,y:by},{x:ax,y:by}]}catch(e){return null}}
+function makePage(src,{auto=S.autoCrop,filter=S.filter}={}){return (async()=>{
+ const img=await loadImg(src);const s=Math.min(1,S.maxCap/Math.max(img.naturalWidth,img.naturalHeight));
+ const c=canvas(img.naturalWidth*s,img.naturalHeight*s),x=c.getContext('2d');
+ x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.imageSmoothingQuality='high';x.drawImage(img,0,0,c.width,c.height);
+ let quad=auto?detectQuad(c):null,guess=false;
+ if(auto&&!quad&&filter!=='original'){quad=estimateDocBox(c);guess=!!quad}
+ const p={id:uid(),orig:c.toDataURL('image/jpeg',.93),quad,rot:0,filter,bright:0,contrast:0,overlays:[]};
+ if(auto&&!quad)toast('No se detectaron bordes: ajustá el recorte a mano',3500);
+ else if(guess)toast('Bordes estimados: revisá el recorte',3000);
+ c.width=c.height=1;await makeThumb(p);return p})()}
+
+/* chip con el filtro de escaneo, como en el diseño */
+(function(){const chip=$('#camFilterChip');if(!chip)return;
+ const upd=()=>{const n=(FILTERS.find(f=>f[0]===S.filter)||['','Original'])[1];chip.innerHTML='<i data-ico="wand" style="width:16px"></i> Escaneo: <b>'+esc(n)+'</b>';iconize(chip)};
+ chip.onclick=()=>{const P=$('#camPanel');P.hidden=!P.hidden;$('#camCfg').classList.toggle('on',!P.hidden);camPanelRender()};
+ const _u=Cam.updUI;Cam.updUI=function(){_u.call(this);upd()};const _r=camPanelRender;camPanelRender=function(){_r.apply(this,arguments);upd()};upd()})();
+
+/* ===== Danscaner Pro v25: almacenamiento, envío optimizado y confirmación de guardado ===== */
+
+/* ---------- 1. Almacenamiento y caché ---------- */
+async function cacheBytes(){try{if(!('caches' in window))return 0;let t=0;for(const n of await caches.keys()){const c=await caches.open(n);for(const r of await c.keys()){try{const res=await c.match(r);if(!res)continue;const b=await res.clone().blob();t+=b.size}catch(e){}}}return t}catch(e){return 0}}
+async function clearCaches(){let n=0;try{for(const k of await caches.keys()){await caches.delete(k);n++}}catch(e){}
+ try{const rs=await navigator.serviceWorker.getRegistrations();for(const r of rs)r.update()}catch(e){}return n}
+async function storageSheet(){
+ const b=openSheet('💾 Almacenamiento y caché','<div class="stbox"><div class="muted">Calculando…</div></div>');
+ const docs=_metas.reduce((a,m)=>a+(m.bytes||0),0);
+ let est={};try{est=await navigator.storage.estimate()}catch(e){}
+ const cache=await cacheBytes();
+ const total=Math.max(est.usage||0,docs+cache),libre=Math.max(0,(est.quota||0)-(est.usage||0));
+ const draw=()=>{const rows=[..._metas].sort((a,c)=>(c.bytes||0)-(a.bytes||0));
+ $('.stbox',b).innerHTML='<div class="stcard"><div class="sttop"><b>'+fmtSize(total)+'</b><span class="muted">usado por Danscaner Pro</span></div>'
+ +'<div class="stbar"><i style="width:'+Math.min(100,docs/Math.max(1,total)*100)+'%;background:#0ea5e9"></i><i style="width:'+Math.min(100,cache/Math.max(1,total)*100)+'%;background:#38bdf8"></i></div>'
+ +'<div class="stleg"><span><i style="background:#0ea5e9"></i>Documentos '+fmtSize(docs)+'</span><span><i style="background:#38bdf8"></i>Caché y librerías '+fmtSize(cache)+'</span>'+(libre?'<span><i style="background:#cbd5e1"></i>Libre '+fmtSize(libre)+'</span>':'')+'</div></div>'
+ +'<div class="stclean"><div><b>Limpieza rápida</b><small class="muted">Borra la caché, las librerías guardadas y los archivos temporales. <b>No toca tus documentos.</b> Se vuelven a descargar cuando haya internet.</small></div><button class="btn pri block" id="stClean"'+(cache<50000?' disabled':'')+'><i data-ico="wand">🧹</i> '+(cache<50000?'No hay caché para liberar':'Liberar '+fmtSize(cache))+'</button></div>'
+ +'<div class="cph">Documentos guardados ('+rows.length+')</div>'
+ +(rows.length?rows.map(r=>'<div class="frow"><img src="'+r.thumb+'" style="width:28px;height:36px;object-fit:cover;border-radius:4px"><span style="flex:1"><b>'+esc(r.name)+'</b><br><small class="muted">'+r.count+' pág · '+fmtSize(r.bytes||0)+' · '+new Date(r.updated).toLocaleDateString('es-AR')+'</small></span><button class="btn sm" data-stdl="'+r.id+'"><i data-ico="save">⬇</i></button><button class="btn sm red" data-stdel="'+r.id+'"><i data-ico="trash">🗑</i></button></div>').join(''):'<p class="muted">Todavía no hay documentos.</p>')
+ +'<p class="muted">Los documentos viven solo en este dispositivo. Descargá los que ya elevaste antes de borrarlos.</p>';iconize(b)};
+ draw();
+ b.onclick=async e=>{const dl=e.target.closest('[data-stdl]'),del=e.target.closest('[data-stdel]');
+ if(e.target.closest('#stClean')){if(!confirm('¿Vaciar la caché? Se liberan '+fmtSize(cache)+'. Tus documentos no se tocan.'))return;
+  await withBusy(async()=>{busy('Liberando memoria…');await clearCaches()});
+  const after=await cacheBytes();const freed=Math.max(0,cache-after);
+  $('.stbox',b).innerHTML='<div class="stok"><div class="stok-ic">✅</div><h3>Memoria liberada</h3><b>'+fmtSize(freed)+'</b><p class="muted">Se borraron la caché y los archivos temporales. Ningún documento fue afectado: seguís teniendo '+_metas.length+' documento(s), '+fmtSize(docs)+'.</p><p class="muted">Las librerías se vuelven a guardar solas la próxima vez que uses cada herramienta con internet.</p><button class="btn pri block" data-back><i data-ico="check">✓</i> Listo</button></div>';iconize(b);return}
+ if(dl){await withBusy(async()=>{busy('Generando PDF…');const d=await DB.getDoc(dl.dataset.stdl);const bytes=await buildPDF(d.pages,{size:S.size,orient:S.orient,margin:S.margin,quality:S.quality,title:d.name},(i,n)=>busy('PDF '+i+'/'+n));busy(false);const bl=pdfBlob(bytes);download(bl,safeName(d.name)+'.pdf');savedSheet(bl,safeName(d.name)+'.pdf')})}
+ if(del){const m=_metas.find(x=>x.id===del.dataset.stdel);if(!confirm('¿Borrar "'+(m?m.name:'')+'"? No se puede deshacer.'))return;await DB.delDoc(del.dataset.stdel);await refreshLists();toast('Documento borrado');await Nav.back();storageSheet()}}}
+
+/* ---------- 2. Aviso de archivo guardado ---------- */
+function savedSheet(blob,name){const b=openSheet('✅ Archivo guardado','<div class="savedok"><div class="savedok-ic">📄</div><b>'+esc(name)+'</b><span class="muted">'+fmtSize(blob.size)+' · guardado en este dispositivo</span>'
++'<div class="savedpath"><i data-ico="folder">📁</i><div><b>Dónde quedó</b><small class="muted">Carpeta <b>Descargas</b> del teléfono (en iPhone: app Archivos → Descargas)</small></div></div>'
++'<div class="row"><button class="btn block" data-back>Listo</button><button class="btn pri block" id="svShare"><i data-ico="share">📤</i> Compartir</button></div></div>');
+ iconize(b);$('#svShare',b).onclick=()=>shareWhatsApp(blob,name)}
+{const _dl=download;download=function(blob,name){const r=_dl(blob,name);try{if(/\.(pdf|docx|xlsx|pptx|zip)$/i.test(name||''))setTimeout(()=>{if(Nav.top()!=='sheet')savedSheet(blob,name)},400)}catch(e){}return r}}
+
+/* ---------- 3. Comprimir antes de enviar ---------- */
+const SEND_LEVELS=[['baja','Compresión máxima','Para datos móviles o correos con límite'],['media','Recomendada','Equilibrio: liviano y se lee perfecto'],['alta','Alta calidad','Para imprimir o archivar']];
+async function sendOptimizedSheet(pages,name,title){
+ let lvl='media';const cache={};
+ const b=openSheet(title||'Comprimir y enviar','<div class="sndhead"><div class="sndic">📄</div><div><b>'+esc(name)+'.pdf</b><small class="muted">'+pages.length+' página(s)</small></div></div><div class="sndlist">'+SEND_LEVELS.map(([k,n,d])=>'<button class="sndopt'+(k==='media'?' on':'')+'" data-sl="'+k+'"><div><b>'+n+'</b><small>'+d+'</small></div><em id="sz_'+k+'">calculando…</em></button>').join('')+'</div><div class="row"><button class="btn block" id="sndSave"><i data-ico="save">💾</i> Guardar</button><button class="btn pri block" id="sndGo"><i data-ico="share">📤</i> Enviar</button></div><p class="muted" id="sndInfo"></p>');
+ const build=async k=>{if(cache[k])return cache[k];const bytes=await buildPDF(pages,{size:S.size,orient:S.orient,margin:S.margin,quality:k,title:name},null);return cache[k]=pdfBlob(bytes)};
+ const mark=()=>{$$('.sndopt',b).forEach(x=>x.classList.toggle('on',x.dataset.sl===lvl));
+  const big=cache['maxima']||cache['alta'],cur=cache[lvl];
+  if(big&&cur)$('#sndInfo',b).textContent='Ahorro: '+fmtSize(Math.max(0,big.size-cur.size))+' menos que en alta calidad.'};
+ (async()=>{for(const [k] of SEND_LEVELS){try{const bl=await build(k);const el=$('#sz_'+k,b);if(el)el.textContent=fmtSize(bl.size)}catch(e){}}mark()})();
+ b.onclick=async e=>{const o=e.target.closest('[data-sl]');if(o){lvl=o.dataset.sl;mark();return}
+  if(e.target.closest('#sndSave'))return withBusy(async()=>{busy('Preparando…');const bl=await build(lvl);busy(false);await Nav.back();download(bl,safeName(name)+'.pdf')});
+  if(e.target.closest('#sndGo'))return withBusy(async()=>{busy('Preparando…');const bl=await build(lvl);busy(false);await Nav.back();shareWhatsApp(bl,safeName(name)+'.pdf')})}}
+async function docToWhatsApp(){if(!DOC||!DOC.pages.length)return toast('No hay páginas');return sendOptimizedSheet(DOC.pages,DOC.name,'Comprimir y enviar')}
+
 </script>
 <script type="text/plain" id="modsrc-admin">/* Danscaner Pro · módulo que se carga solo cuando se usa */
 window.__mods=window.__mods||{};
