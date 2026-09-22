@@ -490,6 +490,47 @@ html[data-skin="industrial"] .badge{border-radius:2px}
 .rtdoc{background:#fff;color:#111;min-height:40vh;padding:22px 20px;box-shadow:0 2px 10px #0002;font-size:11pt;outline:none;border-radius:2px}
 .rtdoc p{margin:0 0 8pt}
 .rtdoc ul,.rtdoc ol{margin:0 0 8pt 18pt}
+/* v22: logo animado, barra inferior y tarjeta IA */
+.dlogo .dl-laser{animation:dlScan 3s cubic-bezier(.45,.05,.55,.95) infinite}
+.dlogo .dl-target{animation:dlPulse 2.8s ease-in-out infinite;transform-origin:145px 142px;transform-box:view-box}
+.dlogo .dl-spin{animation:dlRot 14s linear infinite;transform-origin:145px 142px;transform-box:view-box}
+.dlogo .dl-grid{animation:dlGrid 4s ease-in-out infinite}
+@keyframes dlScan{0%{transform:translateY(14px);opacity:.2}12%{opacity:1}48%{opacity:1}50%{transform:translateY(148px);opacity:.25}52%{opacity:1}90%{opacity:1}100%{transform:translateY(14px);opacity:.2}}
+@keyframes dlPulse{0%,100%{transform:scale(1);opacity:.9}50%{transform:scale(1.08);opacity:1}}
+@keyframes dlRot{to{transform:rotate(360deg)}}
+@keyframes dlGrid{0%,100%{opacity:.15}50%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){.dlogo *{animation:none!important}}
+.authlogo .dlogo{filter:drop-shadow(0 10px 18px #0284c722)}
+.dbrand{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;padding:6px 0}
+.dbrand-chip{display:inline-flex;align-items:center;gap:6px;background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;border-radius:14px;padding:3px 12px;font-size:10.5px;font-weight:700;letter-spacing:1.2px}
+.dbrand-chip i{width:8px;height:8px;border-radius:50%;background:#0ea5e9}
+.dbrand-t b{display:block;font-size:32px;font-weight:800;letter-spacing:-1px;color:var(--tx);margin:8px 0 2px}
+.dbrand-t b em{font-style:normal;font-weight:900;background:linear-gradient(90deg,#0ea5e9,#0284c7);-webkit-background-clip:text;background-clip:text;color:transparent}
+.dbrand-t small{color:var(--tx2);font-size:14px;font-weight:600}.dbrand-t small i{color:#38bdf8;font-style:normal;font-weight:700}
+.dbrand-tags{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+.dbrand-tags span{display:inline-flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--line);border-radius:8px;padding:4px 10px;font-size:11.5px;font-weight:600;color:var(--tx2)}
+.dbrand-tags .dot{width:7px;height:7px;border-radius:50%;background:#10b981;display:inline-block}
+.nav.nav2{background:color-mix(in srgb,var(--bg2) 95%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-top:1px solid var(--line);box-shadow:0 -4px 20px rgba(0,0,0,.06)}
+.nav.nav2 button{font-size:11.5px;font-weight:600}
+.nav.nav2 button.on{color:var(--ac)}
+.nav.nav2 button b .ico{width:24px;height:24px;stroke-width:2}
+.nav.nav2 .fab.fabcam{width:64px!important;height:64px!important;min-width:64px!important;border-radius:50%!important;margin-top:-34px;
+ background:linear-gradient(45deg,color-mix(in srgb,var(--ac) 82%,#000),color-mix(in srgb,var(--ac) 72%,#fff))!important;
+ border:4px solid var(--bg2)!important;color:#fff!important;box-shadow:0 10px 22px color-mix(in srgb,var(--ac) 40%,transparent)!important}
+.nav.nav2 .fab.fabcam .ico{width:32px;height:32px;stroke:#fff;stroke-width:2}
+.nav.nav2 .fab.fabcam:active{transform:scale(.95)}
+html[data-skin="industrial"] .nav.nav2 .fab.fabcam{border-radius:4px!important;background:var(--ind-ink)!important}
+.aicard{display:flex;align-items:center;gap:12px;padding:14px;margin:14px 0 4px;border-radius:16px;cursor:pointer;
+ border:1px solid color-mix(in srgb,#0ea5e9 30%,transparent);
+ background:linear-gradient(90deg,color-mix(in srgb,#0ea5e9 10%,transparent),color-mix(in srgb,#6366f1 10%,transparent),color-mix(in srgb,#a855f7 10%,transparent))}
+.aicard-ic{width:46px;height:46px;border-radius:12px;flex:none;display:grid;place-items:center;color:#fff;background:linear-gradient(45deg,#0ea5e9,#4f46e5);box-shadow:0 4px 12px #0ea5e933}
+.aicard-ic .ico{width:24px;height:24px;stroke-width:2}
+.aicard-t{flex:1;min-width:0}.aicard-t div{display:flex;align-items:center;gap:6px}
+.aicard-t b{font-size:14px;color:var(--tx)}.aicard-t small{display:block;font-size:12px;color:var(--tx2);margin-top:2px}
+.aicard-pro{font-size:10px;font-weight:800;background:#e0f2fe;color:#0284c7;padding:1px 7px;border-radius:10px}
+[data-theme="dark"] .aicard-pro{background:#0c4a6e;color:#7dd3fc}
+.aicard-btn{flex:none;background:#0ea5e9;color:#fff;font-size:12px;font-weight:700;padding:9px 12px;border-radius:12px;box-shadow:0 2px 6px #0ea5e944}
+.aicard:active{transform:scale(.99)}
 </style>
 </head>
 <body>
@@ -872,7 +913,7 @@ function toolRow(t,i){return '<button class="mitem" data-tool="'+i+'">'+toolIc(t
 function renderTools(){const cats=[...new Set(TOOLS.map(t=>t.cat))];$('#toolsGrid').innerHTML=cats.map(c=>'<div class="catt">'+c+'</div><div class="mlist">'+TOOLS.map((t,i)=>t.cat===c?toolRow(t,i):'').join('')+'</div>').join('')+'<p class="muted" style="margin-top:24px;text-align:center">Todo se procesa en tu dispositivo. Algunas funciones descargan módulos la primera vez (requiere internet).</p>';const quick=(S.design&&S.design.quick&&S.design.quick.length)?S.design.quick:['Escanea a PDF','Unir PDF','PDF a WORD','Firmar PDF','Comprimir PDF','OCR PDF','JPG a PDF','Editar PDF'];$('#quickTools').innerHTML=quick.map(n=>{const i=TOOLS.findIndex(t=>t.name===n);return i>=0?toolTile(TOOLS[i],i):''}).join('')}
 function openTool(i){const t=TOOLS[i];if(t.direct)return t.direct();$('#toolTitle').textContent=t.name;$('#toolBody').innerHTML='<div class="tdesc">'+(t.desc||'')+'</div><div id="tMain"></div>';Nav.push('toolScreen');t.ui($('#tMain'))}
 document.addEventListener('click',e=>{const t=e.target.closest('[data-tool]');if(t)openTool(+t.dataset.tool)});
-async function settingsSheet(){let est='';try{const q=await navigator.storage.estimate();est='Espacio usado: '+fmtSize(q.usage||0)}catch(e){}const b=openSheet('Ajustes','<button class="btn pri block" id="sDesign" style="margin:4px 0 8px"><i data-ico="palette">🎨</i> Diseño de botones y funciones</button><button class="btn block" id="sAI" style="margin:0 0 8px"><i data-ico="brain">🧠</i> Inteligencia artificial</button><button class="btn block" id="sSec" style="margin:0 0 8px"><i data-ico="lock">🔐</i> Seguridad y accesos</button><button class="btn block" id="sSpace" style="margin:0 0 12px"><i data-ico="hdd">💾</i> Espacio usado y limpieza</button>'+opt('Plantilla de nombre por defecto',sel('sTpl',NAME_TEMPLATES.map(t=>[t,t])))+opt('Filtro por defecto al escanear',sel('sFilter',FILTERS))+opt('Resolución máxima',sel('sMax',[['2000','2000 px (liviano)'],['3000','3000 px (recomendado)'],['4200','4200 px (máxima)']]))+'<label class="chk"><input type="checkbox" id="sAuto"> Encuadre automático de bordes</label><label class="chk"><input type="checkbox" id="sAutoCap"> Auto-captura en modo lote</label><label class="chk"><input type="checkbox" id="sHd"> Foto HD (máxima resolución del sensor)</label><label class="chk"><input type="checkbox" id="sDeskew"> Enderezar documentos torcidos automáticamente</label><label class="chk"><input type="checkbox" id="sPro"> Filtros y detección de bordes profesionales</label>'+opt('<i data-ico="theme">🌓</i> Tema',sel('sTheme',[['system','Automático (según el teléfono)'],['light','Claro'],['dark','Oscuro']]))+'<label class="chk"><input type="checkbox" id="sNative"> Usar siempre la cámara del teléfono</label><p class="muted" style="margin:-4px 0 8px">'+(camSecure()?'Página segura (https): cámara integrada disponible ✅':'Página no segura ('+esc(location.protocol)+'): se usa la cámara del teléfono')+'</p>'+opt('Idioma OCR',sel('sLang',[['spa','Español'],['eng','Inglés'],['spa+eng','Español + Inglés'],['por','Portugués']]))+'<div class="row">'+opt('Hoja PDF por defecto',sel('sSize',[['a4','A4'],['oficio','Oficio'],['carta','Carta'],['original','Tamaño imagen']]))+opt('Calidad PDF',sel('sQ',Object.entries(QUAL).map(([k,v])=>[k,v.label])))+'</div>'+opt('Márgenes por defecto (mm)','<input type="number" id="sMargin" min="0" max="40">')+'<p class="muted">'+est+'</p><button class="btn red block" id="sWipe">🗑 Borrar todos los documentos</button><p class="muted">Danscaner Pro · funciona en celular y PC · los documentos se guardan en este navegador.</p>');$('.sTpl',b).value=S.nameTemplate;$('.sFilter',b).value=S.filter;$('.sMax',b).value=String(S.maxCap);$('#sAuto').checked=S.autoCrop;$('#sAutoCap').checked=S.autoCapture;$('#sHd').checked=S.hd;$('#sDeskew').checked=S.deskew!==false;$('#sPro').checked=S.proFilters!==false;$('#sNative').checked=!!S.camNative;$('.sTheme',b).value=S.theme||'system';$('.sLang',b).value=S.lang;$('.sSize',b).value=S.size;$('.sQ',b).value=S.quality;$('#sMargin').value=S.margin;b.onchange=()=>{S.nameTemplate=$('.sTpl',b).value;S.filter=$('.sFilter',b).value;S.maxCap=+$('.sMax',b).value;S.autoCrop=$('#sAuto').checked;S.camNative=$('#sNative').checked;if(($('.sTheme',b).value)!==(S.theme||'system'))cambiarTema($('.sTheme',b).value);S.autoCapture=$('#sAutoCap').checked;S.hd=$('#sHd').checked;S.deskew=$('#sDeskew').checked;if((S.proFilters!==false)!==$('#sPro').checked){S.proFilters=$('#sPro').checked;useProFilters(S.proFilters)}S.lang=$('.sLang',b).value;S.size=$('.sSize',b).value;S.quality=$('.sQ',b).value;S.margin=+$('#sMargin').value||0;saveS();toast('Guardado')};$('#sDesign').onclick=async()=>{await Nav.back();designSheet()};$('#sAI').onclick=async()=>{await Nav.back();aiSheet()};$('#sSec').onclick=async()=>{await Nav.back();securitySheet()};$('#sSpace').onclick=async()=>{await Nav.back();storageSheet()};$('#sWipe').onclick=async()=>{if(!confirm('¿Borrar TODOS los documentos guardados?'))return;for(const m of await DB.metas())await DB.delDoc(m.id);refreshLists();toast('Documentos borrados')}}
+async function settingsSheet(){let est='';try{const q=await navigator.storage.estimate();est='Espacio usado: '+fmtSize(q.usage||0)}catch(e){}const b=openSheet('Ajustes','<button class="btn pri block" id="sDesign" style="margin:4px 0 8px"><i data-ico="palette">🎨</i> Diseño de botones y funciones</button><button class="btn block" id="sAI" style="margin:0 0 8px"><i data-ico="brain">🧠</i> Inteligencia artificial</button><button class="btn block" id="sSec" style="margin:0 0 8px"><i data-ico="lock">🔐</i> Seguridad y accesos</button><button class="btn block" id="sSpace" style="margin:0 0 8px"><i data-ico="hdd">💾</i> Espacio usado y limpieza</button><button class="btn block" id="sAbout" style="margin:0 0 12px"><i data-ico="settings">ℹ️</i> Acerca de Danscaner Pro</button>'+opt('Plantilla de nombre por defecto',sel('sTpl',NAME_TEMPLATES.map(t=>[t,t])))+opt('Filtro por defecto al escanear',sel('sFilter',FILTERS))+opt('Resolución máxima',sel('sMax',[['2000','2000 px (liviano)'],['3000','3000 px (recomendado)'],['4200','4200 px (máxima)']]))+'<label class="chk"><input type="checkbox" id="sAuto"> Encuadre automático de bordes</label><label class="chk"><input type="checkbox" id="sAutoCap"> Auto-captura en modo lote</label><label class="chk"><input type="checkbox" id="sHd"> Foto HD (máxima resolución del sensor)</label><label class="chk"><input type="checkbox" id="sDeskew"> Enderezar documentos torcidos automáticamente</label><label class="chk"><input type="checkbox" id="sPro"> Filtros y detección de bordes profesionales</label>'+opt('<i data-ico="theme">🌓</i> Tema',sel('sTheme',[['system','Automático (según el teléfono)'],['light','Claro'],['dark','Oscuro']]))+'<label class="chk"><input type="checkbox" id="sNative"> Usar siempre la cámara del teléfono</label><p class="muted" style="margin:-4px 0 8px">'+(camSecure()?'Página segura (https): cámara integrada disponible ✅':'Página no segura ('+esc(location.protocol)+'): se usa la cámara del teléfono')+'</p>'+opt('Idioma OCR',sel('sLang',[['spa','Español'],['eng','Inglés'],['spa+eng','Español + Inglés'],['por','Portugués']]))+'<div class="row">'+opt('Hoja PDF por defecto',sel('sSize',[['a4','A4'],['oficio','Oficio'],['carta','Carta'],['original','Tamaño imagen']]))+opt('Calidad PDF',sel('sQ',Object.entries(QUAL).map(([k,v])=>[k,v.label])))+'</div>'+opt('Márgenes por defecto (mm)','<input type="number" id="sMargin" min="0" max="40">')+'<p class="muted">'+est+'</p><button class="btn red block" id="sWipe">🗑 Borrar todos los documentos</button><p class="muted">Danscaner Pro · funciona en celular y PC · los documentos se guardan en este navegador.</p>');$('.sTpl',b).value=S.nameTemplate;$('.sFilter',b).value=S.filter;$('.sMax',b).value=String(S.maxCap);$('#sAuto').checked=S.autoCrop;$('#sAutoCap').checked=S.autoCapture;$('#sHd').checked=S.hd;$('#sDeskew').checked=S.deskew!==false;$('#sPro').checked=S.proFilters!==false;$('#sNative').checked=!!S.camNative;$('.sTheme',b).value=S.theme||'system';$('.sLang',b).value=S.lang;$('.sSize',b).value=S.size;$('.sQ',b).value=S.quality;$('#sMargin').value=S.margin;b.onchange=()=>{S.nameTemplate=$('.sTpl',b).value;S.filter=$('.sFilter',b).value;S.maxCap=+$('.sMax',b).value;S.autoCrop=$('#sAuto').checked;S.camNative=$('#sNative').checked;if(($('.sTheme',b).value)!==(S.theme||'system'))cambiarTema($('.sTheme',b).value);S.autoCapture=$('#sAutoCap').checked;S.hd=$('#sHd').checked;S.deskew=$('#sDeskew').checked;if((S.proFilters!==false)!==$('#sPro').checked){S.proFilters=$('#sPro').checked;useProFilters(S.proFilters)}S.lang=$('.sLang',b).value;S.size=$('.sSize',b).value;S.quality=$('.sQ',b).value;S.margin=+$('#sMargin').value||0;saveS();toast('Guardado')};$('#sDesign').onclick=async()=>{await Nav.back();designSheet()};$('#sAI').onclick=async()=>{await Nav.back();aiSheet()};$('#sSec').onclick=async()=>{await Nav.back();securitySheet()};$('#sSpace').onclick=async()=>{await Nav.back();storageSheet()};$('#sAbout').onclick=async()=>{await Nav.back();aboutSheet()};$('#sWipe').onclick=async()=>{if(!confirm('¿Borrar TODOS los documentos guardados?'))return;for(const m of await DB.metas())await DB.delDoc(m.id);refreshLists();toast('Documentos borrados')}}
 $('#btnSettings').onclick=settingsSheet;$('#navSettings').onclick=settingsSheet;
 function go(v){$$('.view').forEach(x=>x.classList.toggle('active',x.id==='v-'+v));$$('.nav [data-go]').forEach(b=>b.classList.toggle('on',b.dataset.go===v));$('#topTitle').textContent={home:'Danscaner Pro',docs:'Documentos',tools:'Herramientas'}[v];window.scrollTo(0,0)}
 async function doAction(a){if(a==='cam-single')Cam.open('single');else if(a==='cam-batch')Cam.open('batch');else if(a==='import-img')$('#inImg').click();else if(a==='import-any')$('#inAny').click()}
@@ -1761,6 +1802,7 @@ var PRESETS={
  papel:{label:'Papel',color:'#8d6e37',shape:'round',ico:22,stroke:1.7,iconStyle:'line',anim:true,uifont:'serif',density:'amplio',zoom:1.05,bg:'papel',contrast:false,docView:'grid',theme:'light'},
  nocturno:{label:'Nocturno',color:'#ff5252',shape:'round',ico:23,stroke:1.9,iconStyle:'line',anim:true,uifont:'sys',density:'normal',zoom:1,bg:'plano',contrast:false,docView:'grid',theme:'dark'},
  industrial:{label:'Industrial',skin:'industrial',color:'#41617f',shape:'square',ico:22,stroke:2,iconStyle:'line',anim:true,uifont:'sys',density:'normal',zoom:1,bg:'plano',contrast:false,docView:'list',theme:'light'},
+ celeste:{label:'Celeste Pro',skin:'suave',color:'#0ea5e9',shape:'round',ico:22,stroke:2,iconStyle:'line',anim:true,uifont:'sys',density:'normal',zoom:1,bg:'plano',contrast:false,docView:'list',theme:'light'},
  grande:{label:'Letra grande',color:'#e53935',shape:'round',ico:27,stroke:2.2,iconStyle:'line',anim:false,uifont:'sys',density:'amplio',zoom:1.18,bg:'plano',contrast:true,docView:'list',theme:'light'}
 };
 Object.assign(DESIGN_DEF,{uifont:'sys',density:'normal',zoom:1,bg:'plano',contrast:false,docView:'list',skin:'suave'});
@@ -2118,6 +2160,60 @@ function applyFilterPro(c,f,bright,contrast,o){o=o||{};bright=+bright||0;contras
 /* ---------- E. activar (con interruptor para volver a los anteriores) ---------- */
 function useProFilters(on){applyFilter=on?applyFilterPro:_origApplyFilter;detectQuad=on?(src=>(typeof HTMLVideoElement!=='undefined'&&src instanceof HTMLVideoElement)?detectQuadOrig(src):_v21_detect(src)):detectQuadOrig;if(FW.w){try{FW.w.terminate()}catch(e){}FW.w=null;FW.ok=null}}
 useProFilters(S.proFilters!==false);
+
+
+/* ===== Danscaner Pro v22: logo animado, barra inferior y tarjeta IA ===== */
+var _logoN=0;
+/* Isotipo animado (barrido láser + retículo OCR). Cada copia usa ids propios para no chocar. */
+function logoIsoSvg(size){const u='dl'+(++_logoN);
+return '<svg class="dlogo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 290 290" width="'+(size||96)+'" height="'+(size||96)+'" role="img" aria-label="Danscaner Pro"><defs>'
++'<linearGradient id="'+u+'sky" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#38bdf8"/><stop offset="1" stop-color="#0284c7"/></linearGradient>'
++'<linearGradient id="'+u+'pri" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0ea5e9"/><stop offset="1" stop-color="#0369a1"/></linearGradient>'
++'<linearGradient id="'+u+'bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff"/><stop offset=".5" stop-color="#f0f9ff"/><stop offset="1" stop-color="#e0f2fe"/></linearGradient>'
++'<linearGradient id="'+u+'beam" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0ea5e9" stop-opacity="0"/><stop offset=".2" stop-color="#38bdf8" stop-opacity=".85"/><stop offset=".5" stop-color="#fff"/><stop offset=".8" stop-color="#38bdf8" stop-opacity=".85"/><stop offset="1" stop-color="#0ea5e9" stop-opacity="0"/></linearGradient>'
++'<linearGradient id="'+u+'sweep" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#38bdf8" stop-opacity=".35"/><stop offset="1" stop-color="#0284c7" stop-opacity="0"/></linearGradient>'
++'<filter id="'+u+'glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="6" result="a"/><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="a"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'
++'<filter id="'+u+'doc" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="12" stdDeviation="10" flood-color="#0369a1" flood-opacity=".14"/><feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#0f172a" flood-opacity=".06"/></filter>'
++'<filter id="'+u+'br" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0284c7" flood-opacity=".25"/></filter>'
++'<clipPath id="'+u+'clip"><rect x="0" y="0" width="150" height="194" rx="16"/></clipPath></defs>'
++'<rect x="1.25" y="1.25" width="287.5" height="287.5" rx="68" fill="url(#'+u+'bg)" stroke="#bae6fd" stroke-width="2.5"/>'
++'<g class="dl-grid" stroke="#0284c7" stroke-width=".8" stroke-dasharray="2.5 5"><line x1="45" y1="70" x2="245" y2="70"/><line x1="45" y1="120" x2="245" y2="120"/><line x1="45" y1="170" x2="245" y2="170"/><line x1="45" y1="220" x2="245" y2="220"/><line x1="70" y1="45" x2="70" y2="245"/><line x1="120" y1="45" x2="120" y2="245"/><line x1="170" y1="45" x2="170" y2="245"/><line x1="220" y1="45" x2="220" y2="245"/></g>'
++'<g class="dl-bracket" filter="url(#'+u+'br)" fill="none" stroke="#0284c7" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><path d="M54 84V58q0-8 8-8h26"/><path d="M202 50h26q8 0 8 8v26"/><path d="M236 206v26q0 8-8 8h-26"/><path d="M88 240H62q-8 0-8-8v-26"/></g>'
++'<g transform="translate(70 48)" filter="url(#'+u+'doc)"><rect width="150" height="194" rx="16" fill="#fff" stroke="#e2e8f0" stroke-width="1.2"/><path d="M112 0l38 38h-25q-13 0-13-13z" fill="#f1f5f9"/><path d="M112 0l38 38" fill="none" stroke="#cbd5e1" stroke-width="1.2"/>'
++'<rect x="18" y="22" width="54" height="12" rx="6" fill="url(#'+u+'sky)"/><circle cx="80" cy="28" r="3.5" fill="#38bdf8"/>'
++[[46,114,.35],[60,96,.25],[74,106,.25],[88,62,.2],[102,102,.25],[116,86,.2],[130,108,.25],[144,72,.18]].map(([y,w,o])=>'<rect x="18" y="'+y+'" width="'+w+'" height="7" rx="3.5" fill="#94a3b8" opacity="'+o+'"/>').join('')
++'<g class="dl-target"><circle class="dl-spin" cx="75" cy="94" r="32" fill="none" stroke="#0ea5e9" stroke-width="2.5" stroke-dasharray="6 5"/><circle cx="75" cy="94" r="16" fill="#e0f2fe" fill-opacity=".45" stroke="#0284c7" stroke-width="2.2"/><circle cx="75" cy="94" r="5.5" fill="url(#'+u+'sky)"/><circle cx="75" cy="94" r="2.2" fill="#fff"/><g stroke="#0284c7" stroke-width="2" stroke-linecap="round"><line x1="75" y1="55" x2="75" y2="62"/><line x1="75" y1="126" x2="75" y2="133"/><line x1="36" y1="94" x2="43" y2="94"/><line x1="107" y1="94" x2="114" y2="94"/></g></g>'
++'<g clip-path="url(#'+u+'clip)"><g class="dl-laser"><rect x="-10" y="-30" width="170" height="30" fill="url(#'+u+'sweep)"/><line x1="-15" y1="0" x2="165" y2="0" stroke="url(#'+u+'beam)" stroke-width="4" filter="url(#'+u+'glow)"/><circle cx="75" cy="0" r="3.8" fill="#fff" filter="url(#'+u+'glow)"/></g></g></g>'
++'<g transform="translate(195 202)" filter="url(#'+u+'br)"><rect width="62" height="28" rx="10" fill="url(#'+u+'pri)" stroke="#bae6fd" stroke-width="1.2"/><path d="M8 3h46" stroke="#fff" stroke-linecap="round" opacity=".6"/><text x="31" y="19" fill="#fff" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-weight="900" font-size="12" letter-spacing="1.5" text-anchor="middle">PRO</text></g></svg>'}
+/* Logo completo con nombre y lema */
+function logoFullHtml(){return '<div class="dbrand">'+logoIsoSvg(120)+'<div class="dbrand-t"><span class="dbrand-chip"><i></i>PRECISION SCANNER</span><b>Danscaner <em>Pro</em></b><small>Escáner inteligente <i>·</i> OCR <i>·</i> Gestión PDF</small><div class="dbrand-tags"><span>✓ Motor óptico HD</span><span><i class="dot"></i>Privacidad en dispositivo</span></div></div></div>'}
+
+/* ---------- pantalla de acceso con el logo animado ---------- */
+function authGateHtml(state,extra){return '<div class="authbox"><div class="authlogo">'+logoIsoSvg(92)+'</div><h2>Danscaner Pro</h2>'+state+(extra||'')+'</div>'}
+
+/* ---------- barra inferior: íconos nuevos y botón central elevado ---------- */
+Object.assign(ICONS,{
+ navHome:'<path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 0 0 1 1h3m10-11l2 2m-2-2v10a1 1 0 0 1-1 1h-3m-6 0a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1m-6 0h6"/>',
+ navDocs:'<path d="M5 19a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4l2 2h4a2 2 0 0 1 2 2v1M5 19h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2z"/>',
+ navTools:'<path d="M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.4 1.8 2.9 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.8 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.4 1.8-2.9 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.5-1.8-3 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4a1.7 1.7 0 0 0 2.5-1.1z"/><circle cx="12" cy="12" r="3"/>',
+ navSet:'<path d="M12 6V4m0 2a2 2 0 1 0 0 4m0-4a2 2 0 1 1 0 4m-6 8a2 2 0 1 0 0-4m0 4a2 2 0 1 1 0-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 1 0 0-4m0 4a2 2 0 1 1 0-4m0 4v2m0-6V4"/>',
+ navCam:'<path d="M3 9a2 2 0 0 1 2-2h.9a2 2 0 0 0 1.7-.9l.8-1.2A2 2 0 0 1 10.1 4h3.8a2 2 0 0 1 1.7.9l.8 1.2a2 2 0 0 0 1.7.9H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="3"/>',
+ bolt:'<path d="M13 10V3L4 14h7v7l9-11h-7z"/>'});
+(function(){const nav=$('.nav');if(!nav)return;
+ const set=(sel,ico)=>{const b=nav.querySelector(sel);if(!b)return;const t=b.querySelector('b');if(t){t.removeAttribute('data-icod');t.dataset.ico=ico;t.innerHTML=''}};
+ set('[data-go="home"]','navHome');set('[data-go="docs"]','navDocs');set('[data-go="tools"]','navTools');set('#navSettings','navSet');
+ const f=nav.querySelector('.fab');if(f){f.innerHTML='<i data-ico="navCam"></i>'}
+ nav.classList.add('nav2');iconize(nav)})();
+
+/* ---------- tarjeta del asistente IA en el inicio ---------- */
+(function(){const sec=$('#v-home .sec');if(!sec||$('#aiCard'))return;
+ const d=document.createElement('div');d.id='aiCard';d.className='aicard';
+ d.innerHTML='<div class="aicard-ic"><i data-ico="bolt"></i></div><div class="aicard-t"><div><b>Asistente IA Danscaner</b><span class="aicard-pro">PRO</span></div><small>Resumir, extraer datos o redactar con tu documento</small></div><button class="aicard-btn">Abrir IA →</button>';
+ sec.parentNode.insertBefore(d,sec);iconize(d);
+ d.onclick=()=>{const i=TOOLS.findIndex(t=>t.name==='Asistente IA');if(i>=0)openTool(i);else toast('El asistente no está disponible')}})();
+
+/* ---------- Acerca de ---------- */
+function aboutSheet(){openSheet('Acerca de Danscaner Pro',logoFullHtml()+'<p class="muted" style="text-align:center;margin-top:14px">Los documentos se procesan y se guardan solo en este dispositivo.</p>')}
 
 </script>
 </body>
