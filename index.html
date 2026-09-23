@@ -582,6 +582,63 @@ html[data-skin="celeste"] .logo{background:#fff;border-color:#bae6fd}
 .sndopt small{display:block;color:var(--tx2);font-size:11.5px;margin-top:2px}
 .sndopt em{font-style:normal;font-weight:800;color:var(--ac);font-size:13px;white-space:nowrap}
 .sndopt.on{border-color:var(--ac);background:var(--soft)}
+/* v26: estilo Azul Cristal y métricas */
+html[data-skin="aqua"]{--cam-mask-url:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3E%3Cpath fill-rule=%22evenodd%22 d=%22M9.5 3.5 8 5.5H5A2.5 2.5 0 0 0 2.5 8v10A2.5 2.5 0 0 0 5 20.5h14a2.5 2.5 0 0 0 2.5-2.5V8A2.5 2.5 0 0 0 19 5.5h-3l-1.5-2zM12 8.7a4.3 4.3 0 1 0 0 8.6 4.3 4.3 0 0 0 0-8.6zM12 10.4a2.6 2.6 0 1 1 0 5.2 2.6 2.6 0 0 1 0-5.2zM18 7.3a1 1 0 1 0 0 2 1 1 0 0 0 0-2z%22/%3E%3C/svg%3E");--color-primario:#1e88ff;--bg:#eef7ff;--bg-principal:#ffffff;--bg2:#ffffff;--bg3:#e8f1ff;--bg4:#d9e8ff;
+ --line:rgba(19,55,105,.10);--stage:#e4eefb;--tx:#15233d;--tx2:#697a96;--texto-principal:#15233d;--soft:#e6f1ff;--soft-line:#bcd9ff;--r-btn:16px}
+html[data-skin="aqua"][data-theme="dark"]{--color-primario:#4ba3ff;--bg:#080d17;--bg-principal:#0e1626;--bg2:#0e1626;--bg3:#152134;--bg4:#1d2c44;
+ --line:rgba(120,160,220,.16);--stage:#0a1120;--tx:#e8eefc;--tx2:#93a4c2;--texto-principal:#e8eefc;--soft:rgba(75,163,255,.14);--soft-line:rgba(75,163,255,.32)}
+html[data-skin="aqua"] body{background:radial-gradient(circle at top left,rgba(94,170,255,.22),transparent 30%),radial-gradient(circle at bottom right,rgba(59,130,246,.15),transparent 35%),linear-gradient(180deg,#eef7ff 0%,#e9f1ff 100%);background-attachment:fixed}
+html[data-skin="aqua"][data-theme="dark"] body{background:radial-gradient(circle at top left,rgba(30,90,180,.28),transparent 32%),radial-gradient(circle at bottom right,rgba(20,60,130,.22),transparent 38%),linear-gradient(180deg,#080d17,#0a1220);background-attachment:fixed}
+html[data-skin="aqua"] .hero{border-radius:28px;box-shadow:0 20px 44px rgba(28,70,129,.14);border-color:rgba(255,255,255,.7);background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(236,244,255,.92))}
+html[data-skin="aqua"][data-theme="dark"] .hero{background:linear-gradient(180deg,#101a2c,#0c1424)}
+html[data-skin="aqua"] .hbtn,html[data-skin="aqua"] .item,html[data-skin="aqua"] .rcard,html[data-skin="aqua"] .stcard,html[data-skin="aqua"] .aicard{border-radius:20px}
+html[data-skin="aqua"] .tool .ic,html[data-skin="aqua"] .mitem .ic{border-radius:15px}
+html[data-skin="aqua"] .item{box-shadow:0 10px 24px rgba(28,70,129,.07)}
+html[data-skin="aqua"] .btn.pri,html[data-skin="aqua"] .ib.pri{background:linear-gradient(135deg,#4ba3ff,#1e88ff);box-shadow:0 10px 22px rgba(30,136,255,.28)}
+html[data-skin="aqua"] .hbtn.big{background:linear-gradient(135deg,#4ba3ff,#1e88ff);border-color:transparent;color:#fff;box-shadow:0 12px 26px rgba(30,136,255,.3)}
+html[data-skin="aqua"] .hbtn.big small{color:#e3f0ff}
+html[data-skin="aqua"] .hbtn.big .icono-camara{background:#fff;-webkit-mask:var(--cam-mask-url) center/contain no-repeat;mask:var(--cam-mask-url) center/contain no-repeat;filter:none}
+html[data-skin="aqua"] .nav.nav2{background:color-mix(in srgb,var(--bg2) 88%,transparent)}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0 4px;cursor:pointer}
+.metric{background:var(--bg2);border:1px solid var(--line);border-radius:18px;padding:12px 8px;text-align:center;box-shadow:0 8px 20px rgba(28,70,129,.06)}
+.metric strong{display:block;font-size:19px;font-weight:800;color:var(--ac);letter-spacing:-.5px}
+.metric span{font-size:11px;color:var(--tx2);font-weight:600}
+.doc-badge{flex:none;align-self:center;font-size:10px;font-weight:800;letter-spacing:.4px;padding:3px 8px;border-radius:8px;background:var(--soft);color:var(--ac)}
+.doc-badge.ocr{background:rgba(21,183,121,.14);color:#0f8a5f}
+[data-theme="dark"] .doc-badge.ocr{color:#34d399}
+#docList.grid .doc-badge{position:absolute;bottom:8px;right:8px}
+/* v27: acabado premium (base de la app) */
+html[data-skin="aqua"] .top{background:color-mix(in srgb,var(--bg2) 82%,transparent);-webkit-backdrop-filter:saturate(180%) blur(16px);backdrop-filter:saturate(180%) blur(16px);border-bottom:1px solid var(--line)}
+html[data-skin="aqua"] #topTitle{font-weight:800;letter-spacing:-.4px}
+html[data-skin="aqua"] .sec{font-size:16px;font-weight:800;letter-spacing:-.3px;align-items:center}
+html[data-skin="aqua"] .sec a{background:var(--soft);color:var(--ac);border-radius:999px;padding:5px 12px;font-size:11.5px;font-weight:700}
+html[data-skin="aqua"] .hero{position:relative;overflow:hidden}
+html[data-skin="aqua"] .hero::after{content:"";position:absolute;width:190px;height:190px;right:-60px;top:-70px;border-radius:50%;
+ background:radial-gradient(circle,color-mix(in srgb,var(--ac) 26%,transparent),transparent 65%);pointer-events:none}
+html[data-skin="aqua"] .hero-t{font-size:24px;font-weight:800;letter-spacing:-.6px}
+html[data-skin="aqua"] .hbtn{background:var(--bg2);border:1px solid var(--line);box-shadow:0 10px 22px rgba(28,70,129,.08)}
+html[data-skin="aqua"][data-theme="dark"] .hbtn{box-shadow:0 10px 22px rgba(0,0,0,.4)}
+html[data-skin="aqua"] .hbtn:active{transform:scale(.95)}
+html[data-skin="aqua"] .grid4{gap:10px}
+html[data-skin="aqua"] .tool{background:var(--bg2);border:1px solid var(--line);border-radius:20px;padding:14px 6px 12px;box-shadow:0 8px 20px rgba(28,70,129,.07)}
+html[data-skin="aqua"][data-theme="dark"] .tool{box-shadow:0 8px 20px rgba(0,0,0,.35)}
+html[data-skin="aqua"] .tool .ic{width:46px;height:46px;border-radius:15px;box-shadow:0 8px 16px rgba(28,70,129,.18)}
+html[data-skin="aqua"] .tool:active{transform:scale(.95)}
+html[data-skin="aqua"] .item{gap:12px;padding:12px;border-radius:20px}
+html[data-skin="aqua"] .item img{border-radius:14px;box-shadow:0 6px 14px rgba(28,70,129,.12)}
+html[data-skin="aqua"] .item .nm{font-weight:700;letter-spacing:-.2px}
+html[data-skin="aqua"] .chip{border-radius:999px}
+html[data-skin="aqua"] .btn{border-radius:16px;font-weight:700}
+html[data-skin="aqua"] .sheet{border-radius:28px 28px 0 0}
+html[data-skin="aqua"] .shh b{font-weight:800;letter-spacing:-.3px}
+html[data-skin="aqua"] .mitem{border-radius:16px}
+html[data-skin="aqua"] .mitem .ic{border-radius:14px;box-shadow:0 6px 14px rgba(28,70,129,.16)}
+html[data-skin="aqua"] .metric{border-radius:20px}
+html[data-skin="aqua"] .aicard{border-radius:22px;box-shadow:0 10px 26px rgba(30,136,255,.12)}
+html[data-skin="aqua"] .fab.fabcam{box-shadow:0 12px 26px color-mix(in srgb,var(--ac) 45%,transparent)!important}
+html[data-skin="aqua"] .pg{border-radius:16px;box-shadow:0 8px 18px rgba(28,70,129,.08)}
+html[data-skin="aqua"] .flt img{border-radius:14px}
+html[data-skin="aqua"] .tb{border-radius:14px}
 </style>
 </head>
 <body>
@@ -1848,15 +1905,11 @@ applyPerms();
 
 /* ---------- 2. Diseño y visualización ---------- */
 var PRESETS={
- clasico:{label:'Clásico',color:'#e53935',shape:'round',ico:22,stroke:1.9,iconStyle:'line',anim:true,uifont:'sys',density:'normal',zoom:1,bg:'plano',contrast:false,docView:'list',theme:'light'},
- institucional:{label:'Institucional',color:'#1e4fa3',shape:'square',ico:22,stroke:2,iconStyle:'line',anim:true,uifont:'serif',density:'normal',zoom:1,bg:'plano',contrast:true,docView:'list',theme:'light'},
- papel:{label:'Papel',color:'#8d6e37',shape:'round',ico:22,stroke:1.7,iconStyle:'line',anim:true,uifont:'serif',density:'amplio',zoom:1.05,bg:'papel',contrast:false,docView:'grid',theme:'light'},
- nocturno:{label:'Nocturno',color:'#ff5252',shape:'round',ico:23,stroke:1.9,iconStyle:'line',anim:true,uifont:'sys',density:'normal',zoom:1,bg:'plano',contrast:false,docView:'grid',theme:'dark'},
- industrial:{label:'Industrial',skin:'industrial',color:'#41617f',shape:'square',ico:22,stroke:2,iconStyle:'line',anim:true,uifont:'sys',density:'normal',zoom:1,bg:'plano',contrast:false,docView:'list',theme:'light'},
- celeste:{label:'Celeste Pro',skin:'celeste',color:'#0ea5e9',shape:'round',ico:22,stroke:2,iconStyle:'line',anim:true,uifont:'sys',density:'normal',zoom:1,bg:'plano',contrast:false,docView:'list',theme:'light'},
- grande:{label:'Letra grande',color:'#e53935',shape:'round',ico:27,stroke:2.2,iconStyle:'line',anim:false,uifont:'sys',density:'amplio',zoom:1.18,bg:'plano',contrast:true,docView:'list',theme:'light'}
+ celeste:{label:'Celeste Pro',skin:'aqua',color:'#1e88ff',shape:'round',ico:22,stroke:2,iconStyle:'line',anim:true,uifont:'sys',density:'normal',zoom:1,bg:'plano',contrast:false,docView:'list',theme:'light'},
+ nocturno:{label:'Nocturno',skin:'aqua',color:'#4ba3ff',shape:'round',ico:22,stroke:2,iconStyle:'line',anim:true,uifont:'sys',density:'normal',zoom:1,bg:'plano',contrast:false,docView:'grid',theme:'dark'}
 };
-Object.assign(DESIGN_DEF,{uifont:'sys',density:'normal',zoom:1,bg:'plano',contrast:false,docView:'list',skin:'suave'});
+
+Object.assign(DESIGN_DEF,{uifont:'sys',density:'normal',zoom:1,bg:'plano',contrast:false,docView:'list',skin:'aqua',color:'#1e88ff',stroke:2});
 var UIFONTS={sys:'system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif',serif:'Georgia,"Times New Roman",serif',round:'"Trebuchet MS",Verdana,system-ui,sans-serif',mono:'"Courier New",monospace'};
 function applyDesign(){const d=D(),r=document.documentElement;
 if(d.color)r.style.setProperty('--color-primario',d.color);else r.style.removeProperty('--color-primario');
@@ -2277,10 +2330,12 @@ Object.assign(ICONS,{
 function aboutSheet(){openSheet('Acerca de Danscaner Pro',logoFullHtml()+'<p class="muted" style="text-align:center;margin-top:14px">Los documentos se procesan y se guardan solo en este dispositivo.</p>')}
 
 
-/* ===== Danscaner Pro v23: diseño nuevo por defecto ===== */
-(function(){try{if(!S.v23){const d=D();Object.assign(d,JSON.parse(JSON.stringify(PRESETS.celeste)));delete d.label;S.v23=true;S.theme=S.theme||'system';saveS();applyDesign();cambiarTema(d.theme||'light')}}catch(e){console.warn(e)}
+/* ===== Danscaner Pro v27: diseño premium por defecto ===== */
+(function(){try{if(S.v27!==true){const d=D();const dark=(document.documentElement.getAttribute('data-theme')==='dark')||S.theme==='dark';
+ Object.assign(d,JSON.parse(JSON.stringify(dark?PRESETS.nocturno:PRESETS.celeste)));delete d.label;
+ S.v27=true;delete S.v23;saveS();applyDesign();cambiarTema(dark?'dark':'light')}}catch(e){console.warn(e)}
  const lg=document.querySelector('.top .logo');if(lg)lg.innerHTML=logoIsoSvg(34);
- const m=document.querySelector('meta[name="theme-color"]');if(m&&document.documentElement.dataset.skin==='celeste')m.content='#0ea5e9'})();
+ const m=document.querySelector('meta[name="theme-color"]');if(m)m.content=document.documentElement.getAttribute('data-theme')==='dark'?'#0e1626':'#1e88ff'})();
 
 /* ===== v24: la cámara escanea, no solo saca la foto ===== */
 /* Si la detección de bordes falla, estimamos la hoja por su brillo para no dejar la foto sin recortar. */
@@ -2372,6 +2427,20 @@ async function sendOptimizedSheet(pages,name,title){
   if(e.target.closest('#sndSave'))return withBusy(async()=>{busy('Preparando…');const bl=await build(lvl);busy(false);await Nav.back();download(bl,safeName(name)+'.pdf')});
   if(e.target.closest('#sndGo'))return withBusy(async()=>{busy('Preparando…');const bl=await build(lvl);busy(false);await Nav.back();shareWhatsApp(bl,safeName(name)+'.pdf')})}}
 async function docToWhatsApp(){if(!DOC||!DOC.pages.length)return toast('No hay páginas');return sendOptimizedSheet(DOC.pages,DOC.name,'Comprimir y enviar')}
+
+
+/* ===== Danscaner Pro v26: estilo "Azul Cristal" + métricas del inicio ===== */
+/* métricas: documentos, páginas y espacio, como en el diseño */
+function renderMetrics(){let box=$('#homeMetrics');
+ if(!box){const anchor=$('#v-home .sec');if(!anchor)return;box=document.createElement('div');box.id='homeMetrics';box.className='metrics';anchor.parentNode.insertBefore(box,anchor)}
+ const docs=_metas.length,pages=_metas.reduce((a,m)=>a+(m.count||0),0),bytes=_metas.reduce((a,m)=>a+(m.bytes||0),0);
+ box.innerHTML='<div class="metric"><strong>'+docs+'</strong><span>Documentos</span></div><div class="metric"><strong>'+pages+'</strong><span>Páginas</span></div><div class="metric"><strong>'+(bytes?fmtSize(bytes):'0 KB')+'</strong><span>Espacio</span></div>';
+ box.onclick=()=>storageSheet()}
+{const _r=refreshLists;refreshLists=async function(){const r=await _r.apply(this,arguments);try{renderMetrics()}catch(e){}return r}}
+setTimeout(()=>{try{renderMetrics()}catch(e){}},600);
+/* etiqueta de tipo en cada documento */
+{const _di=docItem;docItem=function(m,withSel){const html=_di(m,withSel);const tag=(m.text&&m.text.length>40)?'OCR':'PDF';
+ return html.replace('</div></div>','</div></div><span class="doc-badge '+(tag==='OCR'?'ocr':'')+'">'+tag+'</span>')}}
 
 </script>
 <script type="text/plain" id="modsrc-admin">/* Danscaner Pro · módulo que se carga solo cuando se usa */
@@ -2572,7 +2641,6 @@ const b=openSheet('🎨 Diseño y visualización',
 +'<div class="muted">Vista previa · tocá los botones</div><div class="dprev"><div class="hero-btns"><button class="hbtn big"><i class="icono-camara"></i><span>Escanear</span><small>Individual</small></button><button class="hbtn"><i data-ico="files">🗂️</i><span>Lote</span><small>Varias fotos</small></button><button class="hbtn"><i data-ico="image">🖼️</i><span>Galería</span><small>Imágenes</small></button></div><div class="dbar"><button class="tb"><b data-ico="crop">✂️</b>Recortar</button><button class="tb"><b data-ico="replace">🔁</b>Cambiar</button><button class="tb"><b data-ico="sign">✍️</b>Firmar</button><button class="tb"><b data-ico="adjust">🎚️</b>Ajustes</button></div><div class="item" style="pointer-events:none"><img src="'+((_metas[0]&&_metas[0].thumb)||'')+'" alt=""><div class="inf"><div class="nm">Documento de ejemplo</div><div class="muted">hoy · 3 pág. · 480 KB</div></div></div><button class="btn pri block"><i data-ico="save">💾</i> Botón principal</button></div>'
 +'<div class="cph">Tema</div>'+seg('theme',[['light','Claro'],['dark','Oscuro'],['system','Automático']])
 +'<div class="cph">Color principal</div><div class="swatches">'+cols.map(c=>'<button class="sw '+(d.color===c?'on':'')+'" data-col="'+c+'" style="background:'+c+'"></button>').join('')+'<label class="sw pick"><input type="color" id="dsCol" value="'+(d.color||'#e53935')+'"></label><button class="chip" data-col="">Por defecto</button></div>'
-+'<div class="cph">Estilo visual</div>'+seg('skin',[['suave','Actual'],['industrial','Industrial']])
 +'<div class="cph">Fondo</div>'+seg('bg',[['plano','Plano'],['suave','Degradado'],['papel','Papel']])
 +'<div class="cph">Tipografía de la app</div>'+seg('uifont',[['sys','Moderna'],['serif','Formal'],['round','Redondeada'],['mono','Máquina']])
 +'<div class="cph">Tamaño general</div>'+seg('zoom',[[0.9,'Compacto'],[1,'Normal'],[1.1,'Grande'],[1.25,'Muy grande']])
