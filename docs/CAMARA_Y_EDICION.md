@@ -114,6 +114,13 @@ Con los PDF reales del usuario (la misma planilla escaneada con Danscanner y con
 - **Calidad máxima por defecto**: migración única que pone `maxCap` en 4200 y activa Foto HD.
 - **Actualización**: al volver a la app se busca una versión nueva. Cuando se instala, la app se recarga sola si no hay nada abierto; si hay algo abierto, avisa. En Ajustes se muestra la versión.
 
+### Ajuste v25: calibración con la foto real del usuario y enderezado sin cuñas
+
+- Con la foto real de la planilla (filtro Original), Magia Pro deja un 0,70 % de píxeles azules, con mediana RGB 103, 112, 186. CamScanner deja un 0,73 %, con mediana 115, 113, 186. Valores: `sat 2,5` y `cg 1,9` (Mejorar: `sat 2,1` y `cg 2,2`).
+- **Hoja "cruzada" en el editor**: después del recorte de 4 esquinas, la app volvía a girar la imagen unos grados (`deskewAngle`) y expandía el lienzo con cuñas blancas. Ahora:
+  - si la página tiene recorte de 4 esquinas, no se vuelve a girar, porque el recorte ya la deja derecha;
+  - si se gira (una página sin recorte), se recorta el rectángulo interior (`cropInscribed`) y no quedan esquinas blancas.
+
 ## Captura estilo escáner (v21)
 
 Comparación con el flujo de las apps de escaneo comerciales, como CamScanner, y lo que se incorporó:
@@ -169,7 +176,7 @@ Botón **🪪 Datos** en la barra del documento. Si el documento todavía no tie
 
 ## Pruebas
 
-`tests/app.test.js` (Playwright, Chromium) tiene 18 pruebas de extremo a extremo. Las nuevas para este módulo son:
+`tests/app.test.js` (Playwright, Chromium) tiene 19 pruebas de extremo a extremo. Las nuevas para este módulo son:
 
 - **Filtro Documento**: el papel queda blanco, el texto negro y se conserva la tinta azul. Con el modo B/N activo no queda color.
 - **PDF buscable**: `Tucumán`, `“Expte.”`, `N°`, `Peñaloza` se extraen intactos y sin bloques de números.
