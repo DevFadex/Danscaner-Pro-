@@ -1309,7 +1309,7 @@ if(e.target.closest('#trWord'))withBusy(async()=>{busy('Armando Word…');const 
 if(e.target.closest('#trPdf'))withBusy(async()=>{busy('Armando PDF…');const blob=await htmlToPdfBlob(out.split(/\n{2,}/).map(t=>'<p style="text-align:justify">'+esc(t)+'</p>').join(''));busy(false);showResults($('.result',el),[{blob,name:name+'.pdf'}])})})}
 
 /* ---------- Inteligencia artificial (con clave propia) ---------- */
-const AI_PROV={gemini:{n:'Google Gemini',m:'gemini-2.5-flash',help:'Clave gratuita en aistudio.google.com/apikey'},openai:{n:'OpenAI',m:'gpt-4o-mini',help:'Clave en platform.openai.com/api-keys'},anthropic:{n:'Anthropic (Claude)',m:'claude-opus-5',help:'Clave en console.anthropic.com'}};
+const AI_PROV={gemini:{n:'Google Gemini',m:'gemini-2.5-flash',help:'Clave gratuita en aistudio.google.com/apikey'},openai:{n:'OpenAI',m:'gpt-4o-mini',help:'Clave en platform.openai.com/api-keys'},anthropic:{n:'Anthropic (Claude)',m:'claude-sonnet-5',help:'Clave en console.anthropic.com'}};
 const AI=()=>{S.ai=Object.assign({prov:'gemini',key:'',model:''},S.ai||{});const a=S.ai;if(!a.keys||typeof a.keys!=='object')a.keys={};if(a.key&&!a.keys[a.prov])a.keys[a.prov]=a.key;if(!a.models||typeof a.models!=='object')a.models={};return a};
 const aiReady=()=>!!(AI().key||'').trim();
 async function aiRun(prompt,{system,images=[],maxTokens=2000}={}){const a=AI();if(!aiReady())throw new Error('Configurá tu clave de IA en Ajustes → Inteligencia artificial');const model=(a.model||'').trim()||AI_PROV[a.prov].m;
