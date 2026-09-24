@@ -1,4 +1,4 @@
-/* Danscaner Pro · módulo que se carga solo cuando se usa */
+/* Danscanner Pro · módulo que se carga solo cuando se usa */
 window.__mods=window.__mods||{};
 /* ---------- panel de administración ---------- */
 function admInitials(n,e){const base=(n||'').trim()||(e||'').split('@')[0]||'?';const p=base.split(/[\s._-]+/).filter(Boolean);return (p.length>=2?p[0][0]+p[1][0]:base.slice(0,2)).toUpperCase()}
@@ -85,7 +85,7 @@ try{await loadLib('qrcode');new QRCode($('#invQr',b),{text:link,width:190,height
 catch(x){$('#invQr',b).innerHTML='<p class="muted">El código QR necesita internet la primera vez. Usá el enlace de abajo.</p>'}
 busy(false);
 $('#invCopy',b).onclick=async()=>{try{await navigator.clipboard.writeText(link);toast('Enlace copiado')}catch(x){toast('Copialo del recuadro')}};
-$('#invShare',b).onclick=async()=>{const txt='Te comparto el acceso a Danscaner Pro: '+link;try{if(navigator.share)return void await navigator.share({title:'Acceso a Danscaner Pro',text:txt,url:link});await navigator.clipboard.writeText(txt);toast('Copiado')}catch(x){}};
+$('#invShare',b).onclick=async()=>{const txt='Te comparto el acceso a Danscanner Pro: '+link;try{if(navigator.share)return void await navigator.share({title:'Acceso a Danscanner Pro',text:txt,url:link});await navigator.clipboard.writeText(txt);toast('Copiado')}catch(x){}};
 $('#invNew',b).onclick=()=>Nav.back().then(adminInviteSheet)})}}
 function admCsv(list){if(!list||!list.length)return toast('No hay usuarios para exportar');
 const head=['Nombre','Correo','Rol','Estado','Registrado','ID'];

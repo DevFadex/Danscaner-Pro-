@@ -1,4 +1,4 @@
-/* Danscaner Pro · módulo que se carga solo cuando se usa */
+/* Danscanner Pro · módulo que se carga solo cuando se usa */
 window.__mods=window.__mods||{};
 __mods.designSheet=function(){const d=D();const cols=['#e53935','#d81b60','#8e24aa','#3949ab','#1e88e5','#00897b','#43a047','#fb8c00','#6d4c41','#212121'];
 const seg=(k,opts)=>'<div class="seg" data-k="'+k+'">'+opts.map(([v,n])=>'<button data-v="'+v+'" class="'+(String(d[k])===String(v)?'on':'')+'">'+n+'</button>').join('')+'</div>';

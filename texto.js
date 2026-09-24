@@ -1,4 +1,4 @@
-/* Danscaner Pro · módulo que se carga solo cuando se usa */
+/* Danscanner Pro · módulo que se carga solo cuando se usa */
 window.__mods=window.__mods||{};
 /* ---------- 5. Editor de texto tipo Word ---------- */
 function rtHtmlFromText(text){return String(text||'').split(/\n{2,}/).map(p=>'<p>'+esc(p).replace(/\n/g,'<br>')+'</p>').join('')||'<p><br></p>'}

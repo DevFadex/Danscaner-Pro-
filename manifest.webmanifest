@@ -1,6 +1,6 @@
 {
-  "name": "Danscaner Pro",
-  "short_name": "Danscaner",
+  "name": "Danscanner Pro",
+  "short_name": "Danscanner",
   "description": "Escáner de documentos, herramientas PDF, traductor e IA",
   "lang": "es-AR",
   "start_url": "./",

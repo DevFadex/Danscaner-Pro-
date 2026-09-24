@@ -1,5 +1,5 @@
 -- ============================================================
--- Danscaner Pro · base de acceso (Supabase)
+-- Danscanner Pro · base de acceso (Supabase)
 -- Pegá TODO esto en Supabase → SQL Editor → Run.
 -- El PRIMER usuario que entre queda como administrador.
 -- ============================================================
