@@ -189,6 +189,22 @@ await test('Birome azul clara: queda azul y marcada (no pálida)',async pg=>{
   for(const f of ['magia','mejorar']){assert.ok(r[f].n>3000,f+': se perdió el azul '+JSON.stringify(r));assert.ok(r[f].L<150,f+': azul muy pálido '+JSON.stringify(r))}
 });
 
+await test('Birome con color diluido por la cámara: se reconstruye el azul sin teñir el negro',async pg=>{
+  const r=await pg.evaluate(async()=>{const W=900,H=700,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');
+    x.fillStyle='#ddd6c4';x.fillRect(0,0,W,H);x.fillStyle='#1c1c1c';x.font='bold 34px sans-serif';for(let i=0;i<4;i++)x.fillText('PLANILLA DE ASISTENCIA',40,70+i*60);
+    x.strokeStyle='#7c80b8';x.lineWidth=2.5;for(let i=0;i<4;i++){x.beginPath();x.moveTo(60,360+i*80);for(let t=0;t<40;t++)x.lineTo(60+t*19,360+i*80-Math.sin(t*1.2)*20);x.stroke()}
+    /* croma diluida como en la cámara: se desenfoca solo el color */
+    const id=x.getImageData(0,0,W,H),d=id.data,Y=new Float32Array(W*H);for(let i=0;i<W*H;i++)Y[i]=d[i*4]*.299+d[i*4+1]*.587+d[i*4+2]*.114;
+    const bl=new Float32Array(W*H*3);const R=3;for(let y=0;y<H;y++)for(let xx=0;xx<W;xx++){let a=0,b=0,cc=0,n=0;for(let k=-R;k<=R;k++)for(let j=-R;j<=R;j++){const yy=y+k,x2=xx+j;if(yy<0||yy>=H||x2<0||x2>=W)continue;const q=(yy*W+x2)*4,l=Y[yy*W+x2];a+=d[q]-l;b+=d[q+1]-l;cc+=d[q+2]-l;n++}const o=(y*W+xx)*3;bl[o]=a/n;bl[o+1]=b/n;bl[o+2]=cc/n}
+    for(let i=0;i<W*H;i++){d[i*4]=Y[i]+bl[i*3];d[i*4+1]=Y[i]+bl[i*3+1];d[i*4+2]=Y[i]+bl[i*3+2]}x.putImageData(id,0,0);
+    const p=await makePage(c.toDataURL('image/jpeg',.88),{auto:false,filter:'magia'});const cv=await renderPage(p,{maxSide:900});const o=cv.getContext('2d').getImageData(0,0,cv.width,cv.height).data;
+    let blue=0,dark=0,tint=0;for(let y=300;y<660;y++)for(let xx=50;xx<840;xx++){const i=(y*cv.width+xx)*4;if(o[i+2]-o[i]>35&&o[i]+o[i+1]+o[i+2]<600)blue++}
+    for(let y=40;y<260;y++)for(let xx=40;xx<500;xx++){const i=(y*cv.width+xx)*4,l=o[i]*.299+o[i+1]*.587+o[i+2]*.114;if(l<80){dark++;if(Math.max(o[i],o[i+1],o[i+2])-Math.min(o[i],o[i+1],o[i+2])>40)tint++}}
+    return {blue,dark,tint}});
+  assert.ok(r.blue>2500,'no se recuperó el azul '+JSON.stringify(r));assert.ok(r.dark>5000&&r.tint/r.dark<.03,'el texto negro se tiñó '+JSON.stringify(r));
+  assert.equal(await pg.evaluate(()=>S.maxCap),4200);
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();
