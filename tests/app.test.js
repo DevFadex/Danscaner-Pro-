@@ -224,6 +224,28 @@ await test('Arranque sin ver el diseño anterior y Nexa arriba junto a Ajustes',
   await pg.click('#btnNexa');await W(300);assert.ok(await pg.$eval('#v-nexa',e=>e.classList.contains('active')));
 });
 
+await test('Nexa conversa (nombre, versión, qué puede hacer) con botones; íconos profesionales sin internet',async pg=>{
+  await pg.click('#btnNexa');await W(300);
+  for(const q of ['¿Para qué servís?','¿Cómo te llamás?']){await pg.fill('#nxIn',q);await pg.click('#nxSend');await W(600)}
+  const log=await pg.textContent('#nxLog');
+  for(const w of ['Comprimir','Extraer datos','Soy Nexa IA','Versión','Nexa 2.0'])assert.ok(log.includes(w),'falta '+w);
+  assert.ok((await pg.$$('.nx-chip')).length>=6,'faltan los botones interactivos');
+  assert.equal(await pg.$$eval('#nxLog .nx-md',els=>els.some(e=>/\p{Extended_Pictographic}/u.test(e.textContent))),false,'quedaron emojis en Nexa');
+  await pg.click('.nav [data-go="tools"]');await W(300);
+  const t=await pg.$$eval('#toolsGrid .ic',els=>els.map(e=>!!e.querySelector('svg')&&!/\p{Extended_Pictographic}/u.test(e.textContent)));
+  assert.ok(t.length>20&&t.every(Boolean),'herramientas con emojis');
+  const lim=await pg.evaluate(async()=>{Object.defineProperty(navigator,'gpu',{value:{requestAdapter:async()=>({limits:{maxComputeWorkgroupStorageSize:16384},features:new Set()})},configurable:true});return NexaLocal.support()});
+  assert.equal(lim.ok,false);assert.ok(/16 KB/.test(lim.why),lim.why);
+});
+
+await test('Editor: Mejorar imagen (se puede deshacer)',async pg=>{await seedPage(pg);
+  await pg.evaluate(async()=>{DOC=newDoc();DOC.pages.push({...window._pg,id:uid(),filter:'original'});openDocScreen();Ed.open(0)});await W(900);
+  const before=await pg.evaluate(async()=>{const c=await renderPage(Ed.p,{maxSide:500});return c.toDataURL().length});
+  await pg.click('#editor [data-ed="enh"]');await W(700);assert.equal(await pg.evaluate(()=>Ed.p.enh),1);
+  const after=await pg.evaluate(async()=>{const c=await renderPage(Ed.p,{maxSide:500});return c.toDataURL().length});assert.notEqual(before,after,'la imagen no cambió');
+  await pg.click('#edUndo');await W(600);assert.ok(!await pg.evaluate(()=>Ed.p.enh),'deshacer no quitó la mejora');
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();
