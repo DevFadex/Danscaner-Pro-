@@ -74,6 +74,30 @@ Todos se aplican con una LUT de 256 entradas (`toneAdjust`), también en el Web 
 - También exporta a PDF/A, JPG, PNG, Word y texto (herramientas existentes).
 - **Límite**: la letra manuscrita se reconoce solo parcialmente; Tesseract está pensado para texto impreso.
 
+## Captura estilo escáner (v21)
+
+Comparación con el flujo de las apps de escaneo comerciales, como CamScanner, y lo que se incorporó:
+
+| En CamScanner | En Danscanner |
+|---|---|
+| Vista previa a pantalla completa | `object-fit: cover`: la vista previa ocupa toda la pantalla |
+| Marco en vivo con puntos en las esquinas | Marco celeste con esquinas; se pone **verde** cuando la hoja está quieta |
+| Auto-captura al quedar estable | En cualquier modo (antes solo en Lote). Después de capturar **espera la hoja siguiente**, para no repetir la misma página |
+| Tipos de captura | **Documento · Libro · DNI / Tarjeta · Pizarra** |
+| Libro: separa las dos páginas | Busca el lomo (la columna más oscura cerca del centro) y crea dos páginas |
+| Bordes exactos | `refineQuad`: ajuste fino sobre la foto completa (ver abajo) |
+| Recorte con manijas en esquinas y lados | Se agregaron las manijas en la mitad de cada lado |
+| Limpieza de bordes | `cleanEdges`: restos oscuros de la mesa en la franja exterior (2,2 %) → blanco |
+
+**`refineQuad`**: la detección rápida trabaja a 360 px, por eso las esquinas quedaban hasta unos 35 px corridas en una foto de 12 MP. Con la foto a 1400 px:
+
+1. Para cada lado se toman unos 40 puntos.
+2. En cada punto se busca, a lo largo de la perpendicular, el primer salto fuerte de oscuro (mesa) a claro (papel).
+3. Se ajusta una recta por mínimos cuadrados totales, descartando los puntos que se alejan de la recta.
+4. Las esquinas son las intersecciones de esas rectas.
+
+Resultado: error de 2 a 3 px. Si falta contraste, se mantiene la detección original.
+
 ## Datos del documento
 
 Botón **🪪 Datos** en la barra del documento. Si el documento todavía no tiene texto, primero lo lee con OCR (en el teléfono). Después muestra, listos para copiar:
@@ -105,7 +129,7 @@ Botón **🪪 Datos** en la barra del documento. Si el documento todavía no tie
 
 ## Pruebas
 
-`tests/app.test.js` (Playwright, Chromium) tiene 14 pruebas de extremo a extremo. Las nuevas para este módulo son:
+`tests/app.test.js` (Playwright, Chromium) tiene 15 pruebas de extremo a extremo. Las nuevas para este módulo son:
 
 - **Filtro Documento**: el papel queda blanco, el texto negro y se conserva la tinta azul. Con el modo B/N activo no queda color.
 - **PDF buscable**: `Tucumán`, `“Expte.”`, `N°`, `Peñaloza` se extraen intactos y sin bloques de números.
