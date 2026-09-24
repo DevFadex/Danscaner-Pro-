@@ -228,14 +228,14 @@ await test('Nexa conversa (nombre, versión, qué puede hacer) con botones; íco
   await pg.click('#btnNexa');await W(300);
   for(const q of ['¿Para qué servís?','¿Cómo te llamás?']){await pg.fill('#nxIn',q);await pg.click('#nxSend');await W(600)}
   const log=await pg.textContent('#nxLog');
-  for(const w of ['Comprimir','Extraer datos','Soy Nexa IA','Versión','Nexa 2.0'])assert.ok(log.includes(w),'falta '+w);
+  for(const w of ['Comprimir','Extraer datos','Soy Nexa IA','Versión','Nexa 2.'])assert.ok(log.includes(w),'falta '+w);
   assert.ok((await pg.$$('.nx-chip')).length>=6,'faltan los botones interactivos');
   assert.equal(await pg.$$eval('#nxLog .nx-md',els=>els.some(e=>/\p{Extended_Pictographic}/u.test(e.textContent))),false,'quedaron emojis en Nexa');
   await pg.click('.nav [data-go="tools"]');await W(300);
   const t=await pg.$$eval('#toolsGrid .ic',els=>els.map(e=>!!e.querySelector('svg')&&!/\p{Extended_Pictographic}/u.test(e.textContent)));
   assert.ok(t.length>20&&t.every(Boolean),'herramientas con emojis');
   const lim=await pg.evaluate(async()=>{Object.defineProperty(navigator,'gpu',{value:{requestAdapter:async()=>({limits:{maxComputeWorkgroupStorageSize:16384},features:new Set()})},configurable:true});return NexaLocal.support()});
-  assert.equal(lim.ok,false);assert.ok(/16 KB/.test(lim.why),lim.why);
+  /* con placa gráfica chica se ofrece el modo procesador y se explica el motivo */assert.equal(lim.cpu,true);assert.ok(/16 KB/.test(lim.gpuWhy),lim.gpuWhy);
 });
 
 await test('Editor: Mejorar imagen (se puede deshacer)',async pg=>{await seedPage(pg);
@@ -244,6 +244,17 @@ await test('Editor: Mejorar imagen (se puede deshacer)',async pg=>{await seedPag
   await pg.click('#editor [data-ed="enh"]');await W(700);assert.equal(await pg.evaluate(()=>Ed.p.enh),1);
   const after=await pg.evaluate(async()=>{const c=await renderPage(Ed.p,{maxSide:500});return c.toDataURL().length});assert.notEqual(before,after,'la imagen no cambió');
   await pg.click('#edUndo');await W(600);assert.ok(!await pg.evaluate(()=>Ed.p.enh),'deshacer no quitó la mejora');
+});
+
+await test('Nexa local por procesador (sin placa gráfica compatible) y saludo según la hora',async pg=>{
+  await pg.evaluate(()=>{Object.defineProperty(navigator,'gpu',{value:{requestAdapter:async()=>({limits:{maxComputeWorkgroupStorageSize:16384},features:new Set()})},configurable:true})});
+  const s=await pg.evaluate(()=>NexaLocal.support());assert.equal(s.cpu,true,'no ofrece el modo procesador');
+  const r=await pg.evaluate(async()=>{const c=NexaLocal.cfg();c.url=location.origin+'/tests/tiny.gguf';const t=await NexaLocal.chat([{role:'user',content:'hola'}]);return {t,dl:c.downloaded,eng:c.engine}});
+  assert.ok(r.t.length>0&&r.dl&&r.eng==='cpu','no respondió con el procesador: '+JSON.stringify(r));
+  await pg.click('#btnNexa');await W(300);const h=await pg.textContent('#nxLog h3');assert.ok(/^(Buen día|Buenas tardes|Buenas noches), soy Nexa$/.test(h),h);
+  await pg.fill('#nxIn','hola');await pg.click('#nxSend');await W(600);const log=await pg.textContent('#nxLog');
+  assert.ok(/(Buen día|Buenas tardes|Buenas noches)!/.test(log)&&/(trabajamos hoy|ayudar|resolver hoy)/.test(log),log.slice(0,300));
+  assert.ok(await pg.$('#btnNexa'));
 });
 
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
