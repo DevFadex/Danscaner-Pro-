@@ -3190,6 +3190,52 @@ document.head.insertAdjacentHTML('beforeend','<style id="camEditCss">'
 +'.cam-level{position:absolute;right:14px;bottom:14px;z-index:3;width:54px;height:54px;border-radius:50%;border:2px solid rgba(255,255,255,.7);background:rgba(0,0,0,.35)}.cam-level i{position:absolute;left:50%;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:#fbbf24;transition:transform .15s}.cam-level.ok{border-color:#34d399}.cam-level.ok i{background:#34d399}'
 +'#camTorch{position:relative}#camTorch .fl-a{position:absolute;right:2px;bottom:0;font-size:10px;font-weight:800}'
 +'</style>');
+
+/* ===================== DATOS DEL DOCUMENTO: corrección de OCR y campos listos para copiar ===================== */
+/* Confusiones típicas del OCR en números (O→0, l/I→1, S→5, B→8, Z→2) solo dentro de grupos que ya son casi todo dígitos,
+   para no tocar palabras. También "N*"/"Nº" → "N°" y "D.N.l" → "D.N.I". */
+const OCR_NUM={O:'0',o:'0',I:'1',l:'1','|':'1',S:'5',B:'8',Z:'2'};
+function ocrFixNums(t){return String(t||'')
+ .replace(/(?<![\p{L}\d])[\dOoIlSBZ|][\dOoIlSBZ|.\-\/]{2,}(?![\p{L}\d])/gu,tok=>{const dg=(tok.match(/\d/g)||[]).length,lt=(tok.match(/[OoIlSBZ|]/g)||[]).length;return lt&&dg>=3&&lt*2<=dg?tok.replace(/[OoIlSBZ|]/g,c=>OCR_NUM[c]):tok})
+ .replace(/\bN\s?[º°*]\s?(?=\d)|\bNo(?=\d)/g,'N° ').replace(/\bD\.?\s?N\.?\s?[lI1|]\b\.?/g,'D.N.I.')}
+function cuilOk(c){const d=String(c).replace(/\D/g,'');if(d.length!==11)return false;const w=[5,4,3,2,7,6,5,4,3,2];let s=0;for(let i=0;i<10;i++)s+=w[i]*+d[i];let v=11-s%11;if(v===11)v=0;return v===10?+d[10]===9:v===+d[10]}
+function dniFmt(v){const d=String(v).replace(/\D/g,'');return d.length>=7&&d.length<=8?d.replace(/\B(?=(\d{3})+$)/g,'.'):v}
+function fechaNorm(f){let m=/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/.exec(f);if(m)return pad2(+m[1])+'/'+pad2(+m[2])+'/'+(m[3].length===2?'20'+m[3]:m[3]);
+ if(m=new RegExp('^(\\d{1,2})\\s+de\\s+('+NB_MESES+')(?:\\s+de(?:l)?\\s+(\\d{4}))?','i').exec(f))return pad2(+m[1])+'/'+pad2(MES_N[nbNorm(m[2])])+(m[3]?'/'+m[3]:'');return f}
+{const _ent=nbEntities;nbEntities=function(t){const src=ocrFixNums(nbClean(t)),e=_ent(src);
+ e.dni=[...new Set(e.dni.map(dniFmt))].filter(x=>{const n=+x.replace(/\D/g,'');return n>=1e6&&n<1e8});
+ /* "APELLIDO, Nombre Nombre" después de interno, imputado, Sr., etc. */
+ const reK=/\b(?:interno|interna|se[ñn]or|se[ñn]ora|sr\.|sra\.|imputad[oa]|detenid[oa]|causante|v[ií]ctima|condenad[oa]|procesad[oa]|nombre|apellido y nombre|apellidos? y nombres?)\s*:?\s+/gi;let m;
+ while(m=reK.exec(src)){const r=/^([A-ZÁÉÍÓÚÑ]{2,}(?:\s+[A-ZÁÉÍÓÚÑ]{2,}){0,2}),\s*([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+){0,2}|[A-ZÁÉÍÓÚÑ]{2,}(?:\s+[A-ZÁÉÍÓÚÑ]{2,}){0,2})/.exec(src.slice(m.index+m[0].length,m.index+m[0].length+80));
+  if(r){const full=r[1]+', '+r[2];e.personas=e.personas.filter(p=>!nbNorm(full).startsWith(nbNorm(p)));if(!e.personas.some(p=>nbNorm(p)===nbNorm(full)))e.personas.push(full)}}
+ return e}}
+{const _an=docAnalyze;docAnalyze=function(t){return _an(ocrFixNums(t))}}
+ICONS.idcard='<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M6 16c.6-1.5 1.7-2.2 3-2.2s2.4.7 3 2.2M14 10h4M14 13h3"/>';
+const DD_KEYS=['personas','dni','cuil','expedientes','fechas','montos','telefonos','emails'];
+async function docReadText(d,force){let t=(d.text||'').trim();if(t.length>40&&!force)return t;
+ const texts=await ocrCanvases(async fn=>{for(const p of d.pages)await fn(await renderPage(p,{maxSide:2400}))},S.lang,d.pages.length);busy(false);
+ t=texts.join('\n\n').trim();d.text=t.slice(0,20000);await saveDoc(true);return t}
+function docDataHtml(t){const e=nbEntities(t),a=docAnalyze(t);const vals={};
+ const row=(v,show,warn)=>'<div class="dd-row"><span class="dd-v">'+esc(show||v)+(warn?' <small class="dd-w" title="El dígito verificador no coincide: revisalo">⚠ revisar</small>':'')+'</span><button class="btn sm" data-cp="'+esc(v)+'">Copiar</button></div>';
+ let h='<div class="dd-head">'+[a.type&&'📄 <b>'+esc(a.type)+'</b>',a.exp&&'📁 Expte <b>'+esc(a.exp)+'</b>',a.date&&'📅 <b>'+esc(a.date.replace(/-/g,'/'))+'</b>'].filter(Boolean).join('<br>')+'</div>';
+ let any=0;for(const k of DD_KEYS){const list=e[k];if(!list.length)continue;any+=list.length;
+  const items=list.map(v=>k==='fechas'?[fechaNorm(v),fechaNorm(v)+(fechaNorm(v)!==v?'  ·  “'+v+'”':'')]:[v,v]);vals[k]=items.map(x=>x[0]);
+  h+='<div class="dd-cat"><div class="dd-t">'+NB_LABEL[k]+'</div>'+items.map(([v,s])=>row(v,s,k==='cuil'&&!cuilOk(v))).join('')+'</div>'}
+ if(!any)h+='<p class="muted">No encontré nombres, DNI, expedientes ni fechas en el texto. Si el escaneo está torcido o borroso, probá con el filtro <b>Documento</b> y tocá <b>Volver a leer</b>.</p>';
+ const all=DD_KEYS.filter(k=>vals[k]).map(k=>NB_LABEL[k].replace(/^\S+\s/,'')+': '+vals[k].join('; ')).join('\n');
+ h+='<div class="row dd-act"><button class="btn block" id="ddAll"'+(any?'':' disabled')+'>📋 Copiar todo</button><button class="btn block" id="ddRe">🔄 Volver a leer</button></div><p class="muted dd-note">Los datos salen del texto reconocido (OCR), sin internet. Revisalos antes de usarlos en un escrito.</p>';
+ return {h,all}}
+async function docDataSheet(){const d=DOC;if(!d||!d.pages.length)return toast('No hay páginas');
+ const show=async force=>{let t='';await withBusy(async()=>{t=await docReadText(d,force)});if(!t){if(force)toast('No se pudo leer el texto');}
+  const {h,all}=docDataHtml(t||'');const b=Nav.isOpen('sheet')?$('#sheetBody'):openSheet('Datos del documento','');b.innerHTML=h;
+  b.onclick=async e=>{const c=e.target.closest('[data-cp]');const txt=c?c.dataset.cp:e.target.closest('#ddAll')?all:null;
+   if(txt!=null){try{await navigator.clipboard.writeText(txt);toast('Copiado')}catch(x){toast('No se pudo copiar')}return}
+   if(e.target.closest('#ddRe'))await show(true)}};
+ await show(false)}
+(function(){const o=$('#docOcr');if(o&&!$('#docData')){o.insertAdjacentHTML('afterend','<button class="tb" id="docData"><b data-ico="idcard">🪪</b>Datos</button>');iconize($('#docData'));$('#docData').onclick=()=>docDataSheet()}})();
+document.head.insertAdjacentHTML('beforeend','<style id="ddCss">.dd-head{padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--bg2);margin-bottom:10px;line-height:1.6}.dd-head:empty{display:none}'
++'.dd-cat{margin:0 0 12px}.dd-t{font-weight:700;font-size:13px;margin:0 0 4px}.dd-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)}.dd-v{flex:1;min-width:0;overflow-wrap:anywhere;font-size:14px}'
++'.dd-w{color:#b45309;font-weight:600}.dd-act{gap:8px;margin-top:8px}.dd-note{font-size:12px;margin-top:8px}</style>');
 </script>
 </body>
 </html>
