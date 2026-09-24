@@ -1884,9 +1884,9 @@ async function ocrCanvases(getImgs,lang,total){busy('Cargando motor OCR (la prim
 const FW={w:null,ok:null,seq:0,pend:new Map(),
  build(){if(this.ok===false)return null;if(this.w)return this.w;
   try{if(typeof Worker==='undefined'||typeof OffscreenCanvas==='undefined')throw new Error('sin soporte');
-   const names=['lutApply','makeLut','sCurve','autoLevels','saturate','unsharp','bgDivide','sepFilter','clahe','toGray','applyExtraFilter','applyFilter','clamp','otsu','_v21_lum','_v21_lut','_v21_applyLUT','binarizeSauvola','clahePro','autoLevelsPro','sCurveLUT','unsharpPro','removeShadows','adjustSaturation','adjustTemperature','_origApplyFilter','_prePrintFilter','printBW','_despeckle','_clearBorder','docEnhance','cleanEdges','isDocLike','toneActive','toneAdjust'];
+   const names=['lutApply','makeLut','sCurve','autoLevels','saturate','unsharp','bgDivide','sepFilter','clahe','toGray','applyExtraFilter','applyFilter','clamp','otsu','_v21_lum','_v21_lut','_v21_applyLUT','binarizeSauvola','clahePro','autoLevelsPro','sCurveLUT','unsharpPro','removeShadows','adjustSaturation','adjustTemperature','_origApplyFilter','_prePrintFilter','printBW','_despeckle','_clearBorder','docEnhance','cleanEdges','isDocLike','isDocLike2','flatField','csEnhance','toneActive','toneAdjust'];
    let src="'use strict';self.canvas=(w,h)=>new OffscreenCanvas(Math.max(1,Math.round(w)),Math.max(1,Math.round(h)));\n";
-   const T={lutApply:(typeof lutApply!=='undefined'?lutApply:null),makeLut:(typeof makeLut!=='undefined'?makeLut:null),sCurve:(typeof sCurve!=='undefined'?sCurve:null),autoLevels:(typeof autoLevels!=='undefined'?autoLevels:null),saturate:(typeof saturate!=='undefined'?saturate:null),unsharp:(typeof unsharp!=='undefined'?unsharp:null),bgDivide:(typeof bgDivide!=='undefined'?bgDivide:null),sepFilter:(typeof sepFilter!=='undefined'?sepFilter:null),clahe:(typeof clahe!=='undefined'?clahe:null),toGray:(typeof toGray!=='undefined'?toGray:null),applyExtraFilter:(typeof applyExtraFilter!=='undefined'?applyExtraFilter:null),applyFilter:(typeof applyFilter!=='undefined'?applyFilter:null),clamp:(typeof clamp!=='undefined'?clamp:null),otsu:(typeof otsu!=='undefined'?otsu:null),_v21_lum:(typeof _v21_lum!=='undefined'?_v21_lum:null),_v21_lut:(typeof _v21_lut!=='undefined'?_v21_lut:null),_v21_applyLUT:(typeof _v21_applyLUT!=='undefined'?_v21_applyLUT:null),binarizeSauvola:(typeof binarizeSauvola!=='undefined'?binarizeSauvola:null),clahePro:(typeof clahePro!=='undefined'?clahePro:null),autoLevelsPro:(typeof autoLevelsPro!=='undefined'?autoLevelsPro:null),sCurveLUT:(typeof sCurveLUT!=='undefined'?sCurveLUT:null),unsharpPro:(typeof unsharpPro!=='undefined'?unsharpPro:null),removeShadows:(typeof removeShadows!=='undefined'?removeShadows:null),adjustSaturation:(typeof adjustSaturation!=='undefined'?adjustSaturation:null),_prePrintFilter:(typeof _prePrintFilter!=='undefined'?_prePrintFilter:null),printBW:(typeof printBW!=='undefined'?printBW:null),_despeckle:(typeof _despeckle!=='undefined'?_despeckle:null),_clearBorder:(typeof _clearBorder!=='undefined'?_clearBorder:null),docEnhance:(typeof docEnhance!=='undefined'?docEnhance:null),cleanEdges:(typeof cleanEdges!=='undefined'?cleanEdges:null),isDocLike:(typeof isDocLike!=='undefined'?isDocLike:null),toneActive:(typeof toneActive!=='undefined'?toneActive:null),toneAdjust:(typeof toneAdjust!=='undefined'?toneAdjust:null),adjustTemperature:(typeof adjustTemperature!=='undefined'?adjustTemperature:null),_origApplyFilter:(typeof _origApplyFilter!=='undefined'?_origApplyFilter:null)};for(const n of names){const f=T[n];if(typeof f!=='function')continue;const s=f.toString();src+='var '+n+'=('+s+');\n'}
+   const T={lutApply:(typeof lutApply!=='undefined'?lutApply:null),makeLut:(typeof makeLut!=='undefined'?makeLut:null),sCurve:(typeof sCurve!=='undefined'?sCurve:null),autoLevels:(typeof autoLevels!=='undefined'?autoLevels:null),saturate:(typeof saturate!=='undefined'?saturate:null),unsharp:(typeof unsharp!=='undefined'?unsharp:null),bgDivide:(typeof bgDivide!=='undefined'?bgDivide:null),sepFilter:(typeof sepFilter!=='undefined'?sepFilter:null),clahe:(typeof clahe!=='undefined'?clahe:null),toGray:(typeof toGray!=='undefined'?toGray:null),applyExtraFilter:(typeof applyExtraFilter!=='undefined'?applyExtraFilter:null),applyFilter:(typeof applyFilter!=='undefined'?applyFilter:null),clamp:(typeof clamp!=='undefined'?clamp:null),otsu:(typeof otsu!=='undefined'?otsu:null),_v21_lum:(typeof _v21_lum!=='undefined'?_v21_lum:null),_v21_lut:(typeof _v21_lut!=='undefined'?_v21_lut:null),_v21_applyLUT:(typeof _v21_applyLUT!=='undefined'?_v21_applyLUT:null),binarizeSauvola:(typeof binarizeSauvola!=='undefined'?binarizeSauvola:null),clahePro:(typeof clahePro!=='undefined'?clahePro:null),autoLevelsPro:(typeof autoLevelsPro!=='undefined'?autoLevelsPro:null),sCurveLUT:(typeof sCurveLUT!=='undefined'?sCurveLUT:null),unsharpPro:(typeof unsharpPro!=='undefined'?unsharpPro:null),removeShadows:(typeof removeShadows!=='undefined'?removeShadows:null),adjustSaturation:(typeof adjustSaturation!=='undefined'?adjustSaturation:null),_prePrintFilter:(typeof _prePrintFilter!=='undefined'?_prePrintFilter:null),printBW:(typeof printBW!=='undefined'?printBW:null),_despeckle:(typeof _despeckle!=='undefined'?_despeckle:null),_clearBorder:(typeof _clearBorder!=='undefined'?_clearBorder:null),docEnhance:(typeof docEnhance!=='undefined'?docEnhance:null),cleanEdges:(typeof cleanEdges!=='undefined'?cleanEdges:null),flatField:(typeof flatField!=='undefined'?flatField:null),isDocLike2:(typeof isDocLike2!=='undefined'?isDocLike2:null),csEnhance:(typeof csEnhance!=='undefined'?csEnhance:null),isDocLike:(typeof isDocLike!=='undefined'?isDocLike:null),toneActive:(typeof toneActive!=='undefined'?toneActive:null),toneAdjust:(typeof toneAdjust!=='undefined'?toneAdjust:null),adjustTemperature:(typeof adjustTemperature!=='undefined'?adjustTemperature:null),_origApplyFilter:(typeof _origApplyFilter!=='undefined'?_origApplyFilter:null)};for(const n of names){const f=T[n];if(typeof f!=='function')continue;const s=f.toString();src+='var '+n+'=('+s+');\n'}
    src+="onmessage=e=>{const m=e.data;try{const oc=canvas(m.w,m.h),x=oc.getContext('2d',{willReadFrequently:true});x.putImageData(new ImageData(new Uint8ClampedArray(m.buf),m.w,m.h),0,0);applyFilter(oc,m.f,m.b,m.c,m.o);const out=x.getImageData(0,0,m.w,m.h);postMessage({id:m.id,buf:out.data.buffer},[out.data.buffer])}catch(err){postMessage({id:m.id,err:String(err&&err.message||err)})}};";
    const url=URL.createObjectURL(new Blob([src],{type:'text/javascript'}));
    this.w=new Worker(url);
@@ -2049,12 +2049,45 @@ function docEnhance(d,w,h,strong){cleanEdges(d,w,h);removeShadows(d,w,h,false);
   else{const v=cur[l|0];d[i]=d[i+1]=d[i+2]=v}}
  unsharpPro(d,w,h,strong?0.7:0.5,1)}
 /* ¿es un documento (papel con texto) o una foto / credencial? */
+function isDocLike2(d){let low=0,lit=0,tot=0;for(let i=0;i<d.length;i+=4*41){const r=d[i],g=d[i+1],b=d[i+2],mx=Math.max(r,g,b),mn=Math.min(r,g,b);tot++;if(mx-mn<50)low++;if(_v21_lum(r,g,b)>85)lit++}return tot>0&&low/tot>.62&&lit/tot>.45}
 function isDocLike(d){let paper=0,tot=0;for(let i=0;i<d.length;i+=4*37){const r=d[i],g=d[i+1],b=d[i+2],mx=Math.max(r,g,b),mn=Math.min(r,g,b);tot++;if(mx-mn<45&&_v21_lum(r,g,b)>110)paper++}return tot>0&&paper/tot>0.55}
 /* Tono: sombras, luces, gamma y niveles (punto negro / blanco) */
 function toneActive(t){return !!(t&&(t.shadows||t.highlights||t.gamma||t.black||t.white))}
 function toneAdjust(d,t){const sh=(+t.shadows||0)/100,hl=(+t.highlights||0)/100,gm=Math.pow(2,-(+t.gamma||0)/50),bp=(+t.black||0)/100*.35,wp=1-(+t.white||0)/100*.35,lut=new Uint8ClampedArray(256);
  for(let v=0;v<256;v++){let x=v/255;x=Math.max(0,Math.min(1,(x-bp)/Math.max(.05,wp-bp)));x=Math.pow(x,gm);if(x<.5)x+=sh*.3*Math.pow(1-2*x,2)*(x*2);else x+=hl*.3*Math.pow(2*x-1,2)*((1-x)*2);lut[v]=Math.round(Math.max(0,Math.min(1,x))*255)}
  for(let i=0;i<d.length;i+=4){d[i]=lut[d[i]];d[i+1]=lut[d[i+1]];d[i+2]=lut[d[i+2]]}}
+/* ===== Motor de imagen tipo escáner (v32): corrección de iluminación fina + curva adaptativa + tinta de color =====
+   flatField: estima el color del papel en una grilla fina (bloques de ~0,5 % del lado), con cierre morfológico para
+   ignorar las letras, y divide cada canal por ese fondo. Así desaparecen sombras, degradés y el tono amarillo del papel. */
+function flatField(d,w,h){const B=Math.max(4,Math.round(Math.max(w,h)/220)),sw=Math.ceil(w/B),sh=Math.ceil(h/B),n=sw*sh;
+ const bg=[new Float32Array(n),new Float32Array(n),new Float32Array(n)];
+ for(let by=0;by<sh;by++)for(let bx=0;bx<sw;bx++){let mr=0,mg=0,mb=0,ml=-1;const y1=Math.min(h,(by+1)*B),x1=Math.min(w,(bx+1)*B);
+  for(let y=by*B;y<y1;y++)for(let x=bx*B,i=(y*w+x)*4;x<x1;x++,i+=4){const l=d[i]*77+d[i+1]*150+d[i+2]*29;if(l>ml){ml=l;mr=d[i];mg=d[i+1];mb=d[i+2]}}
+  const k=by*sw+bx;bg[0][k]=mr;bg[1][k]=mg;bg[2][k]=mb}
+ const R=2,tmp=new Float32Array(n);
+ const morph=(a,mx)=>{for(let y=0;y<sh;y++)for(let x=0;x<sw;x++){let v=mx?0:255;for(let k=-R;k<=R;k++){const xx=x+k;if(xx<0||xx>=sw)continue;const t=a[y*sw+xx];v=mx?(t>v?t:v):(t<v?t:v)}tmp[y*sw+x]=v}
+  for(let y=0;y<sh;y++)for(let x=0;x<sw;x++){let v=mx?0:255;for(let k=-R;k<=R;k++){const yy=y+k;if(yy<0||yy>=sh)continue;const t=tmp[yy*sw+x];v=mx?(t>v?t:v):(t<v?t:v)}a[y*sw+x]=v}};
+ const blur=a=>{for(let p=0;p<2;p++){for(let y=0;y<sh;y++)for(let x=0;x<sw;x++){let s=0,c=0;for(let k=-1;k<=1;k++){const xx=x+k;if(xx>=0&&xx<sw){s+=a[y*sw+xx];c++}}tmp[y*sw+x]=s/c}
+  for(let y=0;y<sh;y++)for(let x=0;x<sw;x++){let s=0,c=0;for(let k=-1;k<=1;k++){const yy=y+k;if(yy>=0&&yy<sh){s+=tmp[yy*sw+x];c++}}a[y*sw+x]=s/c}}};
+ const lv=new Float32Array(n);for(let k=0;k<n;k++)lv[k]=bg[0][k]*.299+bg[1][k]*.587+bg[2][k]*.114;const srt=Float32Array.from(lv).sort(),paper=Math.max(60,srt[Math.floor(n*.9)]);
+ for(const a of bg){morph(a,true);morph(a,false);blur(a);for(let k=0;k<n;k++)a[k]=Math.max(a[k],paper*.3,12)}
+ for(let y=0;y<h;y++){const fy=Math.max(0,Math.min(sh-1,(y+.5)/B-.5)),y0=fy|0,y1=Math.min(sh-1,y0+1),wy=fy-y0;
+  for(let x=0;x<w;x++){const fx=Math.max(0,Math.min(sw-1,(x+.5)/B-.5)),x0=fx|0,x1=Math.min(sw-1,x0+1),wx=fx-x0,i=(y*w+x)*4,a=y0*sw+x0,b=y0*sw+x1,c=y1*sw+x0,e=y1*sw+x1;
+   for(let ch=0;ch<3;ch++){const g=bg[ch],v=(g[a]*(1-wx)+g[b]*wx)*(1-wy)+(g[c]*(1-wx)+g[e]*wx)*wy;d[i+ch]=Math.min(255,d[i+ch]*255/v)}}}}
+/* csEnhance: después de flatField. Punto negro adaptativo según la tinta real de la hoja, papel a blanco puro,
+   texto a negro con bordes suaves y tinta de color (birome azul, sellos, membretes) conservada y reforzada.
+   m: 'magia' (como Magic Pro), 'mejorar' (más natural), 'color' (color vivo), 'gris'. */
+function csEnhance(d,w,h,m,over){const CS_P={magia:{bpk:.95,wp:220,g:1.2,sat:1.75,mix:.52,c0:10,cr:16},mejorar:{bpk:.7,wp:232,g:1.05,sat:1.35,mix:.4,c0:10,cr:16},aclarar:{bpk:.35,wp:240,g:.9,sat:1.15,mix:.25,c0:10,cr:16},color:{bpk:.8,wp:226,g:1.15,sat:2.1,mix:.45,c0:8,cr:14},gris:{bpk:.95,wp:220,g:1.2,sat:0,mix:0,c0:10,cr:16}};
+ const P=Object.assign({},CS_P[m]||CS_P.magia,over||self.CS_OVER||{});flatField(d,w,h);unsharpPro(d,w,h,.55,1);
+ const H=new Uint32Array(256);let ni=0;for(let i=0;i<d.length;i+=12){const l=(d[i]*77+d[i+1]*150+d[i+2]*29)>>8;if(l<185){H[l]++;ni++}}
+ let ink=110;if(ni>50){let a=0;for(let v=0;v<256;v++){a+=H[v];if(a>=ni*.5){ink=v;break}}}
+ const bp=Math.max(20,Math.min(150,ink*P.bpk)),wp=P.wp,span=Math.max(30,wp-bp),cur=new Float32Array(256);
+ for(let v=0;v<256;v++){const t=Math.max(0,Math.min(1,(v-bp)/span));cur[v]=255*Math.pow(t,P.g)}
+ for(let i=0;i<d.length;i+=4){const r=d[i],g=d[i+1],b=d[i+2],l=r*.299+g*.587+b*.114,li=l|0,mx=Math.max(r,g,b),mn=Math.min(r,g,b),c=mx-mn;
+  const n=cur[li];let wc=P.sat?Math.max(0,Math.min(1,(c-P.c0)/P.cr)):0;if(l>=wp&&c<40)wc=0;
+  if(wc<=0){d[i]=d[i+1]=d[i+2]=n;continue}
+  const L2=l+(n-l)*P.mix,s=P.sat;let R=L2+(r-l)*s,G=L2+(g-l)*s,Bq=L2+(b-l)*s;
+  d[i]=n+(R-n)*wc;d[i+1]=n+(G-n)*wc;d[i+2]=n+(Bq-n)*wc}}
 function applyFilterPro(c,f,bright,contrast,o){o=o||{};bright=+bright||0;contrast=+contrast||0;
  const sat=+o.sat||0,sharp=+o.sharp||0,temp=+o.temp||0,inten=o.intensity==null?100:+o.intensity;
  if((!f||f==='original')&&!bright&&!contrast&&!sat&&!sharp&&!temp&&!toneActive(o.tone))return;
@@ -2062,16 +2095,16 @@ function applyFilterPro(c,f,bright,contrast,o){o=o||{};bright=+bright||0;contras
  const w=c.width,h=c.height,base=(inten<100&&f&&f!=='original')?new Uint8ClampedArray(d):null;
  try{switch(f){
   case 'original':break;
-  case 'aclarar':_v21_applyLUT(d,_v21_lut(v=>255*Math.pow(v/255,0.72)+10));break;
-  case 'mejorar':removeShadows(d,w,h,false);clahePro(d,w,h,2.2,8);autoLevelsPro(d,0.005,0.995);_v21_applyLUT(d,sCurveLUT(0.35));adjustSaturation(d,1.15);unsharpPro(d,w,h,0.55,1);break;
-  case 'documento':docEnhance(d,w,h,false);break;
-  case 'magia':if(isDocLike(d)){docEnhance(d,w,h,true);break}removeShadows(d,w,h,false);clahePro(d,w,h,2.8,8);autoLevelsPro(d,0.005,0.995);_v21_applyLUT(d,sCurveLUT(0.5));adjustSaturation(d,1.35);unsharpPro(d,w,h,0.85,1);break;
-  case 'sinsombra':removeShadows(d,w,h,false);autoLevelsPro(d,0.02,0.98);_v21_applyLUT(d,sCurveLUT(0.25));break;
-  case 'gris':for(let i=0;i<d.length;i+=4){const g=_v21_lum(d[i],d[i+1],d[i+2])|0;d[i]=d[i+1]=d[i+2]=g}clahePro(d,w,h,2.0,8);autoLevelsPro(d,0.01,0.99);_v21_applyLUT(d,sCurveLUT(0.35));break;
-  case 'bn':removeShadows(d,w,h,true);binarizeSauvola(d,w,h,25,0.34);unsharpPro(d,w,h,0.3,1);break;
-  case 'ahorro':removeShadows(d,w,h,true);binarizeSauvola(d,w,h,21,0.22);_v21_applyLUT(d,_v21_lut(v=>v>200?255:Math.max(90,v*0.75+90)));break;
+  case 'aclarar':if(isDocLike2(d)){csEnhance(d,w,h,'aclarar');break}_v21_applyLUT(d,_v21_lut(v=>255*Math.pow(v/255,0.72)+10));break;
+  case 'mejorar':if(isDocLike2(d)){csEnhance(d,w,h,'mejorar');break}removeShadows(d,w,h,false);clahePro(d,w,h,2.2,8);autoLevelsPro(d,0.005,0.995);_v21_applyLUT(d,sCurveLUT(0.35));adjustSaturation(d,1.15);unsharpPro(d,w,h,0.55,1);break;
+  case 'documento':csEnhance(d,w,h,'magia');cleanEdges(d,w,h);break;
+  case 'magia':if(isDocLike2(d)){csEnhance(d,w,h,'magia');cleanEdges(d,w,h);break}removeShadows(d,w,h,false);clahePro(d,w,h,2.8,8);autoLevelsPro(d,0.005,0.995);_v21_applyLUT(d,sCurveLUT(0.5));adjustSaturation(d,1.35);unsharpPro(d,w,h,0.85,1);break;
+  case 'sinsombra':flatField(d,w,h);autoLevelsPro(d,0.01,0.995);_v21_applyLUT(d,sCurveLUT(0.25));break;
+  case 'gris':if(isDocLike2(d)){csEnhance(d,w,h,'gris');break}for(let i=0;i<d.length;i+=4){const g=_v21_lum(d[i],d[i+1],d[i+2])|0;d[i]=d[i+1]=d[i+2]=g}clahePro(d,w,h,2.0,8);autoLevelsPro(d,0.01,0.99);_v21_applyLUT(d,sCurveLUT(0.35));break;
+  case 'bn':flatField(d,w,h);for(let i=0;i<d.length;i+=4){const g=_v21_lum(d[i],d[i+1],d[i+2]);d[i]=d[i+1]=d[i+2]=g}binarizeSauvola(d,w,h,25,0.34);unsharpPro(d,w,h,0.3,1);break;
+  case 'ahorro':flatField(d,w,h);for(let i=0;i<d.length;i+=4){const g=_v21_lum(d[i],d[i+1],d[i+2]);d[i]=d[i+1]=d[i+2]=g}binarizeSauvola(d,w,h,21,0.22);_v21_applyLUT(d,_v21_lut(v=>v>200?255:Math.max(90,v*0.75+90)));break;
   case 'nitido':autoLevelsPro(d,0.008,0.992);unsharpPro(d,w,h,1.3,1);adjustSaturation(d,1.08);break;
-  case 'color':removeShadows(d,w,h,false);autoLevelsPro(d,0.008,0.992);adjustSaturation(d,1.3);_v21_applyLUT(d,sCurveLUT(0.3));break;
+  case 'color':if(isDocLike2(d)){csEnhance(d,w,h,'color');break}removeShadows(d,w,h,false);autoLevelsPro(d,0.008,0.992);adjustSaturation(d,1.3);_v21_applyLUT(d,sCurveLUT(0.3));break;
   case 'contraste':clahePro(d,w,h,3.0,8);autoLevelsPro(d,0.02,0.98);_v21_applyLUT(d,sCurveLUT(0.85));break;
   case 'vivo':autoLevelsPro(d,0.004,0.996);adjustSaturation(d,1.6);_v21_applyLUT(d,sCurveLUT(0.4));break;
   case 'pizarra':removeShadows(d,w,h,false);autoLevelsPro(d,0.005,0.995);adjustSaturation(d,1.9);_v21_applyLUT(d,_v21_lut(v=>v>210?255:v));unsharpPro(d,w,h,0.5,1);break;
@@ -3125,7 +3158,7 @@ const EDIT_KEYS=['filter','bright','contrast','sat','sharp','temp','intensity','
 function syncTone(){const p=Ed.p;if(!p)return;TONE_ADJ.forEach(([k,,,,def])=>{const v=p[k]??def,r=$('#edA_'+k);if(r){r.value=v;$('#edAv_'+k).textContent=v}})}
 
 /* presets inteligentes por tipo de documento + los que guarde el usuario */
-const EDIT_PRESETS=[['Judicial / oficio',{filter:'documento',sharp:25,contrast:5}],['Administrativo',{filter:'documento',sharp:15}],['Factura / recibo (papel térmico)',{filter:'documento',contrast:15,gamma:-20,black:15,sharp:20}],['Documento arrugado o con sombras',{filter:'magia',shadows:30,sharp:20}],['Foto / credencial',{filter:'color',sharp:15,sat:10}],['Ahorro de tinta (B/N)',{filter:'bn'}]];
+const EDIT_PRESETS=[['Judicial / oficio',{filter:'magia',sharp:10}],['Administrativo',{filter:'mejorar',sharp:10}],['Factura / recibo (papel térmico)',{filter:'magia',contrast:15,gamma:-20,black:15,sharp:15}],['Documento arrugado o con sombras',{filter:'magia',shadows:30,sharp:10}],['Foto / credencial',{filter:'color',sharp:15,sat:10}],['Ahorro de tinta (B/N)',{filter:'bn'}]];
 const presetList=()=>[...EDIT_PRESETS,...((S.editPresets||[]).map(p=>[p.name+' ★',p.v]))];
 function presetApply(p,v){for(const k of EDIT_KEYS)if(k!=='filter')p[k]=(k==='intensity'?100:0);Object.assign(p,v);p._dirty=true}
 function paintPresets(){const s=$('#edPreset');if(!s)return;s.innerHTML='<option value="">✨ Presets…</option>'+presetList().map(([n],i)=>'<option value="'+i+'">'+esc(n)+'</option>').join('')}
@@ -3333,6 +3366,24 @@ document.head.insertAdjacentHTML('beforeend','<style id="cam2Css">.cam-stage vid
 +'.cam-kinds{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding:6px 10px 0;justify-content:safe center}.cam-kinds button{flex:none;padding:6px 12px;border-radius:16px;color:#cbd5e1;font-size:12.5px;font-weight:600;letter-spacing:.02em}.cam-kinds button.on{color:#22d3ee;background:#22d3ee1f}'
 +'#camThumb[src=""],#camThumb:not([src]){visibility:hidden}#camShot.arming{box-shadow:0 0 0 5px #22c55e,0 0 18px #22c55e99;transition:box-shadow .2s}'
 +'#crStage .hm{position:absolute;width:30px;height:12px;margin:-6px 0 0 -15px;border-radius:6px;background:#fff;border:2px solid var(--ac);touch-action:none;box-shadow:0 1px 4px #0003;z-index:2}#crStage .hm.v{width:12px;height:30px;margin:-15px 0 0 -6px}</style>');
+
+/* ===================== FILTROS COMO UN ESCÁNER PROFESIONAL (v32) =====================
+   Tira principal con los filtros de CamScanner: Original · Magia Pro · Mejorar · Aclarar · Color mágico · Sin sombras ·
+   Gris · B/N · Ahorro de tinta. Los demás quedan en "Más". "Documento" es el mismo motor que Magia Pro (compatibilidad). */
+const FLT_MAIN=['original','magia','mejorar','aclarar','color','sinsombra','gris','bn','ahorro'];
+{const nm={magia:'Magia Pro',mejorar:'Mejorar',aclarar:'Aclarar',color:'Color mágico',sinsombra:'Sin sombras',gris:'Gris',bn:'B/N',ahorro:'Ahorro de tinta'};
+ for(let i=FILTERS.length-1;i>=0;i--)if(FILTERS[i][0]==='documento')FILTERS.splice(i,1);
+ for(const f of FILTERS)if(nm[f[0]])f[1]=nm[f[0]];
+ const rank=k=>{const i=FLT_MAIN.indexOf(k);return i<0?99:i};const srt=FILTERS.slice().sort((a,b)=>rank(a[0])-rank(b[0]));FILTERS.splice(0,FILTERS.length,...srt)}
+if(S.v32cs!==true){if(!S.filter||S.filter==='documento'||S.filter==='magia')S.filter='magia';S.v32cs=true;try{saveS()}catch(e){}}
+function withFilterSubset(keep,fn){const all=FILTERS.slice();FILTERS.splice(0,FILTERS.length,...all.filter(([k])=>FLT_MAIN.includes(k)||S.moreFlt||keep===k));
+ const done=()=>FILTERS.splice(0,FILTERS.length,...all);let r;try{r=fn()}catch(e){done();throw e}if(r&&r.then)return r.finally(done);done();return r}
+{const _sh=Ed.show;Ed.show=function(){const p=this.p;if(p&&p.filter==='documento')p.filter='magia';return _sh.apply(this,arguments)}}
+{const _st=Ed.strip;Ed.strip=function(){const p=this.p;const r=withFilterSubset(p&&p.filter,()=>_st.apply(this,arguments));
+ const box=$('#edFilters');if(box&&!box.querySelector('.flt-more')){box.insertAdjacentHTML('beforeend','<button class="flt flt-more" type="button"><span>'+(S.moreFlt?'−':'+')+'</span>'+(S.moreFlt?'Menos':'Más filtros')+'</button>');
+  box.querySelector('.flt-more').onclick=e=>{e.stopPropagation();S.moreFlt=!S.moreFlt;saveS();Ed.strip()}}return r}}
+{const _cp=camPanelRender;camPanelRender=function(){return withFilterSubset(S.filter,()=>_cp.apply(this,arguments))}}
+document.head.insertAdjacentHTML('beforeend','<style id="fltCss">.flt-more span{display:flex;align-items:center;justify-content:center;width:72px;height:72px;border-radius:10px;border:2px dashed var(--line);font-size:26px;margin-bottom:3px;color:var(--tx2)}</style>');
 </script>
 </body>
 </html>

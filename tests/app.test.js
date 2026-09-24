@@ -134,7 +134,7 @@ await test('Editor: tono, deshacer/rehacer, presets y aplicar a todas',async pg=
   assert.equal(await pg.evaluate(()=>Ed.p.shadows),40);
   await pg.click('#edUndo');await W(600);assert.equal(await pg.evaluate(()=>Ed.p.shadows),0,'deshacer no volvió a 0');
   await pg.click('#edRedo');await W(600);assert.equal(await pg.evaluate(()=>Ed.p.shadows),40,'rehacer no funcionó');
-  await pg.selectOption('#edPreset','0');await W(500);assert.equal(await pg.evaluate(()=>Ed.p.filter),'documento');
+  await pg.selectOption('#edPreset','0');await W(500);assert.equal(await pg.evaluate(()=>Ed.p.filter),'magia');
   pg.once('dialog',d=>d.accept());await pg.click('#edApplyAll');await W(1500);
   assert.equal(await pg.evaluate(()=>DOC.pages[1].sharp),await pg.evaluate(()=>Ed.p.sharp));
 });
@@ -163,6 +163,21 @@ await test('Cámara: bordes precisos, modo Libro y auto-captura sin repetir',asy
   await pg.evaluate(()=>{const _d=detectQuad;window.detectQuad=src=>src instanceof HTMLVideoElement?[{x:.2,y:.15},{x:.8,y:.15},{x:.8,y:.85},{x:.2,y:.85}]:_d(src);S.autoCapture=true;Cam.open('batch')});
   await W(5000);assert.equal(await pg.evaluate(()=>Cam.batch.length),1,'la auto-captura repitió la misma hoja o no capturó');
   assert.ok(await pg.$('#camKinds [data-kind="book"]'),'faltan los tipos de captura');
+});
+
+await test('Magia Pro calidad escáner: papel blanco, texto negro, azul conservado y sombra eliminada',async pg=>{
+  const r=await pg.evaluate(async()=>{const W=1200,H=1600,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');
+    x.fillStyle='#e8e0c8';x.fillRect(0,0,W,H);x.fillStyle='#262626';x.font='bold 30px serif';for(let i=0;i<22;i++)x.fillText('Por la presente se informa al señor juez lo solicitado '+i,60,90+i*52);
+    x.strokeStyle='#2438a8';x.lineWidth=4;x.beginPath();x.moveTo(700,1350);for(let t=0;t<25;t++)x.lineTo(700+t*16,1350-Math.sin(t*.8)*40);x.stroke();
+    x.fillStyle='rgba(0,0,0,.42)';x.beginPath();x.moveTo(W*.6,0);x.lineTo(W,0);x.lineTo(W,H);x.lineTo(W*.35,H);x.fill();
+    const p=await makePage(c.toDataURL('image/jpeg',.9),{auto:false,filter:'magia'});const cv=await renderPage(p,{maxSide:1200});const d=cv.getContext('2d').getImageData(0,0,cv.width,cv.height).data,sx=cv.width/W;
+    const reg=(x0,y0,x1,y1,f)=>{let n=0,k=0;for(let y=Math.floor(y0*sx);y<y1*sx;y+=2)for(let xx=Math.floor(x0*sx);xx<x1*sx;xx+=2){const i=(y*cv.width+xx)*4;n++;if(f(d[i],d[i+1],d[i+2]))k++}return k/n};
+    return {paperLit:reg(20,1450,400,1590,(r,g,b)=>r>=245&&g>=245&&b>=245),paperShadow:reg(1000,1450,1190,1590,(r,g,b)=>r>=245&&g>=245&&b>=245),
+      text:reg(60,68,1100,96,(r,g,b)=>r<60&&g<60&&b<60),textShadow:reg(670,380,760,410,(r,g,b)=>r<60&&g<60&&b<60),blue:reg(700,1290,1100,1400,(r,g,b)=>b>r+50&&b>g+40)}});
+  assert.ok(r.paperLit>.97&&r.paperShadow>.97,'papel no blanco '+JSON.stringify(r));
+  assert.ok(r.text>.08&&r.textShadow>.08,'texto no negro '+JSON.stringify(r));assert.ok(r.blue>.03,'se perdió el azul '+JSON.stringify(r));
+  assert.deepEqual(await pg.evaluate(()=>FILTERS.slice(0,9).map(f=>f[0])),['original','magia','mejorar','aclarar','color','sinsombra','gris','bn','ahorro']);
+  assert.equal(await pg.evaluate(()=>S.filter),'magia');
 });
 
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
