@@ -1023,7 +1023,7 @@ const b=openSheet('Ajustes','<div class="set-list">'+setRow('sDesign','palette',
 +acc('🌓','Apariencia y nombres','Tema y nombre de los documentos',opt('<i data-ico="theme">🌓</i> Tema',sel('sTheme',[['system','Automático (según el teléfono)'],['light','Claro'],['dark','Oscuro']]))+opt('Plantilla de nombre por defecto',sel('sTpl',NAME_TEMPLATES.map(t=>[t,t]))))
 +acc('📄','PDF y texto (OCR)','Hoja, calidad, márgenes e idioma',opt('Idioma OCR',sel('sLang',[['spa','Español'],['eng','Inglés'],['spa+eng','Español + Inglés'],['por','Portugués']]))+'<div class="row">'+opt('Hoja PDF por defecto',sel('sSize',[['a4','A4'],['oficio','Oficio'],['carta','Carta'],['original','Tamaño imagen']]))+opt('Calidad PDF',sel('sQ',Object.entries(QUAL).map(([k,v])=>[k,v.label])))+'</div>'+opt('Márgenes por defecto (mm)','<input type="number" id="sMargin" min="0" max="40">'))
 +acc('🗄️','Datos del dispositivo',est||'Documentos guardados en este navegador','<p class="muted">'+est+'</p><button class="btn red block" id="sWipe">🗑 Borrar todos los documentos</button>')
-+'<p class="muted set-foot">Danscanner Pro · versión 30 · funciona en celular y PC · los documentos se guardan en este navegador.</p>');$('.sTpl',b).value=S.nameTemplate;$('.sFilter',b).value=S.filter;$('.sMax',b).value=String(S.maxCap);$('#sAuto').checked=S.autoCrop;$('#sAutoCap').checked=S.autoCapture;$('#sHd').checked=S.hd;$('#sDeskew').checked=S.deskew!==false;$('#sPrintBW').checked=S.printBW!==false;$('#sPro').checked=S.proFilters!==false;$('#sNative').checked=!!S.camNative;$('.sTheme',b).value=S.theme||'system';$('.sLang',b).value=S.lang;$('.sSize',b).value=S.size;$('.sQ',b).value=S.quality;$('#sMargin').value=S.margin;b.onchange=()=>{S.nameTemplate=$('.sTpl',b).value;S.filter=$('.sFilter',b).value;S.maxCap=+$('.sMax',b).value;S.autoCrop=$('#sAuto').checked;S.camNative=$('#sNative').checked;if(($('.sTheme',b).value)!==(S.theme||'system'))cambiarTema($('.sTheme',b).value);S.autoCapture=$('#sAutoCap').checked;S.hd=$('#sHd').checked;S.deskew=$('#sDeskew').checked;if((S.printBW!==false)!==$('#sPrintBW').checked){S.printBW=$('#sPrintBW').checked;if(FW.w){try{FW.w.terminate()}catch(e){}FW.w=null;FW.ok=null}}if((S.proFilters!==false)!==$('#sPro').checked){S.proFilters=$('#sPro').checked;useProFilters(S.proFilters)}S.lang=$('.sLang',b).value;S.size=$('.sSize',b).value;S.quality=$('.sQ',b).value;S.margin=+$('#sMargin').value||0;saveS();toast('Guardado')};$('#sDesign').onclick=async()=>{await Nav.back();designSheet()};$('#sAI').onclick=async()=>{await Nav.back();aiSheet()};$('#sSec').onclick=async()=>{await Nav.back();securitySheet()};$('#sSpace').onclick=async()=>{await Nav.back();storageSheet()};$('#sAbout').onclick=async()=>{await Nav.back();aboutSheet()};$('#sWipe').onclick=async()=>{if(!confirm('¿Borrar TODOS los documentos guardados?'))return;for(const m of await DB.metas())await DB.delDoc(m.id);refreshLists();toast('Documentos borrados')}}
++'<p class="muted set-foot">Danscanner Pro · versión 31 · funciona en celular y PC · los documentos se guardan en este navegador.</p>');$('.sTpl',b).value=S.nameTemplate;$('.sFilter',b).value=S.filter;$('.sMax',b).value=String(S.maxCap);$('#sAuto').checked=S.autoCrop;$('#sAutoCap').checked=S.autoCapture;$('#sHd').checked=S.hd;$('#sDeskew').checked=S.deskew!==false;$('#sPrintBW').checked=S.printBW!==false;$('#sPro').checked=S.proFilters!==false;$('#sNative').checked=!!S.camNative;$('.sTheme',b).value=S.theme||'system';$('.sLang',b).value=S.lang;$('.sSize',b).value=S.size;$('.sQ',b).value=S.quality;$('#sMargin').value=S.margin;b.onchange=()=>{S.nameTemplate=$('.sTpl',b).value;S.filter=$('.sFilter',b).value;S.maxCap=+$('.sMax',b).value;S.autoCrop=$('#sAuto').checked;S.camNative=$('#sNative').checked;if(($('.sTheme',b).value)!==(S.theme||'system'))cambiarTema($('.sTheme',b).value);S.autoCapture=$('#sAutoCap').checked;S.hd=$('#sHd').checked;S.deskew=$('#sDeskew').checked;if((S.printBW!==false)!==$('#sPrintBW').checked){S.printBW=$('#sPrintBW').checked;if(FW.w){try{FW.w.terminate()}catch(e){}FW.w=null;FW.ok=null}}if((S.proFilters!==false)!==$('#sPro').checked){S.proFilters=$('#sPro').checked;useProFilters(S.proFilters)}S.lang=$('.sLang',b).value;S.size=$('.sSize',b).value;S.quality=$('.sQ',b).value;S.margin=+$('#sMargin').value||0;saveS();toast('Guardado')};$('#sDesign').onclick=async()=>{await Nav.back();designSheet()};$('#sAI').onclick=async()=>{await Nav.back();aiSheet()};$('#sSec').onclick=async()=>{await Nav.back();securitySheet()};$('#sSpace').onclick=async()=>{await Nav.back();storageSheet()};$('#sAbout').onclick=async()=>{await Nav.back();aboutSheet()};$('#sWipe').onclick=async()=>{if(!confirm('¿Borrar TODOS los documentos guardados?'))return;for(const m of await DB.metas())await DB.delDoc(m.id);refreshLists();toast('Documentos borrados')}}
 $('#btnSettings').onclick=()=>settingsSheet();$('#navSettings').onclick=()=>settingsSheet();
 function go(v){$$('.view').forEach(x=>x.classList.toggle('active',x.id==='v-'+v));$$('.nav [data-go]').forEach(b=>b.classList.toggle('on',b.dataset.go===v));$('#topTitle').textContent={home:'Danscanner Pro',docs:'Documentos',tools:'Herramientas',nexa:'Nexa IA'}[v];window.scrollTo(0,0)}
 async function doAction(a){if(a==='cam-single')Cam.open('single');else if(a==='cam-batch')Cam.open('batch');else if(a==='import-img')$('#inImg').click();else if(a==='import-any')$('#inAny').click()}
@@ -3425,7 +3425,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 3.0',APP_VER='30';
+const NEXA_VER='Nexa 3.1',APP_VER='31';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3543,7 +3543,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='30 · 24/09/2026';
+const BUILD='31 · 24/09/2026';
 /* Botón Nexa arriba: se crea siempre, aunque otra parte de Nexa falle (antes, un error dejaba teléfonos sin el botón) */
 function ensureNexaTop(){const top=$('.top'),bs=$('#btnSettings');if(!top||!bs||$('#btnNexa'))return;const b=document.createElement('button');b.className='ib nx-top';b.id='btnNexa';b.dataset.go='nexa';b.title='Nexa IA';b.setAttribute('aria-label','Nexa IA');b.innerHTML='<i data-ico="nexa"></i><span>Nexa</span>';top.insertBefore(b,bs);iconize(b);const n=$('.nav [data-go="nexa"]');if(n)n.remove()}
 ensureNexaTop();addEventListener('load',ensureNexaTop);
@@ -3687,6 +3687,82 @@ document.head.insertAdjacentHTML('beforeend','<style id="nx2Css">'
 +'#v-nexa .nx-input{border-radius:26px;padding:6px 6px 6px 8px;background:var(--bg2);box-shadow:0 8px 24px rgba(15,23,42,.08)}#v-nexa .nx-send{border-radius:50%}#v-nexa .nx-ib{border-radius:50%}'
 +'.nx-typing{padding:4px 2px}</style>');
 try{Nexa.render()}catch(e){}
+
+/* ===================== v31: Nexa aprende de vos (memoria local), más interacción y conversación siempre en pantalla ===================== */
+/* --- memoria: se guarda solo en este teléfono --- */
+const NexaMem={k:'ds_nexa_mem',d:null,
+ get(){if(!this.d){try{this.d=JSON.parse(localStorage.getItem(this.k)||'{}')}catch(e){this.d={}}this.d=Object.assign({name:'',facts:[],len:'',topics:{},recent:[]},this.d)}return this.d},
+ save(){try{localStorage.setItem(this.k,JSON.stringify(this.get()))}catch(e){}},
+ clear(){this.d={name:'',facts:[],len:'',topics:{},recent:[]};this.save()},
+ topic(n){const m=[['resumir',/resum/],['datos',/dato|extrae|dni|cuil|expediente/],['buscar',/busc|encontr|donde/],['comprimir',/comprim|achic|liviano/],['unir',/\b(uni|unir|une|unilos|junta|juntar|combina|combinar)\b/],['escanear',/escane/],['word',/\bword\b/],['redactar',/redact|nota|escrib/],['dni',/modo dni|frente y dorso/],['respaldo',/respald|backup/]];for(const [k,r] of m)if(r.test(n))return k;return ''},
+ /* aprende de lo que escribís; devuelve una respuesta si el mensaje era para la memoria */
+ learn(text){const d=this.get(),n=nbNorm(text).replace(/[¿?¡!]/g,'').trim();const t=/\b(me llamo|mi nombre|llamame|record|olvida|respond|contest|trabajo)\b/.test(n)?'':this.topic(n);if(t){d.topics[t]=(d.topics[t]||0)+1}
+  d.recent=[String(text).slice(0,120),...d.recent.filter(x=>x!==text)].slice(0,8);let r=null,m;
+  if(/\b(olvida|borra)( toda)?( tu)? (todo|memoria|lo que sabes)\b|\bolvidate de todo\b/.test(n)){this.clear();return '¡Listo! Borré todo lo que recordaba de vos. Empezamos de cero.'}
+  if(/\bque (recordas|sabes|te acordas) de mi\b|\bque sabes de mi\b|\btu memoria\b/.test(n)){r=this.describe();this.save();return r}
+  if(m=String(text).match(/\b(?:me llamo|mi nombre es|llamame|decime)\s+([A-Za-zÁÉÍÓÚÑáéíóúñ]{2,20})/i)){d.name=m[1][0].toUpperCase()+m[1].slice(1).toLowerCase();r='¡Encantada, **'+d.name+'**! Lo voy a recordar.'}
+  else if(m=String(text).match(/\b(?:trabajo (?:en|como)|soy (?:empleado|empleada|agente|oficial|secretario|secretaria|abogado|abogada|jefe|jefa) (?:de|en))\s+(.{3,80})/i)){this.fact('Trabaja '+m[0].replace(/^trabajo /i,'').replace(/^soy /i,'como '));r='¡Anotado! Voy a tenerlo en cuenta para ayudarte mejor.'}
+  else if(m=String(text).match(/\brecord(?:a|á)(?:te)? que\s+(.{3,160})/i)){this.fact(m[1].replace(/[.!]+$/,''));r='¡Anotado! Lo voy a recordar.'}
+  else if(/\b(respond|contest)\w* (mas )?(cort|breve)|\bse mas breve\b|\bmenos largo\b/.test(n)){d.len='corto';r='Dale, a partir de ahora te respondo más corto.'}
+  else if(/\b(respond|contest)\w* (mas )?(larg|detallad|complet)|\bmas detalle\b/.test(n)&&!/resum|document/.test(n)){d.len='largo';r='Perfecto, a partir de ahora te respondo con más detalle.'}
+  this.save();return r},
+ fact(f){const d=this.get();f=f.trim();if(f&&!d.facts.some(x=>nbNorm(x)===nbNorm(f)))d.facts.unshift(f);d.facts=d.facts.slice(0,12)},
+ top(n=4){const d=this.get();return Object.entries(d.topics).sort((a,b)=>b[1]-a[1]).slice(0,n).map(x=>x[0])},
+ describe(){const d=this.get();const L=[];if(d.name)L.push('- Te llamás **'+d.name+'**.');d.facts.forEach(f=>L.push('- '+f.replace(/^Trabaja /,'Trabajás ')+'.'));if(d.len)L.push('- Preferís respuestas **'+(d.len==='corto'?'cortas':'detalladas')+'**.');const t=this.top(3);if(t.length)L.push('- Lo que más me pedís: '+t.join(', ')+'.');
+  return L.length?'Esto es lo que recuerdo de vos (solo queda en este teléfono):\n\n'+L.join('\n')+'\n\n'+chip('Administrar memoria','__config'):'Todavía no sé nada de vos. Podés decirme, por ejemplo, **"me llamo Ana"** o **"recordá que trabajo en la Unidad 5"**.'},
+ context(){const d=this.get();const L=[];if(d.name)L.push('El usuario se llama '+d.name+'; llamalo por su nombre de vez en cuando.');d.facts.forEach(f=>L.push(f));if(d.len)L.push(d.len==='corto'?'Prefiere respuestas cortas y directas.':'Prefiere respuestas detalladas.');const t=this.top(3);if(t.length)L.push('Suele pedir: '+t.join(', ')+'.');const rc=d.recent.slice(1,5);if(rc.length)L.push('Consultas recientes: '+rc.join(' | '));
+  return L.length?'\n\nMEMORIA DEL USUARIO (aprendida en este teléfono):\n- '+L.join('\n- '):''}};
+const TOPIC_CHIP={resumir:['Resumir','Resumí el documento adjunto'],datos:['Extraer datos','Extraé los datos del documento adjunto'],buscar:['Buscar','Buscá "'],comprimir:['Comprimir','Comprimí el último documento'],unir:['Unir','Uní los 2 últimos documentos'],escanear:['Escanear','Escaneá un documento'],word:['Pasar a Word','Pasá el documento a Word'],redactar:['Redactar nota','Redactá una nota con los datos del documento adjunto'],dni:['Modo DNI','Hacé el modo DNI'],respaldo:['Respaldo','Hacé un respaldo']};
+const myChips=(def)=>{const t=NexaMem.top(4).map(k=>TOPIC_CHIP[k]).filter(Boolean);const all=[...t,...def.filter(x=>!t.some(y=>y[0]===x[0]))];return all.slice(0,5).map(([a,p])=>chip(a,p)).join(' ')};
+/* la memoria responde primero (en todos los modos) */
+{const _ask=Nexa.ask;Nexa.ask=async function(msg){const r=NexaMem.learn(msg.text);if(r){this.st.msgs.push({role:'assistant',text:r,prov:'basic'});this.save();this.render();return}return _ask.apply(this,arguments)}}
+/* saludos con tu nombre y tus atajos más usados */
+{const _st=nexaSmallTalk;nexaSmallTalk=function(t){let r=_st(t);if(!r||r==='__count')return r;const nm=NexaMem.get().name;
+ if(nm&&/^¡Hola, /.test(r))r=r.replace(/^¡Hola, /,'¡Hola, '+nm+', ');
+ if(/¿En qué te ayudo hoy\?/.test(r))r=r.replace(/\n\n\[\[[\s\S]*$/,'\n\n'+myChips([['Resumir un documento','Resumí el documento adjunto'],['Buscar en mis documentos','Buscá "'],['Escanear','Escaneá un documento'],['¿Qué podés hacer?','¿Qué podés hacer?']]));return r}}
+{const _r=Nexa.render;Nexa.render=function(){const r=_r.apply(this,arguments);const nm=NexaMem.get().name;const h=$('#nxLog .nx-empty h3');if(h&&nm)h.textContent=saludo()+', '+nm;
+ const log=$('#nxLog');if(log&&this.st.msgs.length)requestAnimationFrame(()=>{log.scrollTop=log.scrollHeight});return r}}
+/* la IA (Gemini o local) recibe tu memoria para responder más personalizada y fluida */
+{const _s=Nexa.system;Nexa.system=function(){return _s.apply(this,arguments)+NexaMem.context()}}
+{const _l=Nexa.localMsgs;Nexa.localMsgs=function(){const m=_l.apply(this,arguments);if(m[0]&&m[0].role==='system')m[0].content+=NexaMem.context();return m}}
+/* después de cada respuesta de la IA: botones para seguir la charla */
+{const _run=Nexa.run;Nexa.run=async function(prov,payload,hist,o){const out=await _run.apply(this,arguments);if(prov==='basic'||!out||/\[\[/.test(out)||out.length<120)return out;
+ return out+'\n\n'+chip('Más corto','Hacelo más corto')+' '+chip('Más detalle','Dame más detalle')+' '+chip('Explicalo simple','Explicalo en palabras simples')}}
+/* IA local: se precarga al abrir Nexa para que la primera respuesta sea más rápida */
+{const _g=go;go=function(v){_g.apply(this,arguments);if(v==='nexa'&&Nexa.prov()==='local'&&NexaLocal.ready()){const w=()=>NexaLocal.load().catch(()=>{});('requestIdleCallback' in window)?requestIdleCallback(w,{timeout:3000}):setTimeout(w,800)}}}
+
+/* --- dictado por voz (si el teléfono lo permite) --- */
+(function(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;const inp=$('#nxIn'),send=$('#nxSend');if(!SR||!inp||!send||$('#nxMic'))return;
+ const b=document.createElement('button');b.className='nx-ib';b.id='nxMic';b.title='Dictar';b.setAttribute('aria-label','Dictar por voz');b.innerHTML='<i data-ico="mic"></i>';send.before(b);iconize(b);let rec=null;
+ b.onclick=()=>{if(rec){rec.stop();return}rec=new SR();rec.lang='es-AR';rec.interimResults=true;const base=inp.value?inp.value+' ':'';b.classList.add('on');
+  rec.onresult=e=>{let t='';for(const r of e.results)t+=r[0].transcript;inp.value=base+t;inp.oninput&&inp.oninput()};
+  rec.onerror=e=>{if(e.error==='not-allowed')toast('Permití el micrófono para dictar');};rec.onend=()=>{b.classList.remove('on');rec=null;inp.focus()};try{rec.start()}catch(x){rec=null;b.classList.remove('on')}}})();
+Object.assign(ICONS,{mic:'<path d="M9 5a3 3 0 0 1 6 0v6a3 3 0 0 1-6 0zM5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/>',brain2:'<path d="M9 4a3 3 0 0 0-3 3 3 3 0 0 0-2 5 3 3 0 0 0 2 5 3 3 0 0 0 6 1V5a2 2 0 0 0-3-1zM15 4a3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1-2 5 3 3 0 0 1-6 1"/>'});
+try{const m=$('#nxMic');if(m){m.querySelector('i').removeAttribute('data-icod');m.querySelector('i').innerHTML='';iconize(m)}}catch(e){}
+
+/* --- memoria en la configuración de Nexa --- */
+{const _ns=nexaSheet;nexaSheet=async function(){const r=await _ns.apply(this,arguments);const b=$('#sheetBody');if(b&&!b.querySelector('#nlMem')){const d=NexaMem.get();const n=(d.name?1:0)+d.facts.length+(d.len?1:0);
+ b.insertAdjacentHTML('afterbegin','<div class="nl-card" id="nlMem"><b><i data-ico="brain2"></i> Memoria de Nexa</b> <span class="nl-ok">'+(n?n+' dato(s)':'vacía')+'</span><small>Nexa aprende de tus conversaciones (tu nombre, dónde trabajás, cómo preferís las respuestas y lo que más usás) para ser más fluida. Se guarda solo en este teléfono. Decile “me llamo…” o “recordá que…”.</small>'+(n?'<div class="row" style="margin-top:8px"><button class="btn sm" id="nlMemSee">Ver</button><button class="btn sm red" id="nlMemDel">Borrar memoria</button></div>':'')+'</div>');iconize(b);
+ const see=$('#nlMemSee');if(see)see.onclick=async()=>{await Nav.back();go('nexa');Nexa.st.msgs.push({role:'assistant',text:NexaMem.describe(),prov:'basic'});Nexa.save();Nexa.render()};
+ const del=$('#nlMemDel');if(del)del.onclick=async()=>{if(!confirm('¿Borrar todo lo que Nexa aprendió de vos?'))return;NexaMem.clear();toast('Memoria borrada');await Nav.back();nexaSheet()}}return r}}
+
+/* --- la conversación ocupa la pantalla y se desplaza por dentro: nada se sale de la vista --- */
+function nxFit(){const v=$('#v-nexa');if(!v)return;const on=v.classList.contains('active');document.documentElement.classList.toggle('nx-on',on);if(!on)return;
+ const t=$('.top'),n=$('.nav');const top=t?t.getBoundingClientRect().bottom:0,vh=(window.visualViewport?visualViewport.height:innerHeight),nb=n&&getComputedStyle(n).display!=='none'?n.getBoundingClientRect().height:0;
+ v.style.setProperty('--nx-top',Math.max(0,top)+'px');v.style.setProperty('--nx-h',Math.max(240,vh-top-nb)+'px')}
+{const _g=go;go=function(v){_g.apply(this,arguments);requestAnimationFrame(()=>{nxFit();window.scrollTo(0,0)})}}
+addEventListener('resize',nxFit);window.visualViewport&&visualViewport.addEventListener('resize',nxFit);
+document.head.insertAdjacentHTML('beforeend','<style id="nx3Css">'
++'html.nx-on,html.nx-on body{overflow:hidden;overscroll-behavior:none}'
++'html.nx-on #v-nexa.active{position:fixed;left:0;right:0;top:var(--nx-top,68px);height:var(--nx-h,70vh);display:flex;flex-direction:column;padding:8px 14px 0;box-sizing:border-box;max-width:760px;margin:0 auto;z-index:1}'
++'html.nx-on #v-nexa .nx-head{flex:none}html.nx-on #v-nexa .nx-card{flex:1;min-height:0;display:flex;flex-direction:column}'
++'html.nx-on #v-nexa .nx-log{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding-bottom:12px!important;scroll-behavior:smooth}'
++'html.nx-on #v-nexa .nx-log>*{flex-shrink:0}'
++'html.nx-on #v-nexa .nx-input{position:static;margin:6px 0 10px;flex:none}html.nx-on #v-nexa .nx-docs{flex:none;padding:0 0 4px}'
++'.nx-md{overflow-wrap:anywhere}.nx-md pre,.nx-md table{max-width:100%;overflow:auto;display:block}.nx-bub{overflow-wrap:anywhere}'
++'#nxMic.on{background:#ef4444;color:#fff;animation:nxpulse 1.2s infinite}@keyframes nxpulse{50%{box-shadow:0 0 0 8px rgba(239,68,68,.15)}}'
++'#nlMem .ico{width:16px;height:16px;vertical-align:-3px}</style>');
+nxFit();
 </script>
 </body>
 </html>

@@ -277,6 +277,16 @@ await test('Gemini: si el modelo no existe para la clave, elige uno disponible s
   assert.equal(r.model,'gemini-3-flash',JSON.stringify(r));assert.ok(/Buenas tardes/.test(r.out),JSON.stringify(r));
 });
 
+await test('Nexa aprende (memoria local) y la conversación no se sale de la pantalla',async pg=>{
+  await pg.click('#btnNexa');await W(300);
+  for(const q of ['me llamo Daniel','recordá que trabajo en la Unidad 5','hola','¿Para qué servís?','¿Qué podés hacer?','hola']){await pg.fill('#nxIn',q);await pg.click('#nxSend');await W(450)}
+  const log=await pg.textContent('#nxLog');assert.ok(/Hola, Daniel/.test(log),'no usa el nombre');
+  const ctx=await pg.evaluate(()=>NexaMem.context());assert.ok(/Daniel/.test(ctx)&&/Unidad 5/.test(ctx),ctx);
+  const lay=await pg.evaluate(()=>({doc:document.documentElement.scrollHeight,vh:innerHeight,inp:$('.nx-input').getBoundingClientRect().bottom,nav:$('.nav').getBoundingClientRect().top,min:Math.min(...[...document.querySelectorAll('#nxLog .nx-msg')].map(e=>e.getBoundingClientRect().height))}));
+  assert.ok(lay.doc<=lay.vh+2,'la página se desplaza: '+JSON.stringify(lay));assert.ok(lay.inp<=lay.nav+2,'la barra de escritura queda tapada');assert.ok(lay.min>30,'mensajes aplastados '+lay.min);
+  await pg.click('.nav [data-go="docs"]');await W(200);assert.equal(await pg.evaluate(()=>document.documentElement.classList.contains('nx-on')),false);
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();
