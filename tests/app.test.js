@@ -287,6 +287,25 @@ await test('Nexa aprende (memoria local) y la conversación no se sale de la pan
   await pg.click('.nav [data-go="docs"]');await W(200);assert.equal(await pg.evaluate(()=>document.documentElement.classList.contains('nx-on')),false);
 });
 
+await test('Nexa aprende de Gemini: guarda respuestas, las reutiliza sin internet, "¿te sirvió?" y memoria automática',async pg=>{
+  await pg.evaluate(()=>{const a=AI();a.keys.gemini='AQ.prueba-1234567890abcdefghij';a.models.gemini='gemini-3-flash';Nexa.st.prov='gemini';Nexa.st.docs=[];
+    window._f=window.fetch;window.fetch=async(u,o)=>{const b=JSON.parse(o.body);const txt=JSON.stringify(b);
+      const ans=/anotá SOLO datos/.test(txt)?'{"name":"","facts":["Trabaja con oficios judiciales del Servicio Penitenciario"],"len":"corto"}':'Para redactar un oficio de traslado indicá el número de expediente, el juzgado que lo ordena, los datos del interno, el destino y la fecha, y firmalo con sello.';
+      return new Response('data: '+JSON.stringify({candidates:[{content:{parts:[{text:ans}]}}]})+'\n\n',{status:200,headers:{'Content-Type':'text/event-stream'}})}});
+  await pg.click('#btnNexa');await W(200);
+  for(const q of ['¿Cómo redacto un oficio de traslado?','gracias por la info','¿y quién lo firma?']){await pg.fill('#nxIn',q);await pg.click('#nxSend');await W(700)}
+  await W(800);
+  const kb=await pg.evaluate(()=>NexaKB.all().map(e=>e.q));assert.ok(kb.some(q=>/oficio de traslado/.test(q)),'no guardó la respuesta: '+kb);
+  assert.ok(await pg.$('.nx-fb [data-fb="up"]'),'falta ¿Te sirvió?');await pg.click('.nx-fb [data-fb="up"] >> nth=0');await W(300);
+  assert.ok(await pg.evaluate(()=>NexaKB.all().some(e=>e.good===true)));
+  assert.ok(await pg.evaluate(()=>NexaMem.get().facts.some(f=>/oficios judiciales/.test(f))),'no hizo la memoria automática');
+  /* sin internet: modo básico reutiliza lo aprendido */
+  await pg.evaluate(()=>{window.fetch=window._f;Nexa.st.prov='basic';Nexa.st.msgs=[];Nexa.render()});
+  await pg.fill('#nxIn','cómo redacto un oficio de traslado');await pg.click('#nxSend');await W(600);
+  const log=await pg.textContent('#nxLog');assert.ok(/Respuesta aprendida/.test(log)&&/número de expediente/.test(log),log.slice(0,300));
+  const ex=await pg.evaluate(()=>Nexa.localMsgs([{role:'user',text:'como hago un oficio de traslado'}])[0].content);assert.ok(/EJEMPLOS DE BUENAS RESPUESTAS/.test(ex));
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();
