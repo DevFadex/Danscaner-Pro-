@@ -1,6 +1,6 @@
 {
-  "name": "Danscaner Pro",
-  "short_name": "Danscaner",
+  "name": "Danscanner Pro",
+  "short_name": "Danscanner",
   "description": "Escáner de documentos, herramientas PDF, traductor e IA",
   "lang": "es-AR",
   "start_url": "./",
@@ -8,19 +8,37 @@
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#f8fafc",
-  "theme_color": "#0ea5e9",
+  "theme_color": "#00b2ff",
   "icons": [
     {
       "src": "icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
     }
   ]
 }

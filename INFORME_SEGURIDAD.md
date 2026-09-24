@@ -1,4 +1,4 @@
-# Informe de seguridad — Danscaner Pro
+# Informe de seguridad — Danscanner Pro
 
 Revisión completa de la app: cómo maneja los datos, los permisos, la comunicación con servicios de internet y el guardado de información.
 
