@@ -1309,7 +1309,7 @@ if(e.target.closest('#trWord'))withBusy(async()=>{busy('Armando Word…');const 
 if(e.target.closest('#trPdf'))withBusy(async()=>{busy('Armando PDF…');const blob=await htmlToPdfBlob(out.split(/\n{2,}/).map(t=>'<p style="text-align:justify">'+esc(t)+'</p>').join(''));busy(false);showResults($('.result',el),[{blob,name:name+'.pdf'}])})})}
 
 /* ---------- Inteligencia artificial (con clave propia) ---------- */
-const AI_PROV={gemini:{n:'Google Gemini',m:'gemini-2.5-flash',help:'Clave gratuita en aistudio.google.com/apikey'},openai:{n:'OpenAI',m:'gpt-4o-mini',help:'Clave en platform.openai.com/api-keys'},anthropic:{n:'Anthropic (Claude)',m:'claude-sonnet-4-5',help:'Clave en console.anthropic.com'}};
+const AI_PROV={gemini:{n:'Google Gemini',m:'gemini-2.5-flash',help:'Clave gratuita en aistudio.google.com/apikey'},openai:{n:'OpenAI',m:'gpt-4o-mini',help:'Clave en platform.openai.com/api-keys'},anthropic:{n:'Anthropic (Claude)',m:'claude-opus-5',help:'Clave en console.anthropic.com'}};
 const AI=()=>{S.ai=Object.assign({prov:'gemini',key:'',model:''},S.ai||{});const a=S.ai;if(!a.keys||typeof a.keys!=='object')a.keys={};if(a.key&&!a.keys[a.prov])a.keys[a.prov]=a.key;if(!a.models||typeof a.models!=='object')a.models={};return a};
 const aiReady=()=>!!(AI().key||'').trim();
 async function aiRun(prompt,{system,images=[],maxTokens=2000}={}){const a=AI();if(!aiReady())throw new Error('Configurá tu clave de IA en Ajustes → Inteligencia artificial');const model=(a.model||'').trim()||AI_PROV[a.prov].m;
@@ -2461,20 +2461,34 @@ aiSheet=function(presetProv){const a=AI();if(presetProv&&AI_PROV[presetProv]){a.
  b.onclick=async e=>{if(e.target.closest('#aiTest')){save();await withBusy(async()=>{busy('Probando…');try{const r=await aiRun('Respondé solamente: OK');toast(r?'✅ Conexión correcta':'Sin respuesta',4000)}catch(x){toast('❌ '+x.message,6000)}})}
   if(e.target.closest('#aiDel')){a.key='';a.keys[a.prov]='';saveS();$('.aiK',b).value='';toast('Clave borrada');try{Nexa.status()}catch(e){}}}};
 
-/* conversación con historial, para los tres proveedores */
-async function aiChat(msgs,{prov,system,maxTokens=2500}={}){const a=AI();prov=prov||a.prov;const key=aiKeyFor(prov);if(!key)throw new Error('Falta la clave de '+AI_PROV[prov].n+'. Configurala en Ajustes → Inteligencia artificial');
+/* conversación con historial para los tres proveedores: la respuesta llega en vivo (streaming) y se puede detener */
+async function aiChatStream(msgs,{prov,system,maxTokens=8000,signal,onText}={}){const a=AI();prov=prov||a.prov;const key=aiKeyFor(prov);if(!key)throw new Error('Falta la clave de '+AI_PROV[prov].n+'. Configurala en Ajustes → Inteligencia artificial');
  const model=((a.models||{})[prov]||(a.prov===prov?a.model:'')||'').trim()||AI_PROV[prov].m;
  const split=d=>({mime:(d.match(/^data:(.*?);/)||[,'image/jpeg'])[1],data:d.replace(/^data:.*?;base64,/,'')});
- const net=async(url,opt,name)=>{let r;try{r=await fetch(url,opt)}catch(e){throw new Error('Sin conexión con '+name+'. Revisá internet.')}let j={};try{j=await r.json()}catch(e){}if(!r.ok)throw new Error(j.error?.message||('Error de '+name+' ('+r.status+')'));return j};
- if(prov==='gemini'){const body={contents:msgs.map(m=>({role:m.role==='assistant'?'model':'user',parts:[...(m.images||[]).map(split).map(i=>({inline_data:{mime_type:i.mime,data:i.data}})),{text:m.text||' '}]})),generationConfig:{maxOutputTokens:maxTokens}};if(system)body.systemInstruction={parts:[{text:system}]};
-  const j=await net('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(model)+':generateContent?key='+encodeURIComponent(key),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)},'Gemini');
-  return (j.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('').trim()}
- if(prov==='openai'){const messages=[...(system?[{role:'system',content:system}]:[]),...msgs.map(m=>m.role==='assistant'?{role:'assistant',content:m.text}:{role:'user',content:[{type:'text',text:m.text||' '},...(m.images||[]).map(d=>({type:'image_url',image_url:{url:d}}))]})];
-  const j=await net('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+key},body:JSON.stringify({model,max_tokens:maxTokens,messages})},'OpenAI');
-  return (j.choices?.[0]?.message?.content||'').trim()}
- const messages=msgs.map(m=>m.role==='assistant'?{role:'assistant',content:m.text||' '}:{role:'user',content:[...(m.images||[]).map(split).map(i=>({type:'image',source:{type:'base64',media_type:i.mime,data:i.data}})),{type:'text',text:m.text||' '}]});
- const j=await net('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model,max_tokens:maxTokens,...(system?{system}:{}),messages})},'Anthropic');
- return (j.content||[]).map(c=>c.text||'').join('').trim()}
+ const name={gemini:'Gemini',openai:'OpenAI',anthropic:'Anthropic'}[prov];let url,headers={'Content-Type':'application/json'},body;
+ if(prov==='gemini'){url='https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(model)+':streamGenerateContent?alt=sse&key='+encodeURIComponent(key);
+  body={contents:msgs.map(m=>({role:m.role==='assistant'?'model':'user',parts:[...(m.images||[]).map(split).map(i=>({inline_data:{mime_type:i.mime,data:i.data}})),{text:m.text||' '}]})),generationConfig:{maxOutputTokens:maxTokens}};if(system)body.systemInstruction={parts:[{text:system}]}}
+ else if(prov==='openai'){url='https://api.openai.com/v1/chat/completions';headers.Authorization='Bearer '+key;
+  body={model,stream:true,max_tokens:maxTokens,messages:[...(system?[{role:'system',content:system}]:[]),...msgs.map(m=>m.role==='assistant'?{role:'assistant',content:m.text}:{role:'user',content:[{type:'text',text:m.text||' '},...(m.images||[]).map(d=>({type:'image_url',image_url:{url:d}}))]})]}}
+ else{url='https://api.anthropic.com/v1/messages';Object.assign(headers,{'x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'});
+  const fb=/^claude-(opus-5|fable-5)/.test(model);if(fb)headers['anthropic-beta']='server-side-fallback-2026-07-01';
+  body={model,stream:true,max_tokens:maxTokens,...(fb?{fallbacks:'default'}:{}),...(system?{system}:{}),messages:msgs.map(m=>m.role==='assistant'?{role:'assistant',content:m.text||' '}:{role:'user',content:[...(m.images||[]).map(split).map(i=>({type:'image',source:{type:'base64',media_type:i.mime,data:i.data}})),{type:'text',text:m.text||' '}]})}}
+ let r;try{r=await fetch(url,{method:'POST',headers,body:JSON.stringify(body),signal})}catch(e){if(e.name==='AbortError')throw e;throw new Error('Sin conexión con '+name+'. Revisá internet.')}
+ if(!r.ok){let j={};try{j=await r.json()}catch(e){}const m=(Array.isArray(j)?j[0]:j)?.error?.message;
+  if(r.status===404&&/model/i.test(m||''))throw new Error('El modelo "'+model+'" no está disponible para tu clave. Cambialo en Ajustes → Inteligencia artificial.');
+  throw new Error(m||('Error de '+name+' ('+r.status+')'))}
+ let text='',stop='';const add=t=>{if(t){text+=t;onText&&onText(text)}};
+ const handle=d=>{if(prov==='gemini'){add((d.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join(''));stop=d.candidates?.[0]?.finishReason||stop}
+  else if(prov==='openai'){add(d.choices?.[0]?.delta?.content||'');stop=d.choices?.[0]?.finish_reason||stop}
+  else{if(d.type==='content_block_delta'&&d.delta?.type==='text_delta')add(d.delta.text);else if(d.type==='message_delta')stop=d.delta?.stop_reason||stop;else if(d.type==='error')throw new Error(d.error?.message||'Error de Anthropic')}};
+ const line=l=>{l=l.replace(/\r$/,'');if(!l.startsWith('data:'))return;const t=l.slice(5).trim();if(!t||t==='[DONE]')return;let d;try{d=JSON.parse(t)}catch(e){return}handle(d)};
+ if(!r.body)(await r.text()).split('\n').forEach(line);
+ else{const rd=r.body.getReader(),dec=new TextDecoder();let buf='';
+  for(;;){const {done,value}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});let i;while((i=buf.indexOf('\n'))>=0){const l=buf.slice(0,i);buf=buf.slice(i+1);line(l)}}
+  if(buf)line(buf)}
+ if(stop==='refusal'||stop==='SAFETY')text+=(text?'\n\n':'')+'*El proveedor no quiso responder este pedido por sus políticas de seguridad.*';
+ else if(stop==='max_tokens'||stop==='length'||stop==='MAX_TOKENS')text+='\n\n*(La respuesta se cortó por largo. Pedile a Nexa que continúe.)*';
+ return text.trim()}
 
 /* markdown liviano y seguro para las respuestas */
 function nexaMd(s){const inl=t=>esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/(^|[^*])\*([^*\n]+)\*/g,'$1<i>$2</i>').replace(/`([^`]+)`/g,'<code>$1</code>');
@@ -2506,7 +2520,7 @@ const Nexa={st:{msgs:[],prov:'auto',docs:[]},sending:false,el:null,imgCache:{},
   $('#v-tools').after(v);this.el=v;iconize(v);
   const inp=$('#nxIn');inp.oninput=()=>{inp.style.height='auto';inp.style.height=Math.min(inp.scrollHeight,140)+'px'};
   inp.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();this.send()}};
-  $('#nxSend').onclick=()=>this.send();
+  $('#nxSend').onclick=()=>{if(this.sending){this.ctrl&&this.ctrl.abort();return}this.send()};
   $('#nxAttach').onclick=()=>this.pickDocs();
   $('#nxCfg').onclick=()=>aiSheet(this.st.prov==='auto'?null:this.st.prov);
   $('#nxNew').onclick=()=>{if(this.sending)return;if(this.st.msgs.length&&!confirm('¿Empezar una conversación nueva? Se borra el historial actual.'))return;this.st.msgs=[];this.st.docs=[];this.imgCache={};this.save();this.render()};
@@ -2537,6 +2551,7 @@ const Nexa={st:{msgs:[],prov:'auto',docs:[]},sending:false,el:null,imgCache:{},
   b.onclick=async e=>{if(!e.target.closest('#nxPickOk'))return;const ids=$$('input:checked',b).map(x=>x.value);if(ids.length>5)return toast('Máximo 5 documentos');
    await withBusy(async()=>{const docs=[];for(const [k,id] of ids.entries()){const prev=this.st.docs.find(d=>d.id===id);if(prev){docs.push(prev);continue}busy('Leyendo documento '+(k+1)+'/'+ids.length+'…');const d=await DB.getDoc(id);if(!d)continue;const text=(d.text||'').trim();docs.push({id,name:d.name,text:text.slice(0,20000),vis:text.length<=40,fresh:true})}
     this.st.docs=docs;this.save();busy(false)});await Nav.back();this.renderDocs();if(ids.length)toast(ids.length+' documento(s) adjuntos')}},
+ attachDoc(d){const text=(d.text||'').trim();const it={id:d.id,name:d.name,text:text.slice(0,20000),vis:text.length<=40,fresh:true};this.st.docs=[it,...this.st.docs.filter(x=>x.id!==d.id)].slice(0,5);delete this.imgCache[d.id];this.save();this.renderDocs()},
  async docImages(d){const doc=await DB.getDoc(d.id);if(!doc)return [];const out=[];for(const p of doc.pages.slice(0,3)){try{const c=await renderPage(p,{maxSide:1400});out.push(c.toDataURL('image/jpeg',.8))}catch(e){}}return out},
  system(){let s=NEXA_SYS;const withText=this.st.docs.filter(d=>!d.vis&&d.text);
   if(withText.length){let budget=40000;s+='\n\nDOCUMENTOS ADJUNTOS POR EL USUARIO:';for(const d of withText){const t=d.text.slice(0,Math.max(0,budget));budget-=t.length;s+='\n\n=== '+d.name+' ===\n'+t;if(budget<=0)break}}
@@ -2548,15 +2563,19 @@ const Nexa={st:{msgs:[],prov:'auto',docs:[]},sending:false,el:null,imgCache:{},
   const docNames=this.st.docs.filter(d=>d.fresh).map(d=>d.name);
   const msg={role:'user',text,docs:docNames};this.st.msgs.push(msg);inp.value='';inp.oninput();this.lastErr='';this.st.docs.forEach(d=>d.fresh=false);this.save();
   await this.ask(msg)},
- async ask(msg){const prov=this.prov();this.sending=true;this.render();$('#nxSend').disabled=true;
+ async ask(msg){const prov=this.prov();this.sending=true;this.render();this.btn();
   try{let imgs=[];const vis=this.st.docs.filter(d=>d.vis);
    for(const d of vis){if(imgs.length>=4)break;if(!this.imgCache[d.id])this.imgCache[d.id]=await this.docImages(d);imgs.push(...this.imgCache[d.id].slice(0,4-imgs.length))}
    const hist=this.st.msgs.slice(-20);while(hist.length&&hist[0].role!=='user')hist.shift();
    const payload=hist.map((m,i)=>({role:m.role,text:m.text,images:i===hist.length-1?imgs:[]}));
-   const out=await aiChat(payload,{prov,system:this.system()});
-   this.st.msgs.push({role:'assistant',text:out||'(Nexa no devolvió respuesta)',prov});this.save()}
+   const ctrl=this.ctrl=new AbortController();let live=null,partial='';
+   const out=await aiChatStream(payload,{prov,system:this.system(),signal:ctrl.signal,onText:t=>{partial=t;if(!live){const ty=$('#nxLog .nx-typing');if(ty){live=document.createElement('div');live.className='nx-md';ty.replaceWith(live)}}if(live){live.innerHTML=nexaMd(t);if(!this._raf)this._raf=requestAnimationFrame(()=>{this._raf=0;live.scrollIntoView({block:'nearest'})})}}}).catch(e=>{if(e.name==='AbortError')return partial?partial+'\n\n*(Respuesta detenida)*':'';throw e});
+   if(out)this.st.msgs.push({role:'assistant',text:out,prov});
+   else if(ctrl.signal.aborted){const u=this.st.msgs.pop();if(u&&u.role==='user'){$('#nxIn').value=u.text;$('#nxIn').oninput()}}
+   else this.st.msgs.push({role:'assistant',text:'(Nexa no devolvió respuesta)',prov});this.save()}
   catch(e){this.lastErr=e.message||String(e)}
-  finally{this.sending=false;$('#nxSend').disabled=false;this.render()}},
+  finally{this.sending=false;this.ctrl=null;this.btn();this.render()}},
+ btn(){const b=$('#nxSend');if(!b)return;b.classList.toggle('stop',this.sending);b.setAttribute('aria-label',this.sending?'Detener respuesta':'Enviar instrucción');b.innerHTML=this.sending?'<span class="nx-sq"></span>':'<i data-ico="send">➤</i>';iconize(b)},
  retry(){const last=this.st.msgs[this.st.msgs.length-1];if(!last||last.role!=='user'||this.sending)return;this.lastErr='';this.ask(last)},
  async export(kind,text){const name='Nexa_'+nowName('').trim().replace(/\s+/g,'_');
   if(kind==='copy'){try{await navigator.clipboard.writeText(text);toast('Copiado')}catch(e){toast('No se pudo copiar')}return}
@@ -2593,7 +2612,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nexaCss">'
 +'.nx-docs{display:flex;flex-wrap:wrap;gap:6px;padding:0 12px}.nx-docs:empty{display:none}.nx-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 6px 6px 10px;border-radius:999px;background:var(--nxs);color:var(--nx2);font-size:12.5px;font-weight:600}.nx-chip small{font-weight:500}.nx-chip button{width:22px;height:22px;border-radius:50%;font-size:11px}'
 +'.nx-input{position:sticky;bottom:calc(74px + env(safe-area-inset-bottom));display:flex;align-items:flex-end;gap:8px;margin:10px 12px 6px;padding:7px;border:1px solid var(--line);border-radius:14px;background:var(--bg3)}'
 +'.nx-input textarea{flex:1;border:0;background:transparent;resize:none;padding:8px 4px;max-height:140px;outline:0;font-size:15px;line-height:1.35}'
-+'.nx-ib,.nx-send{flex:none;width:40px;height:40px;display:grid;place-items:center;border-radius:10px}.nx-ib{color:var(--tx2)}.nx-send{background:var(--nx);color:#fff}[data-theme="dark"] .nx-send{color:#06262c}.nx-send:disabled{opacity:.5}.nx-ib .ico,.nx-send .ico{width:21px;height:21px}'
++'.nx-ib,.nx-send{flex:none;width:40px;height:40px;display:grid;place-items:center;border-radius:10px}.nx-ib{color:var(--tx2)}.nx-send{background:var(--nx);color:#fff}.nx-send.stop{background:var(--ac)}.nx-sq{width:13px;height:13px;border-radius:3px;background:#fff;display:block}[data-theme="dark"] .nx-send{color:#06262c}.nx-send:disabled{opacity:.5}.nx-ib .ico,.nx-send .ico{width:21px;height:21px}'
 +'.nx-foot{display:flex;justify-content:space-between;gap:8px;padding:4px 14px 12px}.nx-link{font-size:12.5px;color:var(--tx2);display:inline-flex;align-items:center;gap:4px}.nx-link .ico{width:14px;height:14px}'
 +'.nx-pick{display:flex;flex-direction:column;gap:6px;margin:10px 0 14px;max-height:52vh;overflow:auto}.nx-prow{display:flex;align-items:center;gap:10px;padding:8px;border:1px solid var(--line);border-radius:12px;margin:0}.nx-prow img{width:38px;height:48px;object-fit:cover;border-radius:6px;border:1px solid var(--line)}.nx-prow span{display:flex;flex-direction:column;min-width:0}.nx-prow b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.nx-prow small{color:var(--tx2);font-size:12px}'
 +'.nav button{min-width:0;flex:1}.nav .fab{flex:none}.nav.nav2 button:not(.fab){font-size:10.5px;letter-spacing:-.2px;white-space:nowrap}.nav .nl-s{display:none}@media(max-width:420px){.nav .nl-l{display:none}.nav .nl-s{display:inline}}'
@@ -2605,6 +2624,8 @@ document.head.insertAdjacentHTML('beforeend','<style id="nexaCss">'
  const nav=$('.nav');if(nav&&!nav.querySelector('[data-go="nexa"]')){const b=document.createElement('button');b.dataset.go='nexa';b.innerHTML='<b data-ico="nexa">✨</b>Nexa IA';const s=nav.querySelector('#navSettings');nav.insertBefore(b,s);iconize(nav)}
  if(nav)[['[data-go="docs"]','Docs'],['[data-go="tools"]','Herram.']].forEach(([q,short])=>{const b=nav.querySelector(q);if(!b)return;const t=[...b.childNodes].find(n=>n.nodeType===3&&n.textContent.trim());if(!t)return;const l=document.createElement('span');l.className='nl-l';l.textContent=t.textContent.trim();const sh=document.createElement('span');sh.className='nl-s';sh.textContent=short;t.replaceWith(l,sh)});
  const _go=go;go=function(v){_go(v);if(v==='nexa'){Nexa.status();setTimeout(()=>{const l=$('#nxLog');if(l&&l.lastElementChild&&Nexa.st.msgs.length)l.lastElementChild.scrollIntoView({block:'nearest'})},50)}};
+ const sh=$('#docScreen .shead'),share=$('#docShare');if(sh&&share&&!$('#docNexa')){const nb=document.createElement('button');nb.className='ib';nb.id='docNexa';nb.title='Preguntar a Nexa';nb.setAttribute('aria-label','Preguntar a Nexa');nb.innerHTML='<i data-ico="nexa">✨</i>';sh.insertBefore(nb,share);iconize(nb);
+  nb.onclick=async()=>{if(!DOC)return;if(!DOC.pages.length)return toast('El documento no tiene páginas');await saveDoc(true);const d=DOC;Nexa.attachDoc(d);while(Nav.stack.length)await Nav.back();go('nexa');toast('📎 '+d.name+' adjunto a Nexa')}}
  const card=$('#aiCard');if(card){card.onclick=()=>go('nexa');const t=card.querySelector('.aicard-t b');if(t)t.textContent='Nexa IA';const sm=card.querySelector('.aicard-t small');if(sm)sm.textContent='Preguntale a tu asistente sobre tus documentos';const bt=card.querySelector('.aicard-btn');if(bt)bt.textContent='Abrir Nexa →'}
 }catch(e){console.error('Nexa IA',e)}})();
 </script>
