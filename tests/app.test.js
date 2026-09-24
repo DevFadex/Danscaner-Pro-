@@ -228,8 +228,8 @@ await test('Nexa conversa (nombre, versión, qué puede hacer) con botones; íco
   await pg.click('#btnNexa');await W(300);
   for(const q of ['¿Para qué servís?','¿Cómo te llamás?']){await pg.fill('#nxIn',q);await pg.click('#nxSend');await W(600)}
   const log=await pg.textContent('#nxLog');
-  for(const w of ['Comprimir','Extraer datos','Soy Nexa IA','Versión','Nexa 2.'])assert.ok(log.includes(w),'falta '+w);
-  assert.ok((await pg.$$('.nx-chip')).length>=6,'faltan los botones interactivos');
+  for(const w of ['Comprimir','Extraer datos','Soy Nexa IA','Versión','Nexa 3.'])assert.ok(log.includes(w),'falta '+w);
+  assert.ok((await pg.$$('.nx-q')).length>=6,'faltan los botones interactivos');
   assert.equal(await pg.$$eval('#nxLog .nx-md',els=>els.some(e=>/\p{Extended_Pictographic}/u.test(e.textContent))),false,'quedaron emojis en Nexa');
   await pg.click('.nav [data-go="tools"]');await W(300);
   const t=await pg.$$eval('#toolsGrid .ic',els=>els.map(e=>!!e.querySelector('svg')&&!/\p{Extended_Pictographic}/u.test(e.textContent)));
@@ -253,17 +253,28 @@ await test('Nexa local por procesador (sin placa gráfica compatible) y saludo s
   assert.ok(r.t.length>0&&r.dl&&r.eng==='cpu','no respondió con el procesador: '+JSON.stringify(r));
   await pg.click('#btnNexa');await W(300);const h=await pg.textContent('#nxLog h3');assert.ok(/^(Buen día|Buenas tardes|Buenas noches), soy Nexa$/.test(h),h);
   await pg.fill('#nxIn','hola');await pg.click('#nxSend');await W(600);const log=await pg.textContent('#nxLog');
-  assert.ok(/(Buen día|Buenas tardes|Buenas noches)!/.test(log)&&/(trabajamos hoy|ayudar|resolver hoy)/.test(log),log.slice(0,300));
+  assert.ok(/(buen día|buenas tardes|buenas noches)!/i.test(log)&&/(ayudo hoy|trabajamos hoy)/.test(log),log.slice(0,300));
   assert.ok(await pg.$('#btnNexa'));
 });
 
 await test('Gemini: acepta claves nuevas (AQ.) y la manda en la cabecera, no en la dirección',async pg=>{
   await pg.click('#btnNexa');await W(200);await pg.click('#nxCfg');await W(700);
+  await pg.evaluate(()=>{window._f=window.fetch;window.fetch=async u=>/\/models\?/.test(String(u))?new Response(JSON.stringify({models:[{name:'models/gemini-3-flash',supportedGenerationMethods:['generateContent']}]}),{status:200}):window._f(u)});
   await pg.fill('#nlKey','AQ.Ab8RN6Kx_prueba-1234567890abcdef');await pg.click('#nlKeyGo');await W(500);
+  await pg.evaluate(()=>{window.fetch=window._f});assert.equal(await pg.evaluate(()=>AI().models.gemini),'gemini-3-flash');
   assert.equal(await pg.evaluate(()=>AI().keys.gemini),'AQ.Ab8RN6Kx_prueba-1234567890abcdef');
   const req=await pg.evaluate(async()=>{let seen=null;const f=window.fetch;window.fetch=async(u,o)=>{seen={u:String(u),h:o&&o.headers};return new Response('data: {"candidates":[{"content":{"parts":[{"text":"ok"}]}}]}\n\n',{status:200,headers:{'Content-Type':'text/event-stream'}})};
     try{await aiChatStream([{role:'user',text:'hola'}],{prov:'gemini'})}catch(e){}window.fetch=f;return seen});
   assert.ok(req&&!/[?&]key=/.test(req.u),'la clave quedó en la dirección: '+(req&&req.u));assert.equal(req.h['x-goog-api-key'],'AQ.Ab8RN6Kx_prueba-1234567890abcdef');
+});
+
+await test('Gemini: si el modelo no existe para la clave, elige uno disponible solo',async pg=>{
+  const r=await pg.evaluate(async()=>{const a=AI();a.keys.gemini='AQ.prueba-1234567890abcdefghij';a.models.gemini='gemini-viejo';const calls=[];const f=window.fetch;
+    window.fetch=async(u,o)=>{u=String(u);calls.push(u);if(/\/models\?/.test(u))return new Response(JSON.stringify({models:[{name:'models/gemini-3-flash',supportedGenerationMethods:['generateContent']},{name:'models/gemini-3-flash-lite',supportedGenerationMethods:['generateContent']},{name:'models/gemini-embedding-001',supportedGenerationMethods:['embedContent']}]}),{status:200});
+      if(/gemini-viejo/.test(u))return new Response(JSON.stringify({error:{message:'models/gemini-viejo is not found for API version v1beta'}}),{status:404});
+      return new Response('data: {"candidates":[{"content":{"parts":[{"text":"¡Buenas tardes! ¿En qué te ayudo?"}]}}]}\n\n',{status:200,headers:{'Content-Type':'text/event-stream'}})};
+    let out='';try{out=await aiChatStream([{role:'user',text:'hola'}],{prov:'gemini'})}catch(e){out='ERR '+e.message}window.fetch=f;return {out,model:AI().models.gemini}});
+  assert.equal(r.model,'gemini-3-flash',JSON.stringify(r));assert.ok(/Buenas tardes/.test(r.out),JSON.stringify(r));
 });
 
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));

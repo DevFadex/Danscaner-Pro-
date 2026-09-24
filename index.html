@@ -1023,7 +1023,7 @@ const b=openSheet('Ajustes','<div class="set-list">'+setRow('sDesign','palette',
 +acc('🌓','Apariencia y nombres','Tema y nombre de los documentos',opt('<i data-ico="theme">🌓</i> Tema',sel('sTheme',[['system','Automático (según el teléfono)'],['light','Claro'],['dark','Oscuro']]))+opt('Plantilla de nombre por defecto',sel('sTpl',NAME_TEMPLATES.map(t=>[t,t]))))
 +acc('📄','PDF y texto (OCR)','Hoja, calidad, márgenes e idioma',opt('Idioma OCR',sel('sLang',[['spa','Español'],['eng','Inglés'],['spa+eng','Español + Inglés'],['por','Portugués']]))+'<div class="row">'+opt('Hoja PDF por defecto',sel('sSize',[['a4','A4'],['oficio','Oficio'],['carta','Carta'],['original','Tamaño imagen']]))+opt('Calidad PDF',sel('sQ',Object.entries(QUAL).map(([k,v])=>[k,v.label])))+'</div>'+opt('Márgenes por defecto (mm)','<input type="number" id="sMargin" min="0" max="40">'))
 +acc('🗄️','Datos del dispositivo',est||'Documentos guardados en este navegador','<p class="muted">'+est+'</p><button class="btn red block" id="sWipe">🗑 Borrar todos los documentos</button>')
-+'<p class="muted set-foot">Danscanner Pro · versión 29 · funciona en celular y PC · los documentos se guardan en este navegador.</p>');$('.sTpl',b).value=S.nameTemplate;$('.sFilter',b).value=S.filter;$('.sMax',b).value=String(S.maxCap);$('#sAuto').checked=S.autoCrop;$('#sAutoCap').checked=S.autoCapture;$('#sHd').checked=S.hd;$('#sDeskew').checked=S.deskew!==false;$('#sPrintBW').checked=S.printBW!==false;$('#sPro').checked=S.proFilters!==false;$('#sNative').checked=!!S.camNative;$('.sTheme',b).value=S.theme||'system';$('.sLang',b).value=S.lang;$('.sSize',b).value=S.size;$('.sQ',b).value=S.quality;$('#sMargin').value=S.margin;b.onchange=()=>{S.nameTemplate=$('.sTpl',b).value;S.filter=$('.sFilter',b).value;S.maxCap=+$('.sMax',b).value;S.autoCrop=$('#sAuto').checked;S.camNative=$('#sNative').checked;if(($('.sTheme',b).value)!==(S.theme||'system'))cambiarTema($('.sTheme',b).value);S.autoCapture=$('#sAutoCap').checked;S.hd=$('#sHd').checked;S.deskew=$('#sDeskew').checked;if((S.printBW!==false)!==$('#sPrintBW').checked){S.printBW=$('#sPrintBW').checked;if(FW.w){try{FW.w.terminate()}catch(e){}FW.w=null;FW.ok=null}}if((S.proFilters!==false)!==$('#sPro').checked){S.proFilters=$('#sPro').checked;useProFilters(S.proFilters)}S.lang=$('.sLang',b).value;S.size=$('.sSize',b).value;S.quality=$('.sQ',b).value;S.margin=+$('#sMargin').value||0;saveS();toast('Guardado')};$('#sDesign').onclick=async()=>{await Nav.back();designSheet()};$('#sAI').onclick=async()=>{await Nav.back();aiSheet()};$('#sSec').onclick=async()=>{await Nav.back();securitySheet()};$('#sSpace').onclick=async()=>{await Nav.back();storageSheet()};$('#sAbout').onclick=async()=>{await Nav.back();aboutSheet()};$('#sWipe').onclick=async()=>{if(!confirm('¿Borrar TODOS los documentos guardados?'))return;for(const m of await DB.metas())await DB.delDoc(m.id);refreshLists();toast('Documentos borrados')}}
++'<p class="muted set-foot">Danscanner Pro · versión 30 · funciona en celular y PC · los documentos se guardan en este navegador.</p>');$('.sTpl',b).value=S.nameTemplate;$('.sFilter',b).value=S.filter;$('.sMax',b).value=String(S.maxCap);$('#sAuto').checked=S.autoCrop;$('#sAutoCap').checked=S.autoCapture;$('#sHd').checked=S.hd;$('#sDeskew').checked=S.deskew!==false;$('#sPrintBW').checked=S.printBW!==false;$('#sPro').checked=S.proFilters!==false;$('#sNative').checked=!!S.camNative;$('.sTheme',b).value=S.theme||'system';$('.sLang',b).value=S.lang;$('.sSize',b).value=S.size;$('.sQ',b).value=S.quality;$('#sMargin').value=S.margin;b.onchange=()=>{S.nameTemplate=$('.sTpl',b).value;S.filter=$('.sFilter',b).value;S.maxCap=+$('.sMax',b).value;S.autoCrop=$('#sAuto').checked;S.camNative=$('#sNative').checked;if(($('.sTheme',b).value)!==(S.theme||'system'))cambiarTema($('.sTheme',b).value);S.autoCapture=$('#sAutoCap').checked;S.hd=$('#sHd').checked;S.deskew=$('#sDeskew').checked;if((S.printBW!==false)!==$('#sPrintBW').checked){S.printBW=$('#sPrintBW').checked;if(FW.w){try{FW.w.terminate()}catch(e){}FW.w=null;FW.ok=null}}if((S.proFilters!==false)!==$('#sPro').checked){S.proFilters=$('#sPro').checked;useProFilters(S.proFilters)}S.lang=$('.sLang',b).value;S.size=$('.sSize',b).value;S.quality=$('.sQ',b).value;S.margin=+$('#sMargin').value||0;saveS();toast('Guardado')};$('#sDesign').onclick=async()=>{await Nav.back();designSheet()};$('#sAI').onclick=async()=>{await Nav.back();aiSheet()};$('#sSec').onclick=async()=>{await Nav.back();securitySheet()};$('#sSpace').onclick=async()=>{await Nav.back();storageSheet()};$('#sAbout').onclick=async()=>{await Nav.back();aboutSheet()};$('#sWipe').onclick=async()=>{if(!confirm('¿Borrar TODOS los documentos guardados?'))return;for(const m of await DB.metas())await DB.delDoc(m.id);refreshLists();toast('Documentos borrados')}}
 $('#btnSettings').onclick=()=>settingsSheet();$('#navSettings').onclick=()=>settingsSheet();
 function go(v){$$('.view').forEach(x=>x.classList.toggle('active',x.id==='v-'+v));$$('.nav [data-go]').forEach(b=>b.classList.toggle('on',b.dataset.go===v));$('#topTitle').textContent={home:'Danscanner Pro',docs:'Documentos',tools:'Herramientas',nexa:'Nexa IA'}[v];window.scrollTo(0,0)}
 async function doAction(a){if(a==='cam-single')Cam.open('single');else if(a==='cam-batch')Cam.open('batch');else if(a==='import-img')$('#inImg').click();else if(a==='import-any')$('#inAny').click()}
@@ -3425,7 +3425,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 2.1',APP_VER='28';
+const NEXA_VER='Nexa 3.0',APP_VER='30';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3500,8 +3500,8 @@ function nexaSmallTalk(text){const n=nbNorm(text).replace(/[¿?¡!.,]/g,' ').rep
 {const _ask=Nexa.ask;Nexa.ask=async function(msg){const r=nexaSmallTalk(msg.text);if(!r)return _ask.apply(this,arguments);
  this.st.msgs.push({role:'assistant',text:r,prov:'basic'});this.save();this.render()}}
 /* botones dentro de las respuestas: [[Etiqueta|pedido]] */
-{const _md=nexaMd;nexaMd=function(s){let h=_md(s);h=h.replace(/\[\[([^\]|]+)\|([^\]]*)\]\]/g,(m,a,b)=>'<button class="nx-chip" data-chip="'+b.replace(/"/g,'&quot;')+'">'+a+'</button>');return h}}
-document.addEventListener('click',async e=>{const c=e.target.closest('.nx-chip[data-chip]');if(!c)return;e.preventDefault();e.stopPropagation();const t=c.dataset.chip.replace(/&quot;/g,'"');
+{const _md=nexaMd;nexaMd=function(s){let h=_md(s);h=h.replace(/\[\[([^\]|]+)\|([^\]]*)\]\]/g,(m,a,b)=>'<button class="nx-q" data-chip="'+b.replace(/"/g,'&quot;')+'">'+a+'</button>');return h}}
+document.addEventListener('click',async e=>{const c=e.target.closest('.nx-q[data-chip]');if(!c)return;e.preventDefault();e.stopPropagation();const t=c.dataset.chip.replace(/&quot;/g,'"');
  if(t==='__config'){nexaSheet();return}const inp=$('#nxIn');if(!inp)return;inp.value=t;inp.oninput&&inp.oninput();
  if(/"$/.test(t)){inp.focus();toast('Escribí la palabra que buscás y enviá');return}
  if(/adjunt/.test(t)&&!Nexa.st.docs.length){toast('Elegí el documento');await Nexa.pickDocs();if(!Nexa.st.docs.length)return}
@@ -3524,8 +3524,8 @@ document.addEventListener('click',async e=>{const c=e.target.closest('.nx-chip[d
  b.addEventListener('click',e=>{e.stopImmediatePropagation();const p=Ed.p;if(!p)return;p.enh=p.enh?0:1;b.classList.toggle('on',!!p.enh);Ed.touch(false);toast(p.enh?'Imagen mejorada: menos ruido, más detalle y nitidez':'Mejora de imagen quitada')},true)})();
 {const _s=Ed.show;Ed.show=function(){_s.apply(this,arguments);const b=$('#editor [data-ed="enh"]');if(b&&this.p)b.classList.toggle('on',!!this.p.enh)}}
 document.head.insertAdjacentHTML('beforeend','<style id="proCss">.ic.ic-svg .ico{width:60%;height:60%;stroke:#fff;color:#fff;stroke-width:2}.mitem .ic.ic-svg .ico{width:19px;height:19px}'
-+'.nx-chip{display:inline-flex;align-items:center;margin:4px 6px 0 0;padding:7px 12px;border-radius:16px;border:1px solid var(--soft-line,#bae6fd);background:var(--soft,#e0f2fe);color:var(--ac);font-weight:600;font-size:13px}.nx-chip:active{transform:scale(.97)}'
-+'.nx-md p:has(.nx-chip){display:flex;flex-wrap:wrap}.nx-acts button{display:inline-flex;align-items:center;gap:5px}.nx-acts .ico,.nx-att .ico,.nx-err .ico{width:15px;height:15px}'
++''
++'.nx-acts button{display:inline-flex;align-items:center;gap:5px}.nx-acts .ico,.nx-att .ico,.nx-err .ico{width:15px;height:15px}'
 +'.nl-bad{font-size:14px!important;font-weight:600!important;color:#b45309!important;line-height:1.45}[data-theme=dark] .nl-bad{color:#fbbf24!important}#toast{display:flex;align-items:center;gap:8px}#toast .ico{width:18px;height:18px;flex:none}</style>');
 
 /* Íconos en lugar de emojis en toda la interfaz (los textos del usuario no se tocan) */
@@ -3543,7 +3543,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='29 · 24/09/2026';
+const BUILD='30 · 24/09/2026';
 /* Botón Nexa arriba: se crea siempre, aunque otra parte de Nexa falle (antes, un error dejaba teléfonos sin el botón) */
 function ensureNexaTop(){const top=$('.top'),bs=$('#btnSettings');if(!top||!bs||$('#btnNexa'))return;const b=document.createElement('button');b.className='ib nx-top';b.id='btnNexa';b.dataset.go='nexa';b.title='Nexa IA';b.setAttribute('aria-label','Nexa IA');b.innerHTML='<i data-ico="nexa"></i><span>Nexa</span>';top.insertBefore(b,bs);iconize(b);const n=$('.nav [data-go="nexa"]');if(n)n.remove()}
 ensureNexaTop();addEventListener('load',ensureNexaTop);
@@ -3618,6 +3618,75 @@ const NexaCPU={w:null,loading:null,
   if(!quota&&!/Failed to fetch|NetworkError|network/i.test(e.message))throw e;
   const out=await _run.call(this,'basic',payload,hist,o);return '*'+(quota?'Se alcanzó el tope gratis de hoy':'Sin conexión a internet')+'; te respondo con Nexa básico.*\n\n'+out}}}
 document.head.insertAdjacentHTML('beforeend','<style id="v28Css">.nl-cpu{margin:8px 0 4px;padding:9px 11px;border-radius:10px;background:var(--soft,#e0f2fe);font-size:13px;line-height:1.45}.nl-cpu .ico{width:15px;height:15px;vertical-align:-3px}.nl-steps{margin:8px 0 10px 18px;font-size:13px;line-height:1.6}#nlFree .row{gap:8px}#nlFree input{flex:1;min-width:0}</style>');
+
+/* ===================== v30: Nexa moderna, cordial y con Gemini que elige su modelo solo ===================== */
+/* --- conversación: con IA (Gemini o local) responde la propia IA; las reglas quedan solo para el modo básico --- */
+let nexaSmallTalkBasic=null;{const _st=nexaSmallTalk;nexaSmallTalk=function(t){if(Nexa.prov()!=='basic'&&!nexaSmallTalk.forceBasic)return null;return _st(t)}}
+{const _st=nexaSmallTalk;nexaSmallTalk=function(t){const n=nbNorm(t).replace(/[¿?¡!.,]/g,' ').replace(/\s+/g,' ').trim();const r=_st(t);if(!r||r==='__count')return r;
+ if(/^(hola|holis|holaa+|buenas|buen dia|buenos dias|buenas tardes|buenas noches|hey|que tal|como va|hola que tal)( nexa)?$/.test(n))
+  return '¡Hola, '+saludo().toLowerCase()+'! Qué bueno leerte. ¿En qué te ayudo hoy?\n\n'+[['Resumir un documento','Resumí el documento adjunto'],['Buscar en mis documentos','Buscá "'],['Escanear','Escaneá un documento'],['¿Qué podés hacer?','¿Qué podés hacer?']].map(([a,p])=>chip(a,p)).join(' ');
+ if(/\b(para que (servis|sirves|sirve|te uso)|que (podes|puedes|sabes|haces) hacer|que puede hacer|en que (me )?(podes|puedes) ayudar|ayuda|ayudame|funciones|comandos|opciones|help)\b/.test(n))
+  return '¡Claro! Me preguntaste qué puedo hacer, así que te cuento: soy tu asistente para trabajar con documentos, sin salir de la app.\n\n'
+   +'- **Consultas:** resumo, respondo preguntas y busco en todos tus documentos.\n- **Datos:** saco nombres, DNI, CUIL, expedientes, fechas y montos.\n- **Archivos:** comprimo, uno y paso a Word o PDF.\n- **Captura:** escaneo con recorte automático y hago el modo DNI.\n- **Seguridad:** hago el respaldo de todo.\n\n¿Con cuál empezamos?\n\n'
+   +[['Resumir','Resumí el documento adjunto'],['Extraer datos','Extraé los datos del documento adjunto'],['Buscar','Buscá "'],['Comprimir','Comprimí el último documento'],['Escanear','Escaneá un documento'],['Modo DNI','Hacé el modo DNI']].map(([a,p])=>chip(a,p)).join(' ');
+ return r}}
+nexaSmallTalkBasic=t=>{nexaSmallTalk.forceBasic=true;try{return nexaSmallTalk(t)}finally{nexaSmallTalk.forceBasic=false}};
+/* si la IA falla y responde el modo básico, igual conversa (saludos, ayuda) */
+{const _a=NexaBasic.answer;NexaBasic.answer=async function(q,docs){const r=nexaSmallTalkBasic(q);if(r&&r!=='__count')return r;return _a.apply(this,arguments)}}
+/* modo básico: reconoce lo que le pidieron antes de responder */
+{const _run=Nexa.run;Nexa.run=async function(prov,payload,hist,o){const out=await _run.apply(this,arguments);if(prov!=='basic'||!out)return out;
+ const q=String((hist[hist.length-1]||{}).text||'');const n=nbNorm(q);const d=this.st.docs.map(x=>x.name);const dn=d.length?(d.length===1?'**'+d[0]+'**':'los '+d.length+' documentos adjuntos'):'';
+ if(/^(\*|¡|Claro|Listo|Encontr|No encontr)/.test(out))return out;
+ let ack='';if(/resum/.test(n))ack=dn?'Claro, te resumo '+dn+':':'Claro, te preparo el resumen:';else if(/dato|extrae|dni|cuil|expediente/.test(n))ack=dn?'Listo, estos son los datos que encontré en '+dn+':':'Listo, estos son los datos que encontré:';
+ else if(/correg|ocr/.test(n))ack='Perfecto, acá va el texto corregido:';else if(dn)ack='Claro, sobre “'+q.slice(0,70)+(q.length>70?'…':'')+'”:';
+ return ack?ack+'\n\n'+out:out}}
+/* IA (Gemini o local): identidad, cordialidad y que retome la consulta */
+const NEXA_STYLE='\n\nESTILO: Te llamás Nexa IA ('+NEXA_VER+'), asistente de Danscanner Pro. Hablá en español rioplatense (vos), con calidez y cordialidad. Si te saludan, respondé con '+'"buen día", "buenas tardes" o "buenas noches" según la hora local ('+new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})+') y preguntá en qué podés ayudar. En los pedidos, empezá con una frase breve que retome lo que te pidieron (por ejemplo: "Claro, te resumo el oficio…") y después respondé ordenado y conciso. No repitas la lista de funciones salvo que te la pidan.';
+{const _s=Nexa.system;Nexa.system=function(){return _s.apply(this,arguments)+NEXA_STYLE}}
+{const _l=Nexa.localMsgs;Nexa.localMsgs=function(){const m=_l.apply(this,arguments);if(m[0]&&m[0].role==='system')m[0].content+=NEXA_STYLE;return m}}
+
+/* --- Gemini: si el modelo no existe para tu clave, busca y elige uno disponible (sin que tengas que cambiar nada) --- */
+async function geminiPickModel(key){const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200',{headers:{'x-goog-api-key':key}});const j=await r.json().catch(()=>({}));
+ if(!r.ok){const m=(j.error&&j.error.message)||('Error '+r.status);throw new Error(/API key|invalid|permission|denied|unauth/i.test(m)?'Google no aceptó la clave. Revisá que esté completa y que sea de aistudio.google.com/apikey.':m)}
+ const ok=(j.models||[]).filter(m=>(m.supportedGenerationMethods||[]).includes('generateContent')).map(m=>m.name.replace(/^models\//,'')).filter(n=>/^gemini/.test(n)&&!/(image|tts|embedding|live|audio|vision-only|computer|robotics|thinking-exp)/.test(n));
+ const ver=n=>{const m=n.match(/gemini-(\d+(?:\.\d+)?)/);return m?+m[1]:0};
+ const score=n=>ver(n)*10+(/flash/.test(n)?5:0)+(/lite/.test(n)?-1:0)+(/preview|exp/.test(n)?-6:0)+(/latest/.test(n)?1:0)+(/pro/.test(n)?-2:0);
+ ok.sort((a,b)=>score(b)-score(a));if(!ok.length)throw new Error('Tu clave no tiene modelos de Gemini disponibles.');return {best:ok[0],lite:ok.find(n=>/lite/.test(n))||ok[0],all:ok}}
+{const _ai=aiChatStream;aiChatStream=async function(msgs,o={}){const prov=o.prov||AI().prov;try{return await _ai.apply(this,arguments)}catch(e){
+  if(prov!=='gemini'||!/no está disponible para tu clave|not found|not supported|is not supported|404|deprecated|retired/i.test(e.message))throw e;
+  const a=AI();const k=aiKeyFor('gemini');const pick=await geminiPickModel(k);a.models.gemini=pick.best;saveS();return _ai.apply(this,arguments)}}}
+/* al activar la clave: se prueba contra Google y se elige el modelo */
+document.addEventListener('click',async e=>{const b=e.target.closest('#nlKeyGo');if(!b)return;e.stopImmediatePropagation();e.preventDefault();
+ const v=$('#nlKey').value.trim();if(!/^(AIza[\w-]{20,}|AQ\.[\w.-]{20,})$/.test(v))return toast('⚠️ Esa clave no parece de Google Gemini (empieza con AIza o AQ.)');
+ b.disabled=true;b.textContent='Conectando…';try{const pick=await geminiPickModel(v);const a=AI();a.keys.gemini=v;a.prov='gemini';a.models.gemini=pick.best;saveS();Nexa.st.prov='gemini';Nexa.save();Nexa.status();toast('✅ Conectada a Gemini ('+pick.best+')',4000);Nav.back()}
+ catch(x){toast('❌ '+(/Failed to fetch|NetworkError/i.test(x.message)?'Sin conexión: probá de nuevo con datos o wifi':x.message),6000);b.disabled=false;b.textContent='Activar'}},true);
+
+/* --- diseño moderno de la pantalla de Nexa --- */
+(function(){const v=$('#v-nexa');if(!v||v.dataset.v30)return;v.dataset.v30=1;const h2=v.querySelector('.nx-head h2');if(h2)h2.textContent='Nexa';
+ const head=v.querySelector('.nx-head'),nw=$('#nxNew'),cf=$('#nxCfg');if(head&&nw&&cf){const box=document.createElement('div');box.className='nx-tools';
+  nw.className='nx-hb';nw.title='Nueva conversación';nw.setAttribute('aria-label','Nueva conversación');nw.innerHTML='<i data-ico="plus"></i>';
+  cf.className='nx-hb';cf.title='Configurar Nexa';cf.setAttribute('aria-label','Configurar Nexa');cf.innerHTML='<i data-ico="gear"></i>';box.append(nw,cf);head.append(box);iconize(box)}})();
+{const _r=Nexa.render;Nexa.render=function(){const r=_r.apply(this,arguments);const log=$('#nxLog');if(!log)return r;
+ const ais=[...log.querySelectorAll('.nx-msg.ai')];ais.forEach((m,i)=>{const md=m.querySelector('.nx-md');const long=md&&md.textContent.length>260;m.classList.toggle('long',!!long);m.classList.toggle('last',i===ais.length-1)});
+ const sg=log.querySelector('.nx-sugs');if(sg&&!sg.dataset.v30){sg.dataset.v30=1;const ic={'Resumir':'files','Corregir OCR':'ocr','Extraer datos':'idcard','Redactar nota':'pencil','Buscar':'search','Comprimir y compartir':'compress','Explicar simple':'info'};sg.querySelectorAll('button').forEach(b=>{const t=b.textContent.trim();b.innerHTML='<i data-ico="'+(ic[t]||'nexa')+'"></i><span>'+esc(t)+'</span>'});iconize(sg)}
+ return r}}
+document.addEventListener('click',e=>{const m=e.target.closest('#nxLog .nx-msg.ai');if(!m||e.target.closest('button,a'))return;m.classList.toggle('show-acts')});
+document.head.insertAdjacentHTML('beforeend','<style id="nx2Css">'
++'#v-nexa .nx-head{display:flex;align-items:center;gap:10px;margin:2px 2px 10px}#v-nexa .nx-kicker,#nxStat{display:none!important}#v-nexa .nx-head h2{font-size:22px;margin:0;flex:1}'
++'#v-nexa .nx-prov{padding:7px 12px;border-radius:999px;font-size:12.5px;font-weight:700;border:1px solid var(--line);background:var(--bg2)}'
++'.nx-tools{display:flex;gap:6px}.nx-hb{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line);background:var(--bg2);color:var(--tx2)}.nx-hb .ico{width:18px;height:18px}.nx-foot{display:none!important}'
++'#v-nexa .nx-card{border:0;background:transparent;box-shadow:none;min-height:calc(100vh - 190px);overflow:visible}#v-nexa .nx-log{padding:4px 2px 8px;gap:16px}'
++'#v-nexa .nx-head h2{display:none}#v-nexa .nx-provw{flex:1}#v-nexa .nx-log{padding-bottom:84px!important}.nx-sugs button{text-align:left}.nx-badge{display:none!important}.nx-msg.ai{overflow:hidden;align-self:flex-start;max-width:94%;padding:12px 15px;border-radius:6px 20px 20px 20px;background:var(--bg2);border:1px solid var(--line);box-shadow:0 2px 10px rgba(15,23,42,.04)}'
++'.nx-msg.ai .nx-md{margin:0;font-size:15px;line-height:1.55}.nx-msg.ai .nx-md p:last-child{margin-bottom:0}.nx-bub{border-radius:20px 20px 6px 20px;padding:10px 15px;font-size:15px}'
++'.nx-acts{display:none;gap:2px;margin:8px -6px -6px;border-top:1px solid var(--line);padding-top:4px}.nx-msg.ai.long.last .nx-acts,.nx-msg.ai.show-acts .nx-acts{display:flex}'
++'.nx-acts button{border:0!important;padding:7px 9px!important;font-size:12px!important;color:var(--tx2);border-radius:8px}.nx-acts button:active{background:var(--bg3)}.nx-acts .ico{width:16px;height:16px}'
++'.nx-md p:has(.nx-q){display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;margin:10px -15px 0;padding:0 15px 2px;flex-wrap:nowrap}.nx-md p:has(.nx-q)::-webkit-scrollbar{display:none}'
++'.nx-q{flex:none;padding:8px 13px;border-radius:999px;border:1px solid var(--soft-line,#bae6fd);background:var(--soft,#ecfeff);color:var(--ac);font-weight:650;font-size:13px;white-space:nowrap}.nx-q:active{transform:scale(.97)}'
++'.nx-empty{padding:28px 4px 10px}.nx-sun{width:64px;height:64px;border-radius:22px;background:linear-gradient(135deg,#22d3ee,#6366f1);color:#fff;box-shadow:0 10px 24px rgba(34,211,238,.35)}.nx-sun .ico{width:30px;height:30px}.nx-empty h3{font-size:22px}'
++'.nx-sugs{display:grid!important;grid-template-columns:1fr 1fr;gap:10px!important;margin-top:20px!important;text-align:left}.nx-sugs button{display:flex!important;flex-direction:column;align-items:flex-start;gap:8px;padding:14px!important;border-radius:16px!important;background:var(--bg2)!important;border:1px solid var(--line)!important;color:var(--tx)!important;font-size:13.5px!important}.nx-sugs button .ico{width:20px;height:20px;color:var(--ac)}'
++'#v-nexa .nx-input{border-radius:26px;padding:6px 6px 6px 8px;background:var(--bg2);box-shadow:0 8px 24px rgba(15,23,42,.08)}#v-nexa .nx-send{border-radius:50%}#v-nexa .nx-ib{border-radius:50%}'
++'.nx-typing{padding:4px 2px}</style>');
+try{Nexa.render()}catch(e){}
 </script>
 </body>
 </html>
