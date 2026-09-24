@@ -1,0 +1,29 @@
+name: Pruebas
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Instalar dependencias de prueba
+        working-directory: tests
+        run: npm install --no-audit --no-fund
+      - name: Instalar Chromium
+        working-directory: tests
+        run: npx playwright install --with-deps chromium
+      - name: Servir la app
+        run: python3 -m http.server 8765 >/dev/null 2>&1 &
+      - name: Correr pruebas
+        working-directory: tests
+        env:
+          BASE_URL: http://localhost:8765
+        run: npm test
