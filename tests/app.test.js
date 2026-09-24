@@ -30,8 +30,8 @@ await test('La app carga con el nombre y los íconos nuevos',async pg=>{
   assert.ok(await pg.$('.nav [data-go="nexa"]'),'falta la pestaña Nexa');
 });
 
-await test('Filtros: todos en blanco y negro puro',async pg=>{await seedPage(pg);
-  const r=await pg.evaluate(async()=>{const out={};for(const [f] of FILTERS){if(f==='original')continue;const p={...window._pg,filter:f,skew:undefined};const c=await renderPage(p,{maxSide:600});const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let bad=0;for(let i=0;i<d.length;i+=4)if(!((d[i]===0||d[i]===255)&&d[i]===d[i+1]&&d[i+1]===d[i+2]))bad++;out[f]=bad}return out});
+await test('Modo B/N puro (opcional): todos los filtros en blanco y negro exacto',async pg=>{await seedPage(pg);
+  const r=await pg.evaluate(async()=>{S.printBW=true;const out={};for(const [f] of FILTERS){if(f==='original')continue;const p={...window._pg,filter:f,skew:undefined};const c=await renderPage(p,{maxSide:600});const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let bad=0;for(let i=0;i<d.length;i+=4)if(!((d[i]===0||d[i]===255)&&d[i]===d[i+1]&&d[i+1]===d[i+2]))bad++;out[f]=bad}return out});
   for(const [f,bad] of Object.entries(r))assert.equal(bad,0,'el filtro '+f+' dejó grises o color');
 });
 
@@ -103,6 +103,40 @@ await test('Modo DNI: frente y dorso en A4 a tamaño real',async pg=>{
   await seedPage(pg);
   const r=await pg.evaluate(async()=>{const c=await dniCompose(window._pg,window._pg,{mode:'gris',guide:true});return {w:c.width,h:c.height}});
   assert.deepEqual(r,{w:2480,h:3508});
+});
+
+await test('Filtro Documento: papel blanco, texto negro y tinta azul conservada',async pg=>{
+  const r=await pg.evaluate(async()=>{const W=1000,H=1300,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');const g=x.createLinearGradient(0,0,W,H);g.addColorStop(0,'#f2ecd6');g.addColorStop(1,'#a69c84');x.fillStyle=g;x.fillRect(0,0,W,H);
+    x.fillStyle='#262626';x.font='28px serif';for(let i=0;i<14;i++)x.fillText('Se informa que el interno Juan Pérez, DNI 30.123.456, causa N° 23-26.',60,120+i*44);
+    x.strokeStyle='#1d3fb8';x.lineWidth=5;x.beginPath();x.moveTo(560,1000);for(let t=0;t<25;t++)x.lineTo(560+t*14,1000-Math.sin(t)*40);x.stroke();
+    const p=await makePage(c.toDataURL('image/jpeg',.9),{auto:false,filter:'documento'});
+    const st=async f=>{const cv=await renderPage({...p,filter:f},{maxSide:1000});const d=cv.getContext('2d').getImageData(0,0,cv.width,cv.height).data,k=cv.width/W;
+      const reg=(x0,y0,x1,y1,fn)=>{let n=0,m=0;for(let y=Math.floor(y0*k);y<y1*k;y+=2)for(let xx=Math.floor(x0*k);xx<x1*k;xx+=2){const i=(y*cv.width+xx)*4;n++;if(fn(d[i],d[i+1],d[i+2]))m++}return m/n};
+      return {paper:reg(40,1150,960,1280,(r,g,b)=>r>=250&&g>=250&&b>=250),blue:reg(560,940,920,1050,(r,g,b)=>b>r+40&&b>g+25),dark:reg(60,98,900,125,(r,g,b)=>r<70&&g<70&&b<70)}};
+    const doc=await st('documento');S.printBW=true;const bw=await st('documento');S.printBW=false;return {doc,bw}});
+  assert.ok(r.doc.paper>.98,'papel no blanco: '+r.doc.paper);assert.ok(r.doc.blue>.05,'se perdió la tinta azul');assert.ok(r.doc.dark>.05,'texto no negro');
+  assert.equal(r.bw.blue,0,'el modo B/N puro no debe dejar color');
+});
+
+await test('PDF buscable: texto Unicode sin caracteres rotos',async pg=>{
+  const r=await pg.evaluate(async()=>{await loadLib('pdflib');const {PDFDocument,rgb}=PDFLib;const doc=await PDFDocument.create();const page=doc.addPage([595,842]);const font=await pdfTextFont(doc);
+    const words=['Tucumán','“Expte.”','N°','23-26/2026','Peñaloza'].map((text,i)=>({text,bbox:{x0:10+i*120,y0:10,x1:120+i*120,y1:40}}));
+    pdfTextLayer(page,words,{dx:0,dy:0,dw:595,dh:842,cw:700,ch:1000,ph:842,font,rgb});const bytes=await doc.save();
+    await loadLib('pdfjs');const pd=await pdfjsLib.getDocument({data:bytes}).promise;const tc=await (await pd.getPage(1)).getTextContent();return tc.items.map(i=>i.str).join(' ')});
+  for(const w of ['Tucumán','“Expte.”','N°','23-26/2026','Peñaloza'])assert.ok(r.includes(w),'falta '+w+' en: '+r);
+  assert.ok(!/\d{6,}/.test(r.replace('23-26/2026','')),'aparecen bloques de números');
+});
+
+await test('Editor: tono, deshacer/rehacer, presets y aplicar a todas',async pg=>{await seedPage(pg);
+  await pg.evaluate(async()=>{DOC=newDoc();DOC.pages.push({...window._pg,id:uid()},{...window._pg,id:uid()});openDocScreen();Ed.open(0)});await W(900);
+  await pg.click('[data-ed="adj"]');
+  await pg.fill('#edA_shadows','40');await pg.dispatchEvent('#edA_shadows','input');await W(700);
+  assert.equal(await pg.evaluate(()=>Ed.p.shadows),40);
+  await pg.click('#edUndo');await W(600);assert.equal(await pg.evaluate(()=>Ed.p.shadows),0,'deshacer no volvió a 0');
+  await pg.click('#edRedo');await W(600);assert.equal(await pg.evaluate(()=>Ed.p.shadows),40,'rehacer no funcionó');
+  await pg.selectOption('#edPreset','0');await W(500);assert.equal(await pg.evaluate(()=>Ed.p.filter),'documento');
+  pg.once('dialog',d=>d.accept());await pg.click('#edApplyAll');await W(1500);
+  assert.equal(await pg.evaluate(()=>DOC.pages[1].sharp),await pg.evaluate(()=>Ed.p.sharp));
 });
 
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
