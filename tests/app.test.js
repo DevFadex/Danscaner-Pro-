@@ -180,6 +180,15 @@ await test('Magia Pro calidad escáner: papel blanco, texto negro, azul conserva
   assert.equal(await pg.evaluate(()=>S.filter),'magia');
 });
 
+await test('Birome azul clara: queda azul y marcada (no pálida)',async pg=>{
+  const r=await pg.evaluate(async()=>{const W=1000,H=1300,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');
+    x.fillStyle='#ddd6c4';x.fillRect(0,0,W,H);x.strokeStyle='#222';x.lineWidth=3;for(let i=0;i<10;i++){x.beginPath();x.moveTo(40,100+i*100);x.lineTo(960,100+i*100);x.stroke()}
+    x.strokeStyle='#8f96cf';x.lineWidth=2.5;for(let i=0;i<9;i++){x.beginPath();x.moveTo(300,150+i*100);for(let t=0;t<30;t++)x.lineTo(300+t*18,150+i*100-Math.sin(t*1.3)*18);x.stroke()}
+    const out={};for(const f of ['magia','mejorar']){const p=await makePage(c.toDataURL('image/jpeg',.9),{auto:false,filter:f});const cv=await renderPage(p,{maxSide:1000});const d=cv.getContext('2d').getImageData(0,0,cv.width,cv.height).data;
+      let n=0,k=0,sl=0;for(let y=120;y<1000;y++)for(let xx=300;xx<840;xx++){const i=(y*cv.width+xx)*4;if(d[i+2]-d[i]>35){n++;sl+=d[i]*.299+d[i+1]*.587+d[i+2]*.114}}out[f]={n,L:n?sl/n:255}}return out});
+  for(const f of ['magia','mejorar']){assert.ok(r[f].n>3000,f+': se perdió el azul '+JSON.stringify(r));assert.ok(r[f].L<150,f+': azul muy pálido '+JSON.stringify(r))}
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();
