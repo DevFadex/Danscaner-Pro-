@@ -14,6 +14,7 @@ async function newPage(browser){
   await pg.evaluate(async()=>{for(const m of await DB.metas())await DB.delDoc(m.id);localStorage.removeItem('ds_nexa');S.lastBackup=Date.now();saveS();refreshLists()});
   return pg;
 }
+const DB_count=pg=>pg.evaluate(async()=>(await DB.metas()).length);
 const seedPage=pg=>pg.evaluate(async()=>{const c=document.createElement('canvas');c.width=500;c.height=700;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,500,700);x.fillStyle='#000';x.font='36px Arial';x.fillText('OFICIO 55',40,90);window._pg=await makePage(c.toDataURL('image/jpeg',.9),{auto:false,filter:'magia'})});
 const OFICIO='OFICIO N° 55/2026\nExpte. 23-26/2026. San Miguel de Tucumán, 12 de octubre de 2026.\nSe informa al Juzgado que el interno Juan Carlos PÉREZ, DNI 30.123.456, CUIL 20-30123456-7, solicita audiencia. El juez Martín Gómez fijó audiencia para el 20/10/2026. Se abonó $ 15.000,00. Contacto: tel. 381 555-1234, mail juzgado@justucuman.gov.ar.';
 
@@ -84,6 +85,24 @@ await test('Organización: nombre, carpeta y etiqueta automáticos',async pg=>{
 await test('Nexa: configuración gratis desde Ajustes',async pg=>{
   await pg.click('#navSettings');await W(500);await pg.click('#sAI');await W(700);
   assert.equal((await pg.textContent('#sheetTitle')).trim(),'Nexa · configuración');
+});
+
+await test('Nexa acciones: confirma antes de actuar y no confunde "borrador"',async pg=>{
+  await seedPage(pg);
+  await pg.evaluate(async()=>{const n=Date.now();await DB.putDoc({id:'a',name:'Oficio 55',created:1,updated:n-2000,text:'OFICIO 55',pages:[window._pg,window._pg]});await DB.putDoc({id:'b',name:'Oficio 60',created:1,updated:n-1000,text:'OFICIO 60',pages:[window._pg]});await DB.putDoc({id:'c',name:'Borrador del escrito',created:1,updated:n-5000,text:'Borrador con texto suficiente para convertir a Word.',pages:[window._pg]})});
+  await pg.click('.nav [data-go="nexa"]');
+  const say=async q=>{await pg.fill('#nxIn',q);await pg.press('#nxIn','Enter');await W(700);return pg.evaluate(()=>{const m=Nexa.st.msgs.at(-1);return (m.action&&{k:m.action.kind,docs:m.action.docs.map(d=>d.name)})||null})};
+  let a=await say('Uní los 2 últimos oficios');assert.deepEqual(a,{k:'merge',docs:['Oficio 60','Oficio 55']});
+  assert.equal((await DB_count(pg)),3,'actuó sin confirmar');
+  await pg.click('#nxLog .na-card [data-act="yes"]');await W(2500);assert.equal(await DB_count(pg),4);
+  a=await say('Convertí el borrador a Word');assert.equal(a.k,'word');assert.deepEqual(a.docs,['Borrador del escrito']);
+  a=await say('¿Cómo comprimo un PDF?');assert.equal(a,null,'una pregunta no debe ser una acción');
+});
+
+await test('Modo DNI: frente y dorso en A4 a tamaño real',async pg=>{
+  await seedPage(pg);
+  const r=await pg.evaluate(async()=>{const c=await dniCompose(window._pg,window._pg,{mode:'gris',guide:true});return {w:c.width,h:c.height}});
+  assert.deepEqual(r,{w:2480,h:3508});
 });
 
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));

@@ -2937,6 +2937,134 @@ refreshLists();
  const inp=$('#toolSearch');inp.oninput=()=>{const q=nbNorm(inp.value.trim());$$('#toolsGrid .mlist').forEach(l=>{let any=0;[...l.children].forEach(r=>{const ok=!q||nbNorm(r.textContent).includes(q);r.hidden=!ok;if(ok)any++});l.hidden=!any;const c=l.previousElementSibling;if(c&&c.classList.contains('catt'))c.hidden=!any});const w=$('#wizRow');if(w)w.hidden=!!q}}}
 renderTools();
 document.head.insertAdjacentHTML('beforeend','<style id="unifyCss">.wiz-nexa{font-weight:700;color:var(--ac);white-space:nowrap}#v-docs .row:has(#selToggle){flex-wrap:wrap}.tool-search{margin:10px 0 6px}</style>');
+/* ===================== MODO DNI: frente y dorso en una hoja A4 a tamaño real ===================== */
+const ID1={w:1011,h:638};/* 85,6 × 54 mm a 300 ppp */
+async function dniCapture(side,step){
+ const btn=k=>{const [ic,n,d]=SRC_OPTS[k];return '<button class="src-opt" data-src="'+k+'"><span class="src-ic">'+ic+'</span><span><b>'+n+'</b><small>'+d+'</small></span></button>'};
+ for(;;){const k=await sheetAsk('Modo DNI · '+side,'<div class="dni-step"><b>Paso '+step+' de 3</b> · Sacá o elegí la foto del <b>'+side.toUpperCase()+'</b> del documento.</div><div class="dni-card '+(side==='frente'?'f':'b')+'"></div><p class="muted">Apoyalo sobre una superficie oscura, con buena luz y sin reflejos.</p>'+btn('appcam')+btn('natcam')+btn('gallery'),e=>{const b=e.target.closest('[data-src]');return b?b.dataset.src:undefined});
+  if(!k)return null;const r=await Source.acquire(k,{accept:'image/*',multi:false});if(!r)continue;
+  let pages=r.pages;if(!pages)await withBusy(async()=>{busy('Procesando foto…');pages=await importFiles(r.files,{auto:true})});const p=pages&&pages[0];if(!p)continue;
+  for(;;){const a=await sheetAsk('Modo DNI · '+side,'<div class="dni-step">Revisá el <b>'+side+'</b>: tiene que verse entero y derecho.</div><div class="src-prev dni-prev"><img src="'+(p.thumb||'')+'" alt=""></div><div class="row"><button class="btn block" id="dnCrop">✂️ Ajustar recorte</button><button class="btn block" id="dnRot">↻ Girar</button></div><div class="row"><button class="btn block" id="dnAgain">↩ Otra foto</button><button class="btn pri block" id="dnOk">✓ Usar</button></div>',
+    e=>e.target.closest('#dnOk')?'ok':e.target.closest('#dnAgain')?'again':e.target.closest('#dnCrop')?'crop':e.target.closest('#dnRot')?'rot':undefined);
+   if(a==='ok')return p;if(!a)return null;if(a==='again')break;
+   if(a==='crop'){if(await cropPage(p))await makeThumb(p)}else if(a==='rot'){p.rot=((p.rot||0)+90)%360;await makeThumb(p)}}}}
+async function dniCompose(front,back,{mode='gris',guide=true}={}){const W=2480,H=3508,c=canvas(W,H),x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,W,H);
+ const x0=Math.round((W-ID1.w)/2),ys=[520,520+ID1.h+200];
+ for(const [i,p] of [front,back].entries()){let cv=await renderPage({...p,filter:mode==='bn'?'bn':'original'},{maxSide:2000});if(cv.height>cv.width)cv=rotateCanvas(cv,90);
+  x.save();x.beginPath();x.roundRect?x.roundRect(x0,ys[i],ID1.w,ID1.h,36):x.rect(x0,ys[i],ID1.w,ID1.h);x.clip();x.imageSmoothingQuality='high';x.drawImage(cv,x0,ys[i],ID1.w,ID1.h);x.restore();
+  if(guide){x.save();x.setLineDash([14,10]);x.lineWidth=3;x.strokeStyle='#9ca3af';x.beginPath();x.roundRect?x.roundRect(x0-6,ys[i]-6,ID1.w+12,ID1.h+12,40):x.rect(x0-6,ys[i]-6,ID1.w+12,ID1.h+12);x.stroke();x.restore()}}
+ if(mode==='gris'){const id=x.getImageData(0,0,W,H),d=id.data;for(let i=0;i<d.length;i+=4){let g=d[i]*.299+d[i+1]*.587+d[i+2]*.114;g=g>235?255:Math.max(0,Math.min(255,(g-18)*1.1));d[i]=d[i+1]=d[i+2]=g}x.putImageData(id,0,0)}
+ return c}
+async function dniMode(){
+ const front=await dniCapture('frente',1);if(!front)return;const back=await dniCapture('dorso',2);if(!back)return;
+ const opt2=await sheetAsk('Modo DNI · hoja final','<div class="dni-step"><b>Paso 3 de 3</b> · Las dos caras van en una hoja A4, a tamaño real (85,6 × 54 mm).</div><div class="src-prev dni-prev"><img src="'+front.thumb+'" alt=""><img src="'+back.thumb+'" alt=""></div><div class="cph">Color de la copia</div><div class="seg dni-mode"><button data-md="color">Color</button><button data-md="gris" class="on">Grises</button><button data-md="bn">B/N (menos tinta)</button></div><label class="chk"><input type="checkbox" id="dnGuide" checked> Línea de corte alrededor de cada cara</label><button class="btn pri block" id="dnGo">Armar hoja</button>',
+  e=>{const m=e.target.closest('[data-md]');if(m){$$('#sheetBody .dni-mode button').forEach(b=>b.classList.toggle('on',b===m));return undefined}if(e.target.closest('#dnGo'))return {mode:$('#sheetBody .dni-mode .on').dataset.md,guide:$('#dnGuide').checked};return undefined});
+ if(!opt2)return;let page;await withBusy(async()=>{busy('Armando la hoja…');const c=await dniCompose(front,back,opt2);page=await makePage(c.toDataURL('image/jpeg',.93),{auto:false,filter:'original'})});if(!page)return;
+ const d=new Date();DOC=newDoc();DOC.name='DNI · frente y dorso · '+pad2(d.getDate())+'-'+pad2(d.getMonth()+1)+'-'+d.getFullYear();DOC.tags=['Confidencial'];DOC.autoDone=true;DOC.pages.push(page);await saveDoc(true);openDocScreen();
+ toast('✅ Listo. Para imprimir a tamaño real, usá escala 100 % (sin “ajustar a la página”).',6000);return DOC}
+TOOLS.push({name:'Modo DNI (frente y dorso)',cat:'Más herramientas',col:'#0ea5e9',fa:'fa-solid fa-id-card',ic:'🪪',desc:'Frente y dorso del DNI o una credencial en una sola hoja A4, a tamaño real.',direct:()=>dniMode()});renderTools();
+
+/* ===================== NEXA ACCIONES: órdenes en lenguaje natural, siempre con confirmación ===================== */
+const NA_NUM={un:1,uno:1,una:1,dos:2,tres:3,cuatro:4,cinco:5,seis:6,siete:7,ocho:8,nueve:9,diez:10};
+const NA_VERBS=/\b(comprim\w*|achic\w*|compart\w*|mand\w*|envi\w*|uni|unir|une|unilos|juntar?|junta\w*|combin\w*|fusion\w*|divid\w*|separ\w*|convert\w*|pasa\w*|export\w*|descarg\w*|guarda\w*|renombr\w*|cambia\w*|llama\w*|move\w*|movel\w*|mov[ei]\w*|pone\w*|marca\w*|etiquet\w*|abri\w*|abre\w*|escane\w*|respald\w*|borra|borrar|borralo|borrala|borralos|borralas|elimina|eliminar|eliminalo|eliminala|eliminalos|eliminalas|hace\w*|arma\w*|crea\w*)\b/;
+const NexaActions={results:{},
+ async plan(text,attached){const n=nbNorm(text).replace(/[¿?¡!]/g,'').trim();if(/^(como|que|por que|cual|cuales|cuando|donde|quien|explica|resum)/.test(n)||/\b(resum\w*|explic\w*|busc\w*)\b|\bextrae\w* (los )?datos\b/.test(n))return null;
+  const has=re=>re.test(n);let kind=null,opts={};
+  if(has(/\bmodo dni\b|\bdni\b.*(frente|dorso)|\b(frente y dorso)\b|fotocopia del? (dni|documento)|credencial/))kind='dni';
+  else if(has(/\brespald\w*|\bbackup\b|copia de seguridad/))kind='backup';
+  else if(has(/^escane\w*|\bescane(a|ar|ame)\b/)&&!has(/\bescaneo\b/))kind='scan';
+  else if(has(/\b(borra|borrar|borralo|borrala|borralos|borralas|elimina|eliminar|eliminalo|eliminala|eliminalos|eliminalas)\b/))kind='delete';
+  else if(has(/\b(renombr\w*|cambia\w* (el )?nombre|ponele de nombre|llamal[oa])\b/)){kind='rename';const q=text.match(/["“«](.+?)["”»]/);const m=q?q[1]:(text.match(/\b(?:a|como|por)\s+([^,.;]+)$/i)||[])[1];opts.name=(m||'').trim()}
+  else if(has(/\bcarpeta\b/)&&has(/\b(mov\w*|guarda\w*|pone\w*|mete\w*|pasa\w*|agrega\w*)\b/)){kind='folder';const q=text.match(/["“«](.+?)["”»]/);opts.folder=(q?q[1]:(text.match(/carpeta\s+(?:de(?:l)?\s+)?(.+?)\s*[.!?]*$/i)||[])[1]||'').trim()}
+  else if(has(/\b(marca\w*|etiquet\w*|pone\w*)\b/)&&has(/\b(judicial|administrativ\w*|confidencial|favorit\w*)\b/)){kind='tag';opts.tag=has(/judicial/)?'Judicial':has(/administrativ/)?'Administrativo':has(/confidencial/)?'Confidencial':'fav'}
+  else if(has(/\b(uni|unir|une|unilos|junta\w*|juntar?|combin\w*|fusion\w*)\b/))kind='merge';
+  else if(has(/\b(divid\w*|separ\w*|parti\w*)\b/)){kind='split';const m=n.match(/\ben (\d+|dos|tres|cuatro|cinco|seis) partes/);opts.parts=m?(+m[1]||NA_NUM[m[1]]):0;opts.perPage=has(/cada (una |)pagina|por pagina|pagina por pagina|una por una/)||!m}
+  else if(has(/\bcomprim\w*|\bachic\w*|\breduc\w*.*peso|mas liviano/)){kind='compress';opts.level=has(/maxim|mucho|whatsapp|lo mas/)?'baja':'media';opts.share=has(/compart|mand|envi/)}
+  else if(has(/\b(a|en)\s+(word|docx)\b/))kind='word';
+  else if(has(/\b(a|en)\s+(jpg|jpeg|imagen(es)?|fotos?)\b/))kind='jpg';
+  else if(has(/\b(a|en)\s+(texto|txt)\b/))kind='txt';
+  else if(has(/\b(compart\w*|mand\w*|envi\w*)\b/))kind='share';
+  else if(has(/\b(descarg\w*|export\w*|guarda\w*)\b.*\bpdf\b|\bpdf\b.*\b(descarg\w*|export\w*)/))kind='pdf';
+  else if(has(/^(abri\w*|abre\w*|mostra\w*)\b/))kind='open';
+  if(!kind)return null;
+  if(['dni','backup','scan'].includes(kind))return {kind,opts,docs:[]};
+  const docs=await this.targets(n,text,attached,kind==='merge');
+  return {kind,opts,docs}},
+ async targets(n,text,attached,many){let metas=[];try{metas=await DB.metas()}catch(e){}metas.sort((a,b)=>b.updated-a.updated);
+  const typ=DOC_TYPES.find(([name])=>new RegExp('\\b'+nbNorm(name).split(' ')[0]+'(s|es)?\\b').test(n));
+  const pool=typ?metas.filter(m=>nbNorm(m.name+' '+(m.text||'')).includes(nbNorm(typ[0]).split(' ')[0])):metas;
+  const lm=n.match(/\bultim[oa]s?(?:\s+(\d+|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez))?/)||n.match(/\b(\d+|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez)\s+ultim[oa]s\b/);
+  if(lm){const k=lm[1]?(+lm[1]||NA_NUM[lm[1]]):(/\bultim[oa]s\b/.test(n)?(many?2:1):1);return pool.slice(0,k).map(m=>({id:m.id,name:m.name}))}
+  const q=text.match(/["“«](.+?)["”»]/);if(q){const t=nbNorm(q[1]);const rank=m=>{const nm=nbNorm(m.name);return nm===t?0:nm.startsWith(t)?1:2};const hit=metas.filter(m=>nbNorm(m.name).includes(t)).sort((a,b)=>rank(a)-rank(b));if(hit.length)return hit.slice(0,many?10:1).map(m=>({id:m.id,name:m.name}))}
+  if(/\b(todos|todas)\b/.test(n)&&typ)return pool.slice(0,20).map(m=>({id:m.id,name:m.name}));
+  const words=n.split(/\s+/).filter(w=>(w.length>2||/\d/.test(w))&&!NB_STOP.has(w)&&!NA_VERBS.test(w)&&!/^(documentos?|archivos?|pdf|word|jpg|texto|carpeta|este|esta|ese|esa)$/.test(w));
+  const sc=words.length?metas.map(m=>{const nm=nbNorm(m.name);return {m,s:words.filter(w=>nm.includes(w)).length/words.length}}).filter(x=>x.s>=.5).sort((a,b)=>b.s-a.s||b.m.updated-a.m.updated):[];
+  if(sc.length&&sc[0].s>=.75)return sc.slice(0,many?5:1).map(x=>({id:x.m.id,name:x.m.name}));
+  if(attached&&attached.length)return attached.map(d=>({id:d.id,name:d.name}));
+  if(sc.length)return sc.slice(0,many?5:1).map(x=>({id:x.m.id,name:x.m.name}));
+  return []},
+ describe(a){const L={compress:'comprimir',share:'compartir',merge:'unir en un solo documento',split:'dividir',word:'convertir a Word',jpg:'convertir a JPG',txt:'convertir a texto',pdf:'exportar como PDF',rename:'renombrar',folder:'mover a una carpeta',tag:'etiquetar',open:'abrir',delete:'borrar',dni:'armar la hoja del DNI (frente y dorso)',backup:'hacer un respaldo',scan:'escanear un documento'};
+  let t='Voy a **'+L[a.kind]+'**';if(a.docs.length)t+=':\n'+a.docs.map(d=>'- '+d.name).join('\n');
+  const o=a.opts;if(a.kind==='compress')t+='\n\nNivel: '+(o.level==='baja'?'máxima compresión (ideal para WhatsApp)':'equilibrado');
+  if(a.kind==='split')t+='\n\n'+(o.parts?'En '+o.parts+' partes':'Una página por archivo');if(a.kind==='rename')t+='\n\nNombre nuevo: **'+(o.name||'(falta el nombre)')+'**';
+  if(a.kind==='folder')t+='\n\nCarpeta: **'+(o.folder||'(falta el nombre)')+'**';if(a.kind==='tag')t+='\n\nEtiqueta: **'+(o.tag==='fav'?'⭐ Favorito':o.tag)+'**';
+  if(a.kind==='delete')t+='\n\n⚠️ Esto no se puede deshacer (salvo que tengas un respaldo).';return t},
+ valid(a){if(['dni','backup','scan'].includes(a.kind))return '';if(!a.docs.length)return '¿Sobre qué documento? Adjuntalo con 📎 o nombralo (por ejemplo: *comprimí "Oficio 55"* o *uní los 3 últimos oficios*).';
+  if(a.kind==='merge'&&a.docs.length<2)return 'Para unir necesito al menos 2 documentos. Adjuntalos con 📎 o decime, por ejemplo: *uní los 3 últimos oficios*.';
+  if(a.kind==='rename'&&(!a.opts.name||a.docs.length!==1))return 'Decime el nombre nuevo, por ejemplo: *renombrá este documento a "Oficio 55 firmado"*.';
+  if(a.kind==='folder'&&!a.opts.folder)return 'Decime la carpeta, por ejemplo: *mové este documento a la carpeta "Expte 23-26"*.';return ''},
+ async run(a){const docs=[];for(const t of a.docs){const d=await DB.getDoc(t.id);if(d)docs.push(d)}const files=[];let summary='',openId='';const o=a.opts;
+  const pdfOf=async(d,q)=>pdfBlob(await buildPDF(d.pages,{size:S.size,orient:S.orient,margin:S.margin,quality:q||S.quality,title:d.name},(i,n)=>busy('Generando PDF '+i+'/'+n)));
+  const textOf=async d=>{if((d.text||'').trim().length>40)return d.text;busy('Leyendo con OCR…');const tx=await ocrCanvases(async cb=>{for(const p of d.pages)await cb(await renderPage(p,{maxSide:2200}))},S.lang,d.pages.length);d.text=tx.join('\n\n').trim().slice(0,20000);await DB.putDoc(d);return d.text};
+  switch(a.kind){
+   case 'compress':for(const d of docs){busy('Comprimiendo '+d.name+'…');files.push({blob:await pdfOf(d,o.level),name:safeName(d.name)+'.pdf'})}summary='Comprimido'+(docs.length>1?'s':'')+'.';break;
+   case 'share':case 'pdf':for(const d of docs)files.push({blob:await pdfOf(d),name:safeName(d.name)+'.pdf'});summary=a.kind==='share'?'Listo para compartir: tocá 📤.':'PDF listo.';break;
+   case 'merge':{const nd=newDoc();nd.name='Unión · '+docs.map(d=>d.name).join(' + ').slice(0,80);nd.pages=docs.flatMap(d=>d.pages.map(p=>({...structuredClone(p),id:uid()})));nd.autoDone=true;const f=docs.find(d=>d.folder);if(f)nd.folder=f.folder;
+    await DB.putDoc(nd);openId=nd.id;files.push({blob:await pdfOf(nd),name:safeName(nd.name)+'.pdf'});summary='Creé “'+nd.name+'” con '+nd.pages.length+' páginas.';break}
+   case 'split':for(const d of docs){const groups=[];if(o.parts>1){const n=Math.min(o.parts,d.pages.length),base=Math.floor(d.pages.length/n),ex=d.pages.length%n;let s=0;for(let i=0;i<n;i++){const l=base+(i<ex?1:0);groups.push(d.pages.slice(s,s+l));s+=l}}else d.pages.forEach(p=>groups.push([p]));
+    for(const [i,g] of groups.entries()){busy('Parte '+(i+1)+'/'+groups.length);files.push({blob:pdfBlob(await buildPDF(g,{size:S.size,orient:S.orient,margin:S.margin,quality:S.quality,title:d.name})),name:safeName(d.name)+'_'+(o.parts>1?'parte':'pag')+(i+1)+'.pdf'})}}summary='Dividido en '+files.length+' archivo(s).';break;
+   case 'word':for(const d of docs){const t=await textOf(d);busy('Armando Word…');files.push({blob:await makeDocx(nbClean(t).split(/\n{2,}/).map(x=>({type:'p',text:x}))),name:safeName(d.name)+'.docx'})}summary='Convertido a Word (con el texto reconocido).';break;
+   case 'txt':for(const d of docs){const t=await textOf(d);files.push({blob:new Blob([nbClean(t)],{type:'text/plain;charset=utf-8'}),name:safeName(d.name)+'.txt'})}summary='Texto listo.';break;
+   case 'jpg':for(const d of docs)for(const [i,p] of d.pages.entries()){busy('Imagen '+(i+1)+'/'+d.pages.length);files.push({blob:await canvasBlob(await renderPage(p),'image/jpeg',.92),name:safeName(d.name)+(d.pages.length>1?'_'+(i+1):'')+'.jpg'})}summary='Convertido a JPG.';break;
+   case 'rename':docs[0].name=o.name;await DB.putDoc(docs[0]);summary='Renombrado a “'+o.name+'”.';break;
+   case 'folder':for(const d of docs){d.folder=o.folder;d.autoDone=true;await DB.putDoc(d)}summary='Movido a 📁 '+o.folder+'.';break;
+   case 'tag':for(const d of docs){if(o.tag==='fav')d.fav=true;else d.tags=[...new Set([...(d.tags||[]),o.tag])];await DB.putDoc(d)}summary='Listo.';break;
+   case 'delete':for(const d of docs)await DB.delDoc(d.id);Nexa.st.docs=Nexa.st.docs.filter(x=>!docs.some(d=>d.id===x.id));Nexa.save();summary='Borrado'+(docs.length>1?'s':'')+'.';break;
+   case 'open':openId=docs[0].id;summary='Abriendo…';break}
+  busy(false);refreshLists();return {files,summary,openId}}};
+
+/* Nexa: detectar la orden antes de responder */
+{const _ask=Nexa.ask;Nexa.ask=async function(msg){let a=null;try{a=await NexaActions.plan(msg.text,this.st.docs)}catch(e){console.warn(e)}if(!a)return _ask.call(this,msg);
+  const prob=NexaActions.valid(a);this.lastErr='';
+  if(prob)this.st.msgs.push({role:'assistant',text:prob,prov:'act'});else this.st.msgs.push({role:'assistant',text:NexaActions.describe(a),prov:'act',action:{...a,status:'pending'}});
+  this.save();this.render()}}
+{const _render=Nexa.render;Nexa.render=function(){_render.apply(this,arguments);const log=$('#nxLog');if(!log)return;
+  this.st.msgs.forEach((m,i)=>{if(m.prov==='act'&&!m.action){const an=log.querySelector('[data-nx="copy"][data-i="'+i+'"]');const bd=an&&an.closest('.nx-msg').querySelector('.nx-badge');if(bd)bd.lastChild.textContent=' NEXA IA'}if(!m.action)return;const anchor=log.querySelector('[data-nx="copy"][data-i="'+i+'"]');const box=anchor&&anchor.closest('.nx-msg');if(!box||box.querySelector('.na-card'))return;const a=m.action,res=NexaActions.results[i];let h='';
+   if(a.status==='pending')h='<div class="row"><button class="btn block" data-act="no" data-i="'+i+'">Cancelar</button><button class="btn '+(a.kind==='delete'?'red':'pri')+' block" data-act="yes" data-i="'+i+'">'+(a.kind==='delete'?'🗑 Borrar':'✓ Hacerlo')+'</button></div>';
+   else if(a.status==='cancelled')h='<p class="muted">Cancelado.</p>';
+   else if(a.status==='done'){h='<div class="okbox">✅ '+esc(a.summary||'Listo')+'</div>';if(res&&res.files.length)h+=res.files.map((f,j)=>'<div class="rrow"><span>📄 '+esc(f.name)+' <small class="muted">'+fmtSize(f.blob.size)+'</small></span><button class="btn sm pri" data-act="dl" data-i="'+i+'" data-j="'+j+'">⬇</button><button class="btn sm" data-act="sh" data-i="'+i+'" data-j="'+j+'">📤</button></div>').join('');else if(a.files)h+='<p class="muted">Los archivos ya no están disponibles: repetí la orden.</p>';if(a.openId)h+='<button class="btn block" data-act="open" data-i="'+i+'">📂 Abrir documento</button>'}
+   else if(a.status==='error')h='<div class="nx-err">⚠️ '+esc(a.error||'No se pudo')+'</div>';
+   box.querySelector('.nx-acts').insertAdjacentHTML('beforebegin','<div class="na-card">'+h+'</div>');const b=box.querySelector('.nx-badge');if(b)b.lastChild.textContent=' NEXA IA · Acción'})}}
+Nexa.el&&$('#nxLog').addEventListener('click',async e=>{const b=e.target.closest('[data-act]');if(!b)return;const i=+b.dataset.i,m=Nexa.st.msgs[i];if(!m||!m.action)return;const a=m.action,k=b.dataset.act;
+ if(k==='no'){a.status='cancelled';Nexa.save();Nexa.render();return}
+ if(k==='yes'){if(a.status!=='pending')return;a.status='running';
+  if(a.kind==='dni'){a.status='done';a.summary='Abriendo el modo DNI…';Nexa.save();Nexa.render();dniMode();return}
+  if(a.kind==='backup'){a.status='done';a.summary='Abriendo el respaldo…';Nexa.save();Nexa.render();backupSheet();return}
+  if(a.kind==='scan'){a.status='done';a.summary='Abriendo la cámara…';Nexa.save();Nexa.render();Cam.open('single');return}
+  let r=null;await withBusy(async()=>{r=await NexaActions.run(a)});
+  if(r){a.status='done';a.summary=r.summary;a.files=r.files.length;a.openId=r.openId;NexaActions.results[i]=r;if(a.kind==='open'&&r.openId)openDocById(r.openId)}else{a.status='error';a.error='No se pudo completar la acción.'}
+  Nexa.save();Nexa.render();return}
+ const res=NexaActions.results[i];
+ if(k==='dl'&&res){const f=res.files[+b.dataset.j];download(f.blob,f.name);toast('Guardado en Descargas')}
+ if(k==='sh'&&res){const f=res.files[+b.dataset.j];share(f.blob,f.name)}
+ if(k==='open'&&a.openId)openDocById(a.openId)});
+NEXA_SUG.splice(1,0,['Comprimir y compartir','Comprimí este documento para mandarlo por WhatsApp']);
+{const _ans=NexaBasic.answer;NexaBasic.answer=async function(q,docs){let r=await _ans.call(this,q,docs);if(/^👋/.test(r))r=r.replace('Para preguntas abiertas','También puedo **hacer cosas** por vos: *comprimí este documento*, *uní los 3 últimos oficios*, *dividí cada página*, *convertí a Word*, *mové a la carpeta "Expte 23-26"*, *modo DNI*, *hacé un respaldo*.\n\nPara preguntas abiertas');return r}}
+document.head.insertAdjacentHTML('beforeend','<style id="dniCss">'
++'.dni-step{padding:10px 12px;border-radius:12px;background:var(--bg3);margin:0 0 10px;font-size:14px}'
++'.dni-card{width:190px;height:120px;margin:4px auto 10px;border-radius:14px;border:3px dashed #00b2ff;position:relative;background:linear-gradient(135deg,var(--bg2),var(--bg3))}.dni-card.f::before{content:"";position:absolute;left:16px;top:22px;width:44px;height:56px;border-radius:8px;background:#00b2ff33}.dni-card.f::after,.dni-card.b::after{content:"";position:absolute;left:74px;top:30px;width:96px;height:8px;border-radius:4px;background:var(--line);box-shadow:0 18px 0 var(--line),0 36px 0 var(--line)}.dni-card.b::before{content:"";position:absolute;left:16px;bottom:16px;right:16px;height:22px;border-radius:4px;background:repeating-linear-gradient(90deg,#00b2ff55 0 3px,transparent 3px 7px)}.dni-card.b::after{left:16px}'
++'.dni-prev img{height:120px}.dni-mode{margin-bottom:8px}.na-card{margin:8px 0 4px}.na-card .row{margin:6px 0}'
++'</style>');
 </script>
 </body>
 </html>
