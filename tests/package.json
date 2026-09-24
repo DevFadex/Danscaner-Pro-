@@ -1,0 +1,11 @@
+{
+  "name": "danscanner-pro-tests",
+  "private": true,
+  "description": "Pruebas de extremo a extremo de Danscanner Pro",
+  "scripts": {
+    "test": "node app.test.js"
+  },
+  "devDependencies": {
+    "playwright": "1.56.1"
+  }
+}

@@ -829,9 +829,7 @@ function unsharp(d,w,h,amount=0.6,radius=1){const copy=new Uint8ClampedArray(d);
 function applyFilter(c,f,bright=0,contrast=0,o){o=o||{};const sat=+o.sat||0,sharp=+o.sharp||0,temp=+o.temp||0,inten=o.intensity==null?100:+o.intensity;if((!f||f==='original')&&!bright&&!contrast&&!sat&&!sharp&&!temp)return;const x=c.getContext('2d',{willReadFrequently:true}),id=x.getImageData(0,0,c.width,c.height),d=id.data;const base=(inten<100&&f&&f!=='original')?new Uint8ClampedArray(d):null;if(typeof applyExtraFilter==='function'&&applyExtraFilter(c,d,f)){}else switch(f){case 'aclarar':lutApply(d,makeLut(v=>255*Math.pow(v/255,.72)+10));break;case 'mejorar':autoLevels(d,.005,.995);lutApply(d,makeLut(v=>sCurve(v,.35)));saturate(d,1.15);unsharp(d,c.width,c.height,.4,1);break;case 'magia':bgDivide(c,d,false);clahe(d,c.width,c.height,2.5,8);lutApply(d,makeLut(v=>sCurve((v-30)*255/220,.5)));saturate(d,1.4);unsharp(d,c.width,c.height,.7,1);break;case 'sinsombra':bgDivide(c,d,false);lutApply(d,makeLut(v=>(v-12)*255/236));break;case 'gris':toGray(d);autoLevels(d);lutApply(d,makeLut(v=>sCurve(v,.3)));break;case 'bn':bgDivide(c,d,true);lutApply(d,makeLut(v=>v<150?0:v>212?255:(v-150)*255/62));break;case 'ahorro':bgDivide(c,d,true);lutApply(d,makeLut(v=>v>215?255:105+v*.62));break}if(base){const k=inten/100;for(let i=0;i<d.length;i+=4){d[i]=base[i]+(d[i]-base[i])*k;d[i+1]=base[i+1]+(d[i+1]-base[i+1])*k;d[i+2]=base[i+2]+(d[i+2]-base[i+2])*k}}if(bright||contrast){const k=(100+contrast)/100;lutApply(d,makeLut(v=>(v-128)*k*k+128+bright*1.3))}if(sat)saturate(d,1+sat/100);if(temp){for(let i=0;i<d.length;i+=4){d[i]=d[i]+temp*.7;d[i+2]=d[i+2]-temp*.7}}if(sharp)unsharp(d,c.width,c.height,sharp/55,1);x.putImageData(id,0,0)}
 async function renderPage(p,{maxSide=0,noOverlays=false}={}){const img=await loadImg(p.orig);let src=img,iw=img.naturalWidth,ih=img.naturalHeight;if(maxSide&&Math.max(iw,ih)>maxSide*1.15){const s=maxSide*1.15/Math.max(iw,ih);const t=canvas(iw*s,ih*s);const tx=t.getContext('2d');tx.imageSmoothingQuality='high';tx.drawImage(img,0,0,t.width,t.height);src=t;iw=t.width;ih=t.height}let c;if(p.quad)c=warp(src,p.quad.map(o=>({x:o.x*iw,y:o.y*ih})),maxSide||5000);else{c=canvas(iw,ih);c.getContext('2d').drawImage(src,0,0)}if(maxSide&&Math.max(c.width,c.height)>maxSide)c=scaleCanvas(c,maxSide/Math.max(c.width,c.height));if(p.rot)c=rotateCanvas(c,p.rot);await applyFilterAsync(c,p.filter,p.bright,p.contrast,{sat:p.sat,sharp:p.sharp,temp:p.temp,intensity:p.intensity});if(!noOverlays&&p.overlays&&p.overlays.length){const x=c.getContext('2d');for(const o of p.overlays){const oi=await loadImg(o.src);x.drawImage(oi,o.x*c.width,o.y*c.height,o.w*c.width,o.h*c.height)}}return c}
 async function makeThumb(p){const c=await renderPage(p,{maxSide:520});p.thumb=c.toDataURL('image/jpeg',.8)}
-async function makePage(src,{auto=S.autoCrop,filter=S.filter}={}){const img=await loadImg(src);const s=Math.min(1,S.maxCap/Math.max(img.naturalWidth,img.naturalHeight));const c=canvas(img.naturalWidth*s,img.naturalHeight*s),x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.imageSmoothingQuality='high';x.drawImage(img,0,0,c.width,c.height);const p={id:uid(),orig:c.toDataURL('image/jpeg',.93),quad:auto?detectQuad(c):null,rot:0,filter,bright:0,contrast:0,overlays:[]};if(auto&&!p.quad)toast('No se detectaron bordes: ajustá el recorte manualmente',3500);c.width=c.height=1;await makeThumb(p);return p}
 function trimCanvas(c,padding=10){const x=c.getContext('2d'),d=x.getImageData(0,0,c.width,c.height).data;let x0=c.width,y0=c.height,x1=-1,y1=-1;for(let y=0;y<c.height;y++)for(let xx=0;xx<c.width;xx++)if(d[(y*c.width+xx)*4+3]>10){if(xx<x0)x0=xx;if(xx>x1)x1=xx;if(y<y0)y0=y;if(y>y1)y1=y}if(x1<0)return null;x0=Math.max(0,x0-padding);y0=Math.max(0,y0-padding);x1=Math.min(c.width-1,x1+padding);y1=Math.min(c.height-1,y1+padding);const n=canvas(x1-x0+1,y1-y0+1);n.getContext('2d').drawImage(c,x0,y0,n.width,n.height,0,0,n.width,n.height);return n}
-function textToPng(text,{color='#000',size=40,bold=true,box=false}={}){const lines=String(text).split('\n'),fs=size*2,font=(bold?'700 ':'')+fs+'px Arial, sans-serif';const m=canvas(10,10).getContext('2d');m.font=font;const w=Math.max(...lines.map(l=>m.measureText(l).width))+fs*.6,lh=fs*1.25,h=lh*lines.length+fs*.4;const c=canvas(w,h),x=c.getContext('2d');x.font=font;x.fillStyle=color;x.textBaseline='top';lines.forEach((l,i)=>x.fillText(l,fs*.3,fs*.2+i*lh+fs*.05));if(box){x.strokeStyle=color;x.lineWidth=Math.max(3,fs/12);x.strokeRect(x.lineWidth/2,x.lineWidth/2,w-x.lineWidth,h-x.lineWidth)}return c.toDataURL('image/png')}
 async function imageBytesForPdf(p,quality,allowPng){const Q=QUAL[quality]||QUAL.alta;const c=await renderPage(p,{maxSide:Q.max});const png=!!allowPng&&typeof printBWOn==='function'&&printBWOn(p);const b=await canvasBlob(c,png?'image/png':'image/jpeg',Q.q);const w=c.width,h=c.height;c.width=c.height=1;return {bytes:new Uint8Array(await b.arrayBuffer()),w,h,png}}
 async function buildPDF(pages,{size='a4',orient='auto',margin=0,quality='alta',title='Documento'}={},onProg){await loadLib('pdflib');const {PDFDocument}=PDFLib;const pdf=await PDFDocument.create();pdf.setTitle(title);pdf.setCreator('Danscanner Pro');pdf.setProducer('Danscanner Pro');const mm=margin*72/25.4;for(let i=0;i<pages.length;i++){onProg&&onProg(i+1,pages.length);const {bytes,w,h,png}=await imageBytesForPdf(pages[i],quality,true);const img=png?await pdf.embedPng(bytes):await pdf.embedJpg(bytes);let pw,ph;if(size==='original'){if(w>=h){ph=595.28;pw=ph*w/h}else{pw=595.28;ph=pw*h/w}pw+=2*mm;ph+=2*mm}else{[pw,ph]=PAGE_SIZES[size]||PAGE_SIZES.a4;if(orient==='h'||(orient==='auto'&&w>h))[pw,ph]=[ph,pw]}const s=Math.min((pw-2*mm)/w,(ph-2*mm)/h),dw=w*s,dh=h*s;pdf.addPage([pw,ph]).drawImage(img,{x:(pw-dw)/2,y:(ph-dh)/2,width:dw,height:dh})}return pdf.save()}
 async function buildSearchablePDF(pages,opts,onProg){await loadLib('pdflib');await loadLib('tess');const {PDFDocument,StandardFonts,rgb}=PDFLib;const pdf=await PDFDocument.create();pdf.setTitle(opts.title||'Documento');pdf.setCreator('Danscanner Pro');const worker=await Tesseract.createWorker(S.lang,1,{logger:m=>{if(m.status==='recognizing text')onProg&&onProg(null,m.progress)}});const Q=QUAL[opts.quality]||QUAL.alta;const mm=(opts.margin||0)*72/25.4;try{for(let i=0;i<pages.length;i++){onProg&&onProg(i+1,pages.length);const c=await renderPage(pages[i],{maxSide:Q.max});const imgBytes=new Uint8Array(await (await canvasBlob(c,'image/jpeg',Q.q)).arrayBuffer());const img=await pdf.embedJpg(imgBytes);const {data}=await worker.recognize(c,{},{text:true,blocks:true});const [baseW,baseH]=PAGE_SIZES[opts.size]||PAGE_SIZES.a4;let pw=baseW,ph=baseH;if(opts.orient==='h'||(opts.orient==='auto'&&c.width>c.height))[pw,ph]=[ph,pw];const sc=Math.min((pw-2*mm)/c.width,(ph-2*mm)/c.height);const dw=c.width*sc,dh=c.height*sc,dx=(pw-dw)/2,dy=(ph-dh)/2;const page=pdf.addPage([pw,ph]);page.drawImage(img,{x:dx,y:dy,width:dw,height:dh});const font=await pdf.embedFont(StandardFonts.Helvetica);if(data.words&&data.words.length){for(const w of data.words){if(!w.text||!w.bbox)continue;const wx=dx+(w.bbox.x0/c.width)*dw;const wy=ph-(dy+(w.bbox.y1/c.height)*dh);const fontSize=Math.max(3,((w.bbox.y1-w.bbox.y0)/c.height)*dh*.85);try{page.drawText(w.text,{x:wx,y:wy,size:fontSize,font,color:rgb(0,0,0),opacity:0.01})}catch(e){}}}c.width=c.height=1}}finally{await worker.terminate()}return pdf.save()}
@@ -839,7 +837,6 @@ async function makeDocx(blocks){await loadLib('jszip');const zip=new JSZip(),rel
 async function zipBlobs(outs){await loadLib('jszip');const z=new JSZip(),used={};for(const o of outs){let nm=o.name;if(used[nm]){nm=nm.replace(/(\.\w+)?$/,m=>'_'+used[o.name]+m)}used[o.name]=(used[o.name]||0)+1;z.file(nm,o.blob)}return z.generateAsync({type:'blob'})}
 async function pdfTextPages(ab){const pdf=await openPdfjs(ab),pages=[];for(let i=1;i<=pdf.numPages;i++){const tc=await (await pdf.getPage(i)).getTextContent();const items=tc.items.filter(t=>t.str&&t.str.trim()!=='').map(t=>({s:t.str,x:t.transform[4],y:t.transform[5],w:t.width,h:Math.abs(t.transform[3])||10}));items.sort((a,b)=>b.y-a.y||a.x-b.x);const lines=[];for(const it of items){let L=lines[lines.length-1];if(!L||Math.abs(L.y-it.y)>Math.max(2.5,it.h*.5)){L={y:it.y,items:[]};lines.push(L)}L.items.push(it)}pages.push(lines.map(L=>{L.items.sort((a,b)=>a.x-b.x);let text='',cells=[],cell='',prevEnd=null;for(const it of L.items){const cw=it.w/Math.max(1,it.s.length)||5;if(prevEnd!==null){const gap=it.x-prevEnd;if(gap>cw*3){cells.push(cell.trim());cell='';text+='   '}else if(gap>cw*.25&&!text.endsWith(' ')){text+=' ';cell+=' '}}text+=it.s;cell+=it.s;prevEnd=it.x+it.w}cells.push(cell.trim());return {text,cells,h:Math.max(...L.items.map(i=>i.h))}}))}return pages}
 async function htmlToPdfBlob(html,{landscape=false}={}){await loadLib('html2pdf');if(typeof sanitizeHtml==='function')html=sanitizeHtml(html);const wrap=document.createElement('div');wrap.innerHTML='<style>table{border-collapse:collapse;width:100%;font-size:9pt}td,th{border:1px solid #999;padding:3px 5px}img{max-width:100%}h1,h2,h3{margin:.4em 0}</style>'+html;wrap.style.cssText='width:'+(landscape?'277mm':'190mm')+';background:#fff;color:#000;font-family:Arial,sans-serif;font-size:11pt;line-height:1.35';return html2pdf().set({margin:10,image:{type:'jpeg',quality:.95},html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff'},jsPDF:{unit:'mm',format:'a4',orientation:landscape?'landscape':'portrait'},pagebreak:{mode:['css','legacy']}}).from(wrap).outputPdf('blob')}
-async function ocrCanvases(getImgs,lang,total){busy('Cargando motor OCR (la primera vez descarga el idioma)…');await loadLib('tess');let cur=0;const w=await Tesseract.createWorker(lang||S.lang,1,{logger:m=>{if(m.status==='recognizing text')busy('Reconociendo texto · página '+cur+(total?'/'+total:'')+' · '+Math.round(m.progress*100)+'%')}});const texts=[];try{await getImgs(async img=>{cur++;const {data}=await w.recognize(img);texts.push(data.text.trim())})}finally{await w.terminate()}return texts}
 let DOC=null,organize=false,_saveT=null;
 function newDoc(template){return {id:uid(),name:nowName(template||S.nameTemplate||'Escaneo'),created:Date.now(),updated:Date.now(),pages:[]}}
 function saveDoc(now){if(!DOC)return;const d=DOC;clearTimeout(_saveT);const run=async()=>{d.updated=Date.now();try{await DB.putDoc(d);refreshLists()}catch(e){toast('Error al guardar: '+e.message)}};if(now)return run();_saveT=setTimeout(run,500)}
@@ -876,7 +873,6 @@ upd();
 const go=async doShare=>{const name=safeName($('#exName').value);DOC.name=$('#exName').value.trim()||DOC.name;renderDocScreen();S.size=$('#exSize').value;S.orient=$('#exOrient').value;S.margin=+$('#exMargin').value;S.quality=$('#exQ').value;saveS();const idx=parseRange($('#exRange').value,DOC.pages.length);if(!idx.length)return toast('Rango de páginas inválido');const pages=idx.map(i=>DOC.pages[i-1]);await withBusy(async()=>{let blob,fn;if(cur==='pdf'){const wantOcr=$('#exPdfOcr')?.checked;const opts={size:S.size,orient:S.orient,margin:S.margin,quality:S.quality,title:DOC.name};const bytes=wantOcr?await buildSearchablePDF(pages,opts,(i,n)=>{if(i)busy('OCR PDF '+i+'/'+n);else busy('Reconociendo… '+Math.round((n||0)*100)+'%')}):await buildPDF(pages,opts,(i,n)=>busy('Generando PDF '+i+'/'+n));blob=pdfBlob(bytes);fn=name+'.pdf'}else if(cur==='jpg'){const outs=[];for(const [i,p] of pages.entries()){busy('Imagen '+(i+1)+'/'+pages.length);const Q=QUAL[S.quality];const c=await renderPage(p,{maxSide:Q.max});outs.push({blob:await canvasBlob(c,'image/jpeg',Q.q),name:name+'_'+pad2(idx[i])+'.jpg'})}if(outs.length===1){blob=outs[0].blob;fn=outs[0].name}else{busy('Comprimiendo ZIP…');blob=await zipBlobs(outs);fn=name+'_imagenes.zip'}}else if(cur==='docx'){const wantImg=$('#exWordImg').checked,wantOcr=$('#exWordOcr').checked;if(!wantImg&&!wantOcr)throw new Error('Elegí imagen y/o texto');let texts=[];if(wantOcr)texts=await ocrCanvases(async fn2=>{for(const p of pages)await fn2(await renderPage(p,{maxSide:2400}))},S.lang,pages.length);const blocks=[];for(const [i,p] of pages.entries()){busy('Armando Word '+(i+1)+'/'+pages.length);if(i)blocks.push({type:'br'});if(wantImg){const r=await imageBytesForPdf(p,S.quality);blocks.push({type:'img',data:r.bytes,w:r.w,h:r.h})}if(wantOcr&&texts[i])blocks.push({type:'p',text:texts[i]})}blob=await makeDocx(blocks);fn=name+'.docx'}else{const texts=await ocrCanvases(async fn2=>{for(const p of pages)await fn2(await renderPage(p,{maxSide:2400}))},S.lang,pages.length);blob=new Blob([texts.join('\n\n---------------\n\n')],{type:'text/plain;charset=utf-8'});fn=name+'.txt'}busy(false);$('#exRes').textContent='✅ '+fn+' · '+fmtSize(blob.size);saveDoc();doShare?await share(blob,fn):download(blob,fn)})};
 $('#exDown').onclick=()=>go(false);$('#exShare').onclick=()=>go(true)}
 async function runOcrPages(pages){if(!pages||!pages.length)return toast('No hay páginas');await withBusy(async()=>{const texts=await ocrCanvases(async fn=>{for(const p of pages)await fn(await renderPage(p,{maxSide:2400}))},S.lang,pages.length);busy(false);showText(texts.join('\n\n'),DOC?DOC.name:'texto')})}
-function showText(text,name){const b=openSheet('Texto extraído','<textarea class="ocr" id="ocrTxt"></textarea><div class="row"><button class="btn block" data-t="copy">📋 Copiar</button><button class="btn block" data-t="txt">⬇ .txt</button><button class="btn block" data-t="docx">📝 Word</button><button class="btn block" data-t="share">📤</button></div><p class="muted">'+(text.trim()?'Podés corregir el texto antes de copiar o guardar.':'No se detectó texto. Probá con mejor luz o filtro B/N.')+'</p>');$('#ocrTxt').value=text;b.onclick=async e=>{const t=e.target.closest('[data-t]')?.dataset.t;if(!t)return;const v=$('#ocrTxt').value,nm=safeName(name);if(t==='copy'){try{await navigator.clipboard.writeText(v);toast('Copiado')}catch(er){$('#ocrTxt').select();document.execCommand('copy');toast('Copiado')}}if(t==='txt')download(new Blob([v],{type:'text/plain;charset=utf-8'}),nm+'.txt');if(t==='docx')withBusy(async()=>download(await makeDocx([{type:'p',text:v}]),nm+'.docx'));if(t==='share')share(new Blob([v],{type:'text/plain;charset=utf-8'}),nm+'.txt')}}
 const Ed={i:0,token:0,_t:null,get p(){return DOC&&DOC.pages[this.i]},open(i){this.i=i;$('#edAdj').hidden=true;if(!Nav.isOpen('editor'))Nav.push('editor',async()=>{clearTimeout(this._t);if(DOC){await Promise.all(DOC.pages.filter(p=>p._dirty).map(p=>{p._dirty=false;return makeThumb(p)}));renderDocScreen();saveDoc()}});this.show()},show(){const p=this.p;if(!p)return;$('#edTitle').textContent='Página '+(this.i+1)+' de '+DOC.pages.length;$('#edBright').value=p.bright;$('#edContrast').value=p.contrast;$('#edBv').textContent=p.bright;$('#edCv').textContent=p.contrast;$('#edPrev').disabled=this.i===0;$('#edNext').disabled=this.i>=DOC.pages.length-1;this.preview(true)},async preview(strip){const t=++this.token;$('#edSpin').hidden=false;try{const q=await renderPage(this.p,{maxSide:760});if(t!==this.token)return;$('#edImg').src=q.toDataURL('image/jpeg',.82);await sleep(0);if(t!==this.token)return;const c=await renderPage(this.p,{maxSide:1800});if(t!==this.token)return;$('#edImg').src=c.toDataURL('image/jpeg',.9)}catch(e){toast(e.message)}if(t===this.token)$('#edSpin').hidden=true;if(strip)this.strip()},async strip(){const p=this.p,t=this.token;const box=$('#edFilters');box.innerHTML=FILTERS.map(([k,n])=>'<button class="flt '+(p.filter===k?'on':'')+'" data-f="'+k+'"><img alt="">'+n+'</button>').join('');const base=await renderPage({...p,filter:'original',bright:0,contrast:0,overlays:[]},{maxSide:180});for(const [k] of FILTERS){if(t!==this.token&&this.p!==p)return;const c=canvas(base.width,base.height);c.getContext('2d').drawImage(base,0,0);applyFilter(c,k);const im=box.querySelector('[data-f="'+k+'"] img');if(im)im.src=c.toDataURL('image/jpeg',.7)}},touch(strip){const p=this.p;p._dirty=true;this.preview(strip);clearTimeout(this._t);this._t=setTimeout(async()=>{if(p._dirty){p._dirty=false;await makeThumb(p);saveDoc()}},900)}};
 $('#edFilters').onclick=e=>{const f=e.target.closest('[data-f]');if(!f||!Ed.p)return;Ed.p.filter=f.dataset.f;$$('#edFilters .flt').forEach(x=>x.classList.toggle('on',x===f));Ed.touch(false)};
 $('#edBright').oninput=e=>{Ed.p.bright=+e.target.value;$('#edBv').textContent=e.target.value;Ed.touch(false)};
@@ -899,7 +895,6 @@ function placeOverlay(bg,ov,{allOption=false,title='Colocar',free=false,init=nul
 function plLayout(){const st=$('#plStage').getBoundingClientRect(),r=$('#plImg').getBoundingClientRect();if(!r.width)return;const bw=Pl.w*r.width,bh=bw*Pl.ratio;Pl.x=clamp(Pl.x,0,Math.max(0,1-Pl.w));Pl.y=clamp(Pl.y,0,Math.max(0,1-bh/r.height));const b=$('#plBox');b.style.left=(r.left-st.left+Pl.x*r.width)+'px';b.style.top=(r.top-st.top+Pl.y*r.height)+'px';b.style.width=bw+'px';b.style.height=bh+'px'}
 (()=>{let mode=null,sx,sy,ox,oy,ow,orat;const box=$('#plBox'),rs=$('#plRs');const down=(e,m)=>{e.preventDefault();e.stopPropagation();mode=m;sx=e.clientX;sy=e.clientY;ox=Pl.x;oy=Pl.y;ow=Pl.w;orat=Pl.ratio;e.target.setPointerCapture(e.pointerId)};box.addEventListener('pointerdown',e=>{if(e.target!==rs)down(e,'move')});rs.addEventListener('pointerdown',e=>down(e,'size'));const move=e=>{if(!mode)return;const r=$('#plImg').getBoundingClientRect();const dx=(e.clientX-sx)/r.width,dy=(e.clientY-sy)/r.height;if(mode==='move'){Pl.x=ox+dx;Pl.y=oy+dy}else{Pl.w=clamp(ow+dx,.04,1);$('#plSize').value=Math.round(Pl.w*100);if(Pl.free){const hp=ow*r.width*orat+(e.clientY-sy);Pl.ratio=Math.max(.01,hp/(Pl.w*r.width));$('#plH').value=Math.round(hp/r.height*100)}}plLayout()};box.addEventListener('pointermove',move);rs.addEventListener('pointermove',move);const up=()=>mode=null;box.addEventListener('pointerup',up);rs.addEventListener('pointerup',up);$('#plSize').oninput=e=>{const r=$('#plImg').getBoundingClientRect();const hp=Pl.w*r.width*Pl.ratio;Pl.w=e.target.value/100;if(Pl.free&&r.width)Pl.ratio=hp/(Pl.w*r.width);plLayout()};$('#plH').oninput=e=>{const r=$('#plImg').getBoundingClientRect();if(r.width)Pl.ratio=Math.max(.01,(e.target.value/100)*r.height/(Pl.w*r.width));plLayout()}})();
 function signatureSheet(){return new Promise(res=>{let result=null;const sigs=(()=>{try{return JSON.parse(localStorage.getItem('ds_sigs')||'[]')}catch(e){return[]}})();const b=openSheet('Firma',(sigs.length?'<div class="muted">Firmas guardadas (tocá para usar)</div><div class="sigs">'+sigs.map((s,i)=>'<div><img src="'+s+'" data-use="'+i+'"><button data-rm="'+i+'">✕</button></div>').join('')+'</div>':'')+'<label class="btn block" style="margin:8px 0"><i data-ico="upload">⬆</i> Cargar firma desde el dispositivo<input type="file" accept="image/*" id="sigImgTop" hidden></label><div class="muted" style="margin:6px 0">…o dibujá tu firma</div><canvas id="sigPad"></canvas><div class="row"><div class="chips">'+[['#000','Negro'],['#0d3fa6','Azul'],['#b71c1c','Rojo']].map(([c,n],i)=>'<button class="chip '+(i?'':'on')+'" data-col="'+c+'">'+n+'</button>').join('')+'</div><input type="range" id="sigW" min="2" max="10" value="4" style="flex:1"></div><label class="chk"><input type="checkbox" id="sigSave" checked> Guardar esta firma</label><div class="row"><button class="btn block" id="sigClr">🧽 Limpiar</button><label class="btn block"><i data-ico="image">🖼️</i> Imagen<input type="file" accept="image/*" id="sigImg" hidden></label><button class="btn pri block" id="sigUse">✓ Usar</button></div>',()=>res(result));const c=$('#sigPad'),dpr=window.devicePixelRatio||1;let ctx,drawn=false,col='#000',last=null;requestAnimationFrame(()=>{c.width=c.clientWidth*dpr;c.height=c.clientHeight*dpr;ctx=c.getContext('2d');ctx.lineCap='round';ctx.lineJoin='round'});const pos=e=>{const r=c.getBoundingClientRect();return {x:(e.clientX-r.left)*dpr,y:(e.clientY-r.top)*dpr}};c.onpointerdown=e=>{c.setPointerCapture(e.pointerId);last=pos(e);drawn=true;ctx.beginPath();ctx.fillStyle=col;ctx.arc(last.x,last.y,$('#sigW').value*dpr/2,0,7);ctx.fill()};c.onpointermove=e=>{if(!last)return;const p=pos(e);ctx.strokeStyle=col;ctx.lineWidth=$('#sigW').value*dpr;ctx.beginPath();ctx.moveTo(last.x,last.y);ctx.lineTo(p.x,p.y);ctx.stroke();last=p};c.onpointerup=c.onpointercancel=()=>last=null;b.onclick=async e=>{const col2=e.target.closest('[data-col]');if(col2){col=col2.dataset.col;$$('[data-col]',b).forEach(x=>x.classList.toggle('on',x===col2))}const u=e.target.closest('[data-use]');if(u){result=sigs[u.dataset.use];Nav.back()}const rm=e.target.closest('[data-rm]');if(rm){sigs.splice(rm.dataset.rm,1);localStorage.setItem('ds_sigs',JSON.stringify(sigs));rm.parentElement.remove()}if(e.target.id==='sigClr'){ctx.clearRect(0,0,c.width,c.height);drawn=false}if(e.target.id==='sigUse'){if(!drawn)return toast('Dibujá la firma primero');const t=trimCanvas(c,12);if(!t)return toast('Firma vacía');result=t.toDataURL('image/png');if($('#sigSave').checked){sigs.unshift(result);try{localStorage.setItem('ds_sigs',JSON.stringify(sigs.slice(0,6)))}catch(er){}}Nav.back()}};const onSigFile=e=>{const f=e.target.files[0];e.target.value='';if(!f)return;sigAdjustInto(b,f,png=>{result=png;Nav.back()})};$('#sigImg').onchange=onSigFile;$('#sigImgTop').onchange=onSigFile})}
-function textStampSheet(){return new Promise(res=>{let result=null;const b=openSheet('Texto / sello','<label class="opt"><span>Texto</span><textarea id="tsT" rows="3" placeholder="Ej: RECIBIDO"></textarea></label><div class="chips">'+[['#000','Negro'],['#0d3fa6','Azul'],['#c62828','Rojo'],['#1b5e20','Verde']].map(([c,n],i)=>'<button class="chip '+(i?'':'on')+'" data-col="'+c+'">'+n+'</button>').join('')+'</div><label class="chk"><input type="checkbox" id="tsB" checked> Negrita</label><label class="chk"><input type="checkbox" id="tsBox"> Recuadro tipo sello</label><button class="btn pri block" id="tsOk">✓ Continuar</button>',()=>res(result));let col='#000';b.onclick=e=>{const c=e.target.closest('[data-col]');if(c){col=c.dataset.col;$$('[data-col]',b).forEach(x=>x.classList.toggle('on',x===c))}if(e.target.id==='tsOk'){const t=$('#tsT').value.trim();if(!t)return toast('Escribí un texto');result=textToPng(t,{color:col,bold:$('#tsB').checked,box:$('#tsBox').checked});Nav.back()}}})}
 function camSecure(){const lh=/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);return (location.protocol==='https:'||(location.protocol==='http:'&&lh))&&window.isSecureContext!==false&&!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia)}
 const NativeCam={mode:'single',count:0,open(mode){this.mode=mode||'single';if(mode!=='more')this.count=0;else this.mode='batch';try{sessionStorage.setItem('ds_cam_wait',JSON.stringify({t:Date.now(),m:this.mode,c:this.count,doc:DOC&&DOC.id}))}catch(e){}$('#inCam').click();if(!this.tipShown&&!camSecure()){this.tipShown=true;toast('📷 Usando la cámara del teléfono. Después de cada foto se recorta y mejora sola.',4500)}},
 async onFiles(e){try{sessionStorage.removeItem('ds_cam_wait')}catch(_){}const files=[...e.target.files];e.target.value='';if(!files.length)return toast('No llegó ninguna foto desde la cámara');let pages=[];await withBusy(async()=>{pages=await importFiles(files,{auto:S.autoCrop})});if(!pages.length)return toast('❌ No se pudo procesar la foto. Probá de nuevo o importala desde Galería',4500);if(this.mode!=='batch'){await addPages(pages,pages.length===1);return}await addPages(pages,false);this.count+=pages.length;const last=pages[pages.length-1];const html='<div style="text-align:center"><img src="'+(last.thumb||'')+'" style="max-height:220px;max-width:100%;border-radius:10px;box-shadow:0 2px 10px #0003"><p><b>✅ '+this.count+' página(s) escaneada(s)</b></p><p class="muted">La foto se recortó y mejoró automáticamente. Podés ajustarla después tocándola.</p></div><div class="row"><button class="btn block" id="ncDone">✓ Listo</button><button class="btn pri block" id="ncMore">📷 Otra foto</button></div>';let b;if(Nav.top()==='sheet'&&$('#sheetBody').dataset.nc==='1'){b=$('#sheetBody');b.innerHTML=html}else{b=openSheet('Escaneo por lote',html);b.dataset.nc='1';const prev=Nav.stack[Nav.stack.length-1],oc=prev&&prev.onClose;if(prev)prev.onClose=()=>{b.dataset.nc='';oc&&oc()}}b.onclick=ev=>{if(ev.target.closest('#ncMore'))NativeCam.open('more');else if(ev.target.closest('#ncDone'))Nav.back()}}};
@@ -919,12 +914,11 @@ document.addEventListener('keydown',e=>{if(Nav.top()==='camera'&&(e.code==='Spac
 const QR={stream:null,t:null,det:null,async open(){Nav.push('qrScreen',()=>this.stop());$('#qrRes').hidden=true;try{if('BarcodeDetector' in window){try{this.det=new BarcodeDetector()}catch(e){this.det=null}}if(!this.det)await loadLib('jsqr');this.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});if(!Nav.isOpen('qrScreen'))return this.stop();const v=$('#qrVideo');v.srcObject=this.stream;await v.play().catch(()=>{});this.loop()}catch(e){toast('Cámara no disponible: elegí una imagen 🖼️')}},async scan(src,w,h){try{if(this.det){const r=await this.det.detect(src);return r.length?r[0].rawValue:null}const c=canvas(w,h),x=c.getContext('2d',{willReadFrequently:true});x.drawImage(src,0,0,w,h);const r=jsQR(x.getImageData(0,0,w,h).data,w,h);return r?r.data:null}catch(e){return null}},async loop(){if(!this.stream)return;const v=$('#qrVideo');if(v.videoWidth){const w=Math.min(800,v.videoWidth),txt=await this.scan(v,w,Math.round(w*v.videoHeight/v.videoWidth));if(txt)return this.found(txt)}this.t=setTimeout(()=>this.loop(),220)},found(txt){navigator.vibrate&&navigator.vibrate(80);const isUrl=/^https?:\/\//i.test(txt);const r=$('#qrRes');r.hidden=false;r.innerHTML='<div class="muted">Resultado</div><div style="margin:6px 0 10px;font-size:15px">'+esc(txt)+'</div><div class="row"><button class="btn block" id="qrCopy">📋 Copiar</button>'+(isUrl?'<a class="btn pri block" href="'+esc(txt)+'" target="_blank" rel="noopener">🔗 Abrir</a>':'')+'<button class="btn block" id="qrAgain">↻ Otro</button></div>';$('#qrCopy').onclick=()=>navigator.clipboard.writeText(txt).then(()=>toast('Copiado'));$('#qrAgain').onclick=()=>{r.hidden=true;this.loop()}},stop(){clearTimeout(this.t);if(this.stream)this.stream.getTracks().forEach(t=>t.stop());this.stream=null;$('#qrVideo').srcObject=null}};
 $('#qrFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;e.target.value='';if(!QR.det&&!('BarcodeDetector' in window))await loadLib('jsqr').catch(()=>{});if(!QR.det&&'BarcodeDetector' in window){try{QR.det=new BarcodeDetector()}catch(er){}}const u=URL.createObjectURL(f);const im=await loadImg(u);const s=Math.min(1,1200/im.naturalWidth);const txt=await QR.scan(im,Math.round(im.naturalWidth*s),Math.round(im.naturalHeight*s));QR.stop();txt?QR.found(txt):toast('No se encontró código en la imagen');URL.revokeObjectURL(u)};
 let selMode=false,selected=new Set(),_metas=[];
-function docItem(m,withSel){const d=new Date(m.updated);return '<div class="item" data-id="'+m.id+'">'+(withSel?'<input type="checkbox" '+(selected.has(m.id)?'checked':'')+' data-sel>':'')+'<img src="'+(m.thumb||'')+'" alt=""><div class="inf"><div class="nm">'+esc(m.name)+'</div><div class="muted">'+d.toLocaleDateString('es-AR')+' '+d.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})+' · '+m.count+' pág.</div></div>'+(withSel?'':'<button class="ib" data-menu>⋮</button>')+'</div>'}
 async function refreshLists(){try{_metas=await DB.metas()}catch(e){_metas=[]}const byDate=[..._metas].sort((a,b)=>b.updated-a.updated);$('#recentList').innerHTML=byDate.length?byDate.slice(0,5).map(m=>docItem(m,false)).join(''):'<div class="empty">📄 Todavía no hay documentos.<br>Tocá <b>Escanear</b> para empezar.</div>';renderDocList()}
 function renderDocList(){const q=$('#docSearch').value.trim().toLowerCase();let l=_metas.filter(m=>m.name.toLowerCase().includes(q));l.sort($('#docSort').value==='name'?(a,b)=>a.name.localeCompare(b.name):(a,b)=>b.updated-a.updated);$('#docList').innerHTML=l.length?l.map(m=>docItem(m,selMode)).join(''):'<div class="empty">Sin documentos</div>';$('#selBar').hidden=!selMode;$('#selCount').textContent=selected.size+' seleccionados';$('#selToggle').textContent=selMode?'✕ Cancelar':'☑️ Seleccionar'}
 $('#docSearch').oninput=renderDocList;$('#docSort').onchange=renderDocList;
 $('#selToggle').onclick=()=>{selMode=!selMode;selected.clear();renderDocList()};
-async function listClick(e){const it=e.target.closest('.item');if(!it)return;const id=it.dataset.id,m=_metas.find(x=>x.id===id);if(selMode&&this.id==='docList'){selected.has(id)?selected.delete(id):selected.add(id);renderDocList();return}if(e.target.closest('[data-menu]')){const b=openSheet(m.name,'<div class="menu"><button data-m="open"><b>📂</b>Abrir</button><button data-m="pdf"><b>⬇</b>Descargar PDF</button><button data-m="share"><b>📤</b>Compartir PDF</button><button data-m="ren"><b>✏️</b>Renombrar</button><button data-m="dup"><b>⧉</b>Duplicar</button><button data-m="del" style="color:var(--red)"><b>🗑</b>Eliminar</button></div>');b.onclick=async ev=>{const a=ev.target.closest('[data-m]')?.dataset.m;if(!a)return;await Nav.back();if(a==='open')return openDocById(id);const d=await DB.getDoc(id);if(!d)return;if(a==='pdf'||a==='share')await withBusy(async()=>{const blob=pdfBlob(await buildPDF(d.pages,{size:S.size,orient:S.orient,margin:S.margin,quality:S.quality,title:d.name},(i,n)=>busy('Generando PDF '+i+'/'+n)));busy(false);a==='share'?await share(blob,safeName(d.name)+'.pdf'):download(blob,safeName(d.name)+'.pdf')});if(a==='ren'){const n=prompt('Nuevo nombre',d.name);if(n&&n.trim()){d.name=n.trim();d.updated=Date.now();await DB.putDoc(d);refreshLists()}}if(a==='dup'){const c=structuredClone(d);c.id=uid();c.name=d.name+' (copia)';c.updated=c.created=Date.now();c.pages.forEach(p=>p.id=uid());await DB.putDoc(c);refreshLists();toast('Duplicado')}if(a==='del'&&confirm('¿Eliminar "'+d.name+'"?')){await DB.delDoc(id);refreshLists();toast('Eliminado')}};return}openDocById(id)}
+async function listClick(e){const it=e.target.closest('.item');if(!it)return;const id=it.dataset.id,m=_metas.find(x=>x.id===id);if(selMode&&this.id==='docList'){selected.has(id)?selected.delete(id):selected.add(id);renderDocList();return}if(e.target.closest('[data-menu]')){const b=openSheet(m.name,'<div class="menu"><button data-m="open"><b>📂</b>Abrir</button><button data-m="pdf"><b>⬇</b>Descargar PDF</button><button data-m="share"><b>📤</b>Compartir PDF</button><button data-m="org"><b>📁</b>Carpeta y etiquetas</button><button data-m="ren"><b>✏️</b>Renombrar</button><button data-m="dup"><b>⧉</b>Duplicar</button><button data-m="del" style="color:var(--red)"><b>🗑</b>Eliminar</button></div>');b.onclick=async ev=>{const a=ev.target.closest('[data-m]')?.dataset.m;if(!a)return;await Nav.back();if(a==='open')return openDocById(id);if(a==='org')return orgSheet(id);const d=await DB.getDoc(id);if(!d)return;if(a==='pdf'||a==='share')await withBusy(async()=>{const blob=pdfBlob(await buildPDF(d.pages,{size:S.size,orient:S.orient,margin:S.margin,quality:S.quality,title:d.name},(i,n)=>busy('Generando PDF '+i+'/'+n)));busy(false);a==='share'?await share(blob,safeName(d.name)+'.pdf'):download(blob,safeName(d.name)+'.pdf')});if(a==='ren'){const n=prompt('Nuevo nombre',d.name);if(n&&n.trim()){d.name=n.trim();d.updated=Date.now();await DB.putDoc(d);refreshLists()}}if(a==='dup'){const c=structuredClone(d);c.id=uid();c.name=d.name+' (copia)';c.updated=c.created=Date.now();c.pages.forEach(p=>p.id=uid());await DB.putDoc(c);refreshLists();toast('Duplicado')}if(a==='del'&&confirm('¿Eliminar "'+d.name+'"?')){await DB.delDoc(id);refreshLists();toast('Eliminado')}};return}openDocById(id)}
 $('#recentList').addEventListener('click',listClick);$('#docList').addEventListener('click',listClick);
 $('#selDel').onclick=async()=>{if(!selected.size||!confirm('¿Eliminar '+selected.size+' documento(s)?'))return;for(const id of selected)await DB.delDoc(id);selected.clear();selMode=false;refreshLists()};
 $('#selMerge').onclick=async()=>{if(selected.size<2)return toast('Seleccioná al menos 2');await withBusy(async()=>{const order=_metas.filter(m=>selected.has(m.id)).sort((a,b)=>a.created-b.created);const nd=newDoc();nd.name=nowName('Unido');for(const m of order){const d=await DB.getDoc(m.id);d.pages.forEach(p=>nd.pages.push({...p,id:uid()}))}await DB.putDoc(nd);selected.clear();selMode=false;await refreshLists();busy(false);DOC=nd;openDocScreen();toast('Documentos unidos')})};
@@ -1112,22 +1106,9 @@ $('#edAdjReset').onclick=()=>{const p=Ed.p;if(!p)return;p.bright=0;p.contrast=0;
 {const _show=Ed.show;Ed.show=function(){_show.call(this);syncAdj()}}
 
 /* ---------- Editor: cambiar la foto de esta página ---------- */
-function replacePagePhoto(){const p=Ed.p;if(!p)return;const b=openSheet('Cambiar esta foto','<div class="menu"><button data-r="cam"><b data-ico="camera">📷</b>Sacar otra foto</button><button data-r="gal"><b data-ico="image">🖼️</b>Elegir de la galería</button></div><p class="muted">Solo se reemplaza la página '+(Ed.i+1)+'. Se mantienen el filtro, los ajustes, las firmas y los textos.</p>');
-b.onclick=e=>{const r=e.target.closest('[data-r]')?.dataset.r;if(!r)return;const inp=document.createElement('input');inp.type='file';inp.accept='image/*';if(r==='cam')inp.setAttribute('capture','environment');inp.style.display='none';document.body.appendChild(inp);
-inp.onchange=async()=>{const f=inp.files[0];inp.remove();if(!f)return;let np=null;await withBusy(async()=>{busy('Procesando foto…');const arr=await importFiles([f],{auto:S.autoCrop});np=arr&&arr[0]});if(!np)return toast('No se pudo leer la foto');const target=DOC.pages.find(x=>x.id===p.id)||p;target.orig=np.orig;target.quad=np.quad;target.rot=0;Ed.touch(true);toast('Foto reemplazada. Ajustá el recorte si hace falta.');if(await cropPage(target))Ed.touch(true)};
-inp.click();Nav.back()}}
 
 /* ---------- Al terminar de editar: guardar, compartir y comprimir ---------- */
 const COMP=[['baja','Máxima compresión','Más liviano, ideal WhatsApp/mail'],['media','Equilibrado','Buena calidad y liviano'],['alta','Alta calidad','Recomendado para imprimir'],['maxima','Sin comprimir','Máxima nitidez']];
-function finishSheet(){if(!DOC||!DOC.pages.length)return;let lvl=S.quality||'media';const cache={};
-const b=openSheet('✅ Documento listo','<div style="display:flex;gap:12px;align-items:center;margin-bottom:10px"><img src="'+(DOC.pages[0].thumb||'')+'" style="width:64px;height:84px;object-fit:cover;border-radius:8px;border:1px solid var(--line)"><div><b>'+esc(DOC.name)+'</b><div class="muted">'+DOC.pages.length+' página(s)</div></div></div><div class="muted" style="margin:6px 0">Compresión del PDF</div><div class="complist">'+COMP.map(([k,n,d])=>'<button class="compopt" data-lv="'+k+'"><b>'+n+'</b><small>'+d+'</small><em id="cz_'+k+'"></em></button>').join('')+'</div><button class="btn sm" id="fnCalc" style="margin:8px 0"><i data-ico="compress">🗜️</i> Calcular tamaños</button><div class="row" style="margin-top:6px"><button class="btn pri block" id="fnSave"><i data-ico="save">💾</i> Guardar PDF</button><button class="btn block" id="fnShare"><i data-ico="share">📤</i> Compartir</button></div><div class="row"><button class="btn block" id="fnMore"><i data-ico="settings">⚙️</i> Más formatos</button><button class="btn block" data-back><i data-ico="pencil">✏️</i> Seguir editando</button></div>');
-const mark=()=>$$('.compopt',b).forEach(x=>x.classList.toggle('on',x.dataset.lv===lvl));mark();
-const build=async k=>{if(cache[k])return cache[k];const bytes=await buildPDF(DOC.pages,{size:S.size,orient:S.orient,margin:S.margin,quality:k,title:DOC.name},(i,n)=>busy('Generando PDF '+i+'/'+n));return cache[k]=pdfBlob(bytes)};
-b.onclick=async e=>{const o=e.target.closest('[data-lv]');if(o){lvl=o.dataset.lv;mark();return}
-if(e.target.closest('#fnCalc')){await withBusy(async()=>{for(const [k] of COMP){busy('Calculando '+k+'…');const bl=await build(k);const el=$('#cz_'+k);if(el)el.textContent=fmtSize(bl.size)}})}
-else if(e.target.closest('#fnSave')){await withBusy(async()=>{const bl=await build(lvl);busy(false);download(bl,safeName(DOC.name)+'.pdf');const el=$('#cz_'+lvl);if(el)el.textContent=fmtSize(bl.size);toast('PDF guardado · '+fmtSize(bl.size))})}
-else if(e.target.closest('#fnShare')){let bl;await withBusy(async()=>{bl=await build(lvl)});if(bl)await share(bl,safeName(DOC.name)+'.pdf')}
-else if(e.target.closest('#fnMore')){await Nav.back();exportSheet()}}}
 
 /* ---------- Mover páginas arrastrando (mantener apretado) ---------- */
 (function(){const grid=$('#pageGrid');let st=null,clone=null,raf=0,lastY=0,justDragged=false;
@@ -1158,42 +1139,11 @@ $('#camCfg').onclick=()=>{const P=$('#camPanel');P.hidden=!P.hidden;$('#camCfg')
 {const _stop=Cam.stop;Cam.stop=function(){$('#camPanel').hidden=true;$('#camCfg').classList.remove('on');return _stop.call(this)}}
 
 /* ---------- Firma: cargar desde el dispositivo con ajuste de fondo ---------- */
-function sigAdjustInto(b,file,done){const u=URL.createObjectURL(file);loadImg(u).then(im=>{const s=Math.min(1,1400/Math.max(im.naturalWidth,im.naturalHeight));const src=canvas(im.naturalWidth*s,im.naturalHeight*s);src.getContext('2d').drawImage(im,0,0,src.width,src.height);URL.revokeObjectURL(u);_imgCache.delete(u);
-b.innerHTML='<div class="muted">Ajustá cómo queda tu firma</div><div class="sigprev"><canvas id="sgOut"></canvas></div><label class="opt"><span>Quitar fondo: <b id="sgTv"></b></span><input type="range" id="sgT" min="0" max="100" value="55"></label><div class="chips" id="sgCol">'+[['orig','Color original'],['#000000','Negro'],['#0d3fa6','Azul']].map(([c,n],i)=>'<button class="chip '+(i?'':'on')+'" data-sc="'+c+'">'+n+'</button>').join('')+'</div><label class="chk"><input type="checkbox" id="sgSave" checked> Guardar en mis firmas</label><div class="row"><button class="btn block" data-back>Cancelar</button><button class="btn pri block" id="sgUse"><i data-ico="check">✓</i> Usar firma</button></div>';
-let col='orig',out=null;const render=()=>{const t=+$('#sgT').value;$('#sgTv').textContent=t+'%';const c=canvas(src.width,src.height),x=c.getContext('2d');x.drawImage(src,0,0);const id=x.getImageData(0,0,c.width,c.height),d=id.data;const hi=255-t*1.3,lo=hi-45;const rgb=col==='orig'?null:[parseInt(col.slice(1,3),16),parseInt(col.slice(3,5),16),parseInt(col.slice(5,7),16)];for(let i=0;i<d.length;i+=4){const l=d[i]*.3+d[i+1]*.59+d[i+2]*.11;const a=l>=hi?0:l<=lo?255:(hi-l)/(hi-lo)*255;d[i+3]=Math.min(d[i+3],a);if(rgb){d[i]=rgb[0];d[i+1]=rgb[1];d[i+2]=rgb[2]}}x.putImageData(id,0,0);out=trimCanvas(c,6)||c;const v=$('#sgOut');v.width=out.width;v.height=out.height;v.getContext('2d').drawImage(out,0,0)};
-render();$('#sgT').oninput=render;$('#sgCol').onclick=e=>{const c=e.target.closest('[data-sc]');if(!c)return;col=c.dataset.sc;$$('#sgCol .chip').forEach(z=>z.classList.toggle('on',z===c));render()};
-$('#sgUse').onclick=()=>{if(!out)return;const png=out.toDataURL('image/png');if($('#sgSave').checked){try{const arr=JSON.parse(localStorage.getItem('ds_sigs')||'[]');arr.unshift(png);localStorage.setItem('ds_sigs',JSON.stringify(arr.slice(0,8)))}catch(e){}}done(png)}}).catch(()=>toast('No se pudo leer la imagen'))}
 
 /* ---------- Diseño de botones y funciones ---------- */
 const ED_TOOLS=[['crop','Recortar'],['replace','Cambiar foto'],['rotl','Girar izq.'],['rotr','Girar der.'],['adj','Ajustes'],['all','Filtro a todas'],['sign','Firmar'],['text','Texto'],['date','Fecha/hora'],['ocr','OCR'],['clear','Quitar firmas'],['del','Eliminar']];
 const DESIGN_DEF={color:'',shape:'round',ico:22,stroke:1.9,iconStyle:'line',anim:true,edTools:ED_TOOLS.map(([k])=>({k,on:true})),quick:[]};
 function D(){if(!S.design||typeof S.design!=='object')S.design={};for(const k in DESIGN_DEF)if(S.design[k]===undefined)S.design[k]=JSON.parse(JSON.stringify(DESIGN_DEF[k]));const known=new Set(S.design.edTools.map(t=>t.k));ED_TOOLS.forEach(([k])=>{if(!known.has(k))S.design.edTools.push({k,on:true})});return S.design}
-function applyDesign(){const d=D(),r=document.documentElement;if(d.color)r.style.setProperty('--color-primario',d.color);else r.style.removeProperty('--color-primario');r.style.setProperty('--r-btn',{round:'14px',square:'6px',circle:'999px'}[d.shape]||'14px');r.style.setProperty('--ico',d.ico+'px');r.style.setProperty('--ico-w',d.stroke);r.classList.toggle('ico-emoji',d.iconStyle==='emoji');r.classList.toggle('no-anim',!d.anim);r.dataset.shape=d.shape;
-const foot=$('#editor .sfoot');if(foot){for(const t of d.edTools){const btn=foot.querySelector('[data-ed="'+t.k+'"]');if(btn){foot.appendChild(btn);btn.hidden=!t.on}}}
-if(typeof renderTools==='function')try{renderTools()}catch(e){}}
-function designSheet(){const d=D();const cols=['#e53935','#d81b60','#8e24aa','#3949ab','#1e88e5','#00897b','#43a047','#fb8c00','#6d4c41','#212121'];
-const b=openSheet('🎨 Diseño de botones y funciones','<div class="muted">Vista previa interactiva · tocá los botones</div><div class="dprev"><div class="hero-btns"><button class="hbtn big"><i class="icono-camara"></i><span>Escanear</span><small>Individual</small></button><button class="hbtn"><i data-ico="files">🗂️</i><span>Lote</span><small>Varias fotos</small></button><button class="hbtn"><i data-ico="image">🖼️</i><span>Galería</span><small>Imágenes</small></button><button class="hbtn"><i data-ico="import">📥</i><span>Importar</span><small>PDF</small></button></div><div class="dbar">'+ED_TOOLS.slice(0,5).map(([k,n])=>'<button class="tb"><b data-ico="'+{crop:'crop',replace:'replace',rotl:'rotl',rotr:'rotr',adj:'adjust'}[k]+'"></b>'+n+'</button>').join('')+'</div><button class="btn pri block"><i data-ico="save">💾</i> Botón principal</button></div>'
-+'<div class="cph">Color principal</div><div class="swatches">'+cols.map(c=>'<button class="sw '+(d.color===c?'on':'')+'" data-col="'+c+'" style="background:'+c+'"></button>').join('')+'<label class="sw pick" title="Elegir color"><input type="color" id="dsCol" value="'+(d.color||'#e53935')+'"></label><button class="chip" data-col="">Predeterminado</button></div>'
-+'<div class="cph">Forma de los botones</div><div class="seg" data-k="shape">'+[['round','Redondeado'],['square','Cuadrado'],['circle','Circular']].map(([v,n])=>'<button data-v="'+v+'" class="'+(d.shape===v?'on':'')+'">'+n+'</button>').join('')+'</div>'
-+'<div class="cph">Estilo de íconos</div><div class="seg" data-k="iconStyle">'+[['line','Profesional (línea)'],['emoji','Emoji']].map(([v,n])=>'<button data-v="'+v+'" class="'+(d.iconStyle===v?'on':'')+'">'+n+'</button>').join('')+'</div>'
-+'<div class="cph">Tamaño de íconos</div><div class="seg" data-k="ico">'+[[18,'Chico'],[22,'Normal'],[27,'Grande']].map(([v,n])=>'<button data-v="'+v+'" class="'+(d.ico==v?'on':'')+'">'+n+'</button>').join('')+'</div>'
-+'<div class="cph">Grosor de línea</div><div class="seg" data-k="stroke">'+[[1.5,'Fino'],[1.9,'Normal'],[2.4,'Grueso']].map(([v,n])=>'<button data-v="'+v+'" class="'+(d.stroke==v?'on':'')+'">'+n+'</button>').join('')+'</div>'
-+'<label class="chk"><input type="checkbox" id="dsAnim" '+(d.anim?'checked':'')+'> Animación al tocar los botones</label>'
-+'<div class="cph">Botones de la barra de edición <small class="muted">(mostrar y ordenar)</small></div><div id="dsEd"></div>'
-+'<div class="cph">Accesos rápidos del inicio <small class="muted">(hasta 8)</small></div><div class="chips" id="dsQuick"></div>'
-+'<div class="row" style="margin-top:14px"><button class="btn block" id="dsReset"><i data-ico="rotl">↺</i> Restablecer</button><button class="btn pri block" data-back><i data-ico="check">✓</i> Listo</button></div>');
-const drawEd=()=>{$('#dsEd').innerHTML=d.edTools.map((t,i)=>{const n=(ED_TOOLS.find(x=>x[0]===t.k)||[])[1];return '<div class="frow dsrow"><label class="chk" style="flex:1;margin:0"><input type="checkbox" data-eon="'+i+'" '+(t.on?'checked':'')+'> '+n+'</label><button class="ib" data-eup="'+i+'" '+(i?'':'disabled')+'>▲</button><button class="ib" data-edn="'+i+'" '+(i<d.edTools.length-1?'':'disabled')+'>▼</button></div>'}).join('')};
-const drawQuick=()=>{const q=d.quick.length?d.quick:['Escanea a PDF','Unir PDF','PDF a WORD','Firmar PDF','Comprimir PDF','OCR PDF','JPG a PDF','Editar PDF'];$('#dsQuick').innerHTML=TOOLS.map(t=>'<button class="chip '+(q.includes(t.name)?'on':'')+'" data-q="'+esc(t.name)+'">'+esc(t.name)+'</button>').join('')};
-drawEd();drawQuick();const commit=()=>{saveS();applyDesign()};
-b.oninput=(e=>{if(e.target.id==='dsCol'){d.color=e.target.value;$$('.sw',b).forEach(x=>x.classList.remove('on'));commit()}});
-b.onclick=e=>{const btn=e.target.closest('button,input');if(btn&&btn.closest('.dprev')){btn.classList.remove('pulse');void btn.offsetWidth;btn.classList.add('pulse');return}
-const c=e.target.closest('[data-col]');if(c){d.color=c.dataset.col;$$('.sw',b).forEach(x=>x.classList.toggle('on',x===c));commit();return}
-const sv=e.target.closest('.seg[data-k] [data-v]');if(sv){const k=sv.parentNode.dataset.k;d[k]=isNaN(+sv.dataset.v)?sv.dataset.v:+sv.dataset.v;$$('button',sv.parentNode).forEach(x=>x.classList.toggle('on',x===sv));commit();return}
-if(e.target.id==='dsAnim'){d.anim=e.target.checked;commit();return}
-const on=e.target.closest('[data-eon]');if(on){d.edTools[+on.dataset.eon].on=on.checked;commit();return}
-const up=e.target.closest('[data-eup]'),dn=e.target.closest('[data-edn]');if(up||dn){const i=+(up||dn).dataset[up?'eup':'edn'],j=up?i-1:i+1;[d.edTools[i],d.edTools[j]]=[d.edTools[j],d.edTools[i]];drawEd();commit();return}
-const q=e.target.closest('[data-q]');if(q){let arr=d.quick.length?d.quick.slice():['Escanea a PDF','Unir PDF','PDF a WORD','Firmar PDF','Comprimir PDF','OCR PDF','JPG a PDF','Editar PDF'];const n=q.dataset.q;if(arr.includes(n))arr=arr.filter(x=>x!==n);else{if(arr.length>=8)return toast('Máximo 8 accesos. Quitá uno primero');arr.push(n)}d.quick=arr;drawQuick();commit();return}
-if(e.target.closest('#dsReset')){if(!confirm('¿Volver al diseño original?'))return;S.design=JSON.parse(JSON.stringify(DESIGN_DEF));saveS();applyDesign();Nav.back().then(designSheet)}}}
 applyDesign();iconize(document);
 
 
@@ -1445,59 +1395,15 @@ return outs}})}
 /* ---------- 5. Acceso con Supabase (administrador e invitados) ---------- */
 const SB={cfg:null,client:null,user:null,profile:null,ready:false};
 function sbConfig(){if(window.DANSCANER_CONFIG&&window.DANSCANER_CONFIG.url)return window.DANSCANER_CONFIG;try{const c=JSON.parse(localStorage.getItem('ds_sb')||'null');if(c&&c.url&&c.anonKey)return c}catch(e){}return null}
-function authGateHtml(state,extra){return '<div class="authbox"><div class="authlogo">'+($('.logo')?$('.logo').innerHTML:'')+'</div><h2>Danscanner Pro</h2>'+state+(extra||'')+'</div>'}
 function showGate(html){let d=$('#authScr');if(!d){d=document.createElement('div');d.id='authScr';document.body.appendChild(d)}d.innerHTML=authGateHtml(html);iconize(d);return d}
 function hideGate(){const d=$('#authScr');if(d)d.remove()}
-async function sbInit(){const cfg=sbConfig();if(!cfg)return false;SB.cfg=cfg;
-showGate('<p class="muted">Verificando el acceso…</p>');
-try{await loadLib('supabase');SB.client=supabase.createClient(cfg.url,cfg.anonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:'ds_auth',lock:(_n,_a,fn)=>fn()}})}catch(e){showGate('<p class="muted">No se pudo conectar con el servidor de acceso. Revisá tu conexión.</p><button class="btn pri block" onclick="location.reload()">Reintentar</button>');return true}
-SB.client.auth.onAuthStateChange(()=>sbRefresh());
-await sbRefresh();return true}
 const _to=(p,ms,label)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('Tardó demasiado ('+label+')')),ms))]);
 function gateError(msg,extra){showGate('<h3>No se pudo verificar el acceso</h3><p class="muted">'+esc(msg)+'</p>'+(extra||'')+'<button class="btn pri block" onclick="location.reload()"><i data-ico="rotr">↻</i> Reintentar</button><button class="btn block" id="agOut">Entrar con otro correo</button>');bindOut()}
 let _sbBusy=false;
-async function sbRefresh(){if(_sbBusy)return;_sbBusy=true;try{
-const herr=new URLSearchParams((location.hash||'').replace(/^#/,'')).get('error_description')||new URLSearchParams(location.search).get('error_description');
-if(herr){history.replaceState({},'',location.pathname);return gateError(herr)}
-let session=null;
-try{const r=await _to(SB.client.auth.getSession(),12000,'sesión');session=r.data.session}catch(e){return gateError(e.message,'<p class="muted">Probá con otro navegador o desactivá el bloqueo de cookies para este sitio.</p>')}
-SB.user=session?.user||null;
-if(!SB.user)return sbLoginScreen();
-const inv=new URLSearchParams(location.search).get('invite');
-if(inv){try{await SB.client.rpc('redeem_invite',{p_token:inv});history.replaceState({},'',location.pathname)}catch(e){}}
-let data=null,error=null;
-try{const r=await _to(SB.client.from('profiles').select('*').eq('id',SB.user.id).maybeSingle(),12000,'perfil');data=r.data;error=r.error}catch(e){return gateError(e.message,'<p class="muted">La base de accesos no respondió. Revisá que el SQL se haya ejecutado en Supabase.</p>')}
-SB.profile=data||null;
-if(error)return gateError(error.message);
-if(!SB.profile||SB.profile.status!=='activo'){showGate('<h3>Acceso pendiente</h3><p class="muted">Tu cuenta <b>'+esc(SB.user.email||'')+'</b> todavía no tiene acceso habilitado. Pedile al administrador que te active o que te mande un enlace de invitación.</p><button class="btn block" id="agRe"><i data-ico="rotr">↻</i> Volver a verificar</button><button class="btn block" id="agOut">Cerrar sesión</button>');
-$('#agRe').onclick=()=>sbRefresh();return bindOut()}
-SB.ready=true;hideGate();document.documentElement.classList.toggle('is-admin',SB.profile.role==='admin')}finally{_sbBusy=false}}
 function bindOut(){const b=$('#agOut');if(b)b.onclick=async()=>{await sbSignOut();location.reload()}}
-function sbLoginScreen(){showGate('<p class="muted">Ingresá con tu correo. Vas a recibir un enlace para entrar, sin contraseña.</p><input id="agMail" type="email" inputmode="email" placeholder="tu.correo@ejemplo.com" autocomplete="email"><button class="btn pri block" id="agSend"><i data-ico="check">✓</i> Enviarme el enlace</button><div class="muted" id="agMsg"></div>');
-$('#agSend').onclick=async()=>{const email=$('#agMail').value.trim();if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))return $('#agMsg').textContent='Escribí un correo válido';$('#agSend').disabled=true;$('#agMsg').textContent='Enviando…';
-const inv=new URLSearchParams(location.search).get('invite');
-const {error}=await SB.client.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin+location.pathname+(inv?'?invite='+encodeURIComponent(inv):'')}});
-$('#agSend').disabled=false;$('#agMsg').textContent=error?('Error: '+error.message):'Listo: revisá tu correo y tocá el enlace (puede tardar un minuto).'}}
 function sbConfigSheet(){const c=sbConfig()||{};const b=openSheet('Servidor de acceso','<p class="muted">Datos del proyecto de Supabase. Si publicaste la app con el archivo <b>config.js</b>, esto ya viene cargado y no hace falta tocarlo.</p>'+opt('URL del proyecto','<input class="sbU" placeholder="https://xxxx.supabase.co" value="'+esc(c.url||'')+'">')+opt('Clave pública (anon key)','<input class="sbK" placeholder="eyJ…" value="'+esc(c.anonKey||'')+'">')+'<div class="row"><button class="btn block" id="sbClr">Borrar</button><button class="btn pri block" id="sbSave">Guardar y reiniciar</button></div>');
 b.onclick=e=>{if(e.target.closest('#sbSave')){localStorage.setItem('ds_sb',JSON.stringify({url:$('.sbU',b).value.trim(),anonKey:$('.sbK',b).value.trim()}));location.reload()}
 if(e.target.closest('#sbClr')){localStorage.removeItem('ds_sb');location.reload()}}}
-async function adminSheet(){if(!SB.ready||SB.profile.role!=='admin')return toast('Solo el administrador puede entrar acá');
-const b=openSheet('👤 Administración de accesos','<div class="row"><button class="btn pri block" id="adNew"><i data-ico="plus">＋</i> Crear enlace de invitación</button><button class="btn block" id="adRef"><i data-ico="rotr">↻</i> Actualizar</button></div><div id="adList"><p class="muted">Cargando…</p></div>');
-const draw=async()=>{const {data,error}=await SB.client.from('profiles').select('*').order('created_at',{ascending:false});
-if(error)return $('#adList',b).innerHTML='<p class="muted">'+esc(error.message)+'</p>';
-$('#adList',b).innerHTML='<div class="cph">'+data.length+' usuario(s)</div>'+data.map(u=>'<div class="frow adrow"><span style="flex:1"><b>'+esc(u.email||'(sin correo)')+'</b><br><small class="muted">'+esc(u.role)+' · '+esc(u.status)+(u.id===SB.user.id?' · vos':'')+'</small></span>'+(u.id===SB.user.id?'':'<button class="btn sm" data-tog="'+u.id+'" data-st="'+esc(u.status)+'">'+(u.status==='activo'?'Quitar acceso':'Dar acceso')+'</button><button class="btn sm" data-rol="'+u.id+'" data-r="'+esc(u.role)+'">'+(u.role==='admin'?'Quitar admin':'Hacer admin')+'</button>')+'</div>').join('')};
-await draw();
-b.onclick=async e=>{const t=e.target.closest('[data-tog]'),r=e.target.closest('[data-rol]');
-if(e.target.closest('#adRef'))return draw();
-if(t){const st=t.dataset.st==='activo'?'bloqueado':'activo';await SB.client.from('profiles').update({status:st}).eq('id',t.dataset.tog);toast(st==='activo'?'Acceso habilitado':'Acceso quitado');draw()}
-if(r){const rol=r.dataset.r==='admin'?'usuario':'admin';await SB.client.from('profiles').update({role:rol}).eq('id',r.dataset.rol);toast('Rol actualizado');draw()}
-if(e.target.closest('#adNew')){const email=prompt('Correo de la persona (opcional, podés dejarlo vacío para un enlace abierto):','')||null;
-const {data,error}=await SB.client.rpc('create_invite',{p_email:email,p_days:7});
-if(error)return toast('Error: '+error.message);
-const link=location.origin+location.pathname+'?invite='+data;
-openSheet('Enlace de invitación','<p class="muted">Válido 7 días'+(email?' y solo para <b>'+esc(email)+'</b>':' para quien lo reciba')+'. Al abrirlo, la persona ingresa con su correo y queda habilitada.</p><textarea rows="3" readonly class="invlink">'+esc(link)+'</textarea><div class="row"><button class="btn block" id="ivCopy"><i data-ico="type">📋</i> Copiar</button><button class="btn pri block" id="ivShare"><i data-ico="share">📤</i> Compartir</button></div>').onclick=async ev=>{
-if(ev.target.closest('#ivCopy')){try{await navigator.clipboard.writeText(link);toast('Enlace copiado')}catch(x){toast('Copialo a mano desde el recuadro')}}
-if(ev.target.closest('#ivShare')){try{await navigator.share({title:'Acceso a Danscanner Pro',text:'Entrá con este enlace:',url:link})}catch(x){}}}}}}
 
 /* ---------- 6. Ajustes: seguridad ---------- */
 function securitySheet(){const b=openSheet('🔐 Seguridad y accesos','<button class="btn block" id="seLock"><i data-ico="lock">🔒</i> Bloqueo con PIN <small class="muted">'+(Lock.cfg?'(activado)':'(desactivado)')+'</small></button>'
@@ -1533,20 +1439,6 @@ sbInit();
 /* ===== Danscanner Pro v9: WhatsApp, búsqueda por contenido, espacio y acceso con contraseña ===== */
 
 /* ---------- 1. Compartir por WhatsApp ---------- */
-async function shareWhatsApp(blob,name,texto){
- try{const f=new File([blob],name,{type:blob.type});
-  if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name,text:texto||''});return true}
- }catch(e){if(e.name==='AbortError')return true}
- download(blob,name);
- const msg=encodeURIComponent((texto?texto+'\n':'')+'Te envío: '+name);
- const b=openSheet('Compartir por WhatsApp','<p>El archivo <b>'+esc(name)+'</b> se descargó en este dispositivo.</p><p class="muted">Este navegador no comparte archivos directamente. Abrí WhatsApp y adjuntalo desde Descargas.</p><a class="btn pri block" target="_blank" rel="noopener" href="https://wa.me/?text='+msg+'"><i data-ico="share">📤</i> Abrir WhatsApp</a>');
- return false}
-async function docToWhatsApp(){if(!DOC||!DOC.pages.length)return toast('No hay páginas');
- await withBusy(async()=>{busy('Preparando PDF liviano…');
-  const bytes=await buildPDF(DOC.pages,{size:S.size,orient:S.orient,margin:S.margin,quality:'media',title:DOC.name},(i,n)=>busy('Generando PDF '+i+'/'+n));
-  const blob=pdfBlob(bytes);busy(false);
-  if(blob.size>60*1024*1024)toast('Ojo: el archivo pesa '+fmtSize(blob.size)+'. Probá con "Máxima compresión".',5000);
-  await share(blob,safeName(DOC.name)+'.pdf')})}
 
 /* ---------- 2. Búsqueda por contenido (texto reconocido) ---------- */
 {const _run=runOcrPages;runOcrPages=async function(pages){const r=await _run(pages);
@@ -1564,13 +1456,6 @@ $('#docSearch').placeholder='🔎 Buscar por nombre o texto del documento…';
 $('#docSearch').oninput=()=>renderDocList();$('#docSort').onchange=()=>renderDocList();
 
 /* ---------- 3. Espacio usado y limpieza ---------- */
-async function storageSheet(){let est='';try{const q=await navigator.storage.estimate();est=fmtSize(q.usage||0)+' usados'+(q.quota?' de '+fmtSize(q.quota)+' disponibles':'')}catch(e){}
-const rows=[];for(const m of [..._metas].sort((a,b)=>b.updated-a.updated)){const d=await DB.getDoc(m.id);let bytes=0;try{bytes=JSON.stringify(d).length}catch(e){}rows.push({...m,bytes})}
-rows.sort((a,b)=>b.bytes-a.bytes);
-const b=openSheet('Espacio usado','<p class="muted">'+esc(est)+' · '+rows.length+' documento(s). Los documentos viven solo en este dispositivo: si lo formateás o desinstalás el navegador, se pierden. Guardá en otro lado los PDF que ya elevaste.</p><div id="stList">'+rows.map(r=>'<div class="frow"><img src="'+r.thumb+'" style="width:28px;height:36px;object-fit:cover;border-radius:4px"><span style="flex:1"><b>'+esc(r.name)+'</b><br><small class="muted">'+r.count+' pág · '+fmtSize(r.bytes)+' · '+new Date(r.updated).toLocaleDateString('es-AR')+'</small></span><button class="btn sm" data-stdl="'+r.id+'"><i data-ico="save">⬇</i></button><button class="btn sm red" data-stdel="'+r.id+'"><i data-ico="trash">🗑</i></button></div>').join('')+'</div><p class="muted">Consejo: descargá el PDF antes de borrar.</p>');
-b.onclick=async e=>{const dl=e.target.closest('[data-stdl]'),del=e.target.closest('[data-stdel]');
- if(dl){await withBusy(async()=>{busy('Generando PDF…');const d=await DB.getDoc(dl.dataset.stdl);const bytes=await buildPDF(d.pages,{size:S.size,orient:S.orient,margin:S.margin,quality:S.quality,title:d.name},(i,n)=>busy('PDF '+i+'/'+n));busy(false);download(pdfBlob(bytes),safeName(d.name)+'.pdf')})}
- if(del){const m=_metas.find(x=>x.id===del.dataset.stdel);if(!confirm('¿Borrar "'+(m?m.name:'')+'"? No se puede deshacer.'))return;await DB.delDoc(del.dataset.stdel);await refreshLists();toast('Documento borrado');await Nav.back();storageSheet()}}}
 
 /* ---------- 4. Acceso: usuario y contraseña además del enlace ---------- */
 function sbLoginScreen(){
@@ -1673,26 +1558,6 @@ function sbLoginScreen(){
 }
 
 /* nombre en la lista de administración */
-async function adminSheet(){if(!SB.ready||SB.profile.role!=='admin')return toast('Solo el administrador puede entrar acá');
-const b=openSheet('👤 Administración de accesos','<div class="row"><button class="btn pri block" id="adNew"><i data-ico="plus">＋</i> Crear enlace de invitación</button><button class="btn block" id="adRef"><i data-ico="rotr">↻</i> Actualizar</button></div><input id="adFind" placeholder="🔎 Buscar por nombre o correo"><div id="adList"><p class="muted">Cargando…</p></div>');
-let all=[];
-const paint=()=>{const q=($('#adFind',b).value||'').toLowerCase();
- const l=all.filter(u=>((u.email||'')+' '+(u.full_name||'')).toLowerCase().includes(q));
- $('#adList',b).innerHTML='<div class="cph">'+l.length+' usuario(s)</div>'+l.map(u=>'<div class="frow adrow"><span style="flex:1"><b>'+esc(u.full_name||u.email||'(sin correo)')+'</b><br><small class="muted">'+esc(u.email||'')+'<br>'+esc(u.role)+' · '+esc(u.status)+(u.id===SB.user.id?' · vos':'')+'</small></span>'+(u.id===SB.user.id?'':'<button class="btn sm '+(u.status==='activo'?'red':'pri')+'" data-tog="'+u.id+'" data-st="'+esc(u.status)+'">'+(u.status==='activo'?'Quitar acceso':'Dar acceso')+'</button><button class="btn sm" data-rol="'+u.id+'" data-r="'+esc(u.role)+'">'+(u.role==='admin'?'Quitar admin':'Hacer admin')+'</button>')+'</div>').join('')};
-const draw=async()=>{const {data,error}=await SB.client.from('profiles').select('*').order('created_at',{ascending:false});
- if(error)return $('#adList',b).innerHTML='<p class="muted">'+esc(error.message)+'</p>';all=data||[];paint()};
-$('#adFind',b).oninput=paint;await draw();
-b.onclick=async e=>{const t=e.target.closest('[data-tog]'),r=e.target.closest('[data-rol]');
- if(e.target.closest('#adRef'))return draw();
- if(t){const st=t.dataset.st==='activo'?'bloqueado':'activo';const {error}=await SB.client.from('profiles').update({status:st}).eq('id',t.dataset.tog);toast(error?('Error: '+error.message):(st==='activo'?'Acceso habilitado':'Acceso quitado'));draw()}
- if(r){const rol=r.dataset.r==='admin'?'usuario':'admin';const {error}=await SB.client.from('profiles').update({role:rol}).eq('id',r.dataset.rol);toast(error?('Error: '+error.message):'Rol actualizado');draw()}
- if(e.target.closest('#adNew')){const email=prompt('Correo de la persona (opcional; vacío = enlace abierto):','')||null;
-  const {data,error}=await SB.client.rpc('create_invite',{p_email:email,p_days:7});
-  if(error)return toast('Error: '+error.message);
-  const link=location.origin+location.pathname+'?invite='+data;
-  openSheet('Enlace de invitación','<p class="muted">Válido 7 días'+(email?' y solo para <b>'+esc(email)+'</b>':' para quien lo reciba')+'. Al abrirlo, la persona entra con su correo y queda habilitada.</p><textarea rows="3" readonly class="invlink">'+esc(link)+'</textarea><div class="row"><button class="btn block" id="ivCopy"><i data-ico="type">📋</i> Copiar</button><button class="btn pri block" id="ivShare"><i data-ico="share">📤</i> Compartir</button></div>').onclick=async ev=>{
-   if(ev.target.closest('#ivCopy')){try{await navigator.clipboard.writeText(link);toast('Enlace copiado')}catch(x){toast('Copialo a mano del recuadro')}}
-   if(ev.target.closest('#ivShare')){try{await navigator.share({title:'Acceso a Danscanner Pro',text:'Entrá con este enlace:',url:link})}catch(x){}}}}}}
 
 /* ---------- 5. Enganches en la interfaz ---------- */
 $('#docShare').onclick=()=>docToWhatsApp();
@@ -1709,61 +1574,6 @@ function rotateDeg(c,deg){const rad=deg*Math.PI/180,w=c.width,h=c.height;const n
 {const _rp=renderPage;renderPage=async function(p,o){let c=await _rp(p,o);if(S.deskew!==false&&p.skew===undefined&&!(o&&o.maxSide&&o.maxSide<900)){try{p.skew=deskewAngle(c)}catch(e){p.skew=0}}if(p.skew){c=rotateDeg(c,-p.skew);if(printBWOn(p))rebinarize(c)}return c}}
 
 /* ---------- 2. Cambiar foto: selector propio, uno por vez ---------- */
-function replacePagePhoto(){
-  const p = Ed.p;
-  if (!p) return;
-  const b = openSheet('Cambiar esta foto',
-    '<div class="menu">'+
-      '<button data-r="cam"><b data-ico="camera">📷</b>Sacar otra foto</button>'+
-      '<button data-r="gal"><b data-ico="image">🖼️</b>Elegir de la galería</button>'+
-    '</div>'+
-    '<p class="muted">Se reemplaza solo la página '+(Ed.i+1)+'. Se mantienen el filtro, los ajustes, las firmas y los textos.</p>');
-  b.onclick = async e => {
-    const r = e.target.closest('[data-r]')?.dataset.r;
-    if (!r) return;
-    await Nav.back();
-    const inp = document.createElement('input');
-    inp.type = 'file';
-    inp.accept = 'image/*';
-    if (r === 'cam') inp.setAttribute('capture', 'environment');
-    inp.style.cssText = 'position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0';
-    document.body.appendChild(inp);
-    const cleanup = () => { try { inp.remove(); } catch(_){} };
-    let done = false;
-    const finish = async files => {
-      if (done) return; done = true;
-      cleanup();
-      if (!files || !files.length) return;
-      let np = null;
-      await withBusy(async () => {
-        busy('Procesando foto…');
-        try {
-          const arr = await importFiles(files.slice(0,1), {auto: S.autoCrop});
-          np = arr && arr[0];
-        } catch (err) {
-          console.error(err);
-          toast('Error: ' + (err.message || err), 4500);
-        }
-      });
-      if (!np) { toast('No se pudo leer la foto', 4000); return; }
-      const target = (DOC && DOC.pages.find(x => x.id === p.id)) || p;
-      if (!target) return;
-      target.orig = np.orig;
-      target.quad = np.quad;
-      target.rot = 0;
-      delete target.skew;
-      Ed.touch(true);
-      toast('Foto reemplazada. Ajustá el recorte si hace falta.');
-      if (await cropPage(target)) Ed.touch(true);
-    };
-    inp.addEventListener('change', () => finish([...inp.files]));
-    inp.addEventListener('cancel', cleanup);
-    window.addEventListener('focus', () => {
-      setTimeout(() => { if (!done && !inp.files.length) cleanup(); }, 1500);
-    }, {once:true});
-    inp.click();
-  };
-}
 
 /* ---------- 3. Ajustes del editor con − y + ---------- */
 function addStepButtons(root){$$('input[type=range]',root).forEach(r=>{if(r.dataset.pm)return;r.dataset.pm='1';
@@ -1812,19 +1622,6 @@ b.onclick=e=>{const c=e.target.closest('[data-dc]');if(c){col=c.dataset.dc;$$('[
 if(e.target.closest('#dtOk')){result=png();Nav.back()}}})}
 
 /* ---------- 7. OCR más preciso ---------- */
-function prepOcr(c){let out=c;const short=Math.min(out.width,out.height);
-if(short<1600){const k=Math.min(3,1600/short);const t=canvas(out.width*k,out.height*k),x=t.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(out,0,0,t.width,t.height);out=t}
-const x=out.getContext('2d',{willReadFrequently:true}),id=x.getImageData(0,0,out.width,out.height),d=id.data;
-try{bgDivide(out,d,true)}catch(e){}
-autoLevels(d,.01,.99);
-lutApply(d,makeLut(v=>v>190?255:v<90?0:(v-90)*255/100));
-unsharp(d,out.width,out.height,.7,1);
-x.putImageData(id,0,0);return out}
-async function ocrCanvases(getImgs,lang,total){busy('Cargando motor OCR (la primera vez descarga el idioma)…');await loadLib('tess');let cur=0;
-const w=await Tesseract.createWorker(lang||S.lang,1,{logger:m=>{if(m.status==='recognizing text')busy('Reconociendo texto · página '+cur+(total?'/'+total:'')+' · '+Math.round(m.progress*100)+'%')}});
-try{await w.setParameters({preserve_interword_spaces:'1',tessedit_pageseg_mode:'3',user_defined_dpi:'300'})}catch(e){}
-const texts=[];try{await getImgs(async img=>{cur++;busy('Preparando imagen '+cur+(total?'/'+total:'')+'…');const prep=(img&&img.getContext)?prepOcr(img):img;const {data}=await w.recognize(prep);texts.push((data.text||'').replace(/[ \t]+\n/g,'\n').trim())})}finally{await w.terminate()}
-return texts}
 
 /* ---------- 8. Tamaños, sin comprimir y dividir al terminar ---------- */
 function finishSheet(){if(!DOC||!DOC.pages.length)return;let lvl=S.quality||'media';const cache={};
@@ -1879,7 +1676,6 @@ function docItem(m,withSel){const d=new Date(m.updated);return '<div class="item
 return new Promise((res,rej)=>{const t=this.db.transaction(['docs','meta'],'readwrite');t.objectStore('docs').put(d);t.objectStore('meta').put({id:d.id,name:d.name,created:d.created,updated:d.updated,count:d.pages.length,thumb:d.pages[0]?.thumb||'',text:(d.text||'').slice(0,4000),bytes});t.oncomplete=res;t.onerror=()=>rej(t.error)})}}
 
 /* ---------- 12. Permisos: compartir solo si el administrador lo habilita ---------- */
-function applyPerms(){const p=SB.profile;const allow=!SB.ready||!p||p.role==='admin'||p.can_share!==false;document.documentElement.classList.toggle('no-share',!allow)}
 {const _ref=sbRefresh;sbRefresh=async function(){const r=await _ref.apply(this,arguments);applyPerms();return r}}
 {const _adm=adminSheet;adminSheet=async function(){await _adm.apply(this,arguments);
 const b=$('#sheetBody');if(!b)return;
@@ -3047,234 +2843,100 @@ document.head.insertAdjacentHTML('beforeend','<style id="bkCss">'
 +'.bk-nag{display:flex;align-items:center;gap:10px;margin:0 0 12px;padding:10px 10px 10px 12px;border:1px solid #fcd34d;border-radius:14px;background:#fffbeb}[data-theme="dark"] .bk-nag{background:#2a2410;border-color:#78620f}'
 +'.bk-ic{font-size:22px}.bk-t{flex:1;min-width:0}.bk-t b{display:block;font-size:13.5px}.bk-t small{color:var(--tx2);font-size:12px}.bk-x{width:28px;height:28px;border-radius:50%;color:var(--tx2)}'
 +'</style>');
-</script>
-<script type="text/plain" id="modsrc-admin">/* Danscanner Pro · módulo que se carga solo cuando se usa */
-window.__mods=window.__mods||{};
-/* ---------- panel de administración ---------- */
-function admInitials(n,e){const base=(n||'').trim()||(e||'').split('@')[0]||'?';const p=base.split(/[\s._-]+/).filter(Boolean);return (p.length>=2?p[0][0]+p[1][0]:base.slice(0,2)).toUpperCase()}
-function admColor(seed){const pal=['#e53935','#d81b60','#8e24aa','#5e35b1','#3949ab','#1e88e5','#039be5','#00897b','#43a047','#f4511e','#6d4c41','#546e7a'];let h=0;for(const c of String(seed||''))h=(h*31+c.charCodeAt(0))>>>0;return pal[h%pal.length]}
-function admAvatar(u,lg){return '<div class="avatar'+(lg?' lg':'')+'" style="background:'+admColor(u.id||u.email||'')+'">'+esc(admInitials(u.full_name,u.email))+'</div>'}
-function admDate(iso){if(!iso)return '—';try{return new Date(iso).toLocaleDateString('es-AR',{day:'2-digit',month:'short',year:'numeric'})}catch(e){return '—'}}
-function admRel(iso){if(!iso)return '';try{const d=new Date(iso),s=Math.floor((Date.now()-d)/1000);if(s<3600)return 'hace '+Math.max(1,Math.floor(s/60))+' min';if(s<86400)return 'hace '+Math.floor(s/3600)+' h';if(s<2592000)return 'hace '+Math.floor(s/86400)+' días';return 'el '+d.toLocaleDateString('es-AR')}catch(e){return ''}}
-function admBadges(u,isMe){const st={activo:['activo','Activo'],pendiente:['pendiente','Pendiente'],bloqueado:['bloqueado','Bloqueado']}[u.status]||['user',u.status||'—'];
-return '<span class="badge '+(u.role==='admin'?'admin':'user')+'">'+(u.role==='admin'?'Admin':'Usuario')+'</span><span class="badge '+st[0]+'">'+esc(st[1])+'</span>'+(isMe?'<span class="badge you">Vos</span>':'')}
-__mods.adminSheet=async function(){if(!SB.ready||!SB.profile||SB.profile.role!=='admin')return toast('Solo el administrador puede entrar acá');
-let users=[],filter='todos',query='',bulk=false;const sel=new Set();
-const b=openSheet('👤 Administración de accesos','<div class="admin-wrap" id="admRoot"><div class="admin-empty"><div class="big">⏳</div>Cargando…</div></div>');
-const draw=()=>{const st={total:users.length,activos:users.filter(u=>u.status==='activo').length,pend:users.filter(u=>u.status==='pendiente').length,bloq:users.filter(u=>u.status==='bloqueado').length,admins:users.filter(u=>u.role==='admin').length};
-let list=users.filter(u=>{if(filter==='activos'&&u.status!=='activo')return false;if(filter==='pendientes'&&u.status!=='pendiente')return false;if(filter==='bloqueados'&&u.status!=='bloqueado')return false;if(filter==='admins'&&u.role!=='admin')return false;
-if(query)return ((u.email||'')+' '+(u.full_name||'')).toLowerCase().includes(query.toLowerCase());return true});
-list.sort((a,c)=>a.role!==c.role?(a.role==='admin'?-1:1):new Date(c.created_at||0)-new Date(a.created_at||0));
-$('#admRoot',b).innerHTML='<div class="admin-stats">'
-+'<div class="stat-card" data-tone="ac"><b>'+st.total+'</b><small>Total</small></div>'
-+'<div class="stat-card" data-tone="ok"><b>'+st.activos+'</b><small>Activos</small></div>'
-+'<div class="stat-card" data-tone="red"><b>'+st.bloq+'</b><small>Bloqueados</small></div>'
-+'<div class="stat-card" data-tone="info"><b>'+st.admins+'</b><small>Admins</small></div></div>'
-+'<div class="invite-cta" id="admInvite"><div class="ic">＋</div><div class="txt"><b>Invitar a alguien</b><small>Enlace o código QR para dar acceso</small></div><div class="arrow">›</div></div>'
-+'<div class="admin-search"><input id="admQ" placeholder="Buscar por nombre o correo…" value="'+esc(query)+'"></div>'
-+'<div class="admin-filters">'+[['todos','Todos',st.total],['activos','Activos',st.activos],['pendientes','Pendientes',st.pend],['bloqueados','Bloqueados',st.bloq],['admins','Admins',st.admins]].map(([k,l,n])=>'<button class="chip '+(filter===k?'on':'')+'" data-fl="'+k+'">'+l+' · '+n+'</button>').join('')+'</div>'
-+(bulk&&sel.size?'<div class="admin-selbar"><b>'+sel.size+' seleccionado(s)</b><button data-bulk="activo">✓ Dar acceso</button><button data-bulk="bloqueado">✕ Quitar</button><button data-bulk="cancel">Cancelar</button></div>':'')
-+'<div class="admin-list">'+(list.length?list.map(u=>{const isMe=u.id===SB.user.id;
-return '<div class="admin-user" data-id="'+u.id+'" data-status="'+esc(u.status||'')+'" data-role="'+esc(u.role||'')+'">'
-+(bulk&&!isMe?'<input type="checkbox" class="cb" data-cb="'+u.id+'" '+(sel.has(u.id)?'checked':'')+'>':'')
-+admAvatar(u)+'<div class="inf"><div class="nm">'+esc(u.full_name||u.email||'(sin nombre)')+'</div><div class="em">'+esc(u.email||'')+'</div><div class="admin-badges">'+admBadges(u,isMe)+'</div>'+(u.created_at?'<div class="meta">Se registró '+admRel(u.created_at)+'</div>':'')+'</div><div class="chev">›</div></div>'}).join('')
-:'<div class="admin-empty"><div class="big">🔎</div>No hay usuarios que coincidan.</div>')+'</div>'
-+'<div class="admin-actions-top" style="margin-top:10px"><button class="btn" id="admBulk">'+(bulk?'✕ Cancelar':'☑️ Seleccionar')+'</button><button class="btn" id="admCsv">📥 CSV</button><button class="btn" id="admRef">↻ Actualizar</button></div>';
-const q=$('#admQ',b);if(q)q.oninput=e=>{query=e.target.value;const p=e.target.selectionStart;draw();const n=$('#admQ',b);n.focus();try{n.setSelectionRange(p,p)}catch(x){}}};
-const load=async(silent)=>{if(!silent)$('#admRoot',b).innerHTML='<div class="admin-empty"><div class="big">⏳</div>Cargando…</div>';
-try{const r=await _to(SB.client.from('profiles').select('*').order('created_at',{ascending:false}),20000,'usuarios');
- if(r.error)throw r.error;users=r.data||[];draw()}
-catch(e){$('#admRoot',b).innerHTML='<div class="admin-empty"><div class="big">⚠️</div>'+esc(e.message||e)+'<br><button class="btn pri" style="margin-top:12px" id="admRetry">↻ Reintentar</button></div>'}};
-b.onclick=async e=>{
- if(e.target.closest('#admRetry'))return load();
- const f=e.target.closest('[data-fl]');if(f){filter=f.dataset.fl;return draw()}
- if(e.target.closest('#admInvite'))return adminInviteSheet();
- if(e.target.closest('#admRef'))return load(true);
- if(e.target.closest('#admBulk')){bulk=!bulk;if(!bulk)sel.clear();return draw()}
- if(e.target.closest('#admCsv'))return admCsv(users);
- const cb=e.target.closest('[data-cb]');if(cb){e.stopPropagation();cb.checked?sel.add(cb.dataset.cb):sel.delete(cb.dataset.cb);return draw()}
- const bl=e.target.closest('[data-bulk]');if(bl){const a=bl.dataset.bulk;if(a==='cancel'){bulk=false;sel.clear();return draw()}
-  await withBusy(async()=>{let i=0;for(const id of sel){busy('Actualizando '+(++i)+'/'+sel.size);await SB.client.from('profiles').update({status:a}).eq('id',id)}});
-  sel.clear();bulk=false;toast(a==='activo'?'Acceso habilitado':'Acceso quitado');return load(true)}
- const row=e.target.closest('.admin-user');if(row){const u=users.find(x=>x.id===row.dataset.id);if(u)adminUserDetail(u,()=>load(true),$('#admRoot',b))}};
-await load()}
-function adminUserDetail(u,onChange,host){const isMe=u.id===SB.user.id;
-const b=host||openSheet('Detalle del usuario','');if(host)host.innerHTML='<button class="btn sm" data-act="back" style="margin-bottom:10px">← Volver a la lista</button>'+('<div class="udetail-head">'+admAvatar(u,true)+'<div class="txt"><h3>'+esc(u.full_name||u.email||'(sin nombre)')+'</h3><div class="em">'+esc(u.email||'')+'</div><div class="admin-badges" style="margin-top:8px">'+admBadges(u,isMe)+'</div></div></div>'
-+'<div class="udetail-row"><span class="label">Rol</span><span class="val">'+(u.role==='admin'?'Administrador':'Usuario')+'</span></div>'
-+'<div class="udetail-row"><span class="label">Estado</span><span class="val">'+(u.status==='activo'?'Puede entrar':u.status==='pendiente'?'Esperando autorización':'Bloqueado')+'</span></div>'
-+'<div class="udetail-row"><span class="label">Registrado</span><span class="val">'+admDate(u.created_at)+' · '+admRel(u.created_at)+'</span></div>'
-+'<div class="udetail-row"><span class="label">ID</span><span class="val"><code>'+esc(u.id)+'</code></span></div>'
-+(isMe?'<p class="muted" style="margin-top:16px;text-align:center">Es tu propia cuenta: no podés quitarte el acceso.</p>'
- :'<div class="udetail-actions"><button class="btn '+(u.status==='activo'?'red':'pri')+'" data-act="st">'+(u.status==='activo'?'🚫 Quitar acceso':'✓ Dar acceso')+'</button><button class="btn" data-act="rol">'+(u.role==='admin'?'👤 Quitar admin':'👑 Hacer admin')+'</button><button class="btn" data-act="mail">📋 Copiar correo</button><button class="btn" data-act="del">🗑 Eliminar</button></div>'));
-b.onclick=async e=>{const a=e.target.closest('[data-act]')?.dataset.act;if(!a)return;
-if(a==='mail'){try{await navigator.clipboard.writeText(u.email||'');toast('Correo copiado')}catch(x){toast('No se pudo copiar')}return}
-if(a==='back'){onChange&&onChange();return}
-if(a==='st'){const n=u.status==='activo'?'bloqueado':'activo';const {error}=await SB.client.from('profiles').update({status:n}).eq('id',u.id);if(error)return toast('Error: '+error.message);toast(n==='activo'?'Acceso habilitado':'Acceso quitado');if(!host)await Nav.back();onChange&&onChange();return}
-if(a==='rol'){const n=u.role==='admin'?'usuario':'admin';if(n==='admin'&&!confirm('¿Convertir a '+(u.email||'')+' en administrador? Va a poder dar y quitar accesos.'))return;const {error}=await SB.client.from('profiles').update({role:n}).eq('id',u.id);if(error)return toast('Error: '+error.message);toast(n==='admin'?'Ahora es administrador':'Ya no es administrador');if(!host)await Nav.back();onChange&&onChange();return}
-if(a==='del'){if(!confirm('¿Eliminar el perfil de '+(u.email||'')+'? Si vuelve a entrar con su correo, se crea de nuevo.'))return;const {error}=await SB.client.from('profiles').delete().eq('id',u.id);if(error)return toast('Error: '+error.message);toast('Perfil eliminado');if(!host)await Nav.back();onChange&&onChange()}}}
-function adminInviteSheet(){let role='usuario',days=7;
-const b=openSheet('Invitar persona','<p class="muted" style="margin-top:0">La persona abre el enlace, entra con su correo y queda habilitada.</p>'
-+'<div class="inv-step"><span class="num">1</span><div class="txt"><b>Correo (opcional)</b>Vacío = sirve para cualquiera.</div></div><input id="invEmail" type="email" inputmode="email" placeholder="correo@ejemplo.com">'
-+'<div class="inv-step"><span class="num">2</span><div class="txt"><b>Rol</b>Con qué permisos entra.</div></div><div class="seg" id="invRole"><button data-r="usuario" class="on">👤 Usuario</button><button data-r="admin">👑 Admin</button></div>'
-+'<div class="inv-step"><span class="num">3</span><div class="txt"><b>Vencimiento</b>Después de ese plazo el enlace no sirve más.</div></div><div class="seg" id="invDays"><button data-d="1">1 día</button><button data-d="7" class="on">7 días</button><button data-d="30">30 días</button></div>'
-+'<button class="btn pri block" style="margin-top:16px" id="invGo"><i data-ico="check">✨</i> Generar enlace</button>');
-b.onclick=async e=>{const r=e.target.closest('#invRole [data-r]');if(r){role=r.dataset.r;$$('#invRole button',b).forEach(x=>x.classList.toggle('on',x===r));return}
-const d=e.target.closest('#invDays [data-d]');if(d){days=+d.dataset.d;$$('#invDays button',b).forEach(x=>x.classList.toggle('on',x===d));return}
-if(!e.target.closest('#invGo'))return;
-const email=($('#invEmail',b).value||'').trim()||null;
-if(email&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))return toast('Escribí un correo válido');
-await withBusy(async()=>{busy('Generando…');const {data,error}=await SB.client.rpc('create_invite',{p_email:email,p_days:days});
-if(error)throw new Error(error.message);
-const link=location.origin+location.pathname+'?invite='+data;busy('Armando el código QR…');
-b.innerHTML='<div style="text-align:center;margin-bottom:8px"><div style="font-size:48px">🎉</div><h3 style="margin:8px 0 4px">Invitación lista</h3><p class="muted" style="margin:0">'+(email?'Solo para <b>'+esc(email)+'</b>':'Enlace abierto')+' · vence en '+days+' día(s)'+(role==='admin'?' · entra como administrador':'')+'</p></div>'
-+'<div class="inv-result"><div class="qr-wrap" id="invQr"></div><div class="inv-link">'+esc(link)+'</div><div class="row" style="margin:0"><button class="btn block" id="invCopy"><i data-ico="type">📋</i> Copiar</button><button class="btn pri block" id="invShare"><i data-ico="share">📤</i> Compartir</button></div></div>'
-+'<div class="inv-step"><span class="num">💡</span><div class="txt"><b>Cómo se usa</b>Mandaselo por WhatsApp, o que escanee el QR con la cámara del teléfono.</div></div>'
-+'<div class="row"><button class="btn block" id="invNew">➕ Otra invitación</button><button class="btn pri block" data-back><i data-ico="check">✓</i> Listo</button></div>';
-iconize(b);
-try{await loadLib('qrcode');new QRCode($('#invQr',b),{text:link,width:190,height:190,correctLevel:QRCode.CorrectLevel.M})}
-catch(x){$('#invQr',b).innerHTML='<p class="muted">El código QR necesita internet la primera vez. Usá el enlace de abajo.</p>'}
-busy(false);
-$('#invCopy',b).onclick=async()=>{try{await navigator.clipboard.writeText(link);toast('Enlace copiado')}catch(x){toast('Copialo del recuadro')}};
-$('#invShare',b).onclick=async()=>{const txt='Te comparto el acceso a Danscanner Pro: '+link;try{if(navigator.share)return void await navigator.share({title:'Acceso a Danscanner Pro',text:txt,url:link});await navigator.clipboard.writeText(txt);toast('Copiado')}catch(x){}};
-$('#invNew',b).onclick=()=>Nav.back().then(adminInviteSheet)})}}
-function admCsv(list){if(!list||!list.length)return toast('No hay usuarios para exportar');
-const head=['Nombre','Correo','Rol','Estado','Registrado','ID'];
-const rows=list.map(u=>[u.full_name||'',u.email||'',u.role||'',u.status||'',admDate(u.created_at),u.id]);
-const csv=[head,...rows].map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(';')).join('\n');
-download(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),'usuarios_'+new Date().toISOString().slice(0,10)+'.csv');toast('CSV descargado')}
+/* ===================== ORGANIZACIÓN: nombre y carpeta automáticos, carpetas por expediente y etiquetas ===================== */
+const DOC_TAGS=[['Judicial','⚖️'],['Administrativo','🗂️'],['Confidencial','🔒']];
+const DOC_TYPES=[['Oficio',/\boficio\b/],['Cédula',/\bcedula\b/],['Notificación',/\bnotificaci/],['Sentencia',/\bsentencia\b/],['Resolución',/\bresolucion\b|\bresuelvo\b/],['Decreto',/\bdecreto\b/],['Auto interlocutorio',/\bauto interlocutorio\b/],['Acta',/\bacta\b/],['Informe',/\binforme\b/],['Nota',/\bnota\b/],['Certificado',/\bcertificad/],['Constancia',/\bconstancia\b/],['Solicitud',/\bsolicitud\b/],['Denuncia',/\bdenuncia\b/],['Evaluación',/\bevaluacion\b/],['Planilla',/\bplanilla\b/],['Memorándum',/\bmemorandum\b/]];
+const MES_N={enero:1,febrero:2,marzo:3,abril:4,mayo:5,junio:6,julio:7,agosto:8,septiembre:9,setiembre:9,octubre:10,noviembre:11,diciembre:12};
+function docAnalyze(text){const t=String(text||''),n=nbNorm(t),head=n.slice(0,900);let type='',best=1e9;
+ for(const [name,re] of DOC_TYPES){const m=re.exec(head)||null;if(m&&m.index<best){best=m.index;type=name}}
+ if(!type)for(const [name,re] of DOC_TYPES)if(re.test(n)){type=name;break}
+ const e=nbEntities(t);let exp='';for(const x of e.expedientes){const m=/^(?:expte\.?|expediente|causa|legajo|autos)\s*(?:n(?:ro|°|º)?\.?\s*)?[:\-]?\s*(.+)$/i.exec(x);if(m){exp=m[1].replace(/[.,;:]+$/,'').trim();break}}
+ let date='';const f=[...e.fechas].sort((x,y)=>t.indexOf(x)-t.indexOf(y))[0];if(f){let m=/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/.exec(f);if(m){const y=m[3].length===2?'20'+m[3]:m[3];date=pad2(+m[1])+'-'+pad2(+m[2])+'-'+y}
+  else if(m=new RegExp('^(\\d{1,2})\\s+de\\s+('+NB_MESES+')(?:\\s+de(?:l)?\\s+(\\d{4}))?','i').exec(f)){date=pad2(+m[1])+'-'+pad2(MES_N[nbNorm(m[2])])+(m[3]?'-'+m[3]:'')}}
+ const tags=[];if(/psicolog|psiquiatr|medic|salud mental|clinic|diagnostic|confidencial|reservad/.test(n))tags.push('Confidencial');
+ if(/juzgado|\bjuez|expte|expediente|\bcausa\b|fiscal|tribunal|camara|oficio|cedula|sentencia|resolucion|decreto|ejecucion penal/.test(n))tags.push('Judicial');
+ else if(/\bnota\b|informe|\bacta\b|constancia|certificad|planilla|solicitud|memorandum|administraci/.test(n))tags.push('Administrativo');
+ const name=[type,exp?'Expte '+exp:'',date].filter(Boolean).join(' · ');
+ return {type,exp,date,tags,name,folder:exp?'Expte '+exp:''}}
+const isDefaultName=nm=>/\d{2}-\d{2}-\d{4} \d{2}\.\d{2}$/.test(nm||'')||/^Escaneo\b/i.test(nm||'');
+const Org={q:Promise.resolve(),busy:0,
+ async headText(d){const t=(d.text||d.head||'').trim();if(t.length>40)return t;if(!d.pages.length)return '';
+  if(navigator.onLine===false)throw new Error('sin conexión');let w=null;
+  const job=(async()=>{await loadLib('tess');w=await Tesseract.createWorker(S.lang||'spa',1);const c=await renderPage(d.pages[0],{maxSide:1800});const {data}=await w.recognize(c);return (data.text||'').trim()})();
+  try{return await Promise.race([job,new Promise((_,rej)=>setTimeout(()=>rej(new Error('tiempo agotado')),90000))])}finally{if(w)try{await w.terminate()}catch(e){}}},
+ enqueue(id){if(S.autoOrganize===false)return;this.q=this.q.then(()=>this.auto(id)).catch(e=>console.warn('Organizar:',e&&e.message))},
+ async auto(id,{force=false,apply=true}={}){const d=await DB.getDoc(id);if(!d)return null;if(!force&&d.autoDone)return null;
+  this.busy++;try{const head=await this.headText(d);if(!head||head.length<20){d.autoDone=true;await DB.putDoc(d);return null}
+   const a=docAnalyze(head);if(!d.text&&!d.head)d.head=head.slice(0,4000);d.autoDone=true;
+   if(!apply){await DB.putDoc(d);return a}
+   const cur=await DB.getDoc(id);if(!cur)return a;if(cur.updated>d.updated){cur.head=cur.head||d.head;cur.autoDone=true;Object.assign(d,cur)}
+   let msg=[];if(a.name&&(force||isDefaultName(d.name))){d.name=a.name;msg.push('“'+a.name+'”')}
+   if(a.folder&&!d.folder){d.folder=a.folder;msg.push('📁 '+a.folder)}
+   if(a.tags.length&&!(d.tags&&d.tags.length)){d.tags=a.tags;msg.push(a.tags.join(', '))}
+   await DB.putDoc(d);refreshLists();if(msg.length&&!force)toast('✨ Organizado: '+msg.join(' · '),4500);return a}
+  finally{this.busy--}}};
+/* al cerrar un documento, se organiza solo en segundo plano */
+{const _open=openDocScreen;openDocScreen=function(){_open.apply(this,arguments);const id=DOC&&DOC.id;const top=Nav.stack[Nav.stack.length-1];if(top&&top.id==='docScreen'&&id){const oc=top.onClose;top.onClose=()=>{oc&&oc();setTimeout(()=>Org.enqueue(id),600)}}}}
+/* carpeta, etiquetas y favorito también en el índice (meta) */
+{const _put=DB.putDoc.bind(DB);DB.putDoc=function(d){let bytes=0;try{bytes=JSON.stringify(d).length}catch(e){}
+ return new Promise((res,rej)=>{const t=this.db.transaction(['docs','meta'],'readwrite');t.objectStore('docs').put(d);t.objectStore('meta').put({id:d.id,name:d.name,created:d.created,updated:d.updated,count:d.pages.length,thumb:d.pages[0]?.thumb||'',text:(d.text||d.head||'').slice(0,4000),bytes,folder:d.folder||'',tags:Array.isArray(d.tags)?d.tags:[],fav:!!d.fav});t.oncomplete=res;t.onerror=()=>rej(t.error)})}}
 
+/* hoja "Carpeta y etiquetas" */
+async function orgSheet(id){const d=await DB.getDoc(id);if(!d)return toast('Documento no encontrado');const folders=[...new Set(_metas.map(m=>m.folder).filter(Boolean))].sort();const tags=new Set(d.tags||[]);
+ const b=openSheet('Carpeta y etiquetas','<p class="muted">'+esc(d.name)+'</p>'+opt('Nombre','<input id="ogName" value="'+esc(d.name)+'">')
+ +opt('Carpeta (por ejemplo, el expediente)','<input id="ogFolder" list="ogFolders" placeholder="Sin carpeta" value="'+esc(d.folder||'')+'"><datalist id="ogFolders">'+folders.map(f=>'<option value="'+esc(f)+'">').join('')+'</datalist>')
+ +(folders.length?'<div class="chips og-fl">'+folders.map(f=>'<button class="chip" data-f="'+esc(f)+'">📁 '+esc(f)+'</button>').join('')+'</div>':'')
+ +'<div class="cph">Etiquetas</div><div class="chips">'+DOC_TAGS.map(([t,ic])=>'<button class="chip '+(tags.has(t)?'on':'')+'" data-t="'+t+'">'+ic+' '+t+'</button>').join('')+'<button class="chip '+(d.fav?'on':'')+'" data-fav>⭐ Favorito</button></div>'
+ +'<button class="btn block" id="ogAuto" style="margin-top:10px">✨ Sugerir nombre y carpeta (lee el documento)</button><div id="ogSug"></div><button class="btn pri block" id="ogSave" style="margin-top:8px">Guardar</button>');
+ b.onclick=async e=>{const f=e.target.closest('[data-f]');if(f){$('#ogFolder',b).value=f.dataset.f;return}
+  const t=e.target.closest('[data-t]');if(t){t.classList.toggle('on');return}if(e.target.closest('[data-fav]')){e.target.closest('[data-fav]').classList.toggle('on');return}
+  if(e.target.closest('#ogAuto')){let a;await withBusy(async()=>{busy('Leyendo el documento…');a=await Org.auto(id,{force:true,apply:false})});if(!a){$('#ogSug',b).innerHTML='<p class="muted">No pude leer texto en la primera página.</p>';return}
+   $('#ogSug',b).innerHTML='<div class="og-sug"><div><b>'+esc(a.name||'(sin datos suficientes)')+'</b><small>'+(a.folder?'📁 '+esc(a.folder)+' · ':'')+(a.tags.join(', ')||'sin etiqueta')+'</small></div>'+(a.name||a.folder?'<button class="btn sm pri" id="ogUse">Usar</button>':'')+'</div>';b._sug=a;return}
+  if(e.target.closest('#ogUse')&&b._sug){const a=b._sug;if(a.name)$('#ogName',b).value=a.name;if(a.folder)$('#ogFolder',b).value=a.folder;$$('[data-t]',b).forEach(x=>x.classList.toggle('on',a.tags.includes(x.dataset.t)));return}
+  if(e.target.closest('#ogSave')){const cur=await DB.getDoc(id);if(!cur)return;cur.name=$('#ogName',b).value.trim()||cur.name;cur.folder=$('#ogFolder',b).value.trim();cur.tags=$$('[data-t].on',b).map(x=>x.dataset.t);cur.fav=!!$('[data-fav].on',b);cur.autoDone=true;
+   await DB.putDoc(cur);if(DOC&&DOC.id===id){DOC.name=cur.name;DOC.folder=cur.folder;DOC.tags=cur.tags;DOC.fav=cur.fav;renderDocScreen()}refreshLists();await Nav.back();toast('Guardado')}}}
 
+/* Documentos: filtros por carpeta, etiqueta y favoritos */
+let docFilter={k:'all',v:''};
+function renderDocFilters(){const el=$('#docFolders');if(!el)return;const c=(f)=>_metas.filter(f).length;const folders={};_metas.forEach(m=>{if(m.folder)folders[m.folder]=(folders[m.folder]||0)+1});
+ const chip=(k,v,label,n)=>'<button class="chip '+(docFilter.k===k&&docFilter.v===v?'on':'')+'" data-fk="'+k+'" data-fv="'+esc(v)+'">'+label+' <small>'+n+'</small></button>';
+ el.innerHTML=chip('all','','Todos',_metas.length)+(c(m=>m.fav)?chip('fav','','⭐ Favoritos',c(m=>m.fav)):'')+DOC_TAGS.filter(([t])=>c(m=>(m.tags||[]).includes(t))).map(([t,ic])=>chip('tag',t,ic+' '+t,c(m=>(m.tags||[]).includes(t)))).join('')
+  +Object.keys(folders).sort().map(f=>chip('folder',f,'📁 '+esc(f),folders[f])).join('')+(Object.keys(folders).length&&c(m=>!m.folder)?chip('none','','Sin carpeta',c(m=>!m.folder)):'')}
+renderDocList=function(){const q=nbNorm($('#docSearch').value.trim());const f=docFilter;
+ let l=_metas.filter(m=>f.k==='all'||(f.k==='fav'&&m.fav)||(f.k==='tag'&&(m.tags||[]).includes(f.v))||(f.k==='folder'&&m.folder===f.v)||(f.k==='none'&&!m.folder));
+ if(q)l=l.filter(m=>nbNorm(m.name+' '+(m.folder||'')+' '+(m.tags||[]).join(' ')+' '+(m.text||'')).includes(q));
+ l.sort($('#docSort').value==='name'?(a,b)=>a.name.localeCompare(b.name):(a,b)=>b.updated-a.updated);
+ renderDocFilters();
+ $('#docList').innerHTML=l.length?l.map(m=>docItem(m,selMode)).join(''):'<div class="empty">'+(q?'Sin resultados para "'+esc($('#docSearch').value.trim())+'"':'No hay documentos en esta vista')+'</div>';
+ $('#selBar').hidden=!selMode;$('#selCount').textContent=selected.size+' seleccionados';$('#selToggle').innerHTML=selMode?'✕ Cancelar':'<i data-ico="select">☑️</i> Seleccionar';iconize($('#selToggle'))};
+{const _di=docItem;docItem=function(m,w){const h=_di(m,w);const bd=(m.fav?'<span class="dbg fav">⭐</span>':'')+(m.folder?'<span class="dbg">📁 '+esc(m.folder)+'</span>':'')+(m.tags||[]).map(t=>'<span class="dbg t-'+nbNorm(t)+'">'+esc(t)+'</span>').join('');return bd?h.replace('<div class="muted">','<div class="doc-badges">'+bd+'</div><div class="muted">'):h}}
+(function(){const list=$('#docList');if(list&&!$('#docFolders'))list.insertAdjacentHTML('beforebegin','<div class="chips doc-folders" id="docFolders"></div>');
+ $('#docFolders').onclick=e=>{const c=e.target.closest('[data-fk]');if(!c)return;docFilter={k:c.dataset.fk,v:c.dataset.fv||''};renderDocList()};
+ const sb=$('#selBar');if(sb&&!$('#selFolder')){const del=$('#selDel');del.insertAdjacentHTML('beforebegin','<button class="btn sm" id="selFolder">📁 Carpeta</button>');
+  $('#selFolder').onclick=async()=>{if(!selected.size)return toast('Seleccioná documentos');const folders=[...new Set(_metas.map(m=>m.folder).filter(Boolean))].sort();
+   const b=openSheet('Mover a carpeta','<p class="muted">'+selected.size+' documento(s)</p>'+opt('Carpeta','<input id="mvF" list="mvFl" placeholder="Nombre de la carpeta (vacío = sin carpeta)"><datalist id="mvFl">'+folders.map(f=>'<option value="'+esc(f)+'">').join('')+'</datalist>')+(folders.length?'<div class="chips">'+folders.map(f=>'<button class="chip" data-f="'+esc(f)+'">📁 '+esc(f)+'</button>').join('')+'</div>':'')+'<button class="btn pri block" id="mvOk" style="margin-top:8px">Mover</button>');
+   b.onclick=async e=>{const f=e.target.closest('[data-f]');if(f){$('#mvF',b).value=f.dataset.f;return}if(!e.target.closest('#mvOk'))return;const v=$('#mvF',b).value.trim();await withBusy(async()=>{for(const id of selected){const d=await DB.getDoc(id);if(d){d.folder=v;d.autoDone=true;await DB.putDoc(d)}}});selMode=false;selected.clear();await Nav.back();refreshLists();toast(v?'Movido a 📁 '+v:'Quitado de la carpeta')}}}})();
+/* botón en la pantalla del documento */
+(function(){const rn=$('#docRename');if(rn&&!$('#docOrg')){rn.insertAdjacentHTML('afterend','<button class="ib" id="docOrg" title="Carpeta y etiquetas" aria-label="Carpeta y etiquetas">📁</button>');$('#docOrg').onclick=async()=>{if(!DOC)return;await saveDoc(true);orgSheet(DOC.id)}}})();
+/* ajuste: nombre y carpeta automáticos */
+{const _ss=settingsSheet;settingsSheet=async function(){await _ss.apply(this,arguments);const ref=$('#sDeskew');if(ref&&!$('#sAutoOrg')){ref.closest('label').insertAdjacentHTML('afterend','<label class="chk"><input type="checkbox" id="sAutoOrg"> Nombre, carpeta y etiquetas automáticos (lee la 1.ª página con OCR)</label>');const c=$('#sAutoOrg');c.checked=S.autoOrganize!==false;c.onchange=()=>{S.autoOrganize=c.checked;saveS()}}}}
+document.head.insertAdjacentHTML('beforeend','<style id="orgCss">'
++'.doc-folders{margin:4px 0 8px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.doc-folders::-webkit-scrollbar{display:none}.doc-folders .chip{white-space:nowrap;flex:none}.doc-folders small{opacity:.6;margin-left:2px}'
++'.doc-badges{display:flex;flex-wrap:wrap;gap:4px;margin:2px 0}.dbg{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:999px;background:var(--bg3);color:var(--tx2);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dbg.t-judicial{background:#e0f2fe;color:#0369a1}.dbg.t-administrativo{background:#fef3c7;color:#92400e}.dbg.t-confidencial{background:#fee2e2;color:#b91c1c}.dbg.fav{background:transparent;padding:0 2px}'
++'[data-theme="dark"] .dbg.t-judicial{background:#0c3a52;color:#7dd3fc}[data-theme="dark"] .dbg.t-administrativo{background:#3d2e07;color:#fcd34d}[data-theme="dark"] .dbg.t-confidencial{background:#4a1515;color:#fca5a5}'
++'.og-fl{margin:-4px 0 8px}.og-sug{display:flex;align-items:center;gap:10px;margin-top:8px;padding:10px;border:1px dashed var(--line);border-radius:12px}.og-sug div{flex:1;min-width:0}.og-sug small{display:block;color:var(--tx2)}'
++'</style>');
+refreshLists();
 
-</script>
-<script type="text/plain" id="modsrc-texto">/* Danscanner Pro · módulo que se carga solo cuando se usa */
-window.__mods=window.__mods||{};
-/* ---------- 5. Editor de texto tipo Word ---------- */
-function rtHtmlFromText(text){return String(text||'').split(/\n{2,}/).map(p=>'<p>'+esc(p).replace(/\n/g,'<br>')+'</p>').join('')||'<p><br></p>'}
-function rtDocHtml(inner,title){return '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>@page{size:21cm 29.7cm;margin:2.5cm 2cm 2cm 3cm}body{font-family:Calibri,Arial,sans-serif;font-size:11pt;line-height:1.15}p{margin:0 0 8pt}</style></head><body>'+inner+'</body></html>'}
-__mods.showText=function(text,name){const txt=String(text||'');
- const fonts=[['Calibri, Carlito, Arial, sans-serif','Calibri'],['Arial, Helvetica, sans-serif','Arial'],['"Times New Roman", Times, serif','Times New Roman'],['Georgia, serif','Georgia'],['Verdana, sans-serif','Verdana'],['"Courier New", monospace','Courier New']];
- const b=openSheet('Texto extraído',
- '<div class="rtbar">'
- +'<select class="rtsel" data-rt="font" title="Tipo de letra">'+fonts.map(([v,n])=>'<option value=\''+v+'\'>'+n+'</option>').join('')+'</select>'
- +'<select class="rtsel" data-rt="size" title="Tamaño">'+[8,9,10,11,12,14,16,18,20,24,28].map(s=>'<option'+(s===11?' selected':'')+'>'+s+'</option>').join('')+'</select>'
- +'<span class="rtsep"></span>'
- +'<button data-cmd="bold" title="Negrita"><b>N</b></button><button data-cmd="italic" title="Cursiva"><i>K</i></button><button data-cmd="underline" title="Subrayado"><u>S</u></button><button data-cmd="strikeThrough" title="Tachado"><s>ab</s></button>'
- +'<label class="rtcol" title="Color de letra">A<input type="color" data-rt="color" value="#c00000"></label><label class="rtcol hl" title="Resaltar">✎<input type="color" data-rt="hilite" value="#ffff00"></label>'
- +'<span class="rtsep"></span>'
- +'<button data-cmd="justifyLeft" title="Alinear a la izquierda"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 5 H20"/><path d="M4 9 H14"/><path d="M4 13 H20"/><path d="M4 17 H12"/></svg></button><button data-cmd="justifyCenter" title="Centrar"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 5 H20"/><path d="M7 9 H17"/><path d="M4 13 H20"/><path d="M8 17 H16"/></svg></button><button data-cmd="justifyRight" title="Alinear a la derecha"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 5 H20"/><path d="M10 9 H20"/><path d="M4 13 H20"/><path d="M12 17 H20"/></svg></button><button data-cmd="justifyFull" title="Justificar" class="on"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 5 H20"/><path d="M4 9 H20"/><path d="M4 13 H20"/><path d="M4 17 H20"/></svg></button>'
- +'<span class="rtsep"></span>'
- +'<button data-cmd="insertUnorderedList" title="Viñetas">•</button><button data-cmd="insertOrderedList" title="Numeración">1.</button><button data-cmd="outdent" title="Disminuir sangría">⇤</button><button data-cmd="indent" title="Aumentar sangría">⇥</button>'
- +'<select class="rtsel" data-rt="lh" title="Interlineado"><option value="1">1,0</option><option value="1.15" selected>1,15</option><option value="1.5">1,5</option><option value="2">2,0</option></select>'
- +'<span class="rtsep"></span>'
- +'<button data-cmd="removeFormat" title="Borrar formato">⌫A</button><button data-cmd="undo" title="Deshacer">↶</button><button data-cmd="redo" title="Rehacer">↷</button>'
- +'<button data-rt="joinlines" title="Unir renglones cortados en párrafos">¶</button>'
- +'</div>'
- +'<div class="rtpage"><div class="rtdoc" id="rtDoc" contenteditable="true" spellcheck="true" lang="es"></div></div>'
- +'<textarea id="ocrTxt" hidden></textarea>'
- +'<div class="row"><button class="btn block" data-t="copy"><i data-ico="type">📋</i> Copiar</button><button class="btn pri block" data-t="doc"><i data-ico="word">📝</i> Word</button></div>'
- +'<div class="row"><button class="btn block" data-t="pdf"><i data-ico="save">📄</i> PDF</button><button class="btn block" data-t="txt"><i data-ico="save">⬇</i> .txt</button><button class="btn block" data-t="share"><i data-ico="share">📤</i></button></div>'
- +'<p class="muted">'+(txt.trim()?'Editalo como en Word: elegí letra, tamaño, alineación (justificado viene activado), listas, sangría e interlineado. El botón ¶ une los renglones cortados en párrafos.':'No se detectó texto. Probá con más luz, la foto quieta y el filtro "Nítido" o "B/N".')+'</p>');
- const doc=$('#rtDoc',b),mirror=$('#ocrTxt',b);
- doc.innerHTML=rtHtmlFromText(txt);doc.style.textAlign='justify';doc.style.lineHeight='1.15';doc.style.fontFamily=fonts[0][0];
- const sync=()=>{mirror.value=doc.innerText};sync();doc.addEventListener('input',sync);
- try{document.execCommand('styleWithCSS',false,true)}catch(e){}
- const exec=(c,v)=>{doc.focus();try{document.execCommand(c,false,v)}catch(e){}sync()};
- b.onmousedown=e=>{if(e.target.closest('.rtbar button'))e.preventDefault()};
- b.onchange=e=>{const t=e.target.dataset.rt;if(!t)return;const v=e.target.value;
-  if(t==='font')exec('fontName',v);
-  if(t==='size'){exec('fontSize','7');doc.querySelectorAll('font[size="7"],span[style*="xxx-large"]').forEach(n=>{n.removeAttribute('size');n.style.fontSize=v+'pt'})}
-  if(t==='color')exec('foreColor',v);
-  if(t==='hilite')exec('hiliteColor',v);
-  if(t==='lh'){doc.style.lineHeight=v}};
- b.onclick=async e=>{const c=e.target.closest('[data-cmd]');
-  if(c){exec(c.dataset.cmd);if(/^justify/.test(c.dataset.cmd)){$$('.rtbar [data-cmd^="justify"]',b).forEach(x=>x.classList.toggle('on',x===c))}return}
-  if(e.target.closest('[data-rt="joinlines"]')){doc.innerHTML=rtHtmlFromText(doc.innerText.replace(/(\w)-\n(\w)/g,'$1$2').replace(/([^\n.:;!?])\n(?!\n)/g,'$1 '));sync();toast('Renglones unidos en párrafos');return}
-  const t=e.target.closest('[data-t]')?.dataset.t;if(!t)return;const nm=safeName(name||'texto'),plain=doc.innerText;
-  if(t==='copy'){try{await navigator.clipboard.writeText(plain);toast('Copiado')}catch(er){toast('No se pudo copiar')}}
-  if(t==='txt')download(new Blob([plain],{type:'text/plain;charset=utf-8'}),nm+'.txt');
-  if(t==='doc'){const html=rtDocHtml('<div style="text-align:'+(doc.style.textAlign||'justify')+';line-height:'+doc.style.lineHeight+';font-family:'+doc.style.fontFamily.replace(/"/g,"'")+'">'+sanitizeHtml(doc.innerHTML)+'</div>',nm);download(new Blob(['\ufeff'+html],{type:'application/msword'}),nm+'.doc');toast('Se abre en Word con el formato')}
-  if(t==='pdf')withBusy(async()=>{busy('Armando PDF…');const blob=await htmlToPdfBlob('<div style="text-align:'+(doc.style.textAlign||'justify')+';line-height:'+doc.style.lineHeight+';font-family:'+doc.style.fontFamily.replace(/"/g,"'")+';font-size:11pt">'+sanitizeHtml(doc.innerHTML)+'</div>');busy(false);download(blob,nm+'.pdf')});
-  if(t==='share')share(new Blob([plain],{type:'text/plain;charset=utf-8'}),nm+'.txt')};
- return b}
-
-
-
-</script>
-<script type="text/plain" id="modsrc-excel">/* Danscanner Pro · módulo que se carga solo cuando se usa */
-window.__mods=window.__mods||{};
-__mods.uiExcelPdf=function(el){let wb=null,file=null,tmr=0,pages=[];
-el.innerHTML='<div class="fp"></div><div class="xlopts" hidden><div class="row">'+opt('Hoja','<select class="xsh"></select>')+opt('Tamaño de hoja',sel('xsz',[['a4','A4'],['oficio','Oficio'],['carta','Carta']]))+'</div><div class="row">'+opt('Orientación',sel('xor',[['h','Horizontal'],['v','Vertical']]))+opt('Escala',sel('xfit',[['ancho','Ajustar al ancho'],['pagina','Todo en una página'],['100','100 %'],['custom','Personalizada']]))+'</div><label class="opt xzw" hidden><span>Zoom: <b class="xzv">80</b> %</span><input type="range" class="xz" min="25" max="160" value="80"></label><label class="opt"><span>Márgenes: <b class="xmv">10</b> mm</span><input type="range" class="xm" min="0" max="30" value="10"></label><label class="chk"><input type="checkbox" class="xgrid" checked> Mostrar cuadrícula</label><label class="chk"><input type="checkbox" class="xhead" checked> Repetir la primera fila en cada hoja</label><label class="chk"><input type="checkbox" class="xcen" checked> Centrar en la hoja</label><label class="chk"><input type="checkbox" class="xnum"> Numerar páginas</label><div class="cph">Vista previa <span class="muted xinfo"></span></div><div class="xlprev"><div class="xlpages"></div></div></div><button class="btn pri block run">Generar PDF</button><div class="result"></div>';
-const O=()=>({sheet:$('.xsh',el).value,size:$('.xsz',el).value,land:$('.xor',el).value==='h',fit:$('.xfit',el).value,zoom:+$('.xz',el).value,margin:+$('.xm',el).value,grid:$('.xgrid',el).checked,head:$('.xhead',el).checked,center:$('.xcen',el).checked,num:$('.xnum',el).checked});
-const layout=()=>{if(!wb)return;const o=O();$('.xmv',el).textContent=o.margin;$('.xzv',el).textContent=o.zoom;$('.xzw',el).hidden=o.fit!=='custom';const names=o.sheet==='*'?wb.SheetNames:[o.sheet];let [w,h]=PAGE_MM[o.size]||PAGE_MM.a4;if(o.land)[w,h]=[h,w];pages=[];for(const nm of names)pages.push(...xlPagesFor(wb.Sheets[nm],nm,w,h,o));pages.forEach((p,i)=>{if(o.num){const f=document.createElement('div');f.className='xlnum';f.textContent=(i+1)+' / '+pages.length;p.appendChild(f)}});const wrap=$('.xlpages',el);wrap.innerHTML='';pages.forEach(p=>{const holder=document.createElement('div');holder.className='xlhold';holder.appendChild(p);wrap.appendChild(holder)});const pw=mm2px(w);wrap.style.zoom=Math.min(1,($('.xlprev',el).clientWidth-24)/pw);$('.xinfo',el).textContent='· '+pages.length+' página(s) · '+w+'×'+h+' mm'};
-const relayout=()=>{clearTimeout(tmr);tmr=setTimeout(layout,120)};
-filePicker($('.fp',el),{accept:'.xlsx,.xls,.xlsm,.csv,.ods',multi:false,onChange:files=>{file=files[0];wb=null;$('.result',el).innerHTML='';$('.xlopts',el).hidden=!file;if(!file)return;withBusy(async()=>{busy('Leyendo planilla…');await loadLib('xlsx');wb=XLSX.read(await file.arrayBuffer(),{cellDates:true});$('.xsh',el).innerHTML=(wb.SheetNames.length>1?'<option value="*">Todas las hojas</option>':'')+wb.SheetNames.map(n=>'<option>'+esc(n)+'</option>').join('');const ws=wb.Sheets[wb.SheetNames[0]],r=XLSX.utils.decode_range(ws['!ref']||'A1');$('.xor',el).value=(r.e.c-r.s.c)>6?'h':'v';busy(false);layout()})}});
-el.addEventListener('input',e=>{if(e.target.closest('.xlopts'))relayout()});el.addEventListener('change',e=>{if(e.target.closest('.xlopts'))relayout()});
-new ResizeObserver(()=>{if(wb)relayout()}).observe(el);
-$('.run',el).onclick=()=>withBusy(async()=>{if(!wb)return toast('Primero seleccioná una planilla');layout();if(!pages.length)return toast('La hoja está vacía');await loadLib('h2c');await loadLib('pdflib');const pdf=await PDFLib.PDFDocument.create();const host=document.createElement('div');host.className='dxhost';document.body.appendChild(host);const o=O();let [w,h]=PAGE_MM[o.size]||PAGE_MM.a4;if(o.land)[w,h]=[h,w];
-try{for(const [i,p] of pages.entries()){busy('Generando página '+(i+1)+'/'+pages.length);const cl=p.cloneNode(true);host.innerHTML='';host.appendChild(cl);const c=await html2canvas(cl,{scale:2,backgroundColor:'#ffffff',logging:false});await canvasToPdfPage(pdf,c,w*72/25.4,h*72/25.4)}}finally{host.remove()}
-busy(false);showResults($('.result',el),[{blob:pdfBlob(await pdf.save()),name:baseName(file)+'.pdf',note:pages.length+' página(s) · '+o.size.toUpperCase()+' '+(o.land?'horizontal':'vertical')+' · márgenes '+o.margin+' mm'}])})}
-function xlPagesFor(ws,name,wmm,hmm,o){if(!ws||!ws['!ref'])return[];const html=(XLSX.utils.sheet_to_html(ws).match(/<table[\s\S]*<\/table>/i)||[''])[0];if(!html)return[];
-const meas=document.createElement('div');meas.className='dxhost';meas.innerHTML=html;document.body.appendChild(meas);const table=meas.querySelector('table');table.className='xltab'+(o.grid?' grid':'');
-const cols=ws['!cols'];if(cols&&cols.length){const cg=document.createElement('colgroup');const r=XLSX.utils.decode_range(ws['!ref']);for(let c=r.s.c;c<=r.e.c;c++){const cc=cols[c]||{};const px=cc.wpx||(cc.wch?cc.wch*7+10:(cc.width?cc.width*7:0));const col=document.createElement('col');if(px)col.style.width=px+'px';if(cc.hidden)col.style.visibility='collapse';cg.appendChild(col)}table.prepend(cg)}
-const rowsMeta=ws['!rows'];const rows=[...table.rows];if(rowsMeta)rows.forEach((tr,i)=>{const m=rowsMeta[i];if(m&&m.hpx)tr.style.height=m.hpx+'px';if(m&&m.hidden)tr.style.visibility='collapse'});
-const Tw=table.offsetWidth,rowH=rows.map(r=>r.offsetHeight),totalH=rowH.reduce((a,b)=>a+b,0);meas.remove();
-const pageW=mm2px(wmm),pageH=mm2px(hmm),m=mm2px(o.margin),cw=pageW-2*m,ch=pageH-2*m-(o.num?14:0);
-let s=o.fit==='ancho'?Math.min(2.2,cw/Tw):o.fit==='pagina'?Math.min(2.2,cw/Tw,ch/totalH):o.fit==='100'?1:o.zoom/100;
-const avail=ch/s,headH=o.head&&rows.length>1?rowH[0]:0;const groups=[];let cur=[],hh=0;
-for(let i=0;i<rows.length;i++){if(cur.length&&hh+rowH[i]>avail&&!(o.head&&cur.length===1&&cur[0]===0&&i===1)){groups.push(cur);cur=[];hh=0;if(headH&&i>0){cur.push(0);hh=headH}}cur.push(i);hh+=rowH[i]}if(cur.length)groups.push(cur);
-return groups.map(idx=>{const pg=document.createElement('div');pg.className='xlpage';pg.style.cssText='width:'+pageW+'px;height:'+pageH+'px;padding:'+m+'px';const inner=document.createElement('div');const offX=o.center?Math.max(0,(cw-Tw*s)/2):0;inner.style.cssText='width:'+Tw+'px;transform:scale('+s+');transform-origin:0 0;margin-left:'+offX+'px';const tb=table.cloneNode(true);const set=new Set(idx);[...tb.rows].forEach((r,k)=>{if(!set.has(k))r.style.visibility='collapse'});inner.appendChild(tb);pg.appendChild(inner);return pg})}
-
-
-</script>
-<script type="text/plain" id="modsrc-pptx">/* Danscanner Pro · módulo que se carga solo cuando se usa */
-window.__mods=window.__mods||{};
-__mods.pptxRender=async function(ab,onSlide){await loadLib('jszip');const z=await JSZip.loadAsync(ab),P=new DOMParser(),xml=async p=>{const f=z.file(p);return f?P.parseFromString(await f.async('string'),'application/xml'):null};const tag=(n,t)=>[...n.getElementsByTagName(t)];const first=(n,t)=>n.getElementsByTagName(t)[0];const pres=await xml('ppt/presentation.xml');if(!pres)throw new Error('No es un PowerPoint (.pptx) válido');const sz=first(pres,'p:sldSz'),CX=+(sz?.getAttribute('cx')||12192000),CY=+(sz?.getAttribute('cy')||6858000);const rels=await xml('ppt/_rels/presentation.xml.rels'),rmap={};tag(rels,'Relationship').forEach(r=>rmap[r.getAttribute('Id')]=r.getAttribute('Target'));const ids=tag(pres,'p:sldId').map(s=>s.getAttribute('r:id'));const resolve=(base,t)=>{if(t.startsWith('/'))return t.slice(1);const parts=base.split('/');parts.pop();for(const s of t.split('/')){if(s==='..')parts.pop();else if(s!=='.')parts.push(s)}return parts.join('/')};const W=1600,K=W/CX,H=Math.round(CY*K);
-for(const [si,id] of ids.entries()){const path=resolve('ppt/presentation.xml',rmap[id]);const sl=await xml(path);if(!sl)continue;const srels=await xml(resolve(path,'_rels/'+path.split('/').pop()+'.rels')),sm={};if(srels)tag(srels,'Relationship').forEach(r=>sm[r.getAttribute('Id')]=r.getAttribute('Target'));const c=canvas(W,H),x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,W,H);const bgc=first(sl,'p:bg')&&first(first(sl,'p:bg'),'a:srgbClr');if(bgc){x.fillStyle='#'+bgc.getAttribute('val');x.fillRect(0,0,W,H)}let flowY=H*.08;
-const xf=n=>{const sp=first(n,'p:spPr')||first(n,'p:xfrm')?.parentNode||n;const o=first(sp,'a:off'),e=first(sp,'a:ext');return o&&e?{x:+o.getAttribute('x')*K,y:+o.getAttribute('y')*K,w:+e.getAttribute('cx')*K,h:+e.getAttribute('cy')*K}:null};
-const wrapDraw=(paras,box)=>{let y=box.y+8;for(const p of paras){const lines=[];let fs=18,bold=false,col='#222';const words=[];for(const r of p.runs){fs=r.fs;bold=r.b;col=r.c;for(const w of r.t.split(/(\s+)/))if(w)words.push({w,fs,b:r.b,c:r.c})}const px=(fs*12700*K);const lh=px*1.2;x.font=(bold?'700 ':'')+px+'px Arial, sans-serif';let line='';for(const wd of words){const test=line+wd.w;if(x.measureText(test).width>box.w-16&&line.trim()){lines.push(line);line=wd.w.trimStart()}else line=test}if(line.trim()||!words.length)lines.push(line);x.fillStyle=col;x.textBaseline='top';for(const ln of lines){const tw=x.measureText(ln).width;const lx=p.al==='ctr'?box.x+(box.w-tw)/2:p.al==='r'?box.x+box.w-8-tw:box.x+8;if(p.bul&&ln===lines[0]){x.fillText('•',lx-px*.7,y)}x.fillText(ln,lx,y);y+=lh}}return y};
-const paras=tb=>tag(tb,'a:p').map(p=>{const pPr=first(p,'a:pPr');return {al:pPr?.getAttribute('algn'),bul:!!(pPr&&first(pPr,'a:buChar')),runs:tag(p,'a:r').concat(tag(p,'a:fld')).map(r=>{const rp=first(r,'a:rPr'),cl=rp&&first(rp,'a:srgbClr');return {t:tag(r,'a:t').map(t=>t.textContent).join(''),fs:+(rp?.getAttribute('sz')||1800)/100,b:rp?.getAttribute('b')==='1',c:cl?'#'+cl.getAttribute('val'):'#222'}})}});
-const walk=async node=>{for(const n of [...node.children]){const nm=n.tagName;if(nm==='p:grpSp'){await walk(n);continue}if(nm==='p:sp'){let b=xf(n);const sp=first(n,'p:spPr');const fill=sp&&[...sp.children].find(k=>k.tagName==='a:solidFill');const fc=fill&&first(fill,'a:srgbClr');const tb=first(n,'p:txBody');const ph=first(n,'p:ph');const hasText=tb&&tag(tb,'a:t').some(t=>t.textContent.trim());if(!b){if(!hasText)continue;const tp=ph?.getAttribute('type')||'';b=/title/i.test(tp)?{x:W*.06,y:H*.05,w:W*.88,h:H*.18}:{x:W*.06,y:Math.max(flowY,H*.25),w:W*.88,h:H*.65}}if(fc){x.fillStyle='#'+fc.getAttribute('val');x.fillRect(b.x,b.y,b.w,b.h)}if(hasText){const ps=paras(tb);if(ph&&/title/i.test(ph.getAttribute('type')||''))ps.forEach(p=>p.runs.forEach(r=>{if(!first(n,'a:rPr')?.getAttribute('sz'))r.fs=Math.max(r.fs,36);r.b=true}));const end=wrapDraw(ps,b);flowY=Math.max(flowY,end)}continue}if(nm==='p:pic'){const b=xf(n),bl=first(n,'a:blip'),rid=bl&&(bl.getAttribute('r:embed'));if(!b||!rid||!sm[rid])continue;const mp=resolve(path,sm[rid]),mf=z.file(mp);if(!mf||/\.(emf|wmf|tiff?)$/i.test(mp))continue;const u=URL.createObjectURL(await mf.async('blob'));try{const im=await loadImg(u);x.drawImage(im,b.x,b.y,b.w,b.h)}catch(e){}finally{URL.revokeObjectURL(u);_imgCache.delete(u)}continue}if(nm==='p:graphicFrame'){const b=xf(n);const rows=tag(n,'a:tr');if(!b||!rows.length)continue;const rh=b.h/rows.length;x.strokeStyle='#999';x.lineWidth=1;rows.forEach((tr,ri)=>{const cells=tag(tr,'a:tc'),cw=b.w/Math.max(1,cells.length);cells.forEach((tc,ci)=>{x.strokeRect(b.x+ci*cw,b.y+ri*rh,cw,rh);const t=tag(tc,'a:t').map(t=>t.textContent).join(' ');const px=Math.min(rh*.45,14*12700*K);x.font=px+'px Arial, sans-serif';x.fillStyle='#222';x.textBaseline='middle';let s=t;while(s&&x.measureText(s).width>cw-10)s=s.slice(0,-1);x.fillText(s,b.x+ci*cw+5,b.y+ri*rh+rh/2)})})}}};
-const tree=first(sl,'p:spTree');if(tree)await walk(tree);await onSlide(c,si+1,ids.length,{w:CX/12700,h:CY/12700})}return ids.length}
-
-</script>
-<script type="text/plain" id="modsrc-diseno">/* Danscanner Pro · módulo que se carga solo cuando se usa */
-window.__mods=window.__mods||{};
-__mods.designSheet=function(){const d=D();const cols=['#e53935','#d81b60','#8e24aa','#3949ab','#1e88e5','#00897b','#43a047','#fb8c00','#6d4c41','#212121'];
-const seg=(k,opts)=>'<div class="seg" data-k="'+k+'">'+opts.map(([v,n])=>'<button data-v="'+v+'" class="'+(String(d[k])===String(v)?'on':'')+'">'+n+'</button>').join('')+'</div>';
-const b=openSheet('🎨 Diseño y visualización',
-'<div class="cph">Plantillas listas</div><div class="chips" id="dsPre">'+Object.entries(PRESETS).map(([k,v])=>'<button class="chip" data-pre="'+k+'">'+v.label+'</button>').join('')+'</div>'
-+'<div class="muted">Vista previa · tocá los botones</div><div class="dprev"><div class="hero-btns"><button class="hbtn big"><i class="icono-camara"></i><span>Escanear</span><small>Individual</small></button><button class="hbtn"><i data-ico="files">🗂️</i><span>Lote</span><small>Varias fotos</small></button><button class="hbtn"><i data-ico="image">🖼️</i><span>Galería</span><small>Imágenes</small></button></div><div class="dbar"><button class="tb"><b data-ico="crop">✂️</b>Recortar</button><button class="tb"><b data-ico="replace">🔁</b>Cambiar</button><button class="tb"><b data-ico="sign">✍️</b>Firmar</button><button class="tb"><b data-ico="adjust">🎚️</b>Ajustes</button></div><div class="item" style="pointer-events:none"><img src="'+((_metas[0]&&_metas[0].thumb)||'')+'" alt=""><div class="inf"><div class="nm">Documento de ejemplo</div><div class="muted">hoy · 3 pág. · 480 KB</div></div></div><button class="btn pri block"><i data-ico="save">💾</i> Botón principal</button></div>'
-+'<div class="cph">Tema</div>'+seg('theme',[['light','Claro'],['dark','Oscuro'],['system','Automático']])
-+'<div class="cph">Color principal</div><div class="swatches">'+cols.map(c=>'<button class="sw '+(d.color===c?'on':'')+'" data-col="'+c+'" style="background:'+c+'"></button>').join('')+'<label class="sw pick"><input type="color" id="dsCol" value="'+(d.color||'#e53935')+'"></label><button class="chip" data-col="">Por defecto</button></div>'
-+'<div class="cph">Fondo</div>'+seg('bg',[['plano','Plano'],['suave','Degradado'],['papel','Papel']])
-+'<div class="cph">Tipografía de la app</div>'+seg('uifont',[['sys','Moderna'],['serif','Formal'],['round','Redondeada'],['mono','Máquina']])
-+'<div class="cph">Tamaño general</div>'+seg('zoom',[[0.9,'Compacto'],[1,'Normal'],[1.1,'Grande'],[1.25,'Muy grande']])
-+'<div class="cph">Espaciado</div>'+seg('density',[['comp','Ajustado'],['normal','Normal'],['amplio','Amplio']])
-+'<div class="cph">Documentos se ven como</div>'+seg('docView',[['list','Lista'],['grid','Cuadrícula']])
-+'<div class="cph">Botones</div>'+seg('shape',[['round','Redondeado'],['square','Cuadrado'],['circle','Circular']])
-+'<div class="cph">Íconos</div>'+seg('iconStyle',[['line','Profesional'],['emoji','Emoji']])+seg('ico',[[18,'Chicos'],[22,'Normales'],[27,'Grandes']])+seg('stroke',[[1.5,'Finos'],[1.9,'Normales'],[2.4,'Gruesos']])
-+'<label class="chk"><input type="checkbox" id="dsCon" '+(d.contrast?'checked':'')+'> Contraste alto (letras más marcadas)</label>'
-+'<label class="chk"><input type="checkbox" id="dsAnim" '+(d.anim?'checked':'')+'> Animación al tocar</label>'
-+'<div class="cph">Botones de la barra de edición</div><div id="dsEd"></div>'
-+'<div class="cph">Accesos rápidos del inicio <small class="muted">(hasta 8)</small></div><div class="chips" id="dsQuick"></div>'
-+'<div class="row" style="margin-top:14px"><button class="btn block" id="dsReset"><i data-ico="rotl">↺</i> Restablecer</button><button class="btn pri block" data-back><i data-ico="check">✓</i> Listo</button></div>');
-const drawEd=()=>{$('#dsEd',b).innerHTML=d.edTools.map((t,i)=>{const n=(ED_TOOLS.find(x=>x[0]===t.k)||[])[1];return '<div class="frow dsrow"><label class="chk" style="flex:1;margin:0"><input type="checkbox" data-eon="'+i+'" '+(t.on?'checked':'')+'> '+n+'</label><button class="ib" data-eup="'+i+'" '+(i?'':'disabled')+'>▲</button><button class="ib" data-edn="'+i+'" '+(i<d.edTools.length-1?'':'disabled')+'>▼</button></div>'}).join('')};
-const QDEF=['Escanea a PDF','Unir PDF','PDF a WORD','Firmar PDF','Comprimir PDF','OCR PDF','JPG a PDF','Editar PDF'];
-const drawQuick=()=>{const q=d.quick.length?d.quick:QDEF;$('#dsQuick',b).innerHTML=TOOLS.map(t=>'<button class="chip '+(q.includes(t.name)?'on':'')+'" data-q="'+esc(t.name)+'">'+esc(t.name)+'</button>').join('')};
-const refresh=()=>{$$('.seg[data-k]',b).forEach(sg=>{const k=sg.dataset.k;$$('button',sg).forEach(x=>x.classList.toggle('on',String(x.dataset.v)===String(d[k])))});$$('.sw',b).forEach(x=>x.classList.toggle('on',x.dataset.col===d.color));const c=$('#dsCon',b),a=$('#dsAnim',b);if(c)c.checked=!!d.contrast;if(a)a.checked=!!d.anim};
-drawEd();drawQuick();
-const commit=()=>{saveS();applyDesign();if(d.theme)cambiarTema(d.theme)};
-b.oninput=e=>{if(e.target.id==='dsCol'){d.color=e.target.value;commit();refresh()}};
-b.onclick=e=>{const btn=e.target.closest('button,input');if(btn&&btn.closest('.dprev')){btn.classList.remove('pulse');void btn.offsetWidth;btn.classList.add('pulse');return}
-const pre=e.target.closest('[data-pre]');if(pre){Object.assign(d,JSON.parse(JSON.stringify(PRESETS[pre.dataset.pre])));delete d.label;commit();refresh();toast('Plantilla aplicada');return}
-const c=e.target.closest('[data-col]');if(c){d.color=c.dataset.col;commit();refresh();return}
-const sv=e.target.closest('.seg[data-k] [data-v]');if(sv){const k=sv.parentNode.dataset.k;const v=sv.dataset.v;d[k]=isNaN(+v)?v:+v;commit();refresh();return}
-if(e.target.id==='dsAnim'){d.anim=e.target.checked;commit();return}
-if(e.target.id==='dsCon'){d.contrast=e.target.checked;commit();return}
-const on=e.target.closest('[data-eon]');if(on){d.edTools[+on.dataset.eon].on=on.checked;commit();return}
-const up=e.target.closest('[data-eup]'),dn=e.target.closest('[data-edn]');if(up||dn){const i=+(up||dn).dataset[up?'eup':'edn'],j=up?i-1:i+1;[d.edTools[i],d.edTools[j]]=[d.edTools[j],d.edTools[i]];drawEd();commit();return}
-const q=e.target.closest('[data-q]');if(q){let arr=d.quick.length?d.quick.slice():QDEF.slice();const n=q.dataset.q;if(arr.includes(n))arr=arr.filter(x=>x!==n);else{if(arr.length>=8)return toast('Máximo 8 accesos. Quitá uno primero');arr.push(n)}d.quick=arr;drawQuick();commit();return}
-if(e.target.closest('#dsReset')){if(!confirm('¿Volver al diseño original?'))return;S.design=JSON.parse(JSON.stringify(DESIGN_DEF));saveS();applyDesign();cambiarTema('system');Nav.back().then(designSheet)}}}
+/* ===================== UNIFICAR: un solo asistente (Nexa) e inicio más simple ===================== */
+{const i=TOOLS.findIndex(t=>t.name==='Asistente IA');if(i>=0){TOOLS[i].direct=()=>go('nexa');TOOLS[i].desc='Abre Nexa, el asistente de documentos (gratis).'}}
+(function(){const ai=$('#aiCard');if(ai)ai.remove();const w=$('#wizCard');if(w){const t=w.querySelector('.aicard-t');if(t)t.innerHTML='<div><b>¿Qué querés hacer?</b></div><small>Elegí el origen y la herramienta paso a paso, o <a class="wiz-nexa">preguntale a Nexa ✨</a></small>';
+ const bt=w.querySelector('.aicard-btn');if(bt)bt.textContent='Empezar →';const wn=w.querySelector('.wiz-nexa');if(wn)wn.onclick=e=>{e.stopPropagation();go('nexa')}}})();
+/* Herramientas: buscador */
+{const _rt=renderTools;renderTools=function(){_rt.apply(this,arguments);const g=$('#toolsGrid');if(!g||$('#toolSearch'))return;g.insertAdjacentHTML('afterbegin','<input id="toolSearch" class="tool-search" type="search" placeholder="🔎 Buscar herramienta (comprimir, unir, Word…)">');
+ const inp=$('#toolSearch');inp.oninput=()=>{const q=nbNorm(inp.value.trim());$$('#toolsGrid .mlist').forEach(l=>{let any=0;[...l.children].forEach(r=>{const ok=!q||nbNorm(r.textContent).includes(q);r.hidden=!ok;if(ok)any++});l.hidden=!any;const c=l.previousElementSibling;if(c&&c.classList.contains('catt'))c.hidden=!any});const w=$('#wizRow');if(w)w.hidden=!!q}}}
+renderTools();
+document.head.insertAdjacentHTML('beforeend','<style id="unifyCss">.wiz-nexa{font-weight:700;color:var(--ac);white-space:nowrap}#v-docs .row:has(#selToggle){flex-wrap:wrap}.tool-search{margin:10px 0 6px}</style>');
 </script>
 </body>
 </html>
