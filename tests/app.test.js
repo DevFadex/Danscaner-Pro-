@@ -27,7 +27,7 @@ async function test(name,fn){const browser=await chromium.launch({args:['--use-f
 await test('La app carga con el nombre y los íconos nuevos',async pg=>{
   assert.equal(await pg.title(),'Danscanner Pro');
   assert.equal((await pg.textContent('#topTitle')).trim(),'Danscanner Pro');
-  assert.ok(await pg.$('.nav [data-go="nexa"]'),'falta la pestaña Nexa');
+  assert.ok(await pg.$('#btnNexa'),'falta el botón Nexa arriba');
 });
 
 await test('Modo B/N puro (opcional): todos los filtros en blanco y negro exacto',async pg=>{await seedPage(pg);
@@ -37,7 +37,7 @@ await test('Modo B/N puro (opcional): todos los filtros en blanco y negro exacto
 
 await test('Nexa básico: extrae datos y busca en los documentos',async pg=>{
   await pg.evaluate(async t=>{await DB.putDoc({id:'d1',name:'Oficio 55',created:1,updated:Date.now(),text:t,pages:[]});Nexa.attachDoc(await DB.getDoc('d1'))},OFICIO);
-  await pg.click('.nav [data-go="nexa"]');
+  await pg.click('#btnNexa');
   const ask=async q=>{await pg.fill('#nxIn',q);await pg.press('#nxIn','Enter');await W(700);return pg.evaluate(()=>Nexa.st.msgs.at(-1).text)};
   const datos=await ask('Extraé los datos');
   for(const v of ['30.123.456','20-30123456-7','Expte. 23-26/2026','12 de octubre de 2026','$ 15.000,00','juzgado@justucuman.gov.ar','Juan Carlos PÉREZ'])assert.ok(datos.includes(v),'falta '+v);
@@ -90,7 +90,7 @@ await test('Nexa: configuración gratis desde Ajustes',async pg=>{
 await test('Nexa acciones: confirma antes de actuar y no confunde "borrador"',async pg=>{
   await seedPage(pg);
   await pg.evaluate(async()=>{const n=Date.now();await DB.putDoc({id:'a',name:'Oficio 55',created:1,updated:n-2000,text:'OFICIO 55',pages:[window._pg,window._pg]});await DB.putDoc({id:'b',name:'Oficio 60',created:1,updated:n-1000,text:'OFICIO 60',pages:[window._pg]});await DB.putDoc({id:'c',name:'Borrador del escrito',created:1,updated:n-5000,text:'Borrador con texto suficiente para convertir a Word.',pages:[window._pg]})});
-  await pg.click('.nav [data-go="nexa"]');
+  await pg.click('#btnNexa');
   const say=async q=>{await pg.fill('#nxIn',q);await pg.press('#nxIn','Enter');await W(700);return pg.evaluate(()=>{const m=Nexa.st.msgs.at(-1);return (m.action&&{k:m.action.kind,docs:m.action.docs.map(d=>d.name)})||null})};
   let a=await say('Uní los 2 últimos oficios');assert.deepEqual(a,{k:'merge',docs:['Oficio 60','Oficio 55']});
   assert.equal((await DB_count(pg)),3,'actuó sin confirmar');
@@ -212,6 +212,16 @@ await test('Enderezado: sin cuñas blancas "cruzadas" fuera de la hoja',async pg
     const b=await makePage(src,{auto:false,filter:'original'});b.quad=null;b.skew=4;const cb=await renderPage(b,{maxSide:1000});const d=cb.getContext('2d').getImageData(0,0,cb.width,cb.height).data;
     const px=(xx,yy)=>{const i=(yy*cb.width+xx)*4;return d[i]};out.corners=[px(1,1),px(cb.width-2,1),px(1,cb.height-2),px(cb.width-2,cb.height-2)];return out});
   assert.ok(r.q[0],'con recorte no debe girarse de nuevo');assert.ok(r.corners.every(v=>v<200),'quedaron esquinas blancas: '+r.corners);
+});
+
+await test('Arranque sin ver el diseño anterior y Nexa arriba junto a Ajustes',async pg=>{
+  assert.equal(await pg.evaluate(()=>document.documentElement.classList.contains('boot')),false,'la app quedó oculta');
+  assert.equal(await pg.$('.nav [data-go="nexa"]'),null,'Nexa sigue en la barra de abajo');
+  const labels=await pg.$$eval('.nav button',bs=>bs.map(b=>b.dataset.go||b.id||b.getAttribute('aria-label')));
+  assert.deepEqual(labels,['home','docs','Escanear','tools','navSettings']);
+  const [nx,st]=await Promise.all([pg.$eval('#btnNexa',e=>e.getBoundingClientRect().toJSON()),pg.$eval('#btnSettings',e=>e.getBoundingClientRect().toJSON())]);
+  assert.ok(Math.abs(nx.top-st.top)<8&&nx.right<=st.left+2,'Nexa no está al lado de Ajustes');
+  await pg.click('#btnNexa');await W(300);assert.ok(await pg.$eval('#v-nexa',e=>e.classList.contains('active')));
 });
 
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
