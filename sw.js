@@ -1,6 +1,6 @@
 // Danscaner Pro — funcionamiento sin conexión
-const VERSION = 'danscaner-v12';
-const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
+const VERSION = 'danscaner-v13';
+const SHELL = ['./', './index.html', './manifest.webmanifest', './icon.svg', './icon-192.png', './icon-512.png', './icon-maskable-192.png', './icon-maskable-512.png', './apple-touch-icon.png'];
 const CDN = /(cdnjs\.cloudflare\.com|cdn\.jsdelivr\.net|unpkg\.com|tessdata\.projectnaptha\.com|fonts\.gstatic\.com|fonts\.googleapis\.com)$/;
 
 self.addEventListener('install', e => {
