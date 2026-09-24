@@ -18,7 +18,7 @@ const DB_count=pg=>pg.evaluate(async()=>(await DB.metas()).length);
 const seedPage=pg=>pg.evaluate(async()=>{const c=document.createElement('canvas');c.width=500;c.height=700;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,500,700);x.fillStyle='#000';x.font='36px Arial';x.fillText('OFICIO 55',40,90);window._pg=await makePage(c.toDataURL('image/jpeg',.9),{auto:false,filter:'magia'})});
 const OFICIO='OFICIO N° 55/2026\nExpte. 23-26/2026. San Miguel de Tucumán, 12 de octubre de 2026.\nSe informa al Juzgado que el interno Juan Carlos PÉREZ, DNI 30.123.456, CUIL 20-30123456-7, solicita audiencia. El juez Martín Gómez fijó audiencia para el 20/10/2026. Se abonó $ 15.000,00. Contacto: tel. 381 555-1234, mail juzgado@justucuman.gov.ar.';
 
-async function test(name,fn){const browser=await chromium.launch();let pg;
+async function test(name,fn){const browser=await chromium.launch({args:['--use-fake-ui-for-media-stream','--use-fake-device-for-media-stream']});let pg;
   try{pg=await newPage(browser);await fn(pg);assert.deepEqual(pg.errors,[],'errores de JavaScript');results.push(['✅',name])}
   catch(e){results.push(['❌',name,e.message.replace(/\s+/g,' ').slice(0,300)])}
   finally{await browser.close()}}
@@ -149,6 +149,20 @@ await test('Datos del documento: corrige OCR y extrae nombres, DNI, expte y fech
   await pg.evaluate(t=>{DOC=newDoc();DOC.pages.push({...window._pg,id:uid()});DOC.text=t;openDocScreen()},txt);await W(600);
   await pg.click('#docData');await W(700);const body=await pg.textContent('#sheetBody');
   for(const w of ['30.123.456','LUCENA, Juan Benjamín','23/09/2026','Copiar todo'])assert.ok(body.includes(w),'falta '+w);
+});
+
+await test('Cámara: bordes precisos, modo Libro y auto-captura sin repetir',async pg=>{
+  const err=await pg.evaluate(async()=>{const c=document.createElement('canvas');c.width=3024;c.height=4032;const x=c.getContext('2d');x.fillStyle='#4a3f33';x.fillRect(0,0,3024,4032);
+    const P=[[300,260],[2650,380],[2560,3700],[180,3560]];x.beginPath();x.moveTo(...P[0]);P.slice(1).forEach(p=>x.lineTo(...p));x.closePath();x.fillStyle='#f1ecdf';x.fill();
+    const p=await makePage(c.toDataURL('image/jpeg',.9),{filter:'documento'});return Math.max(...p.quad.map((q,i)=>Math.hypot(q.x*3024-P[i][0],q.y*4032-P[i][1])))});
+  assert.ok(err<10,'esquinas imprecisas: '+err+' px');
+  const cut=await pg.evaluate(async()=>{const c=document.createElement('canvas');c.width=2400;c.height=1700;const x=c.getContext('2d');x.fillStyle='#222';x.fillRect(0,0,2400,1700);x.fillStyle='#f4efe2';x.fillRect(150,150,2100,1400);
+    const g=x.createLinearGradient(1100,0,1300,0);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(.5,'rgba(0,0,0,.45)');g.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=g;x.fillRect(1100,150,200,1400);
+    const ps=await splitBook(await makePage(c.toDataURL('image/jpeg',.9)));return [ps.length,ps[0].quad[1].x*2400]});
+  assert.equal(cut[0],2);assert.ok(Math.abs(cut[1]-1200)<40,'lomo mal ubicado: '+cut[1]);
+  await pg.evaluate(()=>{const _d=detectQuad;window.detectQuad=src=>src instanceof HTMLVideoElement?[{x:.2,y:.15},{x:.8,y:.15},{x:.8,y:.85},{x:.2,y:.85}]:_d(src);S.autoCapture=true;Cam.open('batch')});
+  await W(5000);assert.equal(await pg.evaluate(()=>Cam.batch.length),1,'la auto-captura repitió la misma hoja o no capturó');
+  assert.ok(await pg.$('#camKinds [data-kind="book"]'),'faltan los tipos de captura');
 });
 
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
