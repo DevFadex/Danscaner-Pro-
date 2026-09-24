@@ -2527,7 +2527,7 @@ function nexaMd(s){const inl=t=>esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').rep
 
 const NEXA_PROVS=[['auto','NEXA IA'],['anthropic','Claude'],['gemini','Gemini'],['openai','ChatGPT']];
 const NEXA_SUG=[['Resumir','Resumí los documentos adjuntos con los puntos principales en viñetas y una conclusión breve.'],['Corregir OCR','Corregí los errores de OCR, ortografía y redacción del texto de los documentos adjuntos. Devolvé solo el texto corregido.'],['Extraer datos','Extraé los datos importantes (personas, DNI, fechas, números de expediente, plazos, montos) en una lista ordenada. Si falta un dato, indicá "no figura".'],['Redactar nota','Con la información de los documentos adjuntos, redactá una nota formal para un juzgado con encabezado, cuerpo y cierre protocolar.'],['Explicar simple','Explicá el contenido de los documentos adjuntos en lenguaje simple y claro.']];
-const NEXA_SYS='Sos NEXA, la asistente documental integrada en Danscaner Pro, una app de escaneo usada en una oficina judicial penitenciaria de Tucumán, Argentina. Respondés en español rioplatense, claro, formal y conciso. Trabajás sobre los documentos que el usuario adjunta desde su dispositivo: citá el nombre del documento del que sale cada dato. No inventes datos: si algo no figura en los documentos, decilo. Podés usar viñetas, listas numeradas y **negritas**.';
+const NEXA_SYS='Sos NEXA, la asistente documental integrada en Danscaner Pro, una app de escaneo usada en una oficina judicial penitenciaria de Tucumán, Argentina. Respondés en español rioplatense, claro, formal y conciso. Trabajás sobre los documentos que el usuario adjunta desde su dispositivo: citá el nombre del documento del que sale cada dato. No inventes datos: si algo no figura en los documentos, decilo. Podés usar viñetas, listas numeradas y **negritas**. Cuando el usuario quiera procesar o ajustar un documento, guialo paso a paso: primero pedile que elija y confirme el origen (cámara de la app, cámara del celular, galería del dispositivo o documentos guardados en la app, desde el botón 📎 o el Asistente de documentos del inicio) y recién después ofrecé las herramientas: filtro B/N de alto contraste con fondo blanco, corregir perspectiva y alineación, recortar bordes, comprimir PDF, dividir páginas, unir documentos, reordenar hojas, convertir formatos o extraer texto (OCR).';
 
 const Nexa={st:{msgs:[],prov:'auto',docs:[]},sending:false,el:null,imgCache:{},
  load(){try{const j=JSON.parse(localStorage.getItem('ds_nexa')||'{}');if(Array.isArray(j.msgs))this.st.msgs=j.msgs.filter(m=>m&&typeof m.text==='string'&&(m.role==='user'||m.role==='assistant'));if(j.prov&&NEXA_PROVS.some(p=>p[0]===j.prov))this.st.prov=j.prov;if(Array.isArray(j.docs))this.st.docs=j.docs.filter(d=>d&&d.id)}catch(e){}},
@@ -2652,6 +2652,105 @@ document.head.insertAdjacentHTML('beforeend','<style id="nexaCss">'
   nb.onclick=async()=>{if(!DOC)return;if(!DOC.pages.length)return toast('El documento no tiene páginas');await saveDoc(true);const d=DOC;Nexa.attachDoc(d);while(Nav.stack.length)await Nav.back();go('nexa');toast('📎 '+d.name+' adjunto a Nexa')}}
  const card=$('#aiCard');if(card){card.onclick=()=>go('nexa');const t=card.querySelector('.aicard-t b');if(t)t.textContent='Nexa IA';const sm=card.querySelector('.aicard-t small');if(sm)sm.textContent='Preguntale a tu asistente sobre tus documentos';const bt=card.querySelector('.aicard-btn');if(bt)bt.textContent='Abrir Nexa →'}
 }catch(e){console.error('Nexa IA',e)}})();
+/* ===================== ORIGEN DEL DOCUMENTO · asistente paso a paso =====================
+   Antes de cualquier herramienta se elige de dónde sale el documento (cámara de la app,
+   cámara del celular, galería o documentos guardados), se confirma el origen y recién
+   después se ofrecen las herramientas. */
+const SRC_OPTS={appcam:['📷','Cámara de la app','Encuadre automático, perspectiva y B/N'],natcam:['📱','Cámara del celular','La app de cámara del teléfono'],gallery:['🖼️','Galería del dispositivo','Fotos, PDF u otros archivos del teléfono'],saved:['📁','Documentos de la app','Lo que ya escaneaste y guardaste acá']};
+let _srcHook=null;
+{const _ap=addPages;addPages=async function(pages,single){if(_srcHook){const h=_srcHook;_srcHook=null;h(pages);return}return _ap(pages,single)}}
+{const _cs=Cam.stop;Cam.stop=function(){const had=this.batch&&this.batch.length;const r=_cs.apply(this,arguments);if(_srcHook&&!had)setTimeout(()=>{if(_srcHook){const h=_srcHook;_srcHook=null;h(null)}},400);return r}}
+const acceptOk=(f,accept)=>{if(!accept)return true;const n=(f.name||'').toLowerCase(),t=(f.type||'').toLowerCase();return accept.split(',').map(a=>a.trim().toLowerCase()).filter(Boolean).some(a=>a.startsWith('.')?n.endsWith(a):a.endsWith('/*')?t.startsWith(a.slice(0,-1)):t===a)};
+const acceptsPdf=a=>!a||acceptOk({name:'x.pdf',type:'application/pdf'},a);
+const acceptsImg=a=>!a||acceptOk({name:'x.jpg',type:'image/jpeg'},a);
+function nativeInput(accept,multi,capture){return new Promise(res=>{const i=document.createElement('input');i.type='file';if(accept)i.accept=accept;if(multi)i.multiple=true;if(capture)i.setAttribute('capture','environment');i.hidden=true;document.body.appendChild(i);let done=false;
+ const fin=v=>{if(done)return;done=true;window.removeEventListener('focus',onF);i.remove();res(v&&v.length?v:null)};
+ const onF=()=>setTimeout(()=>{if(!i.files||!i.files.length)fin(null)},2000);
+ i.onchange=()=>fin([...i.files]);i.addEventListener('cancel',()=>fin(null));i.click();setTimeout(()=>window.addEventListener('focus',onF,{once:true}),400)})}
+function sheetAsk(title,html,wire){return new Promise(res=>{let val=null;const b=openSheet(title,html,()=>res(val));b.onclick=async e=>{const r=wire(e);if(r===undefined)return;val=r;await Nav.back()}})}
+const Source={
+ /* 1) menú de origen */
+ menu(title,{canSaved=true}={}){const btn=k=>{const [ic,n,d]=SRC_OPTS[k];return '<button class="src-opt" data-src="'+k+'"><span class="src-ic">'+ic+'</span><span><b>'+n+'</b><small>'+d+'</small></span></button>'};
+  return sheetAsk(title||'¿De dónde sale el documento?','<p class="muted">Paso 1 de 3 · Elegí el origen del documento.</p><div class="cph">Captura en directo</div>'+btn('appcam')+btn('natcam')+'<div class="cph">Archivos guardados</div>'+btn('gallery')+(canSaved?btn('saved'):''),e=>{const b=e.target.closest('[data-src]');return b?b.dataset.src:undefined})},
+ /* 2) conseguir el documento según el origen */
+ async acquire(k,{accept,multi}={}){const label=SRC_OPTS[k][1];
+  if(k==='appcam'&&camSecure()&&!S.camNative){const pages=await new Promise(res=>{_srcHook=res;Cam.open('batch')});return pages&&pages.length?{origin:k,label,pages,name:nowName()}:null}
+  if(k==='appcam'||k==='natcam'){const files=await nativeInput('image/*',false,true);if(!files)return null;let pages=[];await withBusy(async()=>{busy('Procesando foto…');pages=await importFiles(files,{auto:S.autoCrop})});return pages.length?{origin:k,label,pages,name:nowName()}:null}
+  if(k==='gallery'){const files=await nativeInput(accept||'image/*,application/pdf,.pdf',multi!==false,false);if(!files)return null;const ok=files.filter(f=>acceptOk(f,accept));if(!ok.length){toast('Ese tipo de archivo no sirve para esta herramienta');return null}return {origin:k,label,files:ok,name:baseName(ok[0])}}
+  let metas=[];try{metas=await DB.metas()}catch(e){}metas.sort((a,b)=>b.updated-a.updated);if(!metas.length){toast('Todavía no tenés documentos guardados en la app',3500);return null}
+  const ids=await sheetAsk('Documentos de la app','<p class="muted">'+(multi?'Elegí uno o más documentos.':'Elegí un documento.')+'</p><div class="nx-pick">'+metas.map(m=>'<label class="chk nx-prow"><input type="'+(multi?'checkbox':'radio')+'" name="srcdoc" value="'+esc(m.id)+'">'+(m.thumb?'<img src="'+m.thumb+'" alt="">':'')+'<span><b>'+esc(m.name)+'</b><small>'+(m.count||0)+' pág.</small></span></label>').join('')+'</div><button class="btn pri block" id="srcDocOk">Usar selección</button>',e=>{if(!e.target.closest('#srcDocOk'))return undefined;const v=$$('#sheetBody input:checked').map(x=>x.value);if(!v.length){toast('Elegí un documento');return undefined}return v});
+  if(!ids)return null;const docs=[];await withBusy(async()=>{busy('Abriendo…');for(const id of ids){const d=await DB.getDoc(id);if(d)docs.push(d)}});return docs.length?{origin:k,label,docs,name:docs[0].name}:null},
+ /* 3) confirmar el origen antes de seguir */
+ confirm(r){const pages=r.pages||(r.docs?r.docs.flatMap(d=>d.pages):null);const n=pages?pages.length:r.files.length;
+  const prev=pages?pages.slice(0,4).map(p=>'<img src="'+(p.thumb||'')+'" alt="">').join(''):r.files.slice(0,4).map(f=>/^image\//.test(f.type)?'<img src="'+URL.createObjectURL(f)+'" alt="">':'<div class="src-file">📄<small>'+esc(f.name)+'</small></div>').join('');
+  const what=r.docs?r.docs.map(d=>esc(d.name)).join(', '):r.files?r.files.map(f=>esc(f.name)).join(', '):n+' foto(s) nueva(s)';
+  const more=r.origin==='appcam'||r.origin==='natcam';
+  return sheetAsk('Confirmá el origen','<p class="muted">Paso 2 de 3 · Revisá que sea el documento correcto.</p><div class="src-chip">'+SRC_OPTS[r.origin][0]+' Origen: <b>'+esc(r.label)+'</b></div><div class="src-prev">'+prev+'</div><p><b>'+what+'</b><br><small class="muted">'+n+(pages?' página(s)':' archivo(s)')+'</small></p>'+(more?'<button class="btn block" id="srcMore">➕ Agregar otra página con la misma cámara</button>':'')+'<div class="row"><button class="btn block" id="srcOther">↩ Elegir otro origen</button><button class="btn pri block" id="srcYes">✓ Confirmar origen</button></div>',
+   e=>e.target.closest('#srcYes')?'yes':e.target.closest('#srcOther')?'other':e.target.closest('#srcMore')?'more':undefined)},
+ /* menú + conseguir + confirmar, repitiendo hasta que el usuario confirme o cancele */
+ async run({title,accept,multi,canSaved=true}={}){let k=await this.menu(title,{canSaved});
+  while(k){const r=await this.acquire(k,{accept,multi});if(!r){k=await this.menu(title,{canSaved});continue}
+   for(;;){const a=await this.confirm(r);if(a==='yes')return r;if(a==='more'){const r2=await this.acquire(r.origin,{});if(r2&&r2.pages)r.pages.push(...r2.pages);continue}break}
+   if(!r)return null;k=await this.menu(title,{canSaved})}
+  return null},
+ /* convertir lo elegido en archivos para una herramienta */
+ async toFiles(r,accept){if(r.files)return r.files;const groups=r.docs?r.docs.map(d=>({name:d.name,pages:d.pages})):[{name:r.name,pages:r.pages}];const out=[];
+  for(const g of groups){if(acceptsPdf(accept)){busy('Preparando PDF de "'+g.name+'"…');const bytes=await buildPDF(g.pages,{size:S.size,orient:S.orient,margin:S.margin,quality:S.quality,title:g.name});out.push(new File([bytes],safeName(g.name)+'.pdf',{type:'application/pdf'}))}
+   else if(acceptsImg(accept)){for(const [i,p] of g.pages.entries()){busy('Preparando imagen '+(i+1)+'/'+g.pages.length+'…');const c=await renderPage(p);const b=await canvasBlob(c,'image/jpeg',.92);out.push(new File([b],safeName(g.name)+(g.pages.length>1?'_'+(i+1):'')+'.jpg',{type:'image/jpeg'}))}}}
+  return out},
+ /* abrir lo elegido en el editor de páginas */
+ async toDoc(r){if(r.docs&&r.docs.length===1){DOC=r.docs[0];openDocScreen();return}
+  let pages=r.pages||(r.docs?r.docs.flatMap(d=>d.pages):null);if(!pages){await withBusy(async()=>{pages=await importFiles(r.files)})}if(!pages||!pages.length)return;
+  DOC=newDoc();if(r.name)DOC.name=r.name;DOC.pages.push(...pages);saveDoc(true);openDocScreen()}};
+
+/* todas las herramientas: "Seleccionar archivo" abre primero el menú de origen */
+{const _fp=filePicker;filePicker=function(el,o){const fp=_fp(el,o);const drop=$('.drop',el),inp=$('input[type=file]',el);
+  const add=fl=>{const dt=new DataTransfer();fl.forEach(f=>dt.items.add(f));inp.files=dt.files;inp.dispatchEvent(new Event('change'))};
+  fp.add=add;fp.accept=o.accept;fp.multi=!!o.multi;
+  fp.pick=async()=>{const r=await Source.run({title:o.label||(o.multi?'¿De dónde salen los archivos?':'¿De dónde sale el archivo?'),accept:o.accept,multi:o.multi});if(!r)return;let files=[];await withBusy(async()=>{files=await Source.toFiles(r,o.accept)});if(!files.length)return toast('No se pudo preparar el archivo para esta herramienta');files.forEach(f=>{try{f._origin=r.label}catch(e){}});add(files);toast('✓ Origen confirmado: '+r.label)};
+  if(drop){drop.addEventListener('click',e=>{e.preventDefault();fp.pick()});const b=drop.querySelector('b');if(b)b.insertAdjacentHTML('afterend','<small>Cámara, galería o documentos de la app</small>')}
+  const list=$('.flist',el);if(list)new MutationObserver(()=>{list.querySelectorAll('.frow').forEach((row,i)=>{const f=fp.files[i];if(f&&f._origin&&!row.querySelector('.src-tag'))row.querySelector('span').insertAdjacentHTML('beforeend',' <small class="src-tag">· '+esc(f._origin)+'</small>')})}).observe(list,{childList:true});
+  if(!Source.lastFP)Source.lastFP=fp;return fp}}
+{const _ot=openTool;openTool=function(i,pre){Source.lastFP=null;_ot(i);const fp=Source.lastFP;if(!fp||!Nav.isOpen('toolScreen'))return;
+  if(pre&&pre.length){const ok=pre.filter(f=>acceptOk(f,fp.accept));if(ok.length){fp.add(fp.multi?ok:[ok[0]]);return}}
+  setTimeout(()=>{if(!fp.files.length&&Nav.top()==='toolScreen')fp.pick()},250)}}
+
+/* asistente completo: origen → confirmación → herramienta */
+const WIZ_TOOLS=[['Edición',[['bw','⚫','Filtro B/N de alto contraste','Fondo blanco puro y texto negro'],['persp','📐','Corregir perspectiva y alineación','Detecta los bordes y endereza la hoja'],['crop','✂️','Recortar bordes','Ajustá el recorte a mano']]],
+ ['PDF y archivos',[['Comprimir PDF','🗜️','Comprimir PDF','Reduce el peso'],['Dividir PDF','✂️','Dividir páginas','Separá por rangos o por página'],['Unir PDF','🧩','Unir varios documentos','Juntá PDF e imágenes en uno'],['Ordenar PDF','🔀','Reordenar hojas','Mové, girá o quitá páginas'],['conv','🔁','Convertir formato','PDF a Word, JPG, Excel y más'],['OCR PDF','🔎','Extraer texto (OCR)','Reconoce el texto escaneado']]]];
+const CONV_TOOLS=['PDF a WORD','PDF a JPG','PDF a EXCEL','PDF a POWERPOINT','JPG a PDF','Extraer texto','PDF a Markdown'];
+const toolIdx=n=>TOOLS.findIndex(t=>t.name===n);
+async function docWizard(){const r=await Source.run({title:'Asistente · ¿De dónde sale el documento?'});if(!r)return;
+ const pick=await sheetAsk('¿Qué querés hacer?','<p class="muted">Paso 3 de 3 · Origen confirmado: <b>'+esc(r.label)+'</b></p>'+WIZ_TOOLS.map(([g,items])=>'<div class="cph">'+g+'</div>'+items.filter(([k])=>k.length<6||toolIdx(k)>=0).map(([k,ic,n,d])=>'<button class="src-opt" data-t="'+esc(k)+'"><span class="src-ic">'+ic+'</span><span><b>'+n+'</b><small>'+d+'</small></span></button>').join('')).join(''),e=>{const b=e.target.closest('[data-t]');return b?b.dataset.t:undefined});
+ if(!pick)return;
+ if(pick==='conv'){const t=await sheetAsk('Convertir formato','<p class="muted">Elegí a qué formato convertir.</p>'+CONV_TOOLS.filter(n=>toolIdx(n)>=0).map(n=>'<button class="src-opt" data-t="'+esc(n)+'"><span class="src-ic">🔁</span><span><b>'+esc(n)+'</b></span></button>').join(''),e=>{const b=e.target.closest('[data-t]');return b?b.dataset.t:undefined});if(t)return wizTool(t,r);return}
+ if(pick==='bw'||pick==='persp'||pick==='crop'){await Source.toDoc(r);if(!DOC||!DOC.pages.length)return;
+  if(pick==='bw'){await applyFilterAll('magia');toast('Filtro B/N aplicado a todas las páginas')}
+  else if(pick==='persp'){await withBusy(async()=>{for(const [i,p] of DOC.pages.entries()){busy('Corrigiendo perspectiva '+(i+1)+'/'+DOC.pages.length);const im=await loadImg(p.orig);const c=canvas(im.naturalWidth,im.naturalHeight);c.getContext('2d').drawImage(im,0,0);const q=detectQuad(c);if(q)p.quad=q;p.skew=undefined;await makeThumb(p)}});renderDocScreen();saveDoc(true);toast('Perspectiva y alineación corregidas')}
+  else{if(await cropPage(DOC.pages[0])){await makeThumb(DOC.pages[0]);renderDocScreen();saveDoc(true)}}
+  return}
+ return wizTool(pick,r)}
+async function wizTool(name,r){const i=toolIdx(name);if(i<0)return toast('Herramienta no disponible');const t=TOOLS[i];let files=[];
+ await withBusy(async()=>{files=await Source.toFiles(r,(t.name==='JPG a PDF')?'image/*':'.pdf,application/pdf,image/*')});files.forEach(f=>{try{f._origin=r.label}catch(e){}});openTool(i,files);toast('✓ '+r.label+' → '+t.name)}
+
+/* "Mejorar fotos / PDF" también pregunta el origen */
+{const i=toolIdx('Mejorar fotos / PDF');if(i>=0)TOOLS[i].direct=async()=>{const r=await Source.run({title:'Mejorar fotos / PDF · ¿de dónde sale?'});if(r)await Source.toDoc(r)}}
+/* acceso al asistente: tarjeta en el inicio y primer lugar en Herramientas */
+(function(){try{const sec=$('#v-home .sec');if(sec&&!$('#wizCard')){const d=document.createElement('div');d.id='wizCard';d.className='aicard wizcard';d.innerHTML='<div class="aicard-ic">🧭</div><div class="aicard-t"><div><b>Asistente de documentos</b></div><small>Elegí el origen, confirmalo y aplicá la herramienta paso a paso</small></div><button class="aicard-btn">Empezar →</button>';sec.parentNode.insertBefore(d,sec);d.onclick=()=>docWizard()}
+ const _rt=renderTools;renderTools=function(){_rt();const g=$('#toolsGrid');if(g&&!$('#wizRow',g))g.insertAdjacentHTML('afterbegin','<button id="wizRow" class="src-opt wizrow"><span class="src-ic">🧭</span><span><b>Asistente de documentos</b><small>Origen → confirmación → herramienta</small></span></button>');const w=$('#wizRow');if(w)w.onclick=()=>docWizard()};renderTools()}catch(e){console.error('Asistente',e)}})();
+
+/* Nexa: el 📎 también pregunta primero el origen */
+{const _pick=Nexa.pickDocs.bind(Nexa);Nexa.pickDocs=async function(){const k=await Source.menu('¿De dónde sale el documento para Nexa?');if(!k)return;if(k==='saved')return _pick();
+  const r=await Source.acquire(k,{accept:'image/*,application/pdf,.pdf',multi:false});if(!r)return;const a=await Source.confirm(r);if(a!=='yes'){if(a==='other')return this.pickDocs();return}
+  let pages=r.pages;if(!pages)await withBusy(async()=>{busy('Leyendo archivo…');pages=await importFiles(r.files)});if(!pages||!pages.length)return;
+  const d=newDoc();d.name=r.name||d.name;d.pages.push(...pages);await DB.putDoc(d);refreshLists();this.attachDoc(d);toast('📎 '+d.name+' ('+r.label+') adjunto a Nexa')}}
+document.head.insertAdjacentHTML('beforeend','<style id="srcCss">'
++'.src-opt{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px;margin:0 0 8px;border:1px solid var(--line);border-radius:14px;background:var(--bg2)}.src-opt:active{transform:scale(.99)}'
++'.src-opt b{display:block;font-size:15px}.src-opt small{display:block;color:var(--tx2);font-size:12.5px;margin-top:2px}.src-ic{flex:none;width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:var(--bg3);font-size:22px}'
++'.src-chip{display:inline-block;padding:7px 11px;border-radius:999px;background:var(--bg3);font-size:13px;margin:4px 0 10px}'
++'.src-prev{display:flex;gap:8px;overflow:auto;margin-bottom:6px}.src-prev img{height:110px;border-radius:8px;border:1px solid var(--line);background:#fff}.src-file{width:86px;height:110px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:1px solid var(--line);border-radius:8px;font-size:28px;text-align:center}.src-file small{font-size:10px;word-break:break-all;padding:0 4px}'
++'.src-tag{color:var(--ac)}.wizrow{margin:12px 0 4px}.drop small+small{display:block;margin-top:2px}'
++'</style>');
 </script>
 <script type="text/plain" id="modsrc-admin">/* Danscaner Pro · módulo que se carga solo cuando se usa */
 window.__mods=window.__mods||{};

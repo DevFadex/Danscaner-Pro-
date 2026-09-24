@@ -1,5 +1,5 @@
 // Danscaner Pro — funcionamiento sin conexión
-const VERSION = 'danscaner-v10';
+const VERSION = 'danscaner-v11';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 const CDN = /(cdnjs\.cloudflare\.com|cdn\.jsdelivr\.net|unpkg\.com|tessdata\.projectnaptha\.com|fonts\.gstatic\.com|fonts\.googleapis\.com)$/;
 
