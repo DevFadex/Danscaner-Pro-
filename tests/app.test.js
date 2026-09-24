@@ -257,6 +257,15 @@ await test('Nexa local por procesador (sin placa gráfica compatible) y saludo s
   assert.ok(await pg.$('#btnNexa'));
 });
 
+await test('Gemini: acepta claves nuevas (AQ.) y la manda en la cabecera, no en la dirección',async pg=>{
+  await pg.click('#btnNexa');await W(200);await pg.click('#nxCfg');await W(700);
+  await pg.fill('#nlKey','AQ.Ab8RN6Kx_prueba-1234567890abcdef');await pg.click('#nlKeyGo');await W(500);
+  assert.equal(await pg.evaluate(()=>AI().keys.gemini),'AQ.Ab8RN6Kx_prueba-1234567890abcdef');
+  const req=await pg.evaluate(async()=>{let seen=null;const f=window.fetch;window.fetch=async(u,o)=>{seen={u:String(u),h:o&&o.headers};return new Response('data: {"candidates":[{"content":{"parts":[{"text":"ok"}]}}]}\n\n',{status:200,headers:{'Content-Type':'text/event-stream'}})};
+    try{await aiChatStream([{role:'user',text:'hola'}],{prov:'gemini'})}catch(e){}window.fetch=f;return seen});
+  assert.ok(req&&!/[?&]key=/.test(req.u),'la clave quedó en la dirección: '+(req&&req.u));assert.equal(req.h['x-goog-api-key'],'AQ.Ab8RN6Kx_prueba-1234567890abcdef');
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();
