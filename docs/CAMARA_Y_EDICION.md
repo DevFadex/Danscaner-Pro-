@@ -74,6 +74,32 @@ Todos se aplican con una LUT de 256 entradas (`toneAdjust`), también en el Web 
 - También exporta a PDF/A, JPG, PNG, Word y texto (herramientas existentes).
 - **Límite**: la letra manuscrita se reconoce solo parcialmente; Tesseract está pensado para texto impreso.
 
+## Motor de imagen tipo escáner (v32)
+
+Se calibró contra el PDF que el usuario hizo con CamScanner. Mediciones de esas páginas:
+
+- resolución completa del sensor (~2300-3000 × 4032);
+- papel en blanco puro (mediana 255);
+- texto casi negro (luminancia mediana entre 5 y 8);
+- birome azul saturada (≈ RGB 45, 45, 135);
+- solo un 3-4 % de medios tonos: bordes suaves, sin serrucho.
+
+**Método de calibración**: a partir de esas páginas se generaron fotos simuladas con papel amarillento, degradé, una sombra con borde definido, tinta más clara, desenfoque, ruido y JPEG. Esas fotos se pasaron por el motor y el resultado se comparó con el PDF de CamScanner. Los valores elegidos para Magia Pro son `bpk .95`, `wp 220`, `γ 1,2`, `sat 1,75` y `mix .52`. Con ellos:
+
+| | Antes (Documento) | Magia Pro nueva | CamScanner |
+|---|---|---|---|
+| Papel ≥ 245 | 95,5 % | 97,7 % | 100 % (referencia) |
+| Luminancia del texto negro | 95 | 9 | ~6 |
+| Medios tonos | 8,4 % | 3,9 % | 3,9 % |
+
+**`flatField`** (reemplaza a `removeShadows` en los filtros de documento): estima el fondo por canal en una grilla fina, de alrededor de 220 bloques por el lado largo (antes eran 8 × 8). Aplica un cierre morfológico para ignorar las letras y un suavizado, y después divide cada canal por ese fondo. Así se van las sombras, los degradés y el tono amarillo del papel, y se distinguen los bordes de sombra definidos.
+
+**`csEnhance`**: toma el punto negro adaptativo a partir de la mediana de la tinta de la hoja. Lleva el papel a blanco puro y aplica una curva γ para que el texto quede negro con bordes suaves. La tinta de color (croma > 10) conserva su tono con más saturación, así las firmas y los sellos azules siguen siendo azules.
+
+**Tira de filtros** (como CamScanner): Original · **Magia Pro** (por defecto) · Mejorar · Aclarar · Color mágico · Sin sombras · Gris · B/N · Ahorro de tinta. Los demás filtros están en **Más filtros**. *Documento* es un alias de Magia Pro, para mantener la compatibilidad.
+
+Si la imagen no parece un documento (por ejemplo, una foto), cada filtro usa su versión para fotos.
+
 ## Captura estilo escáner (v21)
 
 Comparación con el flujo de las apps de escaneo comerciales, como CamScanner, y lo que se incorporó:
@@ -129,7 +155,7 @@ Botón **🪪 Datos** en la barra del documento. Si el documento todavía no tie
 
 ## Pruebas
 
-`tests/app.test.js` (Playwright, Chromium) tiene 15 pruebas de extremo a extremo. Las nuevas para este módulo son:
+`tests/app.test.js` (Playwright, Chromium) tiene 16 pruebas de extremo a extremo. Las nuevas para este módulo son:
 
 - **Filtro Documento**: el papel queda blanco, el texto negro y se conserva la tinta azul. Con el modo B/N activo no queda color.
 - **PDF buscable**: `Tucumán`, `“Expte.”`, `N°`, `Peñaloza` se extraen intactos y sin bloques de números.
