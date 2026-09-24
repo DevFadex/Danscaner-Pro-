@@ -100,6 +100,13 @@ Se calibró contra el PDF que el usuario hizo con CamScanner. Mediciones de esas
 
 Si la imagen no parece un documento (por ejemplo, una foto), cada filtro usa su versión para fotos.
 
+### Ajuste v33: birome azul y resolución (comparación con la planilla de asistencia)
+
+Con los PDF reales del usuario (la misma planilla escaneada con Danscanner y con CamScanner):
+
+- **Birome azul**: en Danscanner quedaba pálida y cortada (RGB medio 146, 148, 199), y en CamScanner, marcada (115, 113, 186). Ahora la tinta de color usa su propia curva (`cbp`, `cwp`, `cg`) y se oscurece como tinta, no como papel. Solo se considera papel si el croma es bajo (`pc`). Resultado en la simulación: luminancia del azul de 181 a ~139 en Magia Pro, y a ~132 en Mejorar.
+- **Resolución**: la foto de Danscanner medía 1516 × 1933 y la de CamScanner 2190 × 3040. `hiResPhoto` pide a `ImageCapture` la resolución máxima del sensor (`getPhotoCapabilities`). Si el teléfono no entrega la foto HD, se avisa una vez y se sugiere usar la cámara nativa.
+
 ## Captura estilo escáner (v21)
 
 Comparación con el flujo de las apps de escaneo comerciales, como CamScanner, y lo que se incorporó:
@@ -155,7 +162,7 @@ Botón **🪪 Datos** en la barra del documento. Si el documento todavía no tie
 
 ## Pruebas
 
-`tests/app.test.js` (Playwright, Chromium) tiene 16 pruebas de extremo a extremo. Las nuevas para este módulo son:
+`tests/app.test.js` (Playwright, Chromium) tiene 17 pruebas de extremo a extremo. Las nuevas para este módulo son:
 
 - **Filtro Documento**: el papel queda blanco, el texto negro y se conserva la tinta azul. Con el modo B/N activo no queda color.
 - **PDF buscable**: `Tucumán`, `“Expte.”`, `N°`, `Peñaloza` se extraen intactos y sin bloques de números.
