@@ -2526,7 +2526,7 @@ function nexaMd(s){const inl=t=>esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').rep
   else{close();out.push('<p>'+inl(l)+'</p>')}});
  close();return out.join('')}
 
-const NEXA_PROVS=[['auto','NEXA IA'],['anthropic','Claude'],['gemini','Gemini'],['openai','ChatGPT']];
+const NEXA_PROVS=[['auto','NEXA IA (gratis)'],['local','Nexa local'],['basic','Nexa básico'],['anthropic','Claude'],['gemini','Gemini'],['openai','ChatGPT']];
 const NEXA_SUG=[['Resumir','Resumí los documentos adjuntos con los puntos principales en viñetas y una conclusión breve.'],['Corregir OCR','Corregí los errores de OCR, ortografía y redacción del texto de los documentos adjuntos. Devolvé solo el texto corregido.'],['Extraer datos','Extraé los datos importantes (personas, DNI, fechas, números de expediente, plazos, montos) en una lista ordenada. Si falta un dato, indicá "no figura".'],['Redactar nota','Con la información de los documentos adjuntos, redactá una nota formal para un juzgado con encabezado, cuerpo y cierre protocolar.'],['Explicar simple','Explicá el contenido de los documentos adjuntos en lenguaje simple y claro.']];
 const NEXA_SYS='Sos NEXA, la asistente documental integrada en Danscanner Pro, una app de escaneo usada en una oficina judicial penitenciaria de Tucumán, Argentina. Respondés en español rioplatense, claro, formal y conciso. Trabajás sobre los documentos que el usuario adjunta desde su dispositivo: citá el nombre del documento del que sale cada dato. No inventes datos: si algo no figura en los documentos, decilo. Podés usar viñetas, listas numeradas y **negritas**. Cuando el usuario quiera procesar o ajustar un documento, guialo paso a paso: primero pedile que elija y confirme el origen (cámara de la app, cámara del celular, galería del dispositivo o documentos guardados en la app, desde el botón 📎 o el Asistente de documentos del inicio) y recién después ofrecé las herramientas: filtro B/N de alto contraste con fondo blanco, corregir perspectiva y alineación, recortar bordes, comprimir PDF, dividir páginas, unir documentos, reordenar hojas, convertir formatos o extraer texto (OCR).';
 
@@ -2563,9 +2563,9 @@ const Nexa={st:{msgs:[],prov:'auto',docs:[]},sending:false,el:null,imgCache:{},
   const s=$('#nxSetup');if(s)s.onclick=()=>aiSheet(this.st.prov==='auto'?null:this.st.prov)},
  renderDocs(){$('#nxDocs').innerHTML=this.st.docs.map(d=>'<span class="nx-chip" title="'+esc(d.name)+'">📄 '+esc(d.name.length>28?d.name.slice(0,26)+'…':d.name)+(d.vis?' <small>· imagen</small>':'')+'<button data-rm="'+esc(d.id)+'" aria-label="Quitar">✕</button></span>').join('')},
  render(){this.status();this.renderDocs();const log=$('#nxLog');
-  if(!this.st.msgs.length){log.innerHTML='<div class="nx-empty"><div class="nx-sun"><i data-ico="nexa">✨</i></div><h3>¿Qué necesitás resolver?</h3><p>Adjuntá documentos de tu dispositivo con 📎 y pedí un resumen, corregir el OCR, extraer datos o redactar una nota.</p><div class="nx-sugs">'+NEXA_SUG.map(([n,t])=>'<button data-nx="sug" data-t="'+esc(t)+'">'+n+'</button>').join('')+'</div></div>';iconize(log);return}
+  if(!this.st.msgs.length){log.innerHTML='<div class="nx-empty"><div class="nx-sun"><i data-ico="nexa">✨</i></div><h3>¿Qué necesitás resolver?</h3><p>Adjuntá documentos con 📎 y pedí un resumen, extraer datos, corregir el OCR o buscar en todos tus documentos. <b>Gratis y sin enviar nada a internet.</b></p><div class="nx-sugs">'+NEXA_SUG.map(([n,t])=>'<button data-nx="sug" data-t="'+esc(t)+'">'+n+'</button>').join('')+'</div></div>';iconize(log);return}
   log.innerHTML=this.st.msgs.map((m,i)=>m.role==='user'?'<div class="nx-msg me"><div class="nx-bub">'+esc(m.text).replace(/\n/g,'<br>')+(m.docs&&m.docs.length?'<div class="nx-att">📎 '+m.docs.map(esc).join(', ')+'</div>':'')+'</div></div>'
-   :'<div class="nx-msg ai"><span class="nx-badge"><i data-ico="nexa">✨</i> NEXA IA'+(m.prov?' · '+esc(AI_PROV[m.prov]?.n||''):'')+'</span><div class="nx-md">'+nexaMd(m.text)+'</div><div class="nx-acts"><button data-nx="copy" data-i="'+i+'">📋 Copiar</button><button data-nx="word" data-i="'+i+'">📝 Word</button><button data-nx="pdf" data-i="'+i+'">📄 PDF</button><button data-nx="txt" data-i="'+i+'">⬇ TXT</button></div></div>').join('')
+   :'<div class="nx-msg ai"><span class="nx-badge"><i data-ico="nexa">✨</i> NEXA IA'+(m.prov?' · '+esc(provName(m.prov)):'')+'</span><div class="nx-md">'+nexaMd(m.text)+'</div><div class="nx-acts"><button data-nx="copy" data-i="'+i+'">📋 Copiar</button><button data-nx="word" data-i="'+i+'">📝 Word</button><button data-nx="pdf" data-i="'+i+'">📄 PDF</button><button data-nx="txt" data-i="'+i+'">⬇ TXT</button></div></div>').join('')
    +(this.sending?'<div class="nx-msg ai"><span class="nx-badge"><i data-ico="nexa">✨</i> NEXA IA</span><div class="nx-typing"><i></i><i></i><i></i></div></div>':'')
    +(this.lastErr?'<div class="nx-err">⚠️ '+esc(this.lastErr)+' <button data-nx="retry">Reintentar</button></div>':'');
   iconize(log);requestAnimationFrame(()=>{const last=log.lastElementChild;if(last)last.scrollIntoView({behavior:'smooth',block:'nearest'})})},
@@ -2584,17 +2584,17 @@ const Nexa={st:{msgs:[],prov:'auto',docs:[]},sending:false,el:null,imgCache:{},
   if(!this.st.docs.length)s+='\n\n(No hay documentos adjuntos. Si el pedido necesita un documento, pedile al usuario que lo adjunte con el botón 📎.)';
   return s},
  async send(){if(this.sending)return;const inp=$('#nxIn');const text=inp.value.trim();if(!text)return;
-  const prov=this.prov();if(!aiKeyFor(prov)){aiSheet(this.st.prov==='auto'?null:this.st.prov);return}
+  const prov=this.prov();if(isCloud(prov)&&!aiKeyFor(prov)){aiSheet(prov);return}
   const docNames=this.st.docs.filter(d=>d.fresh).map(d=>d.name);
   const msg={role:'user',text,docs:docNames};this.st.msgs.push(msg);inp.value='';inp.oninput();this.lastErr='';this.st.docs.forEach(d=>d.fresh=false);this.save();
   await this.ask(msg)},
  async ask(msg){const prov=this.prov();this.sending=true;this.render();this.btn();
   try{let imgs=[];const vis=this.st.docs.filter(d=>d.vis);
-   for(const d of vis){if(imgs.length>=4)break;if(!this.imgCache[d.id])this.imgCache[d.id]=await this.docImages(d);imgs.push(...this.imgCache[d.id].slice(0,4-imgs.length))}
+   if(isCloud(prov))for(const d of vis){if(imgs.length>=4)break;if(!this.imgCache[d.id])this.imgCache[d.id]=await this.docImages(d);imgs.push(...this.imgCache[d.id].slice(0,4-imgs.length))}
    const hist=this.st.msgs.slice(-20);while(hist.length&&hist[0].role!=='user')hist.shift();
    const payload=hist.map((m,i)=>({role:m.role,text:m.text,images:i===hist.length-1?imgs:[]}));
    const ctrl=this.ctrl=new AbortController();let live=null,partial='';
-   const out=await aiChatStream(payload,{prov,system:this.system(),signal:ctrl.signal,onText:t=>{partial=t;if(!live){const ty=$('#nxLog .nx-typing');if(ty){live=document.createElement('div');live.className='nx-md';ty.replaceWith(live)}}if(live){live.innerHTML=nexaMd(t);if(!this._raf)this._raf=requestAnimationFrame(()=>{this._raf=0;live.scrollIntoView({block:'nearest'})})}}}).catch(e=>{if(e.name==='AbortError')return partial?partial+'\n\n*(Respuesta detenida)*':'';throw e});
+   const out=await this.run(prov,payload,hist,{signal:ctrl.signal,onText:t=>{partial=t;if(!live){const ty=$('#nxLog .nx-typing');if(ty){live=document.createElement('div');live.className='nx-md';ty.replaceWith(live)}}if(live){live.innerHTML=nexaMd(t);if(!this._raf)this._raf=requestAnimationFrame(()=>{this._raf=0;live.scrollIntoView({block:'nearest'})})}}}).catch(e=>{if(e.name==='AbortError')return partial?partial+'\n\n*(Respuesta detenida)*':'';throw e});
    if(out)this.st.msgs.push({role:'assistant',text:out,prov});
    else if(ctrl.signal.aborted){const u=this.st.msgs.pop();if(u&&u.role==='user'){$('#nxIn').value=u.text;$('#nxIn').oninput()}}
    else this.st.msgs.push({role:'assistant',text:'(Nexa no devolvió respuesta)',prov});this.save()}
@@ -2819,6 +2819,147 @@ const MARK_SVG="<defs> <linearGradient id=\"bg\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\
  return '<svg class="dlogo dlogo-mark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 290 290" width="'+(size||96)+'" height="'+(size||96)+'" role="img" aria-label="Danscanner Pro"><svg x="0" y="0" width="290" height="290" viewBox="0 0 1024 1024">'+body+'</svg></svg>'}}
 (function(){const l=$('.top .logo');if(l){l.innerHTML=logoIsoSvg(34);l.classList.add('logo-mark')}})();
 document.head.insertAdjacentHTML('beforeend','<style>.top .logo.logo-mark{background:transparent;border:0;box-shadow:none;overflow:visible}.top .logo.logo-mark .dlogo{width:38px;height:38px}</style>');
+/* ===================== NEXA GRATIS: nivel 1 (básico, sin IA) y nivel 2 (IA local en el teléfono) =====================
+   Por defecto Nexa no usa internet ni claves: responde con reglas locales o con un modelo que corre en el
+   propio dispositivo (WebGPU). Claude, Gemini o ChatGPT quedan como opción para quien cargue su clave. */
+const nbNorm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+const NB_STOP=new Set(nbNorm('de la que el en y a los del se las por un una para con no su al lo como mas pero sus le ya o este si porque esta entre cuando muy sin sobre tambien me hasta hay donde quien desde todo nos durante todos uno les ni contra otros ese eso ante ellos e esto mi antes algunos que unos yo otro otras otra el tanto esa estos mucho quienes nada muchos cual poco ella estar estas algunas algo nosotros mis tu te ti tus ellas os es son fue fueron era han ha he sido ser se sera dicho dicha mismo misma cada solo asi segun ello the of and').split(' '));
+const NB_MESES='enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre';
+function nbClean(t){return String(t||'').replace(/\r/g,'').replace(/(\w)-\s*\n\s*(\w)/g,'$1$2').replace(/([^\n.:;!?])\n(?!\n)(?=\S)/g,'$1 ').replace(/[ \t]{2,}/g,' ').replace(/ +([,.;:!?])/g,'$1').replace(/\n{3,}/g,'\n\n').replace(/[|¦]/g,'I').trim()}
+function nbSentences(t){return nbClean(t).split(/(?:(?<=[!?;])|(?<!\b(?:[Tt]el|[Ss]rt?a?|[Dd]ra?|[Ee]xpte|[Nn]ro|N|[Aa]rt|[Ii]nc|[Aa]v|[Pp]ág|[Pp]ag|hs|[Ll]ic|[Ii]ng|[Dd]to|[Cc]ap|[Ee]tc)(?<=\.))(?<=[.!?;]))\s+(?=[A-ZÁÉÍÓÚÑ¿¡"(])|\n{2,}/).map(s=>s.trim()).filter(s=>s.length>=25&&s.length<=450)}
+function nbSummary(t,n=5){const ss=nbSentences(t);if(ss.length<=n)return ss;const f={};
+ for(const s of ss)for(const w of nbNorm(s).match(/[a-zñ0-9]{4,}/g)||[])if(!NB_STOP.has(w))f[w]=(f[w]||0)+1;
+ const sc=ss.map((s,i)=>{const ws=(nbNorm(s).match(/[a-zñ0-9]{4,}/g)||[]).filter(w=>!NB_STOP.has(w));return {i,s,v:ws.reduce((a,w)=>a+f[w],0)/Math.sqrt(ws.length+1)+(i<2?1.5:0)}});
+ return sc.sort((a,b)=>b.v-a.v).slice(0,n).sort((a,b)=>a.i-b.i).map(x=>x.s)}
+function nbEntities(t){t=nbClean(t);const out={personas:[],dni:[],cuil:[],expedientes:[],fechas:[],montos:[],telefonos:[],emails:[]};const add=(k,v)=>{v=String(v).trim().replace(/[.,;:]+$/,'');if(v&&!out[k].some(x=>nbNorm(x)===nbNorm(v)))out[k].push(v)};let m;
+ const reD=/\b(?:D\.?\s?N\.?\s?I\.?|documento(?:\s+nacional\s+de\s+identidad)?|doc\.)\s*(?:n[°º.]?\s*)?[:\-]?\s*(\d{1,2}[.\s]?\d{3}[.\s]?\d{3})\b/gi;while(m=reD.exec(t))add('dni',m[1].replace(/\s/g,'.'));
+ const reD2=/\b\d{1,2}\.\d{3}\.\d{3}\b/g;while(m=reD2.exec(t))if(!out.dni.some(x=>x.replace(/\D/g,'')===m[0].replace(/\D/g,'')))add('dni',m[0]);
+ const reC=/\b(20|23|24|27|30|33|34)[-\s]?(\d{8})[-\s]?(\d)\b/g;while(m=reC.exec(t))add('cuil',m[1]+'-'+m[2]+'-'+m[3]);
+ const reE=/\b(?:expte\.?|expediente|causa|legajo|autos|actuaci[oó]n|oficio|nota|resoluci[oó]n)\s*(?:n(?:ro|°|º)?\.?\s*)?[:\-]?\s*([A-Za-z]{0,4}[\-\s]?\d[\w\-\/.]{0,18})/gi;while(m=reE.exec(t))add('expedientes',m[0].replace(/\s+/g,' '));
+ const reF=/\b(0?[1-9]|[12]\d|3[01])[\/\-.](0?[1-9]|1[0-2])[\/\-.]((?:19|20)?\d{2})\b/g;while(m=reF.exec(t))add('fechas',m[0]);
+ const reF2=new RegExp('\\b(\\d{1,2})\\s+de\\s+('+NB_MESES+')(?:\\s+de(?:l)?\\s+(\\d{4}))?','gi');while(m=reF2.exec(t))add('fechas',m[0]);
+ const reM=/\$\s?\d{1,3}(?:[.\s]\d{3})*(?:,\d{1,2})?|\b\d{1,3}(?:\.\d{3})+(?:,\d{2})?\s?(?:pesos|ARS)\b/gi;while(m=reM.exec(t))add('montos',m[0]);
+ const reT=/\b(?:tel(?:[eé]fono)?|cel(?:ular)?|whats?app|m[oó]vil)\.?\s*[:\-]?\s*(\+?[\d\s()\-]{7,20}\d)/gi;while(m=reT.exec(t))add('telefonos',m[1]);
+ const reM2=/\b[\w.+-]+@[\w-]+\.[\w.-]+\b/g;while(m=reM2.exec(t))add('emails',m[0]);
+ const reK=/\b(?:interno|interna|se[ñn]or|se[ñn]ora|sr\.|sra\.|srta\.|imputad[oa]|detenid[oa]|causante|v[ií]ctima|dr\.|dra\.|juez|jueza|fiscal|abogad[oa]|defensor(?:a)?|condenad[oa]|procesad[oa]|nombre|apellido y nombre)\s*:?\s+/gi;
+ const reN=/^((?:[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+|[A-ZÁÉÍÓÚÑ]{2,})(?:\s+(?!(?:DNI|CUIL|CUIT|D\.N\.I)\b)(?:[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+|[A-ZÁÉÍÓÚÑ]{2,}|de|del|la)){1,4})/;
+ while(m=reK.exec(t)){const r=reN.exec(t.slice(m.index+m[0].length,m.index+m[0].length+80));if(r)add('personas',r[1].replace(/\s+(de|del|la)$/,''))}
+ return out}
+const NB_LABEL={personas:'👤 Personas',dni:'🪪 DNI',cuil:'🔢 CUIL / CUIT',expedientes:'📁 Expedientes y actuaciones',fechas:'📅 Fechas',montos:'💲 Montos',telefonos:'📞 Teléfonos',emails:'✉️ Correos'};
+function nbEntitiesMd(e,only){const ks=(only&&only.length?only:Object.keys(NB_LABEL));const parts=ks.map(k=>'**'+NB_LABEL[k]+':** '+(e[k].length?e[k].join(' · '):'no figura'));return parts.map(p=>'- '+p).join('\n')}
+async function nbSearch(q){const terms=nbNorm(q).split(/\s+/).filter(w=>w.length>2&&!NB_STOP.has(w));if(!terms.length)return [];let metas=[];try{metas=await DB.metas()}catch(e){}
+ const res=[];for(const m of metas){const txt=(m.text||'');const hay=nbNorm(m.name+' '+txt);const hits=terms.filter(w=>hay.includes(w));if(!hits.length)continue;
+  const nt=nbNorm(txt),pos=nt.indexOf(hits[0]);const snip=pos>=0?txt.slice(Math.max(0,pos-70),pos+110).replace(/\s+/g,' ').trim():'';res.push({m,score:hits.length/terms.length,snip})}
+ return res.sort((a,b)=>b.score-a.score||b.m.updated-a.m.updated).slice(0,8)}
+const NexaBasic={
+ async answer(q,docs){const n=nbNorm(q);const withText=docs.filter(d=>(d.text||'').trim().length>40);
+  const wantSearch=/\b(busc\w*|encontr\w*|donde|que documentos?|cuales documentos?|menciona\w*|aparece\w*)\b/.test(n);
+  if(wantSearch||!docs.length){const qm=q.match(/["“«](.+?)["”»]/);let term=qm?qm[1]:(()=>{const mm=/^.*?\b(?:busc\w*|encontr\w*|donde\s+(?:aparece|esta|figura|dice)\w*|que documentos?\s+\w+|cuales documentos?\s+\w+|menciona\w*|aparece\w*)\b\s*(?:(?:a|al|el|la|los|las|de|del|sobre|en|mis|documentos?)\s+)*/.exec(n);let t=mm?q.slice(mm[0].length):q;return t.replace(/\s*\b(en|de)\s+(mis|los|todos los)?\s*documentos?\b.*$/i,'').replace(/[¿?¡!.]+/g,'').trim()||q})();
+   if(!wantSearch&&!docs.length&&term.split(/\s+/).length>6)return '👋 Soy **Nexa básico**: funciono sin internet y sin costo.\n\nPara trabajar con un documento, adjuntalo con 📎 y pedime:\n- **Resumir** el documento\n- **Extraer datos**: personas, DNI, CUIL, expedientes, fechas y montos\n- **Corregir OCR**: ordeno el texto escaneado\n- **Buscar** en todos tus documentos (ej.: *buscá "Pérez"*)\n\nPara preguntas abiertas o redactar notas, activá **Nexa local** en ⚙ Configurar IA (también gratis).';
+   const r=await nbSearch(term);if(!r.length)return 'No encontré **'+esc(term)+'** en tus documentos guardados.\n\n*La búsqueda usa el texto extraído (OCR) de cada documento: si un escaneo todavía no tiene texto, adjuntalo con 📎 y lo leo.*';
+   return '🔎 Encontré **'+r.length+'** documento(s) con **'+esc(term)+'**:\n\n'+r.map(x=>'- **'+x.m.name+'** — '+(x.snip?'…'+x.snip+'…':'(coincide el nombre)')).join('\n')+'\n\n*Para trabajar con uno, adjuntalo con 📎.*'}
+  if(!withText.length)return 'No pude leer texto en los documentos adjuntos. Probá adjuntarlos de nuevo o usar **Extraer texto** en Herramientas.';
+  const per=f=>withText.map(d=>'### 📄 '+d.name+'\n'+f(d.text)).join('\n\n');
+  if(/resum|sintesis|sintetiz|de que (se )?trata|explic|puntos principales/.test(n))return per(t=>{const s=nbSummary(t,5);return s.length?s.map(x=>'- '+x).join('\n'):'*(El texto es muy corto para resumir.)*'})+'\n\n*Resumen automático: son las frases más importantes del documento, sin reescribir.*';
+  if(/correg|ocr|ortograf|limpi|prolij|ordena/.test(n))return per(t=>nbClean(t).slice(0,6000))+'\n\n*Texto ordenado: uní palabras cortadas, saqué espacios y saltos de línea sobrantes.*';
+  const cats=[];if(/\bdni\b|documento/.test(n))cats.push('dni');if(/cuil|cuit/.test(n))cats.push('cuil');if(/fecha|plazo|venc|dia|cuando/.test(n))cats.push('fechas');if(/expte|expediente|causa|legajo|actuacion/.test(n))cats.push('expedientes');if(/monto|importe|pesos|\$|dinero|plata/.test(n))cats.push('montos');if(/persona|nombre|quien|interno|imputad|juez|fiscal/.test(n))cats.push('personas');if(/telefono|celular|contacto/.test(n))cats.push('telefonos');if(/mail|correo/.test(n))cats.push('emails');
+  if(/\bdatos\b|\btodo|\blista/.test(n))cats.length=0;if(cats.length||/dato|extrae|extraer|lista/.test(n))return per(t=>nbEntitiesMd(nbEntities(t),cats));
+  return per(t=>nbEntitiesMd(nbEntities(t))+'\n\n**Resumen:**\n'+nbSummary(t,3).map(x=>'- '+x).join('\n'))+'\n\n*Soy Nexa básico: extraigo datos y resumo. Para preguntas abiertas o redactar notas, activá **Nexa local** en ⚙ Configurar IA (gratis).*'}};
+
+/* ---------- Nivel 2: IA local con WebLLM (WebGPU) ---------- */
+const WEBLLM_URL='libs/web-llm-0.2.85.js';
+const NL_MODELS=[['Qwen2.5-0.5B-Instruct','Liviano','≈ 0,4 GB · rápido, para celulares básicos'],['Qwen2.5-1.5B-Instruct','Recomendado','≈ 1 GB · buen español, equilibrado'],['Qwen2.5-3B-Instruct','Máxima calidad','≈ 1,8 GB · para celulares potentes']];
+const NexaLocal={engine:null,loading:null,lib:null,prog:null,listeners:new Set(),
+ cfg(){if(!S.nexaLocal||typeof S.nexaLocal!=='object')S.nexaLocal={base:'Qwen2.5-1.5B-Instruct',downloaded:false};return S.nexaLocal},
+ ready(){return !!this.cfg().downloaded},
+ async support(){if(!('gpu' in navigator))return {ok:false,why:'Este navegador no tiene WebGPU. Usá Chrome actualizado en Android o PC (o Safari reciente en iPhone).'};
+  try{const ad=await navigator.gpu.requestAdapter();if(!ad)return {ok:false,why:'El teléfono no permitió usar la placa gráfica (WebGPU).'};return {ok:true,f16:ad.features.has('shader-f16')}}catch(e){return {ok:false,why:'WebGPU no disponible: '+e.message}}},
+ async getLib(){if(!this.lib)this.lib=await import(new URL(WEBLLM_URL,location.href).href);return this.lib},
+ async modelId(){const c=this.cfg();if(c.id)return c.id;const s=await this.support();return c.base+(s.f16?'-q4f16_1-MLC':'-q4f32_1-MLC')},
+ emit(p,t){this.prog={p,t};this.listeners.forEach(f=>{try{f(p,t)}catch(e){}})},
+ async load(){if(this.engine)return this.engine;if(this.loading)return this.loading;
+  this.loading=(async()=>{const s=await this.support();if(!s.ok)throw new Error(s.why);const lib=await this.getLib();const c=this.cfg();const id=c.base+(s.f16?'-q4f16_1-MLC':'-q4f32_1-MLC');
+   try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+   this.emit(0,'Preparando Nexa local…');
+   const eng=await lib.CreateMLCEngine(id,{initProgressCallback:r=>this.emit(r.progress||0,r.text||'')});
+   c.id=id;c.downloaded=true;saveS();this.engine=eng;this.emit(1,'Nexa local lista');return eng})();
+  try{return await this.loading}catch(e){this.loading=null;this.emit(-1,e.message);throw e}finally{if(this.engine)this.loading=null}},
+ async chat(messages,{signal,onText}={}){const eng=await this.load();if(signal&&signal.aborted)throw new DOMException('Detenido','AbortError');
+  let text='';const stop=()=>{try{eng.interruptGenerate()}catch(e){}};signal&&signal.addEventListener('abort',stop,{once:true});
+  const stream=await eng.chat.completions.create({messages,stream:true,temperature:.3,max_tokens:900});
+  for await(const ch of stream){const d=ch.choices&&ch.choices[0]&&ch.choices[0].delta&&ch.choices[0].delta.content;if(d){text+=d;onText&&onText(text)}if(signal&&signal.aborted)break}
+  if(signal&&signal.aborted&&!text)throw new DOMException('Detenido','AbortError');return text.trim()},
+ async remove(){const c=this.cfg();try{if(this.engine){await this.engine.unload()}}catch(e){}this.engine=null;try{const lib=await this.getLib();if(c.id)await lib.deleteModelAllInfoInCache(c.id)}catch(e){}c.downloaded=false;c.id='';saveS()}};
+
+/* ---------- Nexa: modos gratis por defecto ---------- */
+const isCloud=p=>!!AI_PROV[p];
+const provName=p=>AI_PROV[p]?AI_PROV[p].n:p==='local'?'Local en el teléfono':p==='basic'?'Básico sin IA':'';
+Object.assign(Nexa,{
+ prov(){const p=this.st.prov;if(p==='auto')return NexaLocal.ready()?'local':'basic';return p},
+ status(){if(!this.el)return;$('#nxProvL').textContent=this.provLabel();const p=this.prov();let h;
+  if(p==='basic')h='<span class="nx-pill"><span class="nx-dot"></span> Nexa básico · gratis y sin internet</span>'+(NexaLocal.ready()?'':' <a class="nx-mini" id="nxSetup">Activar IA local →</a>');
+  else if(p==='local')h='<span class="nx-pill"><span class="nx-dot"></span> Nexa local · gratis, en tu teléfono</span>'+(NexaLocal.ready()?'':' <a class="nx-mini" id="nxSetup">Descargar →</a>');
+  else h=aiKeyFor(p)?'<span class="nx-pill"><span class="nx-dot"></span> '+esc(AI_PROV[p].n)+' · con tu clave</span>':'<span class="nx-pill warn">'+esc(AI_PROV[p].n)+' necesita tu clave · <a id="nxSetup"><b>Cargarla</b></a></span>';
+  $('#nxStat').innerHTML=h;const s=$('#nxSetup');if(s)s.onclick=()=>isCloud(p)?aiSheet(p):nexaSheet()},
+ async ensureText(){for(const d of this.st.docs.filter(x=>x.vis)){const doc=await DB.getDoc(d.id);if(!doc||!doc.pages.length)continue;
+   const texts=await ocrCanvases(async cb=>{for(const pg of doc.pages.slice(0,10))await cb(await renderPage(pg,{maxSide:2200}))},S.lang,Math.min(10,doc.pages.length));busy(false);
+   const t=texts.join('\n\n').trim();doc.text=t.slice(0,20000);try{await DB.putDoc(doc)}catch(e){}d.text=t.slice(0,20000);d.vis=t.length<=40}
+  this.save();this.renderDocs()},
+ localMsgs(hist){const docs=this.st.docs.filter(d=>(d.text||'').trim().length>40);let budget=7000,ctx='';
+  for(const d of docs){const t=nbClean(d.text).slice(0,Math.max(0,Math.floor(budget/docs.length)));const e=nbEntities(d.text);const known=Object.keys(NB_LABEL).filter(k=>e[k].length).map(k=>NB_LABEL[k].replace(/^\S+\s/,'')+': '+e[k].join(', ')).join('; ');
+   ctx+='\n\n=== '+d.name+' ===\n'+(known?'[Datos detectados: '+known+']\n':'')+t}
+  const sys='Sos NEXA, asistente documental de Danscanner Pro (oficina judicial de Tucumán, Argentina). Respondé SIEMPRE en español, claro y breve. Usá solo la información de los documentos; si algo no figura, decí "no figura". No inventes datos.'+(ctx?'\n\nDOCUMENTOS:'+ctx:'\n\n(No hay documentos adjuntos; si el pedido necesita uno, pedí que lo adjunten con 📎.)');
+  const h=hist.slice(-5).map(m=>({role:m.role,content:String(m.text).slice(0,1500)}));return [{role:'system',content:sys},...h]},
+ async run(prov,payload,hist,{signal,onText}){
+  if(isCloud(prov))return aiChatStream(payload,{prov,system:this.system(),signal,onText});
+  if(this.st.docs.some(d=>d.vis)){this.say('Leyendo el documento con OCR (en tu teléfono)…');await this.ensureText()}
+  if(prov==='basic'){const last=hist[hist.length-1];const out=await NexaBasic.answer(last.text,this.st.docs);onText&&onText(out);return out}
+  const off=(p,t)=>this.say(p>=0&&p<1?'Nexa local: '+Math.round(p*100)+'% · '+(t||'').replace(/\[.*?\]\s*/g,'').slice(0,70):t);NexaLocal.listeners.add(off);
+  try{return await NexaLocal.chat(this.localMsgs(hist),{signal,onText})}finally{NexaLocal.listeners.delete(off)}},
+ say(t){const ty=$('#nxLog .nx-typing');if(ty)ty.setAttribute('data-msg',t||'')}});
+
+/* menú de proveedores, envío y etiquetas de respuesta */
+{const menu=$('#nxMenu'),pb=$('#nxProv');
+ pb.onclick=e=>{e.stopPropagation();menu.hidden=!menu.hidden;if(!menu.hidden)menu.innerHTML=NEXA_PROVS.map(([k,n],i)=>(i===3?'<div class="nx-sep">Con tu clave (opcional)</div>':'')+'<button data-p="'+k+'">'+n+(k==='local'&&!NexaLocal.ready()?' <small>· descargar</small>':'')+(isCloud(k)&&!aiKeyFor(k)?' <small>· sin clave</small>':'')+(k==='auto'||k==='basic'?' <small>· gratis</small>':'')+(k===Nexa.st.prov?' <b>✓</b>':'')+'</button>').join('')};
+ menu.onclick=e=>{const b=e.target.closest('[data-p]');if(!b)return;const p=b.dataset.p;menu.hidden=true;Nexa.st.prov=p;Nexa.save();Nexa.status();
+  if(isCloud(p)&&!aiKeyFor(p)){toast('Cargá tu clave de '+AI_PROV[p].n);aiSheet(p)}else if(p==='local'&&!NexaLocal.ready())nexaSheet()};
+ $('#nxCfg').onclick=()=>nexaSheet();$('#nxCfg').innerHTML='⚙ Configurar Nexa'}
+
+/* hoja de configuración de Nexa (Ajustes → IA · Nexa y ⚙ Configurar Nexa) */
+async function nexaSheet(){const c=NexaLocal.cfg();const sup=await NexaLocal.support();
+ const b=openSheet('Nexa · configuración','<p class="muted">Nexa funciona <b>gratis</b> y sin enviar tus documentos a internet. Elegí cómo querés usarla.</p>'
+ +'<div class="nl-card"><b>1 · Nexa básico</b> <span class="nl-ok">Siempre activo</span><small>Extrae DNI, CUIL, expedientes, fechas y montos, resume y busca en todos tus documentos. Sin IA, instantáneo, en cualquier celular.</small></div>'
+ +'<div class="nl-card"><b>2 · Nexa local</b> '+(c.downloaded?'<span class="nl-ok">Descargada ✓</span>':'<span class="nl-no">No descargada</span>')+'<small>IA que corre dentro del teléfono: preguntas abiertas, resúmenes redactados y notas. Gratis y privada. Se descarga una sola vez (conviene por wifi).</small>'
+ +(sup.ok?'<div class="nl-models">'+NL_MODELS.map(([k,n,d])=>'<label class="chk nl-model"><input type="radio" name="nlm" value="'+k+'" '+(c.base===k?'checked':'')+(c.downloaded?' disabled':'')+'><span><b>'+n+'</b><small>'+d+'</small></span></label>').join('')+'</div>'
+  +'<div class="nl-prog" id="nlProg" hidden><div class="nl-bar"><i id="nlBar"></i></div><small id="nlTxt"></small></div>'
+  +(c.downloaded?'<div class="row"><button class="btn block" id="nlTest">▶ Probar</button><button class="btn red block" id="nlDel">🗑 Borrar modelo</button></div>':'<button class="btn pri block" id="nlGo">⬇ Descargar y activar</button><p class="muted nl-warn">Necesita espacio libre y un celular con WebGPU. Si el teléfono se queda sin memoria, elegí “Liviano”.</p>')
+  :'<p class="nl-bad">⚠️ '+esc(sup.why)+'</p><p class="muted">En este dispositivo podés usar Nexa básico (gratis) o una IA en la nube con tu clave.</p>')+'</div>'
+ +'<div class="nl-card"><b>3 · IA en la nube (opcional)</b><small>Claude, Gemini o ChatGPT con tu propia clave: más potente, pero el texto viaja al proveedor y puede tener costo.</small><button class="btn block" id="nlCloud">🔑 Cargar clave de Claude, Gemini o ChatGPT</button></div>');
+ const paint=(p,t)=>{const w=$('#nlProg',b);if(!w)return;w.hidden=false;if(p<0){$('#nlTxt',b).textContent='❌ '+t;return}$('#nlBar',b).style.width=Math.round(p*100)+'%';$('#nlTxt',b).textContent=Math.round(p*100)+'% · '+String(t||'').replace(/\[.*?\]\s*/g,'').slice(0,90)};
+ NexaLocal.listeners.add(paint);if(NexaLocal.loading&&NexaLocal.prog)paint(NexaLocal.prog.p,NexaLocal.prog.t);
+ const obs=new MutationObserver(()=>{if(!document.body.contains($('#nlProg',b)||b)||!Nav.isOpen('sheet')){NexaLocal.listeners.delete(paint);obs.disconnect()}});obs.observe($('#sheet'),{attributes:true,attributeFilter:['class']});
+ b.onchange=e=>{const r=e.target.closest('[name=nlm]');if(r){c.base=r.value;c.id='';saveS()}};
+ b.onclick=async e=>{
+  if(e.target.closest('#nlCloud')){await Nav.back();aiSheet();return}
+  if(e.target.closest('#nlGo')){const bt=e.target.closest('#nlGo');bt.disabled=true;bt.textContent='Descargando… podés seguir usando la app';
+   try{await NexaLocal.load();if(Nexa.st.prov==='basic')Nexa.st.prov='auto';Nexa.save();Nexa.status();toast('✅ Nexa local lista',3500);if(Nav.top()==='sheet'&&$('#nlProg',b)){await Nav.back();nexaSheet()}}
+   catch(x){bt.disabled=false;bt.textContent='⬇ Reintentar descarga';toast('❌ '+x.message,6000)}return}
+  if(e.target.closest('#nlTest')){const bt=e.target.closest('#nlTest');bt.disabled=true;paint(0,'Iniciando…');
+   try{const r=await NexaLocal.chat([{role:'user',content:'Respondé solamente: Nexa local funcionando.'}]);paint(1,'Respuesta: '+r)}catch(x){paint(-1,x.message)}bt.disabled=false;return}
+  if(e.target.closest('#nlDel')){if(!confirm('¿Borrar el modelo de este teléfono? Libera espacio; podés volver a descargarlo.'))return;await NexaLocal.remove();Nexa.status();toast('Modelo borrado');await Nav.back();nexaSheet()}}}
+{const _ss=settingsSheet;settingsSheet=async function(){await _ss.apply(this,arguments);const a=$('#sAI');if(a){a.onclick=async()=>{await Nav.back();nexaSheet()};const sm=a.querySelector('small');if(sm)sm.textContent='Gratis en el teléfono o con tu clave'}}}
+
+document.head.insertAdjacentHTML('beforeend','<style id="nexaLocalCss">'
++'.nx-typing[data-msg]:not([data-msg=""])::after{content:attr(data-msg);display:block;margin-left:8px;font-size:12px;color:var(--tx2);animation:none;width:auto;height:auto;background:none;opacity:1}'
++'.nx-typing{flex-wrap:wrap;align-items:center}.nx-mini{font-size:12.5px;font-weight:700;margin-left:6px}'
++'.nx-sep{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--tx2);padding:8px 10px 2px;border-top:1px solid var(--line);margin-top:4px}'
++'.nl-card{border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:0 0 10px;background:var(--bg2)}.nl-card>b{font-size:15px}.nl-card>small{display:block;color:var(--tx2);font-size:12.5px;margin:4px 0 8px;line-height:1.4}'
++'.nl-ok,.nl-no{font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;margin-left:6px}.nl-ok{background:#d1fae5;color:#047857}.nl-no{background:var(--bg3);color:var(--tx2)}[data-theme="dark"] .nl-ok{background:#064e3b;color:#6ee7b7}'
++'.nl-model{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin:0 0 6px}.nl-model input{flex:none;width:20px!important;height:20px;padding:0;margin:0;accent-color:#00b2ff}.nl-model span{display:flex;flex-direction:column}.nl-model small{color:var(--tx2);font-size:12px}'
++'.nl-prog{margin:8px 0}.nl-bar{height:8px;border-radius:4px;background:var(--bg3);overflow:hidden}.nl-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#00e5ff,#00b2ff);transition:width .3s}.nl-prog small{display:block;margin-top:4px;color:var(--tx2);font-size:12px;word-break:break-word}'
++'.nl-bad{color:var(--ac);font-weight:600}.nl-warn{font-size:12px;margin:6px 0 0}'
++'</style>');
+Nexa.status();
 </script>
 <script type="text/plain" id="modsrc-admin">/* Danscanner Pro · módulo que se carga solo cuando se usa */
 window.__mods=window.__mods||{};
