@@ -107,6 +107,20 @@ Con los PDF reales del usuario (la misma planilla escaneada con Danscanner y con
 - **Birome azul**: en Danscanner quedaba pálida y cortada (RGB medio 146, 148, 199), y en CamScanner, marcada (115, 113, 186). Ahora la tinta de color usa su propia curva (`cbp`, `cwp`, `cg`) y se oscurece como tinta, no como papel. Solo se considera papel si el croma es bajo (`pc`). Resultado en la simulación: luminancia del azul de 181 a ~139 en Magia Pro, y a ~132 en Mejorar.
 - **Resolución**: la foto de Danscanner medía 1516 × 1933 y la de CamScanner 2190 × 3040. `hiResPhoto` pide a `ImageCapture` la resolución máxima del sensor (`getPhotoCapabilities`). Si el teléfono no entrega la foto HD, se avisa una vez y se sugiere usar la cámara nativa.
 
+### Ajuste v24: color de la birome reconstruido y calidad máxima
+
+- **Color local de la tinta**: las cámaras guardan el color con menos detalle que el brillo (croma submuestreada y suavizada), así un trazo fino de birome azul llega casi gris. `csEnhance` promedia el color de la tinta vecina en una grilla de unos 1400 px, ponderado por lo oscura que es cada muestra. Si el color local es de una tinta real (azul, violeta o rojo), lo usa en el píxel y lo refuerza hasta un croma mínimo (`lc`, `lmin`, `amax`). El amarillo o marrón que queda del papel no se refuerza, así el texto negro no se tiñe.
+  Simulación con croma diluida: el azul conservado pasó del 2,5 % al 35 %. En fotos normales, del 60 % al 86 %.
+- **Calidad máxima por defecto**: migración única que pone `maxCap` en 4200 y activa Foto HD.
+- **Actualización**: al volver a la app se busca una versión nueva. Cuando se instala, la app se recarga sola si no hay nada abierto; si hay algo abierto, avisa. En Ajustes se muestra la versión.
+
+### Ajuste v25: calibración con la foto real del usuario y enderezado sin cuñas
+
+- Con la foto real de la planilla (filtro Original), Magia Pro deja un 0,70 % de píxeles azules, con mediana RGB 103, 112, 186. CamScanner deja un 0,73 %, con mediana 115, 113, 186. Valores: `sat 2,5` y `cg 1,9` (Mejorar: `sat 2,1` y `cg 2,2`).
+- **Hoja "cruzada" en el editor**: después del recorte de 4 esquinas, la app volvía a girar la imagen unos grados (`deskewAngle`) y expandía el lienzo con cuñas blancas. Ahora:
+  - si la página tiene recorte de 4 esquinas, no se vuelve a girar, porque el recorte ya la deja derecha;
+  - si se gira (una página sin recorte), se recorta el rectángulo interior (`cropInscribed`) y no quedan esquinas blancas.
+
 ## Captura estilo escáner (v21)
 
 Comparación con el flujo de las apps de escaneo comerciales, como CamScanner, y lo que se incorporó:
@@ -162,7 +176,7 @@ Botón **🪪 Datos** en la barra del documento. Si el documento todavía no tie
 
 ## Pruebas
 
-`tests/app.test.js` (Playwright, Chromium) tiene 17 pruebas de extremo a extremo. Las nuevas para este módulo son:
+`tests/app.test.js` (Playwright, Chromium) tiene 19 pruebas de extremo a extremo. Las nuevas para este módulo son:
 
 - **Filtro Documento**: el papel queda blanco, el texto negro y se conserva la tinta azul. Con el modo B/N activo no queda color.
 - **PDF buscable**: `Tucumán`, `“Expte.”`, `N°`, `Peñaloza` se extraen intactos y sin bloques de números.

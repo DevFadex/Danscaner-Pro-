@@ -1022,7 +1022,7 @@ const b=openSheet('Ajustes','<div class="set-list">'+setRow('sDesign','palette',
 +acc('🌓','Apariencia y nombres','Tema y nombre de los documentos',opt('<i data-ico="theme">🌓</i> Tema',sel('sTheme',[['system','Automático (según el teléfono)'],['light','Claro'],['dark','Oscuro']]))+opt('Plantilla de nombre por defecto',sel('sTpl',NAME_TEMPLATES.map(t=>[t,t]))))
 +acc('📄','PDF y texto (OCR)','Hoja, calidad, márgenes e idioma',opt('Idioma OCR',sel('sLang',[['spa','Español'],['eng','Inglés'],['spa+eng','Español + Inglés'],['por','Portugués']]))+'<div class="row">'+opt('Hoja PDF por defecto',sel('sSize',[['a4','A4'],['oficio','Oficio'],['carta','Carta'],['original','Tamaño imagen']]))+opt('Calidad PDF',sel('sQ',Object.entries(QUAL).map(([k,v])=>[k,v.label])))+'</div>'+opt('Márgenes por defecto (mm)','<input type="number" id="sMargin" min="0" max="40">'))
 +acc('🗄️','Datos del dispositivo',est||'Documentos guardados en este navegador','<p class="muted">'+est+'</p><button class="btn red block" id="sWipe">🗑 Borrar todos los documentos</button>')
-+'<p class="muted set-foot">Danscanner Pro · funciona en celular y PC · los documentos se guardan en este navegador.</p>');$('.sTpl',b).value=S.nameTemplate;$('.sFilter',b).value=S.filter;$('.sMax',b).value=String(S.maxCap);$('#sAuto').checked=S.autoCrop;$('#sAutoCap').checked=S.autoCapture;$('#sHd').checked=S.hd;$('#sDeskew').checked=S.deskew!==false;$('#sPrintBW').checked=S.printBW!==false;$('#sPro').checked=S.proFilters!==false;$('#sNative').checked=!!S.camNative;$('.sTheme',b).value=S.theme||'system';$('.sLang',b).value=S.lang;$('.sSize',b).value=S.size;$('.sQ',b).value=S.quality;$('#sMargin').value=S.margin;b.onchange=()=>{S.nameTemplate=$('.sTpl',b).value;S.filter=$('.sFilter',b).value;S.maxCap=+$('.sMax',b).value;S.autoCrop=$('#sAuto').checked;S.camNative=$('#sNative').checked;if(($('.sTheme',b).value)!==(S.theme||'system'))cambiarTema($('.sTheme',b).value);S.autoCapture=$('#sAutoCap').checked;S.hd=$('#sHd').checked;S.deskew=$('#sDeskew').checked;if((S.printBW!==false)!==$('#sPrintBW').checked){S.printBW=$('#sPrintBW').checked;if(FW.w){try{FW.w.terminate()}catch(e){}FW.w=null;FW.ok=null}}if((S.proFilters!==false)!==$('#sPro').checked){S.proFilters=$('#sPro').checked;useProFilters(S.proFilters)}S.lang=$('.sLang',b).value;S.size=$('.sSize',b).value;S.quality=$('.sQ',b).value;S.margin=+$('#sMargin').value||0;saveS();toast('Guardado')};$('#sDesign').onclick=async()=>{await Nav.back();designSheet()};$('#sAI').onclick=async()=>{await Nav.back();aiSheet()};$('#sSec').onclick=async()=>{await Nav.back();securitySheet()};$('#sSpace').onclick=async()=>{await Nav.back();storageSheet()};$('#sAbout').onclick=async()=>{await Nav.back();aboutSheet()};$('#sWipe').onclick=async()=>{if(!confirm('¿Borrar TODOS los documentos guardados?'))return;for(const m of await DB.metas())await DB.delDoc(m.id);refreshLists();toast('Documentos borrados')}}
++'<p class="muted set-foot">Danscanner Pro · versión 25 · funciona en celular y PC · los documentos se guardan en este navegador.</p>');$('.sTpl',b).value=S.nameTemplate;$('.sFilter',b).value=S.filter;$('.sMax',b).value=String(S.maxCap);$('#sAuto').checked=S.autoCrop;$('#sAutoCap').checked=S.autoCapture;$('#sHd').checked=S.hd;$('#sDeskew').checked=S.deskew!==false;$('#sPrintBW').checked=S.printBW!==false;$('#sPro').checked=S.proFilters!==false;$('#sNative').checked=!!S.camNative;$('.sTheme',b).value=S.theme||'system';$('.sLang',b).value=S.lang;$('.sSize',b).value=S.size;$('.sQ',b).value=S.quality;$('#sMargin').value=S.margin;b.onchange=()=>{S.nameTemplate=$('.sTpl',b).value;S.filter=$('.sFilter',b).value;S.maxCap=+$('.sMax',b).value;S.autoCrop=$('#sAuto').checked;S.camNative=$('#sNative').checked;if(($('.sTheme',b).value)!==(S.theme||'system'))cambiarTema($('.sTheme',b).value);S.autoCapture=$('#sAutoCap').checked;S.hd=$('#sHd').checked;S.deskew=$('#sDeskew').checked;if((S.printBW!==false)!==$('#sPrintBW').checked){S.printBW=$('#sPrintBW').checked;if(FW.w){try{FW.w.terminate()}catch(e){}FW.w=null;FW.ok=null}}if((S.proFilters!==false)!==$('#sPro').checked){S.proFilters=$('#sPro').checked;useProFilters(S.proFilters)}S.lang=$('.sLang',b).value;S.size=$('.sSize',b).value;S.quality=$('.sQ',b).value;S.margin=+$('#sMargin').value||0;saveS();toast('Guardado')};$('#sDesign').onclick=async()=>{await Nav.back();designSheet()};$('#sAI').onclick=async()=>{await Nav.back();aiSheet()};$('#sSec').onclick=async()=>{await Nav.back();securitySheet()};$('#sSpace').onclick=async()=>{await Nav.back();storageSheet()};$('#sAbout').onclick=async()=>{await Nav.back();aboutSheet()};$('#sWipe').onclick=async()=>{if(!confirm('¿Borrar TODOS los documentos guardados?'))return;for(const m of await DB.metas())await DB.delDoc(m.id);refreshLists();toast('Documentos borrados')}}
 $('#btnSettings').onclick=()=>settingsSheet();$('#navSettings').onclick=()=>settingsSheet();
 function go(v){$$('.view').forEach(x=>x.classList.toggle('active',x.id==='v-'+v));$$('.nav [data-go]').forEach(b=>b.classList.toggle('on',b.dataset.go===v));$('#topTitle').textContent={home:'Danscanner Pro',docs:'Documentos',tools:'Herramientas',nexa:'Nexa IA'}[v];window.scrollTo(0,0)}
 async function doAction(a){if(a==='cam-single')Cam.open('single');else if(a==='cam-batch')Cam.open('batch');else if(a==='import-img')$('#inImg').click();else if(a==='import-any')$('#inAny').click()}
@@ -1571,7 +1571,13 @@ iconize(document);
 
 /* ---------- 1. Enderezado automático al capturar ---------- */
 function rotateDeg(c,deg){const rad=deg*Math.PI/180,w=c.width,h=c.height;const nw=Math.abs(w*Math.cos(rad))+Math.abs(h*Math.sin(rad)),nh=Math.abs(w*Math.sin(rad))+Math.abs(h*Math.cos(rad));const t=canvas(nw,nh),x=t.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,nw,nh);x.translate(nw/2,nh/2);x.rotate(rad);x.imageSmoothingQuality='high';x.drawImage(c,-w/2,-h/2);return t}
-{const _rp=renderPage;renderPage=async function(p,o){let c=await _rp(p,o);if(S.deskew!==false&&p.skew===undefined&&!(o&&o.maxSide&&o.maxSide<900)){try{p.skew=deskewAngle(c)}catch(e){p.skew=0}}if(p.skew){c=rotateDeg(c,-p.skew);if(printBWOn(p))rebinarize(c)}return c}}
+/* Enderezado fino: solo si la página no tiene recorte de 4 esquinas (el recorte ya la deja derecha).
+   Al girar se recorta el rectángulo interior, así no quedan cuñas blancas "cruzadas" fuera de la hoja. */
+function cropInscribed(c,w,h,deg){const a=Math.abs(deg)*Math.PI/180,sa=Math.sin(a),ca=Math.cos(a);if(sa<1e-4)return c;let wr,hr;const lg=Math.max(w,h),sh=Math.min(w,h);
+ if(sh<=2*sa*ca*lg){const x=sh/2;[wr,hr]=w>=h?[x/sa,x/ca]:[x/ca,x/sa]}else{const c2=ca*ca-sa*sa;wr=(w*ca-h*sa)/c2;hr=(h*ca-w*sa)/c2}
+ wr=Math.floor(wr);hr=Math.floor(hr);if(wr<20||hr<20)return c;const t=canvas(wr,hr);t.getContext('2d').drawImage(c,(c.width-wr)/2,(c.height-hr)/2,wr,hr,0,0,wr,hr);return t}
+{const _rp=renderPage;renderPage=async function(p,o){let c=await _rp(p,o);const hasQ=!!(p.quad&&p.quad.length===4);if(!hasQ&&S.deskew!==false&&p.skew===undefined&&!(o&&o.maxSide&&o.maxSide<900)){try{p.skew=deskewAngle(c)}catch(e){p.skew=0}}
+ if(p.skew&&!hasQ){const w=c.width,h=c.height;c=cropInscribed(rotateDeg(c,-p.skew),w,h,p.skew);if(printBWOn(p))rebinarize(c)}return c}}
 
 /* ---------- 2. Cambiar foto: selector propio, uno por vez ---------- */
 
@@ -2077,13 +2083,23 @@ function flatField(d,w,h){const B=Math.max(4,Math.round(Math.max(w,h)/220)),sw=M
 /* csEnhance: después de flatField. Punto negro adaptativo según la tinta real de la hoja, papel a blanco puro,
    texto a negro con bordes suaves y tinta de color (birome azul, sellos, membretes) conservada y reforzada.
    m: 'magia' (como Magic Pro), 'mejorar' (más natural), 'color' (color vivo), 'gris'. */
-function csEnhance(d,w,h,m,over){const CS_P={magia:{bpk:.95,wp:220,g:1.2,sat:1.75,mix:1,cg:1.8,pc:30,c0:10,cr:16},mejorar:{bpk:.7,wp:232,g:1.05,sat:1.6,mix:1,cg:2.2,pc:30,c0:10,cr:16},aclarar:{bpk:.35,wp:240,g:.9,sat:1.25,mix:.6,cg:1.3,pc:30,c0:10,cr:16},color:{bpk:.8,wp:226,g:1.15,sat:2.1,mix:.9,cg:1.7,pc:26,c0:8,cr:14},gris:{bpk:.95,wp:220,g:1.2,sat:0,mix:0,c0:10,cr:16}};
- const P=Object.assign({cbp:.5,cwp:250,cg:1.6,pc:28},CS_P[m]||CS_P.magia,over||self.CS_OVER||{});flatField(d,w,h);unsharpPro(d,w,h,.55,1);
+function csEnhance(d,w,h,m,over){const CS_P={magia:{bpk:.95,wp:220,g:1.2,sat:2.5,mix:1,cg:1.9,pc:30,c0:10,cr:16},mejorar:{bpk:.7,wp:232,g:1.05,sat:2.1,mix:1,cg:2.2,pc:30,c0:10,cr:16},aclarar:{bpk:.35,wp:240,g:.9,sat:1.25,mix:.6,cg:1.3,pc:30,c0:10,cr:16},color:{bpk:.8,wp:226,g:1.15,sat:2.1,mix:.9,cg:1.7,pc:26,c0:8,cr:14},gris:{bpk:.95,wp:220,g:1.2,sat:0,mix:0,c0:10,cr:16}};
+ const P=Object.assign({cbp:.5,cwp:250,cg:1.6,pc:28,lc:5,lmin:40,amax:5},CS_P[m]||CS_P.magia,over||self.CS_OVER||{});flatField(d,w,h);unsharpPro(d,w,h,.55,1);
  const H=new Uint32Array(256);let ni=0;for(let i=0;i<d.length;i+=12){const l=(d[i]*77+d[i+1]*150+d[i+2]*29)>>8;if(l<185){H[l]++;ni++}}
  let ink=110;if(ni>50){let a=0;for(let v=0;v<256;v++){a+=H[v];if(a>=ni*.5){ink=v;break}}}
  const bp=Math.max(20,Math.min(150,ink*P.bpk)),wp=P.wp,span=Math.max(30,wp-bp),cur=new Float32Array(256);
  for(let v=0;v<256;v++){const t=Math.max(0,Math.min(1,(v-bp)/span));cur[v]=255*Math.pow(t,P.g)}
- for(let i=0;i<d.length;i+=4){const r=d[i],g=d[i+1],b=d[i+2],l=r*.299+g*.587+b*.114,li=l|0,mx=Math.max(r,g,b),mn=Math.min(r,g,b),c=mx-mn;
+ /* color local de la tinta: las cámaras guardan el color con menos detalle que el brillo (croma submuestreada y suavizada),
+    así un trazo fino de birome azul llega casi gris. Se promedia el color de la tinta vecina, ponderado por lo oscura que es. */
+ const q=Math.max(1,Math.ceil(Math.max(w,h)/1400)),qw=Math.ceil(w/q),qh=Math.ceil(h/q),qn=qw*qh,AW=new Float32Array(qn),AR=new Float32Array(qn),AB=new Float32Array(qn);
+ if(P.sat&&P.loc!==0){for(let y=0;y<h;y++){const ry=((y/q)|0)*qw;for(let x=0,i=y*w*4;x<w;x++,i+=4){const r=d[i],g=d[i+1],b=d[i+2],l=r*.299+g*.587+b*.114;if(l>=235)continue;const wt=(235-l)/235,k=ry+((x/q)|0);AW[k]+=wt;AR[k]+=wt*(r-l);AB[k]+=wt*(b-l)}}
+  const Rb=Math.max(1,Math.round(3/q+1)),tmp=new Float32Array(qn);
+  for(const A of [AW,AR,AB]){for(let y=0;y<qh;y++){let s2=0;for(let x=-Rb;x<qw+Rb;x++){if(x+Rb<qw)s2+=A[y*qw+x+Rb];if(x-Rb-1>=0)s2-=A[y*qw+x-Rb-1];if(x>=0&&x<qw)tmp[y*qw+x]=s2}}
+   for(let x=0;x<qw;x++){let s2=0;for(let y=-Rb;y<qh+Rb;y++){if(y+Rb<qh)s2+=tmp[(y+Rb)*qw+x];if(y-Rb-1>=0)s2-=tmp[(y-Rb-1)*qw+x];if(y>=0&&y<qh)A[y*qw+x]=s2}}}}
+ for(let i=0,px=0;i<d.length;i+=4,px++){let r=d[i],g=d[i+1],b=d[i+2];const l=r*.299+g*.587+b*.114,li=l|0;let c=Math.max(r,g,b)-Math.min(r,g,b);
+  if(P.sat&&P.loc!==0&&l<250){const y=(px/w)|0,k=((y/q)|0)*qw+(((px-y*w)/q)|0),aw=AW[k];if(aw>.02){const vr=AR[k]/aw,vb=AB[k]/aw,vg=-(.299*vr+.114*vb)/.587,cm=Math.max(vr,vg,vb)-Math.min(vr,vg,vb);
+   /* solo tintas reales (azul, violeta, rojo, verde): el amarillo o marrón residual del papel no se refuerza */
+   const ink=(vb>2&&vb>=vg)||(vr>2&&vg<-1&&vb>-vr*.6);if(ink&&cm>=P.lc&&cm>c*.8){const f=(l<wp?1:.7)*Math.min(P.amax,Math.max(1,P.lmin/cm));r=l+vr*f;g=l+vg*f;b=l+vb*f;c=Math.max(c,cm*f)}}}
   const n=cur[li];let wc=P.sat?Math.max(0,Math.min(1,(c-P.c0)/P.cr)):0;if(l>=wp&&c<P.pc)wc=0;
   if(wc<=0){d[i]=d[i+1]=d[i+2]=n;continue}
   const tc=Math.max(0,Math.min(1,(l-bp*P.cbp)/Math.max(30,P.cwp-bp*P.cbp))),nc=255*Math.pow(tc,P.cg),L2=nc+(l-nc)*(1-P.mix),s=P.sat;let R=L2+(r-l)*s,G=L2+(g-l)*s,Bq=L2+(b-l)*s;
@@ -3387,6 +3403,14 @@ document.head.insertAdjacentHTML('beforeend','<style id="fltCss">.flt-more span{
 /* foto a la resolución máxima del sensor (no la del video) */
 async function hiResPhoto(track){const ic=new ImageCapture(track);let o={};try{const pc=await ic.getPhotoCapabilities();if(pc&&pc.imageWidth&&pc.imageWidth.max&&pc.imageHeight&&pc.imageHeight.max)o={imageWidth:pc.imageWidth.max,imageHeight:pc.imageHeight.max}}catch(e){}
  try{return await ic.takePhoto(o)}catch(e){if(Object.keys(o).length)return ic.takePhoto();throw e}}
+
+/* ===================== v24: calidad máxima por defecto y actualización automática ===================== */
+if(S.v24q!==true){if(!(S.maxCap>=4200))S.maxCap=4200;S.hd=true;S.v24q=true;try{saveS()}catch(e){}}
+if('serviceWorker' in navigator){
+ /* al volver a la app busca versión nueva; cuando se instala, recarga sola si no hay nada abierto */
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.update())).catch(()=>{})});
+ let had=!!navigator.serviceWorker.controller;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!had){had=true;return}if(window._swReload)return;window._swReload=true;
+  const go=()=>{if(!Nav.stack.length&&!document.querySelector('#busy.on'))location.reload();else toast('✨ Hay una versión nueva de Danscanner: cerrá y abrí la app para usarla',6000)};go()})}
 </script>
 </body>
 </html>

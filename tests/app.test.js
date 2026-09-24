@@ -185,8 +185,33 @@ await test('Birome azul clara: queda azul y marcada (no pálida)',async pg=>{
     x.fillStyle='#ddd6c4';x.fillRect(0,0,W,H);x.strokeStyle='#222';x.lineWidth=3;for(let i=0;i<10;i++){x.beginPath();x.moveTo(40,100+i*100);x.lineTo(960,100+i*100);x.stroke()}
     x.strokeStyle='#8f96cf';x.lineWidth=2.5;for(let i=0;i<9;i++){x.beginPath();x.moveTo(300,150+i*100);for(let t=0;t<30;t++)x.lineTo(300+t*18,150+i*100-Math.sin(t*1.3)*18);x.stroke()}
     const out={};for(const f of ['magia','mejorar']){const p=await makePage(c.toDataURL('image/jpeg',.9),{auto:false,filter:f});const cv=await renderPage(p,{maxSide:1000});const d=cv.getContext('2d').getImageData(0,0,cv.width,cv.height).data;
-      let n=0,k=0,sl=0;for(let y=120;y<1000;y++)for(let xx=300;xx<840;xx++){const i=(y*cv.width+xx)*4;if(d[i+2]-d[i]>35){n++;sl+=d[i]*.299+d[i+1]*.587+d[i+2]*.114}}out[f]={n,L:n?sl/n:255}}return out});
-  for(const f of ['magia','mejorar']){assert.ok(r[f].n>3000,f+': se perdió el azul '+JSON.stringify(r));assert.ok(r[f].L<150,f+': azul muy pálido '+JSON.stringify(r))}
+      const Ls=[];for(let y=120;y<1000;y++)for(let xx=300;xx<840;xx++){const i=(y*cv.width+xx)*4;if(d[i+2]-d[i]>35)Ls.push(d[i]*.299+d[i+1]*.587+d[i+2]*.114)}Ls.sort((a,b)=>a-b);/* núcleo del trazo: el 30 % más oscuro (los bordes suaves no cuentan) */out[f]={n:Ls.length,L:Ls.length?Ls[Math.floor(Ls.length*.3)]:255}}return out});
+  for(const f of ['magia','mejorar']){assert.ok(r[f].n>3000,f+': se perdió el azul '+JSON.stringify(r));assert.ok(r[f].L<135,f+': azul muy pálido '+JSON.stringify(r))}
+});
+
+await test('Birome con color diluido por la cámara: se reconstruye el azul sin teñir el negro',async pg=>{
+  const r=await pg.evaluate(async()=>{const W=900,H=700,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');
+    x.fillStyle='#ddd6c4';x.fillRect(0,0,W,H);x.fillStyle='#1c1c1c';x.font='bold 34px sans-serif';for(let i=0;i<4;i++)x.fillText('PLANILLA DE ASISTENCIA',40,70+i*60);
+    x.strokeStyle='#7c80b8';x.lineWidth=2.5;for(let i=0;i<4;i++){x.beginPath();x.moveTo(60,360+i*80);for(let t=0;t<40;t++)x.lineTo(60+t*19,360+i*80-Math.sin(t*1.2)*20);x.stroke()}
+    /* croma diluida como en la cámara: se desenfoca solo el color */
+    const id=x.getImageData(0,0,W,H),d=id.data,Y=new Float32Array(W*H);for(let i=0;i<W*H;i++)Y[i]=d[i*4]*.299+d[i*4+1]*.587+d[i*4+2]*.114;
+    const bl=new Float32Array(W*H*3);const R=3;for(let y=0;y<H;y++)for(let xx=0;xx<W;xx++){let a=0,b=0,cc=0,n=0;for(let k=-R;k<=R;k++)for(let j=-R;j<=R;j++){const yy=y+k,x2=xx+j;if(yy<0||yy>=H||x2<0||x2>=W)continue;const q=(yy*W+x2)*4,l=Y[yy*W+x2];a+=d[q]-l;b+=d[q+1]-l;cc+=d[q+2]-l;n++}const o=(y*W+xx)*3;bl[o]=a/n;bl[o+1]=b/n;bl[o+2]=cc/n}
+    for(let i=0;i<W*H;i++){d[i*4]=Y[i]+bl[i*3];d[i*4+1]=Y[i]+bl[i*3+1];d[i*4+2]=Y[i]+bl[i*3+2]}x.putImageData(id,0,0);
+    const p=await makePage(c.toDataURL('image/jpeg',.88),{auto:false,filter:'magia'});const cv=await renderPage(p,{maxSide:900});const o=cv.getContext('2d').getImageData(0,0,cv.width,cv.height).data;
+    let blue=0,dark=0,tint=0;for(let y=300;y<660;y++)for(let xx=50;xx<840;xx++){const i=(y*cv.width+xx)*4;if(o[i+2]-o[i]>35&&o[i]+o[i+1]+o[i+2]<600)blue++}
+    for(let y=40;y<260;y++)for(let xx=40;xx<500;xx++){const i=(y*cv.width+xx)*4,l=o[i]*.299+o[i+1]*.587+o[i+2]*.114;if(l<80){dark++;if(Math.max(o[i],o[i+1],o[i+2])-Math.min(o[i],o[i+1],o[i+2])>40)tint++}}
+    return {blue,dark,tint}});
+  assert.ok(r.blue>2500,'no se recuperó el azul '+JSON.stringify(r));assert.ok(r.dark>5000&&r.tint/r.dark<.03,'el texto negro se tiñó '+JSON.stringify(r));
+  assert.equal(await pg.evaluate(()=>S.maxCap),4200);
+});
+
+await test('Enderezado: sin cuñas blancas "cruzadas" fuera de la hoja',async pg=>{
+  const r=await pg.evaluate(async()=>{const c=document.createElement('canvas');c.width=800;c.height=1000;const x=c.getContext('2d');x.fillStyle='#777';x.fillRect(0,0,800,1000);
+    const src=c.toDataURL('image/jpeg',.9);const out={};
+    const a=await makePage(src,{auto:false,filter:'original'});a.quad=[{x:.05,y:.05},{x:.95,y:.05},{x:.95,y:.95},{x:.05,y:.95}];const base=await renderPage({...a,skew:0},{maxSide:1000});a.skew=3;const ca=await renderPage(a,{maxSide:1000});out.q=[ca.width===base.width&&ca.height===base.height];
+    const b=await makePage(src,{auto:false,filter:'original'});b.quad=null;b.skew=4;const cb=await renderPage(b,{maxSide:1000});const d=cb.getContext('2d').getImageData(0,0,cb.width,cb.height).data;
+    const px=(xx,yy)=>{const i=(yy*cb.width+xx)*4;return d[i]};out.corners=[px(1,1),px(cb.width-2,1),px(1,cb.height-2),px(cb.width-2,cb.height-2)];return out});
+  assert.ok(r.q[0],'con recorte no debe girarse de nuevo');assert.ok(r.corners.every(v=>v<200),'quedaron esquinas blancas: '+r.corners);
 });
 
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
