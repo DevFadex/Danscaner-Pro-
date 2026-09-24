@@ -1029,7 +1029,7 @@ const b=openSheet('Ajustes','<div class="set-list">'+setRow('sDesign','palette',
 +acc('📄','PDF y texto (OCR)','Hoja, calidad, márgenes e idioma',opt('Idioma OCR',sel('sLang',[['spa','Español'],['eng','Inglés'],['spa+eng','Español + Inglés'],['por','Portugués']]))+'<div class="row">'+opt('Hoja PDF por defecto',sel('sSize',[['a4','A4'],['oficio','Oficio'],['carta','Carta'],['original','Tamaño imagen']]))+opt('Calidad PDF',sel('sQ',Object.entries(QUAL).map(([k,v])=>[k,v.label])))+'</div>'+opt('Márgenes por defecto (mm)','<input type="number" id="sMargin" min="0" max="40">'))
 +acc('🗄️','Datos del dispositivo',est||'Documentos guardados en este navegador','<p class="muted">'+est+'</p><button class="btn red block" id="sWipe">🗑 Borrar todos los documentos</button>')
 +'<p class="muted set-foot">Danscanner Pro · funciona en celular y PC · los documentos se guardan en este navegador.</p>');$('.sTpl',b).value=S.nameTemplate;$('.sFilter',b).value=S.filter;$('.sMax',b).value=String(S.maxCap);$('#sAuto').checked=S.autoCrop;$('#sAutoCap').checked=S.autoCapture;$('#sHd').checked=S.hd;$('#sDeskew').checked=S.deskew!==false;$('#sPrintBW').checked=S.printBW!==false;$('#sPro').checked=S.proFilters!==false;$('#sNative').checked=!!S.camNative;$('.sTheme',b).value=S.theme||'system';$('.sLang',b).value=S.lang;$('.sSize',b).value=S.size;$('.sQ',b).value=S.quality;$('#sMargin').value=S.margin;b.onchange=()=>{S.nameTemplate=$('.sTpl',b).value;S.filter=$('.sFilter',b).value;S.maxCap=+$('.sMax',b).value;S.autoCrop=$('#sAuto').checked;S.camNative=$('#sNative').checked;if(($('.sTheme',b).value)!==(S.theme||'system'))cambiarTema($('.sTheme',b).value);S.autoCapture=$('#sAutoCap').checked;S.hd=$('#sHd').checked;S.deskew=$('#sDeskew').checked;if((S.printBW!==false)!==$('#sPrintBW').checked){S.printBW=$('#sPrintBW').checked;if(FW.w){try{FW.w.terminate()}catch(e){}FW.w=null;FW.ok=null}}if((S.proFilters!==false)!==$('#sPro').checked){S.proFilters=$('#sPro').checked;useProFilters(S.proFilters)}S.lang=$('.sLang',b).value;S.size=$('.sSize',b).value;S.quality=$('.sQ',b).value;S.margin=+$('#sMargin').value||0;saveS();toast('Guardado')};$('#sDesign').onclick=async()=>{await Nav.back();designSheet()};$('#sAI').onclick=async()=>{await Nav.back();aiSheet()};$('#sSec').onclick=async()=>{await Nav.back();securitySheet()};$('#sSpace').onclick=async()=>{await Nav.back();storageSheet()};$('#sAbout').onclick=async()=>{await Nav.back();aboutSheet()};$('#sWipe').onclick=async()=>{if(!confirm('¿Borrar TODOS los documentos guardados?'))return;for(const m of await DB.metas())await DB.delDoc(m.id);refreshLists();toast('Documentos borrados')}}
-$('#btnSettings').onclick=settingsSheet;$('#navSettings').onclick=settingsSheet;
+$('#btnSettings').onclick=()=>settingsSheet();$('#navSettings').onclick=()=>settingsSheet();
 function go(v){$$('.view').forEach(x=>x.classList.toggle('active',x.id==='v-'+v));$$('.nav [data-go]').forEach(b=>b.classList.toggle('on',b.dataset.go===v));$('#topTitle').textContent={home:'Danscanner Pro',docs:'Documentos',tools:'Herramientas',nexa:'Nexa IA'}[v];window.scrollTo(0,0)}
 async function doAction(a){if(a==='cam-single')Cam.open('single');else if(a==='cam-batch')Cam.open('batch');else if(a==='import-img')$('#inImg').click();else if(a==='import-any')$('#inAny').click()}
 document.addEventListener('click',e=>{const g=e.target.closest('[data-go]');if(g){e.preventDefault();go(g.dataset.go)}const a=e.target.closest('[data-act]');if(a)doAction(a.dataset.act)});
@@ -2960,6 +2960,93 @@ document.head.insertAdjacentHTML('beforeend','<style id="nexaLocalCss">'
 +'.nl-bad{color:var(--ac);font-weight:600}.nl-warn{font-size:12px;margin:6px 0 0}'
 +'</style>');
 Nexa.status();
+/* ===================== RESPALDO DE DOCUMENTOS =====================
+   Un archivo con todos los documentos (páginas en JPG, texto OCR, firmas y ajustes de edición).
+   Opcional: contraseña (AES-256-GCM, clave derivada con PBKDF2). Las claves de IA nunca se incluyen. */
+const BK_MAGIC='DSBK1\n',BK_SETTINGS=['filter','autoCrop','autoCapture','maxCap','hd','deskew','grid','lang','quality','size','orient','margin','nameTemplate','theme','design','printBW','proFilters','camNative'];
+const bkDate=t=>{const d=new Date(t);return pad2(d.getDate())+'/'+pad2(d.getMonth()+1)+'/'+d.getFullYear()+' '+pad2(d.getHours())+':'+pad2(d.getMinutes())};
+const bkAgo=t=>{if(!t)return 'nunca';const d=Math.floor((Date.now()-t)/864e5);return d<=0?'hoy':d===1?'ayer':'hace '+d+' días'};
+async function bkKey(pass,salt){const base=await crypto.subtle.importKey('raw',new TextEncoder().encode(pass),'PBKDF2',false,['deriveKey']);return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:250000,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
+async function bkEncrypt(blob,pass){const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12));const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},await bkKey(pass,salt),await blob.arrayBuffer());return new Blob([BK_MAGIC,salt,iv,new Uint8Array(ct)],{type:'application/octet-stream'})}
+async function bkIsEncrypted(file){const h=new TextDecoder().decode(await file.slice(0,6).arrayBuffer());return h===BK_MAGIC}
+async function bkDecrypt(file,pass){const buf=new Uint8Array(await file.arrayBuffer());const salt=buf.slice(6,22),iv=buf.slice(22,34);try{const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv},await bkKey(pass,salt),buf.slice(34));return new Blob([pt],{type:'application/zip'})}catch(e){throw new Error('Contraseña incorrecta o archivo dañado')}}
+/* las imágenes van como archivos aparte (más livianos que dentro del JSON) */
+function bkStrip(obj,zip,prefix,cnt){if(Array.isArray(obj))return obj.map(v=>bkStrip(v,zip,prefix,cnt));if(obj&&typeof obj==='object'){const o={};for(const k in obj)o[k]=bkStrip(obj[k],zip,prefix,cnt);return o}
+ if(typeof obj==='string'&&obj.length>1500&&/^data:image\/(jpeg|png|webp);base64,/.test(obj)){const e=/^data:image\/png/.test(obj)?'png':/^data:image\/webp/.test(obj)?'webp':'jpg';const path=prefix+'/'+(cnt.n++)+'.'+e;zip.file(path,obj.slice(obj.indexOf(',')+1),{base64:true,compression:'STORE'});return 'zip:'+path}return obj}
+async function bkFill(obj,zip){if(Array.isArray(obj)){const a=[];for(const v of obj)a.push(await bkFill(v,zip));return a}if(obj&&typeof obj==='object'){const o={};for(const k in obj)o[k]=await bkFill(obj[k],zip);return o}
+ if(typeof obj==='string'&&obj.startsWith('zip:')){const path=obj.slice(4),f=zip.file(path);if(!f)return '';const mime=path.endsWith('.png')?'image/png':path.endsWith('.webp')?'image/webp':'image/jpeg';return 'data:'+mime+';base64,'+await f.async('base64')}return obj}
+const Backup={
+ async create({pass='',settings=true}={}){await loadLib('jszip');const metas=await DB.metas();if(!metas.length)throw new Error('No hay documentos para respaldar');
+  const zip=new JSZip();let pages=0;
+  for(const [i,m] of metas.entries()){busy('Respaldando '+(i+1)+'/'+metas.length+': '+m.name);const d=await DB.getDoc(m.id);if(!d)continue;pages+=d.pages.length;
+   zip.file('docs/'+d.id+'.json',JSON.stringify(bkStrip(d,zip,'img/'+d.id,{n:1})))}
+  const st={};if(settings)for(const k of BK_SETTINGS)if(S[k]!==undefined)st[k]=S[k];
+  zip.file('respaldo.json',JSON.stringify({app:'Danscanner Pro',tipo:'respaldo',version:1,fecha:Date.now(),documentos:metas.length,paginas:pages,ajustes:settings?st:null},null,1));
+  zip.file('LEEME.txt','Respaldo de Danscanner Pro del '+bkDate(Date.now())+'.\nPara recuperarlo: Danscanner Pro → Ajustes → Respaldo de documentos → Restaurar.\n');
+  busy('Armando el archivo…');let blob=await zip.generateAsync({type:'blob',mimeType:'application/zip'},m=>busy('Armando el archivo… '+Math.round(m.percent)+'%'));
+  if(pass){busy('Protegiendo con contraseña…');blob=await bkEncrypt(blob,pass)}
+  const d=new Date(),name='Danscanner-respaldo-'+d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())+(pass?'.dsbackup':'.zip');
+  S.lastBackup=Date.now();saveS();refreshBackupNag();return {blob,name,docs:metas.length,pages}},
+ async open(file,pass){await loadLib('jszip');let blob=file;if(await bkIsEncrypted(file)){if(!pass)throw Object.assign(new Error('Este respaldo tiene contraseña'),{needPass:true});blob=await bkDecrypt(file,pass)}
+  let zip;try{zip=await JSZip.loadAsync(blob)}catch(e){throw new Error('El archivo no es un respaldo de Danscanner')}
+  const mf=zip.file('respaldo.json');if(!mf)throw new Error('El archivo no es un respaldo de Danscanner');const info=JSON.parse(await mf.async('string'));return {zip,info}},
+ async restore({zip,info},{settings=false}={}){const files=zip.file(/^docs\/.+\.json$/);let added=0,updated=0,skipped=0;
+  for(const [i,f] of files.entries()){busy('Restaurando '+(i+1)+'/'+files.length+'…');const d=await bkFill(JSON.parse(await f.async('string')),zip);if(!d||!d.id||!Array.isArray(d.pages)){skipped++;continue}
+   const cur=await DB.getDoc(d.id);if(!cur){await DB.putDoc(d);added++}else if((d.updated||0)>(cur.updated||0)){await DB.putDoc(d);updated++}else skipped++}
+  if(settings&&info.ajustes){for(const k of BK_SETTINGS)if(info.ajustes[k]!==undefined)S[k]=info.ajustes[k];saveS()}
+  refreshLists();return {added,updated,skipped}}};
+
+async function backupSheet(){let metas=[];try{metas=await DB.metas()}catch(e){}const pages=metas.reduce((a,m)=>a+(m.count||0),0);
+ const b=openSheet('Respaldo de documentos','<div class="bk-stat"><div><b>'+metas.length+'</b><small>documentos</small></div><div><b>'+pages+'</b><small>páginas</small></div><div><b>'+bkAgo(S.lastBackup)+'</b><small>último respaldo</small></div></div>'
+ +'<p class="muted">Tus documentos se guardan solo en este teléfono. Si se borran los datos del navegador, cambiás de celular o lo perdés, se pierden. Hacé un respaldo y guardalo en Drive, en tu correo o en la PC.</p>'
+ +'<div class="nl-card"><b>⬆ Crear respaldo</b><small>Un solo archivo con todos los documentos, sus páginas, el texto OCR y las firmas.</small>'
+ +'<label class="chk"><input type="checkbox" id="bkPwOn" checked> Proteger con contraseña (recomendado para documentos sensibles)</label>'
+ +'<div id="bkPw"><input type="password" id="bkP1" placeholder="Contraseña (mínimo 6 caracteres)" autocomplete="new-password"><input type="password" id="bkP2" placeholder="Repetí la contraseña" autocomplete="new-password" style="margin-top:6px"><p class="muted bk-warn">⚠️ Si olvidás la contraseña, el respaldo no se puede abrir.</p></div>'
+ +'<label class="chk"><input type="checkbox" id="bkSet" checked> Incluir los ajustes de la app</label><button class="btn pri block" id="bkGo"'+(metas.length?'':' disabled')+'>Crear respaldo</button></div>'
+ +'<div class="nl-card"><b>⬇ Restaurar un respaldo</b><small>Suma los documentos que no tenés y actualiza los que estén más viejos. No borra ni duplica nada.</small><button class="btn block" id="bkIn">📂 Elegir archivo de respaldo</button></div>'
+ +'<p class="muted" style="font-size:12px">Las claves de IA y el PIN de bloqueo no se guardan en el respaldo.</p><div id="bkRes"></div>');
+ b.onchange=e=>{if(e.target.id==='bkPwOn')$('#bkPw',b).hidden=!e.target.checked};
+ b.onclick=async e=>{
+  if(e.target.closest('#bkGo')){const on=$('#bkPwOn',b).checked,p1=$('#bkP1',b).value,p2=$('#bkP2',b).value;
+   if(on){if(p1.length<6)return toast('La contraseña debe tener al menos 6 caracteres');if(p1!==p2)return toast('Las contraseñas no coinciden')}
+   let r;await withBusy(async()=>{r=await Backup.create({pass:on?p1:'',settings:$('#bkSet',b).checked})});if(!r)return;
+   $('#bkRes',b).innerHTML='<div class="okbox">✅ Respaldo listo · '+r.docs+' documentos · '+r.pages+' páginas · '+fmtSize(r.blob.size)+'</div><p class="muted"><b>'+esc(r.name)+'</b></p><div class="row"><button class="btn pri block" id="bkSave">⬇ Guardar en el teléfono</button><button class="btn block" id="bkShare">📤 Compartir (Drive, mail…)</button></div>';
+   b._bk=r;$('#bkRes',b).scrollIntoView({behavior:'smooth',block:'nearest'});return}
+  if(e.target.closest('#bkSave')&&b._bk){download(b._bk.blob,b._bk.name);toast('Guardado en Descargas');return}
+  if(e.target.closest('#bkShare')&&b._bk){share(b._bk.blob,b._bk.name);return}
+  if(e.target.closest('#bkIn')){const fs=await nativeInput('.zip,.dsbackup,application/zip,application/octet-stream',false,false);if(fs)restoreFlow(fs[0])}}}
+
+async function restoreFlow(file,pass){let data;
+ try{busy('Abriendo respaldo…');data=await Backup.open(file,pass)}catch(e){busy(false);
+  if(e.needPass||/Contraseña incorrecta/.test(e.message)){if(pass)toast('❌ '+e.message,4000);await Nav.back();
+   const b=openSheet('Respaldo con contraseña','<p>'+esc(file.name)+'</p><input type="password" id="rsP" placeholder="Contraseña del respaldo" autocomplete="current-password"><button class="btn pri block" id="rsGo" style="margin-top:10px">Abrir</button>');
+   setTimeout(()=>{const i=$('#rsP');i&&i.focus()},300);const go=async()=>{const p=$('#rsP',b).value;if(!p)return;await Nav.back();restoreFlow(file,p)};b.onclick=e=>{if(e.target.closest('#rsGo'))go()};b.onkeydown=e=>{if(e.key==='Enter')go()};return}
+  return toast('❌ '+e.message,5000)}
+ busy(false);const i=data.info;if(Nav.top()==='sheet')await Nav.back();
+ const b=openSheet('Restaurar respaldo','<div class="okbox">Respaldo del '+bkDate(i.fecha)+'</div><p><b>'+i.documentos+'</b> documentos · <b>'+(i.paginas||0)+'</b> páginas</p><p class="muted">Se suman los documentos que no tenés y se actualizan los que estén más viejos. Los que ya tenés iguales o más nuevos no se tocan.</p>'+(i.ajustes?'<label class="chk"><input type="checkbox" id="rsSet"> Recuperar también los ajustes de la app</label>':'')+'<button class="btn pri block" id="rsOk">Restaurar</button><div id="rsRes"></div>');
+ b.onclick=async e=>{if(!e.target.closest('#rsOk'))return;e.target.closest('#rsOk').disabled=true;let r;await withBusy(async()=>{r=await Backup.restore(data,{settings:!!($('#rsSet',b)||{}).checked})});if(!r){e.target.closest('#rsOk').disabled=false;return}
+  $('#rsRes',b).innerHTML='<div class="okbox">✅ Listo: '+r.added+' agregado(s) · '+r.updated+' actualizado(s) · '+r.skipped+' sin cambios</div>';toast('Respaldo restaurado',3500)}}
+
+/* aviso en el inicio si hace mucho que no se respalda */
+function refreshBackupNag(){const home=$('#v-home');if(!home)return;let el=$('#bkNag');const show=async()=>{let n=0;try{n=(await DB.metas()).length}catch(e){}
+  const due=n>0&&(!S.lastBackup||Date.now()-S.lastBackup>14*864e5)&&!(S.backupNagOff&&Date.now()-S.backupNagOff<3*864e5);
+  if(!due){if(el)el.remove();return}
+  if(!el){el=document.createElement('div');el.id='bkNag';el.className='bk-nag';const sec=$('#v-home .sec');(sec?sec.parentNode:home).insertBefore(el,$('#aiCard')||sec)}
+  el.innerHTML='<span class="bk-ic">🛟</span><span class="bk-t"><b>'+(S.lastBackup?'Tu último respaldo fue '+bkAgo(S.lastBackup):'Todavía no respaldaste tus documentos')+'</b><small>'+n+' documento(s) guardados solo en este teléfono</small></span><button class="btn sm pri" id="bkNow">Respaldar</button><button class="bk-x" id="bkLater" aria-label="Más tarde">✕</button>';
+  $('#bkNow',el).onclick=()=>backupSheet();$('#bkLater',el).onclick=()=>{S.backupNagOff=Date.now();saveS();el.remove()}};show()}
+{const _rl=refreshLists;refreshLists=function(){const r=_rl.apply(this,arguments);try{refreshBackupNag()}catch(e){}return r}}
+setTimeout(refreshBackupNag,800);
+
+/* accesos: Ajustes y pantalla de Documentos */
+{const _ss=settingsSheet;settingsSheet=async function(){await _ss.apply(this,arguments);const sp=$('#sSpace');if(sp&&!$('#sBackup')){sp.insertAdjacentHTML('beforebegin','<button class="set-row" id="sBackup"><span class="set-ic">🛟</span><span class="set-t"><b>Respaldo de documentos</b><small>Último: '+bkAgo(S.lastBackup)+' · guardar o restaurar</small></span><span class="set-chev">›</span></button>');$('#sBackup').onclick=async()=>{await Nav.back();backupSheet()}}}}
+(function(){const t=$('#selToggle');if(t&&!$('#docBackup')){t.insertAdjacentHTML('afterend','<button class="btn sm" id="docBackup">🛟 Respaldo</button>');$('#docBackup').onclick=()=>backupSheet()}})();
+document.head.insertAdjacentHTML('beforeend','<style id="bkCss">'
++'.bk-stat{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:2px 0 10px}.bk-stat div{border:1px solid var(--line);border-radius:12px;padding:10px 6px;text-align:center;background:var(--bg2)}.bk-stat b{display:block;font-size:17px}.bk-stat small{color:var(--tx2);font-size:11.5px}'
++'.bk-warn{font-size:12px;margin:6px 0 4px}'
++'.nl-card .chk input[type=checkbox]{flex:none}'
++'.bk-nag{display:flex;align-items:center;gap:10px;margin:0 0 12px;padding:10px 10px 10px 12px;border:1px solid #fcd34d;border-radius:14px;background:#fffbeb}[data-theme="dark"] .bk-nag{background:#2a2410;border-color:#78620f}'
++'.bk-ic{font-size:22px}.bk-t{flex:1;min-width:0}.bk-t b{display:block;font-size:13.5px}.bk-t small{color:var(--tx2);font-size:12px}.bk-x{width:28px;height:28px;border-radius:50%;color:var(--tx2)}'
++'</style>');
 </script>
 <script type="text/plain" id="modsrc-admin">/* Danscanner Pro · módulo que se carga solo cuando se usa */
 window.__mods=window.__mods||{};
