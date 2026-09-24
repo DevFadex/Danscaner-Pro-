@@ -74,6 +74,19 @@ Todos se aplican con una LUT de 256 entradas (`toneAdjust`), también en el Web 
 - También exporta a PDF/A, JPG, PNG, Word y texto (herramientas existentes).
 - **Límite**: la letra manuscrita se reconoce solo parcialmente; Tesseract está pensado para texto impreso.
 
+## Datos del documento
+
+Botón **🪪 Datos** en la barra del documento. Si el documento todavía no tiene texto, primero lo lee con OCR (en el teléfono). Después muestra, listos para copiar:
+
+- personas: incluye el formato `APELLIDO, Nombre`;
+- DNI: se normaliza a `30.123.456`;
+- CUIL/CUIT: se valida el dígito verificador y, si no coincide, aparece **⚠ revisar**;
+- expedientes y actuaciones;
+- fechas: se normalizan a `dd/mm/aaaa`;
+- montos, teléfonos y correos.
+
+**Corrección de OCR (`ocrFixNums`)**: dentro de grupos que ya son casi todo dígitos, se corrigen las confusiones típicas `O→0`, `l/I→1`, `S→5`, `B→8` y `Z→2`. También `N*` pasa a `N°` y `D.N.l` a `D.N.I.`. Las palabras no se tocan. La corrección se aplica también a Nexa y al nombre y la carpeta automáticos.
+
 ## Cámara (`CamPro`)
 
 - Al abrir la cámara se activan enfoque, exposición y balance de blancos continuos, si el dispositivo los ofrece.
@@ -92,7 +105,7 @@ Todos se aplican con una LUT de 256 entradas (`toneAdjust`), también en el Web 
 
 ## Pruebas
 
-`tests/app.test.js` (Playwright, Chromium) tiene 13 pruebas de extremo a extremo. Las nuevas para este módulo son:
+`tests/app.test.js` (Playwright, Chromium) tiene 14 pruebas de extremo a extremo. Las nuevas para este módulo son:
 
 - **Filtro Documento**: el papel queda blanco, el texto negro y se conserva la tinta azul. Con el modo B/N activo no queda color.
 - **PDF buscable**: `Tucumán`, `“Expte.”`, `N°`, `Peñaloza` se extraen intactos y sin bloques de números.

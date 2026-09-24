@@ -139,6 +139,18 @@ await test('Editor: tono, deshacer/rehacer, presets y aplicar a todas',async pg=
   assert.equal(await pg.evaluate(()=>DOC.pages[1].sharp),await pg.evaluate(()=>Ed.p.sharp));
 });
 
+await test('Datos del documento: corrige OCR y extrae nombres, DNI, expte y fechas',async pg=>{await seedPage(pg);
+  const txt='OFICIO N* 1234/26\nSan Miguel de Tucumán, 23 de septiembre de 2026\nExpte. N° 23-26/2O26\nEl interno LUCENA, Juan Benjamín, D.N.l 3O.l23.456, CUIL 20-30123456-3, el 22/O9/26. SOS y OSO.';
+  const e=await pg.evaluate(t=>nbEntities(t),txt);
+  assert.deepEqual(e.dni,['30.123.456']);assert.ok(e.personas.includes('LUCENA, Juan Benjamín'),'nombre: '+e.personas);
+  assert.ok(e.expedientes.some(x=>x.includes('23-26/2026')),'expte: '+e.expedientes);assert.ok(e.fechas.includes('22/09/26'));
+  assert.ok((await pg.evaluate(t=>ocrFixNums(t),txt)).includes('SOS y OSO'),'tocó palabras');
+  assert.equal(await pg.evaluate(()=>cuilOk('20-30123456-3')),true);assert.equal(await pg.evaluate(()=>cuilOk('20-12345678-9')),false);
+  await pg.evaluate(t=>{DOC=newDoc();DOC.pages.push({...window._pg,id:uid()});DOC.text=t;openDocScreen()},txt);await W(600);
+  await pg.click('#docData');await W(700);const body=await pg.textContent('#sheetBody');
+  for(const w of ['30.123.456','LUCENA, Juan Benjamín','23/09/2026','Copiar todo'])assert.ok(body.includes(w),'falta '+w);
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();
