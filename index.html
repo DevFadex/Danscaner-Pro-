@@ -1023,7 +1023,7 @@ const b=openSheet('Ajustes','<div class="set-list">'+setRow('sDesign','palette',
 +acc('🌓','Apariencia y nombres','Tema y nombre de los documentos',opt('<i data-ico="theme">🌓</i> Tema',sel('sTheme',[['system','Automático (según el teléfono)'],['light','Claro'],['dark','Oscuro']]))+opt('Plantilla de nombre por defecto',sel('sTpl',NAME_TEMPLATES.map(t=>[t,t]))))
 +acc('📄','PDF y texto (OCR)','Hoja, calidad, márgenes e idioma',opt('Idioma OCR',sel('sLang',[['spa','Español'],['eng','Inglés'],['spa+eng','Español + Inglés'],['por','Portugués']]))+'<div class="row">'+opt('Hoja PDF por defecto',sel('sSize',[['a4','A4'],['oficio','Oficio'],['carta','Carta'],['original','Tamaño imagen']]))+opt('Calidad PDF',sel('sQ',Object.entries(QUAL).map(([k,v])=>[k,v.label])))+'</div>'+opt('Márgenes por defecto (mm)','<input type="number" id="sMargin" min="0" max="40">'))
 +acc('🗄️','Datos del dispositivo',est||'Documentos guardados en este navegador','<p class="muted">'+est+'</p><button class="btn red block" id="sWipe">🗑 Borrar todos los documentos</button>')
-+'<p class="muted set-foot">Danscanner Pro · versión 33 · funciona en celular y PC · los documentos se guardan en este navegador.</p>');$('.sTpl',b).value=S.nameTemplate;$('.sFilter',b).value=S.filter;$('.sMax',b).value=String(S.maxCap);$('#sAuto').checked=S.autoCrop;$('#sAutoCap').checked=S.autoCapture;$('#sHd').checked=S.hd;$('#sDeskew').checked=S.deskew!==false;$('#sPrintBW').checked=S.printBW!==false;$('#sPro').checked=S.proFilters!==false;$('#sNative').checked=!!S.camNative;$('.sTheme',b).value=S.theme||'system';$('.sLang',b).value=S.lang;$('.sSize',b).value=S.size;$('.sQ',b).value=S.quality;$('#sMargin').value=S.margin;b.onchange=()=>{S.nameTemplate=$('.sTpl',b).value;S.filter=$('.sFilter',b).value;S.maxCap=+$('.sMax',b).value;S.autoCrop=$('#sAuto').checked;S.camNative=$('#sNative').checked;if(($('.sTheme',b).value)!==(S.theme||'system'))cambiarTema($('.sTheme',b).value);S.autoCapture=$('#sAutoCap').checked;S.hd=$('#sHd').checked;S.deskew=$('#sDeskew').checked;if((S.printBW!==false)!==$('#sPrintBW').checked){S.printBW=$('#sPrintBW').checked;if(FW.w){try{FW.w.terminate()}catch(e){}FW.w=null;FW.ok=null}}if((S.proFilters!==false)!==$('#sPro').checked){S.proFilters=$('#sPro').checked;useProFilters(S.proFilters)}S.lang=$('.sLang',b).value;S.size=$('.sSize',b).value;S.quality=$('.sQ',b).value;S.margin=+$('#sMargin').value||0;saveS();toast('Guardado')};$('#sDesign').onclick=async()=>{await Nav.back();designSheet()};$('#sAI').onclick=async()=>{await Nav.back();aiSheet()};$('#sSec').onclick=async()=>{await Nav.back();securitySheet()};$('#sSpace').onclick=async()=>{await Nav.back();storageSheet()};$('#sAbout').onclick=async()=>{await Nav.back();aboutSheet()};$('#sWipe').onclick=async()=>{if(!confirm('¿Borrar TODOS los documentos guardados?'))return;for(const m of await DB.metas())await DB.delDoc(m.id);refreshLists();toast('Documentos borrados')}}
++'<p class="muted set-foot">Danscanner Pro · versión 34 · funciona en celular y PC · los documentos se guardan en este navegador.</p>');$('.sTpl',b).value=S.nameTemplate;$('.sFilter',b).value=S.filter;$('.sMax',b).value=String(S.maxCap);$('#sAuto').checked=S.autoCrop;$('#sAutoCap').checked=S.autoCapture;$('#sHd').checked=S.hd;$('#sDeskew').checked=S.deskew!==false;$('#sPrintBW').checked=S.printBW!==false;$('#sPro').checked=S.proFilters!==false;$('#sNative').checked=!!S.camNative;$('.sTheme',b).value=S.theme||'system';$('.sLang',b).value=S.lang;$('.sSize',b).value=S.size;$('.sQ',b).value=S.quality;$('#sMargin').value=S.margin;b.onchange=()=>{S.nameTemplate=$('.sTpl',b).value;S.filter=$('.sFilter',b).value;S.maxCap=+$('.sMax',b).value;S.autoCrop=$('#sAuto').checked;S.camNative=$('#sNative').checked;if(($('.sTheme',b).value)!==(S.theme||'system'))cambiarTema($('.sTheme',b).value);S.autoCapture=$('#sAutoCap').checked;S.hd=$('#sHd').checked;S.deskew=$('#sDeskew').checked;if((S.printBW!==false)!==$('#sPrintBW').checked){S.printBW=$('#sPrintBW').checked;if(FW.w){try{FW.w.terminate()}catch(e){}FW.w=null;FW.ok=null}}if((S.proFilters!==false)!==$('#sPro').checked){S.proFilters=$('#sPro').checked;useProFilters(S.proFilters)}S.lang=$('.sLang',b).value;S.size=$('.sSize',b).value;S.quality=$('.sQ',b).value;S.margin=+$('#sMargin').value||0;saveS();toast('Guardado')};$('#sDesign').onclick=async()=>{await Nav.back();designSheet()};$('#sAI').onclick=async()=>{await Nav.back();aiSheet()};$('#sSec').onclick=async()=>{await Nav.back();securitySheet()};$('#sSpace').onclick=async()=>{await Nav.back();storageSheet()};$('#sAbout').onclick=async()=>{await Nav.back();aboutSheet()};$('#sWipe').onclick=async()=>{if(!confirm('¿Borrar TODOS los documentos guardados?'))return;for(const m of await DB.metas())await DB.delDoc(m.id);refreshLists();toast('Documentos borrados')}}
 $('#btnSettings').onclick=()=>settingsSheet();$('#navSettings').onclick=()=>settingsSheet();
 function go(v){$$('.view').forEach(x=>x.classList.toggle('active',x.id==='v-'+v));$$('.nav [data-go]').forEach(b=>b.classList.toggle('on',b.dataset.go===v));$('#topTitle').textContent={home:'Danscanner Pro',docs:'Documentos',tools:'Herramientas',nexa:'Nexa IA'}[v];window.scrollTo(0,0)}
 async function doAction(a){if(a==='cam-single')Cam.open('single');else if(a==='cam-batch')Cam.open('batch');else if(a==='import-img')$('#inImg').click();else if(a==='import-any')$('#inAny').click()}
@@ -3425,7 +3425,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 3.3',APP_VER='33';
+const NEXA_VER='Nexa 3.3',APP_VER='34';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3543,7 +3543,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='33 · 25/09/2026';
+const BUILD='34 · 25/09/2026';
 /* Botón Nexa arriba: se crea siempre, aunque otra parte de Nexa falle (antes, un error dejaba teléfonos sin el botón) */
 function ensureNexaTop(){const top=$('.top'),bs=$('#btnSettings');if(!top||!bs||$('#btnNexa'))return;const b=document.createElement('button');b.className='ib nx-top';b.id='btnNexa';b.dataset.go='nexa';b.title='Nexa IA';b.setAttribute('aria-label','Nexa IA');b.innerHTML='<i data-ico="nexa"></i><span>Nexa</span>';top.insertBefore(b,bs);iconize(b);const n=$('.nav [data-go="nexa"]');if(n)n.remove()}
 ensureNexaTop();addEventListener('load',ensureNexaTop);
@@ -3950,6 +3950,123 @@ document.head.insertAdjacentHTML('beforeend','<style id="v33Css">.tpl-list{displ
 +'.plz-row{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:7px 2px}.plz-row span:last-child{display:flex;flex-direction:column;min-width:0}.plz-row small{color:var(--tx2);font-size:12px;overflow:hidden;text-overflow:ellipsis}'
 +'.plz-d{flex:none;width:48px;padding:6px 0;border-radius:10px;text-align:center;font-weight:800;font-size:13px;background:var(--soft,#e0f2fe);color:var(--ac)}.plz-d.hot{background:#fee2e2;color:#b91c1c}.plz-item{display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--line)}'
 +'.nx-acts [data-nx="speak"].on{color:var(--ac);background:var(--soft)}</style>');
+
+/* ===== Danscanner Pro v34: Corregir texto del documento (borrar una palabra mal escrita y escribir la correcta) ===== */
+Object.assign(ICONS,{spell:'<path d="M3 16l3.5-10L10 16M4.2 12.5h4.6M13 6v10h3a2.5 2.5 0 000-5h-3M13 11h2.5a2.5 2.5 0 000-5H13"/><path d="M14 20l2 2 5-5"/>'});
+const FIX_FONTS={sans:'Arial, "Liberation Sans", Helvetica, sans-serif',serif:'"Times New Roman", "Liberation Serif", Times, serif',mono:'"Courier New", "Liberation Mono", Courier, monospace'};
+const FIX_INK={negro:[25,25,28],azul:[28,52,160]};
+function fixFont(o,px){return (o.b?'bold ':'')+Math.max(1,px).toFixed(1)+'px '+(FIX_FONTS[o.f]||FIX_FONTS.sans)}
+function fixNorm(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')}
+/* tamaño de letra y línea de base a partir de la palabra original y su recuadro */
+function fixMetrics(o){const m=canvas(4,4).getContext('2d');m.font=fixFont(o,100);let a=72,d=21;
+ const ref=String(o.orig||o.t||'').trim();if(ref){const mm=m.measureText(ref);if(mm.actualBoundingBoxAscent>0){a=mm.actualBoundingBoxAscent;d=Math.max(0,mm.actualBoundingBoxDescent||0)}}
+ o.fs=o.h*100/(a+d);o.bl=o.y+a*o.fs/100;return o}
+/* ajusta un recuadro marcado a mano a la tinta que tiene adentro */
+function fixInkBox(c,b){const cw=c.width,ch=c.height,X=Math.max(0,Math.floor(b.x*cw)),Y=Math.max(0,Math.floor(b.y*ch)),W=Math.min(cw-X,Math.ceil(b.w*cw)),H=Math.min(ch-Y,Math.ceil(b.h*ch));if(W<3||H<3)return null;
+ const d=c.getContext('2d',{willReadFrequently:true}).getImageData(X,Y,W,H).data,L=new Float32Array(W*H);for(let i=0;i<W*H;i++)L[i]=d[i*4]*.299+d[i*4+1]*.587+d[i*4+2]*.114;
+ const s=Array.from(L).sort((a,b)=>a-b),hi=s[Math.floor(s.length*.9)],lo=s[Math.floor(s.length*.02)];if(hi-lo<35)return null;const th=hi-(hi-lo)*.45;
+ let x0=W,y0=H,x1=-1,y1=-1;for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(L[y*W+x]<th){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}if(x1<0)return null;
+ return {x:(X+x0)/cw,y:(Y+y0)/ch,w:(x1-x0+1)/cw,h:(y1-y0+1)/ch}}
+/* dibuja una corrección: tapa la palabra con el color del papel de alrededor y escribe el texto nuevo con el color de la tinta */
+function drawFix(c,o){const cw=c.width,ch=c.height;if(!cw||!ch||!o)return;const x=c.getContext('2d',{willReadFrequently:true});
+ const bx=o.x*cw,by=o.y*ch,bw=o.w*cw,bh=o.h*ch,fs=o.fs*ch*(o.k||1);x.font=fixFont(o,fs);const t=String(o.t||'');const tw=t?x.measureText(t).width:0;
+ const sx=tw>bw*1.25?Math.max(.62,bw*1.25/tw):1,dw=Math.max(bw,tw*sx),pad=Math.max(2,bh*.18);
+ const X0=Math.max(0,Math.floor(bx-pad)),Y0=Math.max(0,Math.floor(by-pad)),X1=Math.min(cw,Math.ceil(bx+dw+pad)),Y1=Math.min(ch,Math.ceil(by+bh+pad));if(X1-X0<2||Y1-Y0<2)return;
+ const R=Math.max(2,Math.round(pad)),rx0=Math.max(0,X0-R),ry0=Math.max(0,Y0-R),rx1=Math.min(cw,X1+R),ry1=Math.min(ch,Y1+R),rw=rx1-rx0,rh=ry1-ry0;
+ const src=x.getImageData(rx0,ry0,rw,rh).data;const side={t:[],b:[],l:[],r:[]},ins=[];
+ for(let yy=ry0;yy<ry1;yy++)for(let xx=rx0;xx<rx1;xx++){const i=((yy-ry0)*rw+(xx-rx0))*4,px=[src[i]*.299+src[i+1]*.587+src[i+2]*.114,src[i],src[i+1],src[i+2]];
+  if(xx>=X0&&xx<X1&&yy>=Y0&&yy<Y1){if(xx>=bx&&xx<bx+bw&&yy>=by&&yy<by+bh)ins.push(px)}else (yy<Y0?side.t:yy>=Y1?side.b:xx<X0?side.l:side.r).push(px)}
+ const all=[].concat(side.t,side.b,side.l,side.r);if(!all.length)return;
+ const paper=a=>{if(!a.length)return null;const s=a.slice().sort((p,q)=>p[0]-q[0]),z=s.slice(Math.floor(s.length*.45),Math.max(Math.floor(s.length*.97),Math.floor(s.length*.45)+1));const m=[0,0,0,0];for(const p of z)for(let k=0;k<4;k++)m[k]+=p[k]/z.length;let v=0;for(const p of z)v+=(p[0]-m[0])**2;m.sd=Math.sqrt(v/z.length);return m};
+ const g=paper(all),T=paper(side.t)||g,B=paper(side.b)||g,Lf=paper(side.l)||g,Rt=paper(side.r)||g;
+ let ink=FIX_INK[o.ink];if(!ink){const s=ins.slice().sort((p,q)=>p[0]-q[0]),i0=Math.floor(s.length*.02),i1=Math.max(i0+1,Math.floor(s.length*.2)),m=[0,0,0,0];for(let i=i0;i<i1&&i<s.length;i++)for(let k=0;k<4;k++)m[k]+=s[i][k]/(i1-i0);ink=(s.length&&g[0]-m[0]>45)?[m[1],m[2],m[3]]:FIX_INK.negro}
+ /* papel: mezcla suave de los cuatro lados, con el mismo grano de la foto y bordes difuminados */
+ const W=X1-X0,H=Y1-Y0,out=x.getImageData(X0,Y0,W,H),od=out.data,nz=Math.min(5,g.sd*.7),fe=Math.max(1,pad*.7);
+ for(let yy=0;yy<H;yy++){const v=H>1?yy/(H-1):.5;for(let xx=0;xx<W;xx++){const u=W>1?xx/(W-1):.5,i=(yy*W+xx)*4;
+  const ex=Math.min(xx+X0-(bx-pad),bx+dw+pad-(xx+X0)),ey=Math.min(yy+Y0-(by-pad),by+bh+pad-(yy+Y0)),al=Math.min(1,Math.max(0,Math.min(ex,ey)/fe)),n=(Math.random()+Math.random()-1)*nz;
+  for(let k=1;k<4;k++){const col=((1-u)*Lf[k]+u*Rt[k]+(1-v)*T[k]+v*B[k])/2+n;od[i+k-1]=od[i+k-1]*(1-al)+col*al}}}
+ x.putImageData(out,X0,Y0);
+ if(t){x.save();x.font=fixFont(o,fs);x.textBaseline='alphabetic';x.fillStyle='rgb('+ink.map(v=>Math.round(v)).join(',')+')';if('filter' in x&&fs>14)x.filter='blur('+Math.min(1.2,fs*.012).toFixed(2)+'px)';x.translate(bx,o.bl*ch);x.scale(sx,1);x.fillText(t,0,0);x.restore()}}
+{const _rp=renderPage;renderPage=async function(p,o){const c=await _rp.apply(this,arguments);if(p&&Array.isArray(p.fixes)&&p.fixes.length&&!(o&&o.noFix))for(const f of p.fixes)drawFix(c,f);return c}}
+{const _s=Hist.snap.bind(Hist);Hist.snap=function(p){const o=JSON.parse(_s(p));o.fixes=(p.fixes||[]).map(f=>({...f}));return JSON.stringify(o)}}
+
+/* palabras que leyó el OCR, con su recuadro (en proporción de la imagen) */
+function fixWords(data,cw,ch){const out=[],add=w=>{const t=String(w&&w.text||'').trim(),bb=w&&w.bbox;if(!t||!bb||bb.x1-bb.x0<2||bb.y1-bb.y0<3)return;out.push({t,x:bb.x0/cw,y:bb.y0/ch,w:(bb.x1-bb.x0)/cw,h:(bb.y1-bb.y0)/ch})};
+ for(const b of (data&&data.blocks)||[])for(const pa of b.paragraphs||[])for(const l of pa.lines||[])for(const w of l.words||[])add(w);
+ if(!out.length&&data&&Array.isArray(data.words))data.words.forEach(add);return out}
+document.body.insertAdjacentHTML('beforeend','<div class="screen" id="fixer"><div class="shead"><button class="ib" data-back>←</button><div class="t">Corregir texto</div><button class="ib" id="fxOut" title="Alejar">−</button><button class="ib" id="fxIn" title="Acercar">+</button><button class="ib pri" id="fxDone" title="Listo"><i data-ico="check">✓</i></button></div>'
+ +'<div class="fx-bar"><input id="fxFind" type="search" placeholder="Buscar la palabra mal escrita" autocomplete="off"><button class="chip" id="fxMark">Marcar a mano</button></div><div class="fx-msg" id="fxMsg"></div>'
+ +'<div class="fx-stage" id="fxStage"><div class="fx-wrap" id="fxWrap"><canvas id="fxCv"></canvas><div id="fxBoxes"></div><div id="fxSel" hidden></div></div></div>'
+ +'<div class="fx-panel" id="fxPanel" hidden><canvas id="fxPrev"></canvas><div class="fx-row"><input id="fxTxt" placeholder="Escribí la palabra correcta" autocomplete="off" autocapitalize="off" spellcheck="false"><button class="btn pri" id="fxApply">Aplicar</button></div>'
+ +'<div class="fx-row fx-opts"><span class="fx-seg" id="fxFont"><button data-f="sans">Arial</button><button data-f="serif">Times</button><button data-f="mono">Máquina</button></span><button class="fx-o" id="fxBold"><b>N</b></button>'
+ +'<span class="fx-seg" id="fxInk"><button data-i="">Tinta auto</button><button data-i="negro">Negra</button><button data-i="azul">Azul</button></span><span class="fx-seg"><button id="fxSm" title="Más chica">A−</button><button id="fxBg" title="Más grande">A+</button></span>'
+ +'<button class="fx-o" id="fxErase">Solo borrar</button><button class="fx-o" id="fxAll" hidden></button><button class="fx-o" id="fxCancel">Cancelar</button></div></div></div>');
+iconize($('#fixer'));
+document.head.insertAdjacentHTML('beforeend','<style id="v34Css">#fixer{background:var(--stage,#1f2937)}#fixer .shead .t{flex:1}.fx-bar{display:flex;gap:8px;padding:8px 10px;background:var(--bg2)}.fx-bar input{flex:1;min-width:0;font-size:15px}.fx-bar .chip.on{background:var(--ac);color:#fff}'
+ +'.fx-msg{padding:6px 12px;font-size:13px;color:var(--tx2);background:var(--bg2);border-bottom:1px solid var(--line)}.fx-msg:empty{display:none}.fx-stage{flex:1;min-height:0;overflow:auto;padding:10px;-webkit-overflow-scrolling:touch}.fx-stage.mark{touch-action:none}'
+ +'.fx-wrap{position:relative;width:100%;margin:0 auto}.fx-wrap canvas{display:block;width:100%;height:auto;box-shadow:0 2px 10px #0006}#fxBoxes>b{position:absolute;border-radius:2px;background:#0ea5e914;outline:1px solid #0ea5e955;cursor:pointer}#fxBoxes>b.hit{background:#f59e0b55;outline:2px solid #f59e0b}'
+ +'#fxBoxes>b.sel,#fxSel{background:#e5322d33;outline:2px solid #e5322d}#fxSel{position:absolute;pointer-events:none}.fx-panel{background:var(--bg2);border-top:1px solid var(--line);padding:8px 10px calc(8px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:8px}'
+ +'#fxPrev{width:100%;max-height:110px;object-fit:contain;background:#fff;border-radius:10px;border:1px solid var(--line)}.fx-row{display:flex;gap:8px;align-items:center}.fx-row input{flex:1;min-width:0;font-size:16px}.fx-opts{flex-wrap:wrap;gap:6px}'
+ +'.fx-seg{display:inline-flex;border-radius:10px;overflow:hidden;border:1px solid var(--line)}.fx-seg button,.fx-o{padding:7px 9px;font-size:12.5px;background:var(--bg3);color:var(--tx)}.fx-o{border-radius:10px;border:1px solid var(--line)}.fx-seg button.on,.fx-o.on{background:var(--ac);color:#fff}</style>');
+
+const Fix={p:null,c:null,base:null,words:[],sel:null,o:null,zoom:1,mark:false,worker:null,
+ async open(){const p=Ed.p;if(!p)return;this.p=p;this.sel=null;this.o=null;this.words=[];this.zoom=1;this.setMark(false);$('#fxFind').value='';$('#fxPanel').hidden=true;$('#fxBoxes').innerHTML='';$('#fxSel').hidden=true;$('#fxWrap').style.width='100%';
+  Nav.push('fixer',()=>this.close());this.msg('Preparando la página…');
+  try{this.c=await renderPage(p,{maxSide:1800});}catch(e){this.msg('No se pudo abrir la página: '+e.message);return}
+  this.base=canvas(this.c.width,this.c.height);this.base.getContext('2d').drawImage(this.c,0,0);const cv=$('#fxCv');cv.width=this.c.width;cv.height=this.c.height;this.paint();this.ocr()},
+ close(){const w=this.worker;this.worker=null;this._tok=(this._tok||0)+1;if(w)w.terminate().catch(()=>{})},
+ msg(t){$('#fxMsg').textContent=t||''},
+ paint(){const cv=$('#fxCv'),x=cv.getContext('2d');x.drawImage(this.base,0,0);if(this.o)drawFix(cv,this.o)},
+ async ocr(){const tok=this._tok=(this._tok||0)+1;this.msg('Leyendo el texto de la página… (podés marcar la palabra a mano mientras tanto)');
+  try{await loadLib('tess');const w=await Tesseract.createWorker(S.lang||'spa',1,{logger:m=>{if(m.status==='recognizing text'&&tok===this._tok)this.msg('Leyendo el texto… '+Math.round(m.progress*100)+'%')}});
+   if(tok!==this._tok){w.terminate();return}this.worker=w;try{await w.setParameters({preserve_interword_spaces:'1'})}catch(e){}
+   let r;try{r=await w.recognize(this.base,{},{text:true,blocks:true})}catch(e){r=await w.recognize(this.base)}if(tok!==this._tok)return;
+   this.setWords(fixWords(r.data,this.base.width,this.base.height));w.terminate().catch(()=>{});this.worker=null}
+  catch(e){if(tok===this._tok)this.msg('No pude leer el texto (¿sin internet la primera vez?). Tocá «Marcar a mano» y pasá el dedo sobre la palabra.')}},
+ setWords(ws){this.words=ws;$('#fxBoxes').innerHTML=ws.map((w,i)=>'<b data-w="'+i+'" style="left:'+(w.x*100)+'%;top:'+(w.y*100)+'%;width:'+(w.w*100)+'%;height:'+(w.h*100)+'%"></b>').join('');
+  this.msg(ws.length?'Buscá la palabra arriba o tocala en la hoja. Acercá con + si la letra es chica.':'No encontré texto. Tocá «Marcar a mano» y pasá el dedo sobre la palabra.');this.find()},
+ find(){const q=fixNorm($('#fxFind').value.trim());let n=0,first=null;$$('#fxBoxes>b').forEach(b=>{const w=this.words[+b.dataset.w],hit=!!q&&fixNorm(w.t).includes(q);b.classList.toggle('hit',hit);if(hit){n++;first=first||b}});
+  if(q&&this.words.length)this.msg(n?(n===1?'Encontré 1 vez «':'Encontré '+n+' veces «')+$('#fxFind').value.trim()+'». Tocá la marcada para corregirla.':'No encontré «'+$('#fxFind').value.trim()+'». Probá con parte de la palabra o marcala a mano.');
+  if(first)first.scrollIntoView({block:'center',inline:'center',behavior:'smooth'});return n},
+ setMark(on){this.mark=on;$('#fxMark').classList.toggle('on',on);$('#fxStage').classList.toggle('mark',on)},
+ setZoom(z){this.zoom=clamp(z,1,4);$('#fxWrap').style.width=(this.zoom*100)+'%'},
+ pick(box,orig){const o=fixMetrics({fix:1,x:box.x,y:box.y,w:box.w,h:box.h,orig:orig||'',t:orig||'',f:S.fixFont||'sans',b:0,k:1,ink:''});this.sel=box;this.o=o;
+  const s=$('#fxSel');s.hidden=false;Object.assign(s.style,{left:box.x*100+'%',top:box.y*100+'%',width:box.w*100+'%',height:box.h*100+'%'});
+  $('#fxTxt').value=orig||'';$('#fxPanel').hidden=false;this.opts();this.upd();setTimeout(()=>{const i=$('#fxTxt');i.focus();try{i.select()}catch(e){}},50)},
+ opts(){const o=this.o;if(!o)return;$$('#fxFont button').forEach(b=>b.classList.toggle('on',b.dataset.f===o.f));$$('#fxInk button').forEach(b=>b.classList.toggle('on',b.dataset.i===(o.ink||'')));$('#fxBold').classList.toggle('on',!!o.b);
+  const q=fixNorm(this.o.orig),n=q?this.words.filter(w=>fixNorm(w.t)===q).length:0;const a=$('#fxAll');a.hidden=n<2;a.textContent='Corregir las '+n},
+ upd(){const o=this.o;if(!o)return;o.t=$('#fxTxt').value;if(!o.orig){const k=o.k;fixMetrics(o);o.k=k}this.paint();const cv=$('#fxCv'),P=$('#fxPrev'),m=o.h*cv.height*1.6,sx=Math.max(0,o.x*cv.width-m*2),sy=Math.max(0,o.y*cv.height-m),sw=Math.min(cv.width-sx,o.w*cv.width*1.6+m*4),sh=Math.min(cv.height-sy,o.h*cv.height+m*2);
+  const sc=Math.min(3,700/sw);P.width=Math.max(1,Math.round(sw*sc));P.height=Math.max(1,Math.round(sh*sc));P.getContext('2d').drawImage(cv,sx,sy,sw,sh,0,0,P.width,P.height)},
+ cancel(){this.o=null;this.sel=null;$('#fxPanel').hidden=true;$('#fxSel').hidden=true;$$('#fxBoxes>b.sel').forEach(b=>b.classList.remove('sel'));this.paint()},
+ commit(list){const p=this.p;if(!p||!list.length)return;p.fixes=[...(p.fixes||[]),...list.map(o=>({...o}))];const x=this.base.getContext('2d');for(const o of list)drawFix(this.base,o);
+  for(const o of list){const i=this.words.findIndex(w=>Math.abs(w.x-o.x)<1e-6&&Math.abs(w.y-o.y)<1e-6);if(i>=0){this.words[i].t=o.t||'';const b=$('#fxBoxes>b[data-w="'+i+'"]');if(b)b.remove()}}
+  this.o=null;this.cancel();if(p===Ed.p)Ed.touch(false);else{p._dirty=true;saveDoc()}},
+ apply(){const o=this.o;if(!o)return;o.t=$('#fxTxt').value;if(o.t.trim()===o.orig.trim()&&o.orig&&!confirm('La palabra no cambió. ¿Aplicar igual?'))return;const was=o.orig;this.commit([o]);toast(o.t?'Corregido: «'+(was||'…')+'» → «'+o.t+'»':'Palabra borrada')},
+ applyAll(){const o=this.o;if(!o)return;const t=$('#fxTxt').value,q=fixNorm(o.orig);const list=this.words.filter(w=>fixNorm(w.t)===q).map(w=>fixMetrics({...o,x:w.x,y:w.y,w:w.w,h:w.h,orig:w.t,t}));this.commit(list);toast('Corregidas '+list.length+' palabras')},
+ refit(){const o=this.o;if(!o)return;const k=o.k;fixMetrics(o);o.k=k;this.opts();this.upd()}};
+$('#fxIn').onclick=()=>Fix.setZoom(Fix.zoom+1);$('#fxOut').onclick=()=>Fix.setZoom(Fix.zoom-1);
+$('#fxDone').onclick=()=>Nav.back();
+$('#fxMark').onclick=()=>Fix.setMark(!Fix.mark);
+$('#fxFind').oninput=()=>Fix.find();
+$('#fxTxt').oninput=()=>Fix.upd();
+$('#fxTxt').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();Fix.apply()}};
+$('#fxApply').onclick=()=>Fix.apply();$('#fxAll').onclick=()=>Fix.applyAll();$('#fxCancel').onclick=()=>Fix.cancel();
+$('#fxErase').onclick=()=>{$('#fxTxt').value='';Fix.upd();Fix.apply()};
+$('#fxFont').onclick=e=>{const b=e.target.closest('[data-f]');if(!b||!Fix.o)return;Fix.o.f=S.fixFont=b.dataset.f;saveS();Fix.refit()};
+$('#fxBold').onclick=()=>{if(!Fix.o)return;Fix.o.b=Fix.o.b?0:1;Fix.refit()};
+$('#fxInk').onclick=e=>{const b=e.target.closest('[data-i]');if(!b||!Fix.o)return;Fix.o.ink=b.dataset.i;Fix.opts();Fix.upd()};
+$('#fxSm').onclick=()=>{if(Fix.o){Fix.o.k=Math.max(.6,(Fix.o.k||1)-.06);Fix.upd()}};$('#fxBg').onclick=()=>{if(Fix.o){Fix.o.k=Math.min(1.6,(Fix.o.k||1)+.06);Fix.upd()}};
+$('#fxBoxes').onclick=e=>{if(Fix.mark)return;const b=e.target.closest('[data-w]');if(!b)return;const w=Fix.words[+b.dataset.w];$$('#fxBoxes>b.sel').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');Fix.pick(w,w.t)};
+{let st=null;const pos=e=>{const r=$('#fxCv').getBoundingClientRect();return {x:clamp((e.clientX-r.left)/r.width,0,1),y:clamp((e.clientY-r.top)/r.height,0,1)}};const wr=$('#fxWrap');
+ wr.addEventListener('pointerdown',e=>{if(!Fix.mark)return;e.preventDefault();wr.setPointerCapture(e.pointerId);st=pos(e);const s=$('#fxSel');s.hidden=false;Object.assign(s.style,{left:st.x*100+'%',top:st.y*100+'%',width:'0',height:'0'})});
+ wr.addEventListener('pointermove',e=>{if(!st)return;const q=pos(e),s=$('#fxSel');Object.assign(s.style,{left:Math.min(st.x,q.x)*100+'%',top:Math.min(st.y,q.y)*100+'%',width:Math.abs(q.x-st.x)*100+'%',height:Math.abs(q.y-st.y)*100+'%'})});
+ const up=e=>{if(!st)return;const q=pos(e),b={x:Math.min(st.x,q.x),y:Math.min(st.y,q.y),w:Math.abs(q.x-st.x),h:Math.abs(q.y-st.y)};st=null;
+  if(b.w*Fix.base.width<6||b.h*Fix.base.height<6){$('#fxSel').hidden=true;return}const t=fixInkBox(Fix.base,b)||b;
+  const hit=Fix.words.filter(w=>w.x<t.x+t.w&&w.x+w.w>t.x&&w.y<t.y+t.h&&w.y+w.h>t.y).sort((a,c)=>a.y-c.y||a.x-c.x);Fix.pick(t,hit.map(w=>w.t).join(' '));Fix.setMark(false)};
+ wr.addEventListener('pointerup',up);wr.addEventListener('pointercancel',()=>{st=null;$('#fxSel').hidden=true})}
+(function(){const foot=$('#editor .sfoot'),ref=foot&&foot.querySelector('[data-ed="text"]');if(!foot||!ref||foot.querySelector('[data-ed="fix"]'))return;
+ const b=document.createElement('button');b.className='tb';b.dataset.ed='fix';b.innerHTML='<b data-ico="spell"></b>Corregir';ref.before(b);iconize(b);
+ b.addEventListener('click',e=>{e.stopImmediatePropagation();Fix.open()},true)})();
 </script>
 </body>
 </html>
