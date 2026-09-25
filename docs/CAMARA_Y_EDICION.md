@@ -251,3 +251,12 @@ En el editor, **Corregir** permite arreglar una palabra mal escrita de la hoja e
 - Las grillas se adaptan: herramientas en columnas automáticas y botones del inicio más grandes.
 - Nexa queda al lado del menú, más ancha (980 px), y ajusta su alto sin la barra de abajo.
 - Todo está dentro de `@media (min-width:1024px)`: **en el celular no cambia nada**.
+
+## v41 · Lo guardado para usar sin internet sobrevive a las actualizaciones
+
+- **Antes:** al publicarse una versión nueva, el service worker borraba **todas** las cachés. Se perdían las herramientas guardadas (idioma del OCR, pdf.js, pdf-lib, Tesseract, Word/Excel, wllama) y también **el modelo descargado de Nexa local** (cachés `webllm/*`). «Actualizar la app» y «Limpieza rápida» hacían lo mismo.
+- **Ahora:**
+  - Las herramientas se guardan en una caché permanente (`danscaner-libs`) que no depende de la versión.
+  - Al actualizar solo se borra la copia vieja de la app (`danscaner-vNN`), y lo que había en ella de herramientas se pasa a la caché permanente.
+  - «Actualizar la app» solo borra las copias de la app.
+  - «Limpieza rápida» solo borra las cachés de Danscanner. El modelo de Nexa local se borra únicamente desde Nexa, con «Borrar modelo».
