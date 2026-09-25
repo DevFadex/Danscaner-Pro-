@@ -363,6 +363,26 @@ await test('Nexa IA solo para el administrador mientras está en desarrollo',asy
   assert.equal(await pg.isVisible('#btnNexa'),true,'el administrador no ve Nexa');await pg.click('#btnNexa');await W(300);assert.equal(await pg.isVisible('#v-nexa'),true);
 });
 
+await test('Editar PDF: entrar a una página, corregir una palabra y zoom para encuadrar',async pg=>{
+  const b64=await pg.evaluate(async()=>{await loadLib('pdflib');const d=await PDFLib.PDFDocument.create(),f=await d.embedFont(PDFLib.StandardFonts.Helvetica);for(const t of ['PAGINA UNO','ACTA DE LIVERTAD']){const p=d.addPage([400,300]);p.drawText(t,{x:40,y:200,size:24,font:f})}const u=await d.save();let s='';for(const b of u)s+=String.fromCharCode(b);return btoa(s)});
+  await pg.evaluate(()=>openTool(TOOLS.findIndex(t=>t.name==='Editar PDF')));await W(600);if(await pg.evaluate(()=>$('#sheet').classList.contains('open'))){await pg.evaluate(()=>Nav.back());await W(500)}
+  await pg.setInputFiles('#toolBody .fp input[type=file]',{name:'acta.pdf',mimeType:'application/pdf',buffer:Buffer.from(b64,'base64')});await W(800);if(await pg.$('#srcYes'))await pg.click('#srcYes');await W(2500);
+  assert.equal(await pg.$$eval('#toolBody .pg [data-s="fix"]',x=>x.length),2,'falta Corregir en cada página');
+  await pg.evaluate(()=>{Fix.ocr=async function(){}});await pg.click('#toolBody .pg[data-n="2"] .pgimg');await W(1200);
+  assert.match(await pg.textContent('#fixer .shead .t'),/página 2/);
+  /* el zoom agranda la hoja */
+  const w0=await pg.$eval('#fxCv',c=>c.getBoundingClientRect().width);await pg.click('#fxIn');await W(200);const w1=await pg.$eval('#fxCv',c=>c.getBoundingClientRect().width);assert.ok(w1>w0*1.4,'no hace zoom '+w0+' → '+w1);await pg.click('#fxOut');
+  await pg.evaluate(()=>{const W=Fix.base.width,H=Fix.base.height,k=W/400;const m=canvas(4,4).getContext('2d');m.font=(24*k)+'px Helvetica, Arial';const a=m.measureText('ACTA DE ').width,r=m.measureText('LIVERTAD');
+    Fix.setWords([{t:'LIVERTAD',x:(40*k+a)/W,y:(100*k-r.actualBoundingBoxAscent)/H,w:r.width/W,h:(r.actualBoundingBoxAscent+r.actualBoundingBoxDescent)/H}])});
+  await pg.fill('#fxFind','livertad');await W(200);await pg.click('#fxBoxes>b.hit');await W(300);await pg.fill('#fxTxt','LIBERTAD');await pg.click('#fxApply');await W(500);
+  await pg.click('#fxDone');await W(600);
+  assert.match(await pg.textContent('#toolBody .plist'),/Corrección · página 2/);
+  await pg.click('#toolBody .run');await W(2500);const res=await pg.textContent('#toolBody .result');assert.ok(/Listo/.test(res)&&/2 de 2 página/.test(res),res);
+  /* Colocar: zoom con botones */
+  const z=await pg.evaluate(async()=>{const c=canvas(300,400);c.getContext('2d').fillRect(0,0,10,10);const pr=placeOverlay(c.toDataURL(),rectPng('#fff','#bbb'),{free:true});await new Promise(r=>setTimeout(r,500));const r0=$('#plBox').getBoundingClientRect().width;$('#plZin').click();await new Promise(r=>setTimeout(r,100));const r1=$('#plBox').getBoundingClientRect().width;$('#plOk').click();const res=await pr;return {r0,r1,ok:!!res,w:res&&res.box.w}});
+  assert.ok(z.r1>z.r0*1.4,'Colocar no hace zoom '+JSON.stringify(z));assert.ok(z.ok&&Math.abs(z.w-.35)<.02,'el zoom cambió el tamaño guardado '+JSON.stringify(z));
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();

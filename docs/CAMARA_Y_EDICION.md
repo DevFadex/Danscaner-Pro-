@@ -208,3 +208,9 @@ En el editor, **Corregir** permite arreglar una palabra mal escrita de la hoja e
 - La palabra se tapa con el color del papel de alrededor (mezcla de los cuatro lados, con grano y bordes difuminados) y el texto nuevo se escribe con el **color de la tinta** detectado, el **mismo alto** de letra y la misma línea de base.
 - Opciones: letra Arial / Times / Máquina, negrita, tinta automática / negra / azul, tamaño A− / A+, «Solo borrar» y «Corregir las N» cuando la misma palabra aparece varias veces.
 - No es destructivo: cada corrección se guarda en `p.fixes` (proporciones de la página) y se dibuja al final de `renderPage`, así funciona con cualquier filtro y resolución y se puede **deshacer** con el deshacer del editor.
+
+## v36 · Corregir palabras en «Editar PDF» y zoom
+
+- En **Herramientas → Editar PDF**, cada página tiene el botón **Corregir** (o se toca la miniatura) y abre la misma pantalla de corrección del editor sobre esa página (renderizada a 2,5×).
+- Cada corrección se agrega al PDF como un parche de imagen solo en la zona de la palabra; el resto de la página queda igual (si el PDF tiene texto digital, sigue siendo texto).
+- **Zoom**: en Corregir, con dos dedos, rueda + Ctrl o los botones − / +; en **Colocar** (firma, texto, fecha, tapar, recortar) con dos dedos, rueda o − / +, y con un dedo se mueve la hoja cuando está ampliada. El zoom no cambia la posición ni el tamaño guardados.
