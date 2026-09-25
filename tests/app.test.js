@@ -458,6 +458,21 @@ await test('Computadora: menú lateral y pantalla completa; en el celular sigue 
   await pg.click('.nav [data-go="tools"]');await W(300);assert.ok(await pg.isVisible('#v-tools'));
 });
 
+await test('Actualizar la app no borra las herramientas guardadas ni el modelo de Nexa local',async pg=>{
+  const r=await pg.evaluate(async()=>{for(const k of await caches.keys())await caches.delete(k);
+    const lib=location.origin+'/libs/tesseract.min.js',cdn='https://tessdata.projectnaptha.com/4.0.0/spa.traineddata.gz',app=location.origin+'/index.html';
+    const old=await caches.open('danscaner-v40');await old.put(lib,new Response('lib'));await old.put(cdn,new Response('idioma'));await old.put(app,new Response('app vieja'));
+    await (await caches.open('webllm/model')).put('https://huggingface.co/modelo.bin',new Response('modelo'));
+    const src=await (await fetch('sw.js')).text();const L={};const self={addEventListener:(t,f)=>L[t]=f,location,clients:{claim:async()=>{}},skipWaiting:()=>{}};
+    await new Promise((ok,ko)=>{const sc=document.createElement('script');sc.src=URL.createObjectURL(new Blob(['window.__swInit=function(self){'+src+'\n}'],{type:'text/javascript'}));sc.onload=ok;sc.onerror=ko;document.head.appendChild(sc)});window.__swInit(self);let P;L.activate({waitUntil:p=>P=p});await P;
+    const keys=await caches.keys(),libs=await caches.open('danscaner-libs');
+    const res={keys,lib:!!(await libs.match(lib)),cdn:!!(await libs.match(cdn)),app:!!(await libs.match(app))};
+    await clearCaches();res.afterClean=await caches.keys();return res});
+  assert.ok(!r.keys.includes('danscaner-v40'),'no borró la copia vieja de la app');assert.ok(r.keys.includes('webllm/model'),'borró el modelo de Nexa local');
+  assert.ok(r.lib&&r.cdn,'perdió las herramientas guardadas');assert.ok(!r.app,'guardó la app vieja como herramienta');
+  assert.deepEqual(r.afterClean,['webllm/model'],'la limpieza rápida borró el modelo: '+r.afterClean);
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();
