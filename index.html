@@ -1023,7 +1023,7 @@ const b=openSheet('Ajustes','<div class="set-list">'+setRow('sDesign','palette',
 +acc('🌓','Apariencia y nombres','Tema y nombre de los documentos',opt('<i data-ico="theme">🌓</i> Tema',sel('sTheme',[['system','Automático (según el teléfono)'],['light','Claro'],['dark','Oscuro']]))+opt('Plantilla de nombre por defecto',sel('sTpl',NAME_TEMPLATES.map(t=>[t,t]))))
 +acc('📄','PDF y texto (OCR)','Hoja, calidad, márgenes e idioma',opt('Idioma OCR',sel('sLang',[['spa','Español'],['eng','Inglés'],['spa+eng','Español + Inglés'],['por','Portugués']]))+'<div class="row">'+opt('Hoja PDF por defecto',sel('sSize',[['a4','A4'],['oficio','Oficio'],['carta','Carta'],['original','Tamaño imagen']]))+opt('Calidad PDF',sel('sQ',Object.entries(QUAL).map(([k,v])=>[k,v.label])))+'</div>'+opt('Márgenes por defecto (mm)','<input type="number" id="sMargin" min="0" max="40">'))
 +acc('🗄️','Datos del dispositivo',est||'Documentos guardados en este navegador','<p class="muted">'+est+'</p><button class="btn red block" id="sWipe">🗑 Borrar todos los documentos</button>')
-+'<p class="muted set-foot">Danscanner Pro · versión 37 · funciona en celular y PC · los documentos se guardan en este navegador.</p>');$('.sTpl',b).value=S.nameTemplate;$('.sFilter',b).value=S.filter;$('.sMax',b).value=String(S.maxCap);$('#sAuto').checked=S.autoCrop;$('#sAutoCap').checked=S.autoCapture;$('#sHd').checked=S.hd;$('#sDeskew').checked=S.deskew!==false;$('#sPrintBW').checked=S.printBW!==false;$('#sPro').checked=S.proFilters!==false;$('#sNative').checked=!!S.camNative;$('.sTheme',b).value=S.theme||'system';$('.sLang',b).value=S.lang;$('.sSize',b).value=S.size;$('.sQ',b).value=S.quality;$('#sMargin').value=S.margin;b.onchange=()=>{S.nameTemplate=$('.sTpl',b).value;S.filter=$('.sFilter',b).value;S.maxCap=+$('.sMax',b).value;S.autoCrop=$('#sAuto').checked;S.camNative=$('#sNative').checked;if(($('.sTheme',b).value)!==(S.theme||'system'))cambiarTema($('.sTheme',b).value);S.autoCapture=$('#sAutoCap').checked;S.hd=$('#sHd').checked;S.deskew=$('#sDeskew').checked;if((S.printBW!==false)!==$('#sPrintBW').checked){S.printBW=$('#sPrintBW').checked;if(FW.w){try{FW.w.terminate()}catch(e){}FW.w=null;FW.ok=null}}if((S.proFilters!==false)!==$('#sPro').checked){S.proFilters=$('#sPro').checked;useProFilters(S.proFilters)}S.lang=$('.sLang',b).value;S.size=$('.sSize',b).value;S.quality=$('.sQ',b).value;S.margin=+$('#sMargin').value||0;saveS();toast('Guardado')};$('#sDesign').onclick=async()=>{await Nav.back();designSheet()};$('#sAI').onclick=async()=>{await Nav.back();aiSheet()};$('#sSec').onclick=async()=>{await Nav.back();securitySheet()};$('#sSpace').onclick=async()=>{await Nav.back();storageSheet()};$('#sAbout').onclick=async()=>{await Nav.back();aboutSheet()};$('#sWipe').onclick=async()=>{if(!confirm('¿Borrar TODOS los documentos guardados?'))return;for(const m of await DB.metas())await DB.delDoc(m.id);refreshLists();toast('Documentos borrados')}}
++'<p class="muted set-foot">Danscanner Pro · versión 38 · funciona en celular y PC · los documentos se guardan en este navegador.</p>');$('.sTpl',b).value=S.nameTemplate;$('.sFilter',b).value=S.filter;$('.sMax',b).value=String(S.maxCap);$('#sAuto').checked=S.autoCrop;$('#sAutoCap').checked=S.autoCapture;$('#sHd').checked=S.hd;$('#sDeskew').checked=S.deskew!==false;$('#sPrintBW').checked=S.printBW!==false;$('#sPro').checked=S.proFilters!==false;$('#sNative').checked=!!S.camNative;$('.sTheme',b).value=S.theme||'system';$('.sLang',b).value=S.lang;$('.sSize',b).value=S.size;$('.sQ',b).value=S.quality;$('#sMargin').value=S.margin;b.onchange=()=>{S.nameTemplate=$('.sTpl',b).value;S.filter=$('.sFilter',b).value;S.maxCap=+$('.sMax',b).value;S.autoCrop=$('#sAuto').checked;S.camNative=$('#sNative').checked;if(($('.sTheme',b).value)!==(S.theme||'system'))cambiarTema($('.sTheme',b).value);S.autoCapture=$('#sAutoCap').checked;S.hd=$('#sHd').checked;S.deskew=$('#sDeskew').checked;if((S.printBW!==false)!==$('#sPrintBW').checked){S.printBW=$('#sPrintBW').checked;if(FW.w){try{FW.w.terminate()}catch(e){}FW.w=null;FW.ok=null}}if((S.proFilters!==false)!==$('#sPro').checked){S.proFilters=$('#sPro').checked;useProFilters(S.proFilters)}S.lang=$('.sLang',b).value;S.size=$('.sSize',b).value;S.quality=$('.sQ',b).value;S.margin=+$('#sMargin').value||0;saveS();toast('Guardado')};$('#sDesign').onclick=async()=>{await Nav.back();designSheet()};$('#sAI').onclick=async()=>{await Nav.back();aiSheet()};$('#sSec').onclick=async()=>{await Nav.back();securitySheet()};$('#sSpace').onclick=async()=>{await Nav.back();storageSheet()};$('#sAbout').onclick=async()=>{await Nav.back();aboutSheet()};$('#sWipe').onclick=async()=>{if(!confirm('¿Borrar TODOS los documentos guardados?'))return;for(const m of await DB.metas())await DB.delDoc(m.id);refreshLists();toast('Documentos borrados')}}
 $('#btnSettings').onclick=()=>settingsSheet();$('#navSettings').onclick=()=>settingsSheet();
 function go(v){$$('.view').forEach(x=>x.classList.toggle('active',x.id==='v-'+v));$$('.nav [data-go]').forEach(b=>b.classList.toggle('on',b.dataset.go===v));$('#topTitle').textContent={home:'Danscanner Pro',docs:'Documentos',tools:'Herramientas',nexa:'Nexa IA'}[v];window.scrollTo(0,0)}
 async function doAction(a){if(a==='cam-single')Cam.open('single');else if(a==='cam-batch')Cam.open('batch');else if(a==='import-img')$('#inImg').click();else if(a==='import-any')$('#inAny').click()}
@@ -2372,13 +2372,13 @@ async function aiChatStream(msgs,{prov,system,maxTokens=8000,signal,onText}={}){
  const split=d=>({mime:(d.match(/^data:(.*?);/)||[,'image/jpeg'])[1],data:d.replace(/^data:.*?;base64,/,'')});
  const name={gemini:'Gemini',openai:'OpenAI',anthropic:'Anthropic'}[prov];let url,headers={'Content-Type':'application/json'},body;
  if(prov==='gemini'){url='https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(model)+':streamGenerateContent?alt=sse';headers['x-goog-api-key']=key;
-  body={contents:msgs.map(m=>({role:m.role==='assistant'?'model':'user',parts:[...(m.images||[]).map(split).map(i=>({inline_data:{mime_type:i.mime,data:i.data}})),{text:m.text||' '}]})),generationConfig:{maxOutputTokens:maxTokens}};if(system)body.systemInstruction={parts:[{text:system}]}}
+  body={contents:msgs.map(m=>({role:m.role==='assistant'?'model':'user',parts:[...(m.images||[]).map(split).map(i=>({inline_data:{mime_type:i.mime,data:i.data}})),{text:m.text||' '}]})),generationConfig:{maxOutputTokens:maxTokens}};if(system)body.systemInstruction={parts:[{text:system}]};const tc=typeof nxThinking==='function'&&nxThinking(model);if(tc)body.generationConfig.thinkingConfig=tc}
  else if(prov==='openai'){url='https://api.openai.com/v1/chat/completions';headers.Authorization='Bearer '+key;
   body={model,stream:true,max_tokens:maxTokens,messages:[...(system?[{role:'system',content:system}]:[]),...msgs.map(m=>m.role==='assistant'?{role:'assistant',content:m.text}:{role:'user',content:[{type:'text',text:m.text||' '},...(m.images||[]).map(d=>({type:'image_url',image_url:{url:d}}))]})]}}
  else{url='https://api.anthropic.com/v1/messages';Object.assign(headers,{'x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'});
   const fb=/^claude-(opus-5|fable-5)/.test(model);if(fb)headers['anthropic-beta']='server-side-fallback-2026-07-01';
   body={model,stream:true,max_tokens:maxTokens,...(fb?{fallbacks:'default'}:{}),...(system?{system}:{}),messages:msgs.map(m=>m.role==='assistant'?{role:'assistant',content:m.text||' '}:{role:'user',content:[...(m.images||[]).map(split).map(i=>({type:'image',source:{type:'base64',media_type:i.mime,data:i.data}})),{type:'text',text:m.text||' '}]})}}
- let r;try{r=await fetch(url,{method:'POST',headers,body:JSON.stringify(body),signal})}catch(e){if(e.name==='AbortError')throw e;throw new Error('Sin conexión con '+name+'. Revisá internet.')}
+ let r;try{r=await fetch(url,{method:'POST',headers,body:JSON.stringify(body),signal});if(!r.ok&&r.status===400&&prov==='gemini'&&body.generationConfig&&body.generationConfig.thinkingConfig){delete body.generationConfig.thinkingConfig;r=await fetch(url,{method:'POST',headers,body:JSON.stringify(body),signal})}}catch(e){if(e.name==='AbortError')throw e;throw new Error('Sin conexión con '+name+'. Revisá internet.')}
  if(!r.ok){let j={};try{j=await r.json()}catch(e){}const m=(Array.isArray(j)?j[0]:j)?.error?.message;
   if(r.status===404&&/model/i.test(m||''))throw new Error('El modelo "'+model+'" no está disponible para tu clave. Cambialo en Ajustes → Inteligencia artificial.');
   throw new Error(m||('Error de '+name+' ('+r.status+')'))}
@@ -3425,7 +3425,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 3.3',APP_VER='37';
+const NEXA_VER='Nexa 3.4',APP_VER='38';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3543,7 +3543,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='37 · 25/09/2026';
+const BUILD='38 · 25/09/2026';
 /* Botón Nexa arriba: se crea siempre, aunque otra parte de Nexa falle (antes, un error dejaba teléfonos sin el botón) */
 function ensureNexaTop(){const top=$('.top'),bs=$('#btnSettings');if(!top||!bs||$('#btnNexa'))return;const b=document.createElement('button');b.className='ib nx-top';b.id='btnNexa';b.dataset.go='nexa';b.title='Nexa IA';b.setAttribute('aria-label','Nexa IA');b.innerHTML='<i data-ico="nexa"></i><span>Nexa</span>';top.insertBefore(b,bs);iconize(b);const n=$('.nav [data-go="nexa"]');if(n)n.remove()}
 ensureNexaTop();addEventListener('load',ensureNexaTop);
@@ -4210,6 +4210,92 @@ $('#fxBoxes').onclick=e=>{if(Fix.mark)return;const b=e.target.closest('[data-w]'
  const er=$('#fxErase');if(er&&!$('#fxRf')){er.insertAdjacentHTML('beforebegin','<button class="fx-o on" id="fxRf" title="Si la palabra nueva es más corta o más larga, corre el resto del renglón">Acomodar renglón</button>');$('#fxRf').onclick=()=>{if(!Fix.o)return;Fix.o.rf=Fix.o.rf===0?1:0;Fix.opts();Fix.upd()}}
  const pv=$('#fxPrev');if(pv&&!$('#fxDet'))pv.insertAdjacentHTML('afterend','<div id="fxDet" class="fx-det"></div>')})();
 document.head.insertAdjacentHTML('beforeend','<style id="v37Css">.fx-det{font-size:12.5px;color:var(--tx2);line-height:1.35}.fx-det b{color:var(--tx)}.fx-det small{font-size:11.5px}#fxBoxes>b.sel{background:#e5322d33;outline:2px solid #e5322d}</style>');
+
+/* ===== Danscanner Pro v38: Nexa más rápida y más interactiva ===== */
+/* --- 1) velocidad --- */
+/* la IA local recibe solo las partes del documento que tienen que ver con la pregunta (menos texto = responde mucho antes) */
+function nxRelevant(text,q,budget){text=String(text||'');if(text.length<=budget)return text;const head=text.slice(0,Math.min(500,budget*.25));
+ const terms=[...new Set(nbNorm(q||'').split(/[^a-z0-9ñ]+/).filter(w=>w.length>3&&!STOPW.has(w)))];const paras=text.slice(head.length).replace(/\.\s+(?=[A-ZÁÉÍÓÚÑ])/g,'.\n').split(/\n+/).filter(p=>p.trim().length>2);
+ const sc=paras.map((p,i)=>{const n=nbNorm(p);let s=0;for(const t of terms)if(n.includes(t))s+=2;if(/\d{2}\.?\d{3}\.?\d{3}|expte|expediente|dni|fecha|\d{1,2}\/\d{1,2}\/\d{2,4}/i.test(p))s+=.5;return {p,i,s}});
+ const pick=[];let left=budget-head.length;for(const x of sc.slice().sort((a,b)=>b.s-a.s||a.i-b.i)){if(left<=0)break;if(x.p.length>left&&pick.length)continue;pick.push(x);left-=x.p.length+2}
+ return head+'\n…\n'+pick.sort((a,b)=>a.i-b.i).map(x=>x.p.slice(0,budget)).join('\n')}
+function nxIsCpu(){try{const c=NexaLocal.cfg();return c.engine==='cpu'||/^cpu-/.test(c.base||'')}catch(e){return false}}
+{const _l=Nexa.localMsgs;Nexa.localMsgs=function(hist){const cpu=nxIsCpu(),q=lastUserText(hist||[]),orig=this.st.docs,budget=cpu?2200:5000;
+ this.st.docs=orig.map(d=>({...d,text:nxRelevant(d.text||'',q,Math.floor(budget/Math.max(1,orig.filter(x=>(x.text||'').trim().length>40).length)))}));let m;
+ try{m=_l.call(this,(hist||[]).slice(cpu?-3:-5))}finally{this.st.docs=orig}
+ if(cpu&&m[0]){m[0].content=m[0].content.replace(/\n\nEJEMPLOS DE BUENAS RESPUESTAS[\s\S]*$/,'');for(const x of m.slice(1))x.content=String(x.content).slice(0,700)}return m}}
+/* Gemini responde sin "pensar" de más (modo rápido); si el modelo no lo admite, se reintenta normal */
+function nxThinking(model){if(S.nexaFast===false)return null;const m=String(model||'');if(/gemini-3/.test(m))return {thinkingLevel:'low'};if(/2\.5-flash/.test(m))return {thinkingBudget:0};return null}
+/* se conecta con el servidor de la IA apenas se abre Nexa (ahorra la primera espera) */
+function nxWarm(){try{if(!isCloud(Nexa.prov())||!aiKeyFor(Nexa.prov()))return;const h={gemini:'https://generativelanguage.googleapis.com',openai:'https://api.openai.com',anthropic:'https://api.anthropic.com'}[Nexa.prov()];
+ if(h&&!document.querySelector('link[data-nxw="'+h+'"]')){const l=document.createElement('link');l.rel='preconnect';l.href=h;l.crossOrigin='anonymous';l.dataset.nxw=h;document.head.appendChild(l)}}catch(e){}}
+{const _g=go;go=function(v){_g.apply(this,arguments);if(v==='nexa')nxWarm()}}
+/* el texto con formato de cada mensaje se arma una sola vez (la pantalla se redibuja más rápido) */
+{const _md=nexaMd,memo=new Map();nexaMd=function(s){s=String(s||'');const h=memo.get(s);if(h!==undefined)return h;const r=_md(s);if(memo.size>160)memo.clear();memo.set(s,r);return r}}
+
+/* --- 2) interacción --- */
+const NxUI={t0:0,tm:null,
+ phaseText(){const s=Math.round((Date.now()-this.t0)/1000),p=Nexa.prov(),docs=Nexa.st.docs.length;
+  if(p==='local'&&typeof NexaLocal!=='undefined'&&NexaLocal.ready&&!NexaLocal.ready())return 'Preparando Nexa local…';
+  const base=s<2?(docs?'Leyendo tus documentos…':'Pensando…'):s<6?(docs?'Analizando el documento…':'Pensando la respuesta…'):s<15?'Armando la respuesta…':'Sigue trabajando · podés detenerla con ■';return base+(s>=2?' '+s+' s':'')},
+ tick(){const el=$('#nxLog .nx-typing');if(!el)return;let ph=el.parentNode.querySelector('.nx-phase');if(!ph){ph=document.createElement('div');ph.className='nx-phase';el.after(ph)}ph.textContent=this.phaseText()},
+ start(){this.t0=Date.now();clearInterval(this.tm);this.tm=setInterval(()=>this.tick(),1000);this.tick()},
+ stop(){clearInterval(this.tm);this.tm=null}};
+{const _ask=Nexa.ask;Nexa.ask=async function(){NxUI.start();try{return await _ask.apply(this,arguments)}finally{NxUI.stop();try{navigator.vibrate&&document.visibilityState==='visible'&&navigator.vibrate(15)}catch(e){}}}}
+/* regenerar la última respuesta y editar la última pregunta */
+{const _r=Nexa.render;Nexa.render=function(){const r=_r.apply(this,arguments);const log=$('#nxLog');if(!log)return r;if(this.sending)NxUI.tick();
+ const ms=this.st.msgs,li=ms.length-1;if(li<1||this.sending)return r;const els=[...log.querySelectorAll(':scope > .nx-msg')];
+ if(ms[li].role==='assistant'&&ms[li-1]&&ms[li-1].role==='user'){const ai=els[li],acts=ai&&ai.querySelector('.nx-acts');if(acts&&!acts.querySelector('[data-nx="regen"]')){acts.insertAdjacentHTML('afterbegin','<button data-nx="regen" data-i="'+li+'">'+icoSvg('rotr')+' Otra respuesta</button>');ai.classList.add('show-acts')}
+  const me=els[li-1],bub=me&&me.querySelector('.nx-bub');if(bub&&!me.querySelector('.nx-edit'))bub.insertAdjacentHTML('afterend','<button class="nx-edit" data-nx="edit" title="Editar la pregunta">'+icoSvg('pencil')+' Editar</button>')}
+ return r}}
+$('#nxLog').addEventListener('click',e=>{const b=e.target.closest('[data-nx="regen"],[data-nx="edit"]');if(!b||Nexa.sending)return;e.stopImmediatePropagation();e.preventDefault();const ms=Nexa.st.msgs;
+ if(b.dataset.nx==='regen'){if(ms[ms.length-1]&&ms[ms.length-1].role==='assistant')ms.pop();const u=ms[ms.length-1];if(!u||u.role!=='user')return;Nexa.save();Nexa.lastErr='';Nexa.ask(u);return}
+ while(ms.length&&ms[ms.length-1].role==='assistant')ms.pop();const u=ms.pop();Nexa.save();Nexa.render();const i=$('#nxIn');i.value=u?u.text:'';i.oninput&&i.oninput();i.focus();try{i.setSelectionRange(i.value.length,i.value.length)}catch(x){}},true);
+/* sugerencias mientras escribís */
+const NxAC={el:null,
+ items(){const caps=(typeof NX_CAPS!=='undefined'?NX_CAPS:[]).map(c=>({l:c[0],p:c[1]}));const kb=(typeof NexaKB!=='undefined'?NexaKB.all():[]).slice(-40).map(e=>({l:e.q,p:e.q}));
+  const tp=(typeof Tpl!=='undefined'?Tpl.all():[]).map(t=>({l:'Plantilla: '+t.n,p:'Hacé un '+t.n.toLowerCase()}));const extra=[{l:'¿Qué plazos tengo?',p:'¿Qué plazos tengo?'},{l:'Extraé los datos del documento',p:'Extraé los datos del documento adjunto'},{l:'Resumí el documento',p:'Resumí el documento adjunto'},{l:'Buscá en mis documentos',p:'Buscá "" en mis documentos'}];
+  return [...extra,...caps,...tp,...kb]},
+ show(){const inp=$('#nxIn');if(!inp)return;if(!this.el){this.el=document.createElement('div');this.el.className='nx-ac';inp.closest('.nx-input').before(this.el);this.el.onclick=e=>{const b=e.target.closest('[data-p]');if(!b)return;const p=b.dataset.p;inp.value=p;inp.oninput&&inp.oninput();this.hide();const q=p.indexOf('""');if(q>=0){inp.focus();inp.setSelectionRange(q+1,q+1)}else Nexa.send()}}
+  const q=nbNorm(inp.value.trim());if(q.length<2||Nexa.sending){this.hide();return}const ws=q.split(/\s+/);const seen=new Set();
+  const res=this.items().map(it=>{const n=nbNorm(it.l);let s=0;if(n.startsWith(q))s=3;else if(ws.every(w=>n.includes(w)))s=2;else if(ws.some(w=>w.length>3&&n.includes(w)))s=1;return {...it,s,n}}).filter(x=>x.s>=2&&x.n!==q&&!seen.has(x.n)&&seen.add(x.n)).sort((a,b)=>b.s-a.s).slice(0,3);
+  if(!res.length){this.hide();return}this.el.innerHTML=res.map(x=>'<button data-p="'+esc(x.p)+'">'+esc(x.l.length>60?x.l.slice(0,58)+'…':x.l)+'</button>').join('');this.el.hidden=false},
+ hide(){if(this.el){this.el.hidden=true;this.el.innerHTML=''}}};
+{const inp=$('#nxIn');if(inp){let t=0;inp.addEventListener('input',()=>{clearTimeout(t);t=setTimeout(()=>NxAC.show(),120)});inp.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key==='Escape')NxAC.hide()});inp.addEventListener('blur',()=>setTimeout(()=>NxAC.hide(),200))}}
+{const _s=Nexa.send;Nexa.send=function(){NxAC.hide();return _s.apply(this,arguments)}}
+/* botón para volver al final de la conversación */
+(function(){const log=$('#nxLog');if(!log||$('#nxDown'))return;const b=document.createElement('button');b.id='nxDown';b.className='nx-down';b.hidden=true;b.setAttribute('aria-label','Ir al final');b.innerHTML=icoSvg('download');log.after(b);
+ b.onclick=()=>{log.scrollTo({top:log.scrollHeight,behavior:'smooth'})};log.addEventListener('scroll',()=>{b.hidden=log.scrollHeight-log.scrollTop-log.clientHeight<220},{passive:true})})();
+/* --- 3) conversaciones guardadas --- */
+const NxHist={k:'ds_nexa_hist',
+ all(){try{return JSON.parse(localStorage.getItem(this.k)||'[]')}catch(e){return []}},
+ set(a){try{localStorage.setItem(this.k,JSON.stringify(a.slice(0,30)))}catch(e){try{localStorage.setItem(this.k,JSON.stringify(a.slice(0,10)))}catch(x){}}},
+ title(msgs){const u=msgs.find(m=>m.role==='user');const t=String(u?u.text:'Conversación').replace(/\s+/g,' ').trim();return t.length>60?t.slice(0,58)+'…':t},
+ saveCurrent(){const ms=Nexa.st.msgs;if(!ms.some(m=>m.role==='user'))return false;const a=this.all();const id=Nexa.st.hid||uid();
+  const it={id,t:this.title(ms),at:Date.now(),msgs:ms.slice(-40).map(m=>({role:m.role,text:String(m.text).slice(0,6000),prov:m.prov})),docs:Nexa.st.docs.map(d=>({id:d.id,name:d.name}))};
+  this.set([it,...a.filter(x=>x.id!==id)]);Nexa.st.hid=id;return true},
+ open(id){const it=this.all().find(x=>x.id===id);if(!it)return;this.saveCurrent();Nexa.st.msgs=it.msgs.slice();Nexa.st.hid=it.id;Nexa.st.docs=[];Nexa.lastErr='';Nexa.save();Nexa.render();
+  const miss=(it.docs||[]).map(d=>d.name);if(miss.length)toast('Conversación abierta. Si querés seguir con los documentos, adjuntalos de nuevo: '+miss.join(', '),5000)},
+ del(id){this.set(this.all().filter(x=>x.id!==id))},
+ sheet(){const a=this.all();const f=d=>{const x=new Date(d);return x.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'})+' '+x.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})};
+  const b=openSheet('Conversaciones','<input id="nhQ" type="search" placeholder="Buscar en las conversaciones" style="width:100%;margin-bottom:8px"><div id="nhL"></div><button class="btn pri block" id="nhNew" style="margin-top:10px">'+icoSvg('plus')+' Nueva conversación</button>');
+  const draw=()=>{const q=nbNorm($('#nhQ',b).value.trim());const l=a.filter(x=>!q||nbNorm(x.t+' '+x.msgs.map(m=>m.text).join(' ')).includes(q));
+   $('#nhL',b).innerHTML=l.length?l.map(x=>'<div class="nh-row"><button class="nh-open" data-o="'+esc(x.id)+'"><b>'+esc(x.t)+'</b><small>'+f(x.at)+' · '+x.msgs.length+' mensajes'+(x.id===Nexa.st.hid?' · actual':'')+'</small></button><button class="nh-del" data-d="'+esc(x.id)+'" aria-label="Borrar">'+icoSvg('trash')+'</button></div>').join(''):'<p class="muted">'+(a.length?'No encontré conversaciones con eso.':'Todavía no hay conversaciones guardadas. Se guardan solas cuando empezás una nueva.')+'</p>'};draw();
+  $('#nhQ',b).oninput=draw;
+  b.onclick=async e=>{const o=e.target.closest('[data-o]'),d=e.target.closest('[data-d]');if(o){await Nav.back();NxHist.open(o.dataset.o);return}
+   if(d){if(!confirm('¿Borrar esta conversación?'))return;NxHist.del(d.dataset.d);a.splice(a.findIndex(x=>x.id===d.dataset.d),1);draw();return}
+   if(e.target.closest('#nhNew')){await Nav.back();NxHist.newChat()}}},
+ newChat(){if(Nexa.sending)return;const saved=this.saveCurrent();Nexa.st.msgs=[];Nexa.st.docs=[];Nexa.st.hid=null;Nexa.imgCache={};Nexa.lastErr='';Nexa.save();Nexa.render();if(saved)toast('La conversación anterior quedó guardada en Conversaciones')}};
+{const nw=$('#nxNew');if(nw)nw.onclick=()=>NxHist.newChat();const box=$('#v-nexa .nx-tools');if(box&&!$('#nxHist')){const h=document.createElement('button');h.className='nx-hb';h.id='nxHist';h.title='Conversaciones';h.setAttribute('aria-label','Conversaciones');h.innerHTML=icoSvg('clock');box.prepend(h);h.onclick=()=>NxHist.sheet()}}
+/* la conversación actual también se guarda sola cada tanto */
+{const _sv=Nexa.save;Nexa.save=function(){const r=_sv.apply(this,arguments);clearTimeout(this._hs);this._hs=setTimeout(()=>{try{if(this.st.msgs.filter(m=>m.role==='user').length>=1&&this.st.msgs.length>=2)NxHist.saveCurrent()}catch(e){}},1500);return r}}
+{const _ld=Nexa.load;Nexa.load=function(){const r=_ld.apply(this,arguments);try{const j=JSON.parse(localStorage.getItem('ds_nexa')||'{}');if(j.hid)this.st.hid=j.hid}catch(e){}return r}}
+{const _sv=Nexa.save;Nexa.save=function(){const r=_sv.apply(this,arguments);try{const j=JSON.parse(localStorage.getItem('ds_nexa')||'{}');j.hid=this.st.hid||null;localStorage.setItem('ds_nexa',JSON.stringify(j))}catch(e){}return r}}
+try{const j=JSON.parse(localStorage.getItem('ds_nexa')||'{}');if(j.hid)Nexa.st.hid=j.hid}catch(e){}
+document.head.insertAdjacentHTML('beforeend','<style id="v38Css">.nx-phase{font-size:12.5px;color:var(--tx2);margin:4px 2px 0}.nx-edit{display:flex;align-items:center;gap:4px;margin:3px 2px 0 auto;font-size:12px;color:var(--tx2);padding:3px 6px;border-radius:8px}.nx-edit .ico{width:13px;height:13px}.nx-msg.me{flex-direction:column;align-items:flex-end}'
+ +'.nx-ac{display:flex;gap:6px;overflow-x:auto;padding:4px 2px 6px;scrollbar-width:none}.nx-ac[hidden]{display:none}.nx-ac button{flex:none;max-width:78%;padding:7px 11px;border-radius:14px;border:1px solid var(--line);background:var(--bg2);font-size:13px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
+ +'.nx-down{position:absolute;right:14px;bottom:78px;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--bg2);border:1px solid var(--line);box-shadow:0 2px 8px #0003;z-index:3}.nx-down .ico{width:18px;height:18px}.nx-card{position:relative}'
+ +'.nh-row{display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--line)}.nh-open{flex:1;min-width:0;text-align:left;padding:10px 2px;display:flex;flex-direction:column}.nh-open b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.nh-open small{color:var(--tx2);font-size:12px}.nh-del{width:38px;height:38px;display:grid;place-items:center;color:var(--tx2)}.nh-del .ico{width:18px;height:18px}</style>');
 </script>
 </body>
 </html>

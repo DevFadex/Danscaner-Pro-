@@ -409,6 +409,35 @@ await test('Corregir con la misma letra (Times negrita 12) y varias palabras a l
   const g=await pg.evaluate(()=>({n:Fix.selIdx.join(','),orig:Fix.o.orig}));assert.equal(g.n,'0,1,2');assert.equal(g.orig,'Frias Alberto Tomas');
 });
 
+await test('Nexa más rápida e interactiva: modo rápido, menos texto a la IA local, sugerencias, otra respuesta, editar y conversaciones',async pg=>{
+  /* Gemini en modo rápido (sin "pensar" de más) y si el modelo no lo admite se reintenta normal */
+  const g=await pg.evaluate(async()=>{const a=AI();a.keys.gemini='AQ.prueba-1234567890abcdefghij';a.models.gemini='gemini-2.5-flash';const bodies=[];const f=window.fetch;
+    window.fetch=async(u,o)=>{const b=JSON.parse(o.body);bodies.push(b);if(b.generationConfig.thinkingConfig&&bodies.length===1)return new Response(JSON.stringify({error:{message:'thinking not supported'}}),{status:400});
+      return new Response('data: {"candidates":[{"content":{"parts":[{"text":"Listo"}]}}]}\n\n',{status:200,headers:{'Content-Type':'text/event-stream'}})};
+    let out='';try{out=await aiChatStream([{role:'user',text:'hola'}],{prov:'gemini'})}catch(e){out='ERR '+e.message}window.fetch=f;
+    return {out,first:JSON.stringify(bodies[0].generationConfig.thinkingConfig),second:!!bodies[1]&&!bodies[1].generationConfig.thinkingConfig,g3:JSON.stringify(nxThinking('gemini-3-flash'))}});
+  assert.equal(g.out,'Listo');assert.equal(g.first,'{"thinkingBudget":0}');assert.ok(g.second,'no reintentó sin el modo rápido');assert.equal(g.g3,'{"thinkingLevel":"low"}');
+  /* la IA local por procesador recibe solo lo relevante del documento */
+  const l=await pg.evaluate(()=>{const c=NexaLocal.cfg();c.base='cpu-0.5b';const filler='Texto de relleno administrativo sin datos importantes para la consulta. '.repeat(300);
+    Nexa.st.docs=[{id:'x',name:'Acta larga',text:filler+'\n\nEl interno Pérez tiene audiencia el 20/10/2026 en el Juzgado de Ejecución N° 2.\n\n'+filler}];
+    const m=Nexa.localMsgs([{role:'user',text:'¿cuándo es la audiencia del interno Pérez?'}]);Nexa.st.docs=[];return {len:m[0].content.length,has:/audiencia el 20\/10\/2026/.test(m[0].content)}});
+  assert.ok(l.len<4500,'el mensaje a la IA local sigue siendo largo: '+l.len);assert.ok(l.has,'dejó afuera la parte relevante');
+  await pg.evaluate(()=>{NexaLocal.cfg().base='';Nexa.st.prov='basic';Nexa.st.msgs=[]});
+  await pg.click('#btnNexa');await W(400);
+  /* sugerencias mientras escribís */
+  await pg.fill('#nxIn','qué pla');await W(400);assert.ok(await pg.$$eval('.nx-ac button',x=>x.some(b=>/plazos/i.test(b.textContent))),'no sugiere mientras escribo');
+  await pg.fill('#nxIn','');await pg.fill('#nxIn','hola');await pg.press('#nxIn','Enter');await W(600);
+  /* otra respuesta y editar la pregunta */
+  assert.ok(await pg.$('#nxLog [data-nx="regen"]'),'falta "Otra respuesta"');const n0=await pg.evaluate(()=>Nexa.st.msgs.length);
+  await pg.click('#nxLog [data-nx="regen"]');await W(600);assert.equal(await pg.evaluate(()=>Nexa.st.msgs.length),n0,'regenerar duplicó mensajes');
+  await pg.click('#nxLog [data-nx="edit"]');await W(300);assert.equal(await pg.inputValue('#nxIn'),'hola');assert.equal(await pg.evaluate(()=>Nexa.st.msgs.length),n0-2);
+  await pg.fill('#nxIn','¿qué podés hacer?');await pg.press('#nxIn','Enter');await W(600);
+  /* conversaciones guardadas */
+  await pg.click('#nxNew');await W(400);assert.equal(await pg.evaluate(()=>Nexa.st.msgs.length),0);assert.equal(await pg.evaluate(()=>NxHist.all().length),1);
+  await pg.click('#nxHist');await W(500);assert.match(await pg.textContent('#sheetBody'),/qué podés hacer/);await pg.click('#sheetBody [data-o]');await W(600);
+  assert.ok(await pg.evaluate(()=>Nexa.st.msgs.some(m=>/qué podés hacer/.test(m.text))),'no abrió la conversación guardada');
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();
