@@ -199,3 +199,12 @@ Despliegue: cada cambio en `main` se publica solo en Vercel. El service worker (
 
 - `libs/fontkit-1.1.1.umd.min.js`: MIT.
 - `libs/fonts/LiberationSans-Regular.ttf`: SIL Open Font License 1.1 (ver `libs/fonts/LICENSE-LiberationSans-OFL.txt`).
+
+## v34 · Corregir texto del documento
+
+En el editor, **Corregir** permite arreglar una palabra mal escrita de la hoja escaneada (por ejemplo «livertad» → «libertad») dejando el resto del documento como estaba.
+
+- **Buscar** la palabra (la app lee el texto con OCR) o **Marcar a mano** pasando el dedo; el recuadro marcado se ajusta solo a la tinta.
+- La palabra se tapa con el color del papel de alrededor (mezcla de los cuatro lados, con grano y bordes difuminados) y el texto nuevo se escribe con el **color de la tinta** detectado, el **mismo alto** de letra y la misma línea de base.
+- Opciones: letra Arial / Times / Máquina, negrita, tinta automática / negra / azul, tamaño A− / A+, «Solo borrar» y «Corregir las N» cuando la misma palabra aparece varias veces.
+- No es destructivo: cada corrección se guarda en `p.fixes` (proporciones de la página) y se dibuja al final de `renderPage`, así funciona con cualquier filtro y resolución y se puede **deshacer** con el deshacer del editor.

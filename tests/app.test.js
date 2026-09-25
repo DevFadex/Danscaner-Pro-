@@ -326,6 +326,30 @@ await test('Paquete Nexa: plantillas, consultas sobre muchos documentos, voz y p
   const sp=await pg.evaluate(()=>{let said='';Object.defineProperty(window,'speechSynthesis',{configurable:true,value:{cancel(){},getVoices:()=>[],speak(u){said=u.text}}});NexaVoice.speak('**Hola** [[Botón|x]]');return said});assert.equal(sp,'Hola');
 });
 
+await test('Corregir texto: borra la palabra mal escrita, escribe la correcta y se puede deshacer',async pg=>{
+  await pg.evaluate(async()=>{const c=document.createElement('canvas');c.width=700;c.height=500;const x=c.getContext('2d');x.fillStyle='#f4f1ea';x.fillRect(0,0,700,500);x.fillStyle='#1c2f9a';x.font='40px Arial';x.fillText('ACTA DE LIVERTAD',60,120);x.fillStyle='#111';x.fillText('Firma',60,300);
+    const p=await makePage(c.toDataURL('image/jpeg',.95));DOC=newDoc();DOC.pages.push({...p,id:uid(),filter:'original',quad:null});openDocScreen();Ed.open(0)});await W(900);
+  assert.ok(await pg.$('#editor [data-ed="fix"]'),'falta el botón Corregir');
+  await pg.evaluate(()=>{Fix.ocr=async function(){}});await pg.click('#editor [data-ed="fix"]');await W(900);
+  /* palabras como las devuelve el OCR (proporciones de la imagen) */
+  await pg.evaluate(()=>{const W=Fix.base.width,H=Fix.base.height,m=canvas(4,4).getContext('2d');m.font='40px Arial';const bb=(t,x0,base)=>{const r=m.measureText(t);return {t,x:x0/700,y:(base-r.actualBoundingBoxAscent)/500,w:r.width/700,h:(r.actualBoundingBoxAscent+r.actualBoundingBoxDescent)/500}};
+    const a=m.measureText('ACTA DE ').width;Fix.setWords([bb('ACTA',60,120),bb('DE',60+m.measureText('ACTA ').width,120),bb('LIVERTAD',60+a,120),bb('Firma',60,300)])});
+  await pg.fill('#fxFind','livertad');await W(200);assert.equal(await pg.$$eval('#fxBoxes>b.hit',x=>x.length),1);
+  await pg.click('#fxBoxes>b.hit');await W(300);assert.equal(await pg.inputValue('#fxTxt'),'LIVERTAD');
+  await pg.fill('#fxTxt','LIBERTAD');await W(200);await pg.click('#fxApply');await W(700);
+  const r=await pg.evaluate(async()=>{const p=Ed.p,f=p.fixes&&p.fixes[0];if(!f)return null;const c=await renderPage(p,{maxSide:1800}),d=c.getContext('2d').getImageData(0,0,c.width,c.height).data,W=c.width,H=c.height;
+    const px=(x,y)=>{const i=(Math.round(y*H)*W+Math.round(x*W))*4;return [d[i],d[i+1],d[i+2]]};let blue=0,n=0;for(let y=Math.round(f.y*H);y<(f.y+f.h)*H;y++)for(let x=Math.round(f.x*W);x<(f.x+f.w)*W;x++){const i=(y*W+x)*4;n++;if(d[i+2]-d[i]>40)blue++}
+    const o=await renderPage(p,{maxSide:1800,noFix:true}),od=o.getContext('2d').getImageData(0,0,W,H).data;let diff=0;for(let i=0;i<od.length;i+=4)diff+=Math.abs(od[i]-d[i]);
+    return {t:f.t,orig:f.orig,blue:blue/n,pad:px(f.x+f.w+f.h*.1*H/W,f.y+f.h/2),diff}});
+  assert.ok(r,'no se guardó la corrección');assert.equal(r.t,'LIBERTAD');assert.equal(r.orig,'LIVERTAD');
+  assert.ok(r.blue>.08,'no conservó la tinta azul: '+r.blue);assert.ok(r.diff>1000,'la imagen no cambió');
+  assert.ok(r.pad.every((v,k)=>Math.abs(v-[244,241,234][k])<14),'el borrado no tomó el color del papel: '+r.pad);
+  await pg.click('#fxDone');await W(500);await pg.click('#edUndo');await W(700);assert.equal(await pg.evaluate(()=>(Ed.p.fixes||[]).length),0,'deshacer no quitó la corrección');
+  /* a mano: el recuadro se ajusta a la tinta */
+  const ib=await pg.evaluate(()=>{const c=canvas(200,100),x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,200,100);x.fillStyle='#000';x.fillRect(50,40,60,20);return fixInkBox(c,{x:.1,y:.1,w:.8,h:.8})});
+  assert.ok(Math.abs(ib.x-.25)<.01&&Math.abs(ib.w-.3)<.01&&Math.abs(ib.y-.4)<.02,JSON.stringify(ib));
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();
