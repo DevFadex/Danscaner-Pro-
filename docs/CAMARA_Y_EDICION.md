@@ -223,3 +223,18 @@ En el editor, **Corregir** permite arreglar una palabra mal escrita de la hoja e
 - **Espaciado**: se mide el ancho real de la letra en el documento (`sx0`) y la palabra nueva se escribe con el mismo espaciado.
 - **Acomodar renglón** (activado por defecto): si la palabra nueva es más corta o más larga, el resto del renglón se corre para que no quede hueco ni se superponga.
 - Al correr el renglón, lo que queda libre al final se rellena con el papel de arriba y de abajo (`fixFillCols`), así sigue el degradé de la hoja. En los escaneos, la caja de las palabras se vuelve a medir sobre la tinta, así la cola de una coma no agranda la letra.
+
+## v38 · Nexa más rápida y más interactiva (Nexa 3.4)
+
+- **Velocidad**
+  - Gemini responde en **modo rápido**: `thinkingBudget:0` en 2.5 Flash y `thinkingLevel:'low'` en Gemini 3. Si el modelo no lo admite, se reintenta en modo normal.
+  - Apenas se abre Nexa, la app se conecta al servidor de la IA (`preconnect`).
+  - La IA local recibe solo las partes del documento relacionadas con la pregunta (`nxRelevant`): 2200 caracteres en modo procesador y 5000 en modo placa. En modo procesador se usan menos mensajes previos y no se incluyen ejemplos, así responde mucho antes y no se pasa del contexto.
+  - El formato de los mensajes se memoriza, así la pantalla se redibuja más rápido.
+- **Interacción**
+  - Mientras responde se muestra qué está haciendo y los segundos que lleva.
+  - Botones «Otra respuesta» y «Editar» (la última pregunta).
+  - Sugerencias mientras escribís.
+  - Botón para volver al final de la conversación.
+  - Vibración corta al terminar de responder.
+- **Conversaciones**: se guardan solas y se ven con el botón del reloj. Se pueden buscar, abrir y borrar. «Nueva conversación» guarda la anterior en lugar de borrarla.
