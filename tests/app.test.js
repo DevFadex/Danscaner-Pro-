@@ -482,6 +482,29 @@ await test('Revisión: OCR sin internet (incluido en la app) y Firmar PDF usa el
   assert.equal(await pg.evaluate(()=>{let m='';const t=$('#toast');toast('Uncaught NetworkError: Failed to execute importScripts');m=t.textContent;return /Sin conexión/.test(m)}),true);
 });
 
+await test('Escaneo: detección de la hoja (tablas, otro papel detrás, sombras), tamaño A4/oficio/certificado y borrar la foto en la cámara',async pg=>{
+  await pg.addScriptTag({content:require('fs').readFileSync(__dirname+'/fixtures/escenas.js','utf8')});
+  const d=await pg.evaluate(async()=>{let s=0,bad=0;const n=24;for(let i=1;i<=n;i++){const sc=makeScene(i);const p=await makePage(sc.canvas.toDataURL('image/jpeg',.85));const v=quadIoU(sc.quad,p.quad);s+=v;if(v<.9)bad++}return {avg:s/n,bad}});
+  assert.ok(d.avg>.85&&d.bad<=8,'la detección de la hoja no alcanza: '+JSON.stringify(d));
+  /* tamaño de hoja automático */
+  const sz=await pg.evaluate(async()=>{const mk=async(w,h)=>{const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,w,h);x.fillStyle='#000';x.fillRect(20,20,50,10);return makePage(c.toDataURL('image/jpeg',.9),{auto:false,filter:'original'})};
+    const a=await mk(1000,1414),o=await mk(1000,1650),c=await mk(1000,1414);c.paper='a5';const bytes=await buildPDF([a,o,c],{size:'auto'});const doc=await PDFLib.PDFDocument.load(bytes);return doc.getPages().map(p=>{const z=p.getSize();return Math.round(z.width/72*25.4)+'x'+Math.round(z.height/72*25.4)}).join(' ')});
+  assert.equal(sz,'210x297 216x356 148x210');assert.equal(await pg.evaluate(()=>S.size),'auto');
+  /* cámara: revisar la foto, repetir, pasar a lote y borrar la última */
+  await pg.evaluate(()=>{S.autoCapture=false;Cam.kind='cert';Cam.open('single')});await pg.waitForFunction(()=>Cam.stream&&$('#camVideo').videoWidth>0,null,{timeout:15000});
+  await pg.evaluate(()=>Cam.shoot());await pg.waitForFunction(()=>!$('#camRev').hidden,null,{timeout:20000});
+  assert.equal(await pg.evaluate(()=>Cam.review.length),1);assert.equal(await pg.evaluate(()=>Cam.review[0].paper),'a5','el modo Certificado no marcó la hoja A5');
+  await pg.click('#rvAgain');await W(200);assert.equal(await pg.evaluate(()=>!Cam.review&&$('#camRev').hidden&&!Cam.busy),true);
+  await pg.evaluate(()=>Cam.shoot());await pg.waitForFunction(()=>!$('#camRev').hidden,null,{timeout:20000});await pg.click('#rvMore');await W(200);
+  assert.equal(await pg.evaluate(()=>Cam.mode+' '+Cam.batch.length),'batch 1');assert.equal(await pg.isVisible('#camUndo'),true);
+  await pg.click('#camUndo');await W(200);assert.equal(await pg.evaluate(()=>Cam.batch.length),0);
+  await pg.evaluate(()=>Nav.back());await W(600);
+  /* editor: elegir el tamaño de la hoja */
+  await seedPage(pg);await pg.evaluate(async()=>{DOC=newDoc();DOC.pages.push({...window._pg,id:uid()});openDocScreen();Ed.open(0)});await W(800);
+  await pg.click('#editor [data-ed="paper"]');await W(400);await pg.click('#sheetBody [data-pp="oficio"]');await W(500);
+  assert.equal(await pg.evaluate(()=>Ed.p.paper),'oficio');assert.match(await pg.textContent('#editor [data-ed="paper"]'),/Oficio/);
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();
