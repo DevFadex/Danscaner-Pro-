@@ -1023,7 +1023,7 @@ const b=openSheet('Ajustes','<div class="set-list">'+setRow('sDesign','palette',
 +acc('🌓','Apariencia y nombres','Tema y nombre de los documentos',opt('<i data-ico="theme">🌓</i> Tema',sel('sTheme',[['system','Automático (según el teléfono)'],['light','Claro'],['dark','Oscuro']]))+opt('Plantilla de nombre por defecto',sel('sTpl',NAME_TEMPLATES.map(t=>[t,t]))))
 +acc('📄','PDF y texto (OCR)','Hoja, calidad, márgenes e idioma',opt('Idioma OCR',sel('sLang',[['spa','Español'],['eng','Inglés'],['spa+eng','Español + Inglés'],['por','Portugués']]))+'<div class="row">'+opt('Hoja PDF por defecto',sel('sSize',[['a4','A4'],['oficio','Oficio'],['carta','Carta'],['original','Tamaño imagen']]))+opt('Calidad PDF',sel('sQ',Object.entries(QUAL).map(([k,v])=>[k,v.label])))+'</div>'+opt('Márgenes por defecto (mm)','<input type="number" id="sMargin" min="0" max="40">'))
 +acc('🗄️','Datos del dispositivo',est||'Documentos guardados en este navegador','<p class="muted">'+est+'</p><button class="btn red block" id="sWipe">🗑 Borrar todos los documentos</button>')
-+'<p class="muted set-foot">Danscanner Pro · versión 39 · funciona en celular y PC · los documentos se guardan en este navegador.</p>');$('.sTpl',b).value=S.nameTemplate;$('.sFilter',b).value=S.filter;$('.sMax',b).value=String(S.maxCap);$('#sAuto').checked=S.autoCrop;$('#sAutoCap').checked=S.autoCapture;$('#sHd').checked=S.hd;$('#sDeskew').checked=S.deskew!==false;$('#sPrintBW').checked=S.printBW!==false;$('#sPro').checked=S.proFilters!==false;$('#sNative').checked=!!S.camNative;$('.sTheme',b).value=S.theme||'system';$('.sLang',b).value=S.lang;$('.sSize',b).value=S.size;$('.sQ',b).value=S.quality;$('#sMargin').value=S.margin;b.onchange=()=>{S.nameTemplate=$('.sTpl',b).value;S.filter=$('.sFilter',b).value;S.maxCap=+$('.sMax',b).value;S.autoCrop=$('#sAuto').checked;S.camNative=$('#sNative').checked;if(($('.sTheme',b).value)!==(S.theme||'system'))cambiarTema($('.sTheme',b).value);S.autoCapture=$('#sAutoCap').checked;S.hd=$('#sHd').checked;S.deskew=$('#sDeskew').checked;if((S.printBW!==false)!==$('#sPrintBW').checked){S.printBW=$('#sPrintBW').checked;if(FW.w){try{FW.w.terminate()}catch(e){}FW.w=null;FW.ok=null}}if((S.proFilters!==false)!==$('#sPro').checked){S.proFilters=$('#sPro').checked;useProFilters(S.proFilters)}S.lang=$('.sLang',b).value;S.size=$('.sSize',b).value;S.quality=$('.sQ',b).value;S.margin=+$('#sMargin').value||0;saveS();toast('Guardado')};$('#sDesign').onclick=async()=>{await Nav.back();designSheet()};$('#sAI').onclick=async()=>{await Nav.back();aiSheet()};$('#sSec').onclick=async()=>{await Nav.back();securitySheet()};$('#sSpace').onclick=async()=>{await Nav.back();storageSheet()};$('#sAbout').onclick=async()=>{await Nav.back();aboutSheet()};$('#sWipe').onclick=async()=>{if(!confirm('¿Borrar TODOS los documentos guardados?'))return;for(const m of await DB.metas())await DB.delDoc(m.id);refreshLists();toast('Documentos borrados')}}
++'<p class="muted set-foot">Danscanner Pro · versión 40 · funciona en celular y PC · los documentos se guardan en este navegador.</p>');$('.sTpl',b).value=S.nameTemplate;$('.sFilter',b).value=S.filter;$('.sMax',b).value=String(S.maxCap);$('#sAuto').checked=S.autoCrop;$('#sAutoCap').checked=S.autoCapture;$('#sHd').checked=S.hd;$('#sDeskew').checked=S.deskew!==false;$('#sPrintBW').checked=S.printBW!==false;$('#sPro').checked=S.proFilters!==false;$('#sNative').checked=!!S.camNative;$('.sTheme',b).value=S.theme||'system';$('.sLang',b).value=S.lang;$('.sSize',b).value=S.size;$('.sQ',b).value=S.quality;$('#sMargin').value=S.margin;b.onchange=()=>{S.nameTemplate=$('.sTpl',b).value;S.filter=$('.sFilter',b).value;S.maxCap=+$('.sMax',b).value;S.autoCrop=$('#sAuto').checked;S.camNative=$('#sNative').checked;if(($('.sTheme',b).value)!==(S.theme||'system'))cambiarTema($('.sTheme',b).value);S.autoCapture=$('#sAutoCap').checked;S.hd=$('#sHd').checked;S.deskew=$('#sDeskew').checked;if((S.printBW!==false)!==$('#sPrintBW').checked){S.printBW=$('#sPrintBW').checked;if(FW.w){try{FW.w.terminate()}catch(e){}FW.w=null;FW.ok=null}}if((S.proFilters!==false)!==$('#sPro').checked){S.proFilters=$('#sPro').checked;useProFilters(S.proFilters)}S.lang=$('.sLang',b).value;S.size=$('.sSize',b).value;S.quality=$('.sQ',b).value;S.margin=+$('#sMargin').value||0;saveS();toast('Guardado')};$('#sDesign').onclick=async()=>{await Nav.back();designSheet()};$('#sAI').onclick=async()=>{await Nav.back();aiSheet()};$('#sSec').onclick=async()=>{await Nav.back();securitySheet()};$('#sSpace').onclick=async()=>{await Nav.back();storageSheet()};$('#sAbout').onclick=async()=>{await Nav.back();aboutSheet()};$('#sWipe').onclick=async()=>{if(!confirm('¿Borrar TODOS los documentos guardados?'))return;for(const m of await DB.metas())await DB.delDoc(m.id);refreshLists();toast('Documentos borrados')}}
 $('#btnSettings').onclick=()=>settingsSheet();$('#navSettings').onclick=()=>settingsSheet();
 function go(v){$$('.view').forEach(x=>x.classList.toggle('active',x.id==='v-'+v));$$('.nav [data-go]').forEach(b=>b.classList.toggle('on',b.dataset.go===v));$('#topTitle').textContent={home:'Danscanner Pro',docs:'Documentos',tools:'Herramientas',nexa:'Nexa IA'}[v];window.scrollTo(0,0)}
 async function doAction(a){if(a==='cam-single')Cam.open('single');else if(a==='cam-batch')Cam.open('batch');else if(a==='import-img')$('#inImg').click();else if(a==='import-any')$('#inAny').click()}
@@ -3425,7 +3425,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 3.5',APP_VER='39';
+const NEXA_VER='Nexa 3.5',APP_VER='40';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3543,7 +3543,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='39 · 25/09/2026';
+const BUILD='40 · 25/09/2026';
 /* Botón Nexa arriba: se crea siempre, aunque otra parte de Nexa falle (antes, un error dejaba teléfonos sin el botón) */
 function ensureNexaTop(){const top=$('.top'),bs=$('#btnSettings');if(!top||!bs||$('#btnNexa'))return;const b=document.createElement('button');b.className='ib nx-top';b.id='btnNexa';b.dataset.go='nexa';b.title='Nexa IA';b.setAttribute('aria-label','Nexa IA');b.innerHTML='<i data-ico="nexa"></i><span>Nexa</span>';top.insertBefore(b,bs);iconize(b);const n=$('.nav [data-go="nexa"]');if(n)n.remove()}
 ensureNexaTop();addEventListener('load',ensureNexaTop);
@@ -4309,6 +4309,37 @@ function nxLocalLive(){try{return !!(NexaLocal.engine||(typeof NexaCPU!=='undefi
  const last=this.st.msgs[this.st.msgs.length-1];if(this.st.msgs.length>n&&last&&last.role==='assistant'&&!greet){
   last.text+=dl?'\n\n*Respuesta rápida mientras Nexa local se termina de cargar en el teléfono. En unos segundos las próximas respuestas las da la IA local.*':'\n\n*Nexa local todavía no está descargada, así que respondí en modo básico.* [[Descargar Nexa local|__config]]';this.save()}
  this.status();this.render()}}
+
+/* ===== Danscanner Pro v40: diseño para computadora (pantallas anchas). En el celular no cambia nada ===== */
+const DESK_MQ=matchMedia('(min-width:1024px)');
+document.head.insertAdjacentHTML('beforeend','<style id="v40Css">@media (min-width:1024px){'
+ /* menú lateral en lugar de la barra de abajo */
+ +'body{--side:236px}'
+ +'html body .nav{top:0;bottom:0;left:0;right:auto;width:var(--side);flex-direction:column;justify-content:flex-start;align-items:stretch;gap:4px;padding:18px 14px;border-top:0;border-right:1px solid var(--line);box-shadow:none}'
+ +'html body .nav::before{content:"Danscanner Pro";display:block;font-weight:800;font-size:17px;letter-spacing:-.3px;color:var(--tx);padding:6px 10px 16px}'
+ +'html body .nav button{flex:none!important;flex-direction:row;justify-content:flex-start;gap:12px;min-width:0;width:100%;padding:11px 12px;border-radius:12px;font-size:14.5px!important;letter-spacing:0!important;color:var(--tx2);text-align:left}'
+ +'html body .nav button:hover{background:var(--bg3)}html body .nav button.on{background:var(--soft,#e0f2fe);color:var(--ac);font-weight:700}'
+ +'html body .nav button b,html body .nav button .ico{font-size:20px}html body .nav button .ico{width:21px;height:21px}'
+ +'html body .nav .nl-s{display:none!important}html body .nav .nl-l{display:inline!important}'
+ +'html body .nav.nav2 .fab.fabcam,html body .nav .fab{order:-1;width:100%!important;height:50px!important;min-width:0!important;border-radius:14px!important;margin:0 0 14px!important;border:0!important;box-shadow:0 8px 18px color-mix(in srgb,var(--ac) 30%,transparent)!important;display:flex!important;flex-direction:row;align-items:center;justify-content:center;gap:9px;font-size:15px!important;font-weight:700;color:#fff!important}'
+ +'html body .nav.nav2 .fab.fabcam .ico,html body .nav .fab .ico{width:22px!important;height:22px!important}'
+ +'html body .nav::before{order:-2}'
+ +'html body .nav .fab::after{content:"Escanear"}'
+ /* contenido a todo el ancho */
+ +'html body .app{max-width:none;margin:0 0 0 var(--side);padding-bottom:28px}'
+ +'html body .top{padding:14px 32px}'
+ +'html body .view{padding:8px 32px 24px;max-width:1560px;margin:0 auto}'
+ +'html body .hero{padding:24px 26px}html body .hero-t{font-size:26px}html body .hero-btns{grid-template-columns:repeat(4,minmax(150px,1fr));max-width:980px}'
+ +'html body .hbtn{padding:18px 8px;font-size:30px}html body .hbtn span{font-size:14.5px}'
+ +'html body .grid4{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}'
+ +'html body .mlist{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}'
+ /* Nexa: al lado del menú, centrada y más ancha */
+ +'html.nx-on body #v-nexa.active{left:var(--side);right:0;max-width:980px;padding:10px 24px 0}'
+ +'html body .nx-down{bottom:92px}'
+ +'}</style>');
+/* Nexa calcula su alto sin la barra de abajo cuando está el menú lateral */
+{const _f=nxFit;nxFit=function(){_f.apply(this,arguments);if(!DESK_MQ.matches)return;const v=$('#v-nexa');if(!v||!v.classList.contains('active'))return;const t=$('.top'),top=t?t.getBoundingClientRect().bottom:0,vh=(window.visualViewport?visualViewport.height:innerHeight);v.style.setProperty('--nx-h',Math.max(240,vh-top)+'px')}}
+try{DESK_MQ.addEventListener('change',()=>{try{nxFit()}catch(e){}})}catch(e){}
 </script>
 </body>
 </html>

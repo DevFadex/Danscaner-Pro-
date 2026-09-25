@@ -449,6 +449,15 @@ await test('Nexa local no deja esperando: saluda al instante y responde rápido 
   assert.ok(await pg.evaluate(()=>window._loads>0),'no empezó a cargar el modelo');assert.equal(await pg.evaluate(()=>Nexa.st.prov),'local');
 });
 
+await test('Computadora: menú lateral y pantalla completa; en el celular sigue igual',async pg=>{
+  const m=await pg.evaluate(()=>{const n=$('.nav').getBoundingClientRect();return {bottom:Math.round(n.bottom),w:Math.round(n.width),h:Math.round(n.height)}});
+  assert.ok(m.w>=380&&m.h<100,'en el celular cambió la barra de abajo: '+JSON.stringify(m));
+  await pg.setViewportSize({width:1440,height:860});await W(400);
+  const d=await pg.evaluate(()=>{const n=$('.nav').getBoundingClientRect(),a=$('.app').getBoundingClientRect(),f=$('.nav .fab').getBoundingClientRect();return {nw:Math.round(n.width),nh:Math.round(n.height),al:Math.round(a.left),aw:Math.round(a.width),fy:Math.round(f.top)}});
+  assert.ok(d.nw<300&&d.nh>=800,'no hay menú lateral: '+JSON.stringify(d));assert.ok(d.al>=200&&d.aw>1100,'el contenido no ocupa el ancho: '+JSON.stringify(d));assert.ok(d.fy<120,'Escanear no está arriba');
+  await pg.click('.nav [data-go="tools"]');await W(300);assert.ok(await pg.isVisible('#v-tools'));
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();
