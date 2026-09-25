@@ -383,6 +383,32 @@ await test('Editar PDF: entrar a una página, corregir una palabra y zoom para e
   assert.ok(z.r1>z.r0*1.4,'Colocar no hace zoom '+JSON.stringify(z));assert.ok(z.ok&&Math.abs(z.w-.35)<.02,'el zoom cambió el tamaño guardado '+JSON.stringify(z));
 });
 
+await test('Corregir con la misma letra (Times negrita 12) y varias palabras a la vez',async pg=>{
+  const b64=await pg.evaluate(async()=>{await loadLib('pdflib');const d=await PDFLib.PDFDocument.create(),f=await d.embedFont(PDFLib.StandardFonts.TimesRomanBold),r=await d.embedFont(PDFLib.StandardFonts.Helvetica);const p=d.addPage([595,842]);
+    p.drawText('Interno: Frias Alberto Tomas, alojado en la Unidad 5.',{x:60,y:760,size:12,font:f});p.drawText('Se deja constancia de lo actuado.',{x:60,y:730,size:11,font:r});const u=await d.save();let s='';for(const b of u)s+=String.fromCharCode(b);return btoa(s)});
+  await pg.evaluate(()=>openTool(TOOLS.findIndex(t=>t.name==='Editar PDF')));await W(600);if(await pg.evaluate(()=>$('#sheet').classList.contains('open'))){await pg.evaluate(()=>Nav.back());await W(500)}
+  await pg.setInputFiles('#toolBody .fp input[type=file]',{name:'acta.pdf',mimeType:'application/pdf',buffer:Buffer.from(b64,'base64')});await W(800);if(await pg.$('#srcYes'))await pg.click('#srcYes');await W(2000);
+  await pg.click('#toolBody .pg[data-n="1"] [data-s="fix"]');await W(2000);
+  assert.ok(await pg.evaluate(()=>Fix.words.length>8),'no leyó las palabras del PDF');
+  await pg.fill('#fxFind','frias alberto tomas');await W(300);assert.equal(await pg.$$eval('#fxBoxes>b.hit',x=>x.length),3,'no encontró la frase completa');
+  await pg.click('#fxBoxes>b.hit');await W(400);
+  const o=await pg.evaluate(()=>({orig:Fix.o.orig,f:Fix.o.f,b:Fix.o.b,n:Fix.selIdx.length,det:$('#fxDet').textContent}));
+  assert.equal(o.orig,'Frias Alberto Tomas');assert.equal(o.n,3);assert.equal(o.f,'serif');assert.equal(o.b,1);assert.ok(/Times New Roman · negrita · 12 pt/.test(o.det),o.det);
+  await pg.fill('#fxTxt','Robledo Ariel');await pg.click('#fxApply');await W(500);assert.ok(await pg.evaluate(()=>Fix._lastRects[0].dx<0),'no acomodó el renglón (queda hueco)');await pg.click('#fxDone');await W(500);
+  assert.match(await pg.textContent('#toolBody .plist'),/Corrección · página 1/);
+  /* escaneos: detecta la letra comparando la forma de la palabra */
+  const det=await pg.evaluate(()=>{const out={};for(const [f,b] of [['serif',1],['sans',0],['mono',0]]){const c=canvas(900,200),x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,900,200);x.fillStyle='#222';x.font=fixFont({f,b},44);x.fillText('Frias Alberto Tomas',40,110);
+    const m=x.measureText('Frias Alberto Tomas');const bx={x:(40-(m.actualBoundingBoxLeft||0))/900,y:(110-m.actualBoundingBoxAscent)/200,w:((m.actualBoundingBoxLeft||0)+m.actualBoundingBoxRight)/900,h:(m.actualBoundingBoxAscent+m.actualBoundingBoxDescent)/200};
+    const r=fixDetect(c,{...bx,orig:'Frias Alberto Tomas'});out[f+b]=r&&(r.f+r.b)}return out});
+  assert.deepEqual(det,{serif1:'serif1',sans0:'sans0',mono0:'mono0'},JSON.stringify(det));
+  /* tocando la primera y la última palabra del renglón se eligen todas */
+  await seedPage(pg);await pg.evaluate(async()=>{DOC=newDoc();DOC.pages.push({...window._pg,id:uid(),filter:'original'});openDocScreen();Ed.open(0)});await W(900);
+  await pg.evaluate(()=>{Fix.ocr=async function(){}});await pg.click('#editor [data-ed="fix"]');await W(900);
+  await pg.evaluate(()=>Fix.setWords([{t:'Frias',x:.1,y:.1,w:.1,h:.03},{t:'Alberto',x:.22,y:.1,w:.14,h:.03},{t:'Tomas',x:.38,y:.1,w:.12,h:.03},{t:'Otro',x:.1,y:.3,w:.1,h:.03}]));
+  await pg.click('#fxBoxes>b[data-w="0"]');await W(300);await pg.click('#fxBoxes>b[data-w="2"]');await W(300);
+  const g=await pg.evaluate(()=>({n:Fix.selIdx.join(','),orig:Fix.o.orig}));assert.equal(g.n,'0,1,2');assert.equal(g.orig,'Frias Alberto Tomas');
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();
