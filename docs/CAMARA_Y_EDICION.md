@@ -260,3 +260,10 @@ En el editor, **Corregir** permite arreglar una palabra mal escrita de la hoja e
   - Al actualizar solo se borra la copia vieja de la app (`danscaner-vNN`), y lo que había en ella de herramientas se pasa a la caché permanente.
   - «Actualizar la app» solo borra las copias de la app.
   - «Limpieza rápida» solo borra las cachés de Danscanner. El modelo de Nexa local se borra únicamente desde Nexa, con «Borrar modelo».
+
+## v42 · Revisión completa, OCR incluido en la app
+
+- **Revisión automática** de las 37 herramientas con archivos de prueba (PDF, foto, Word, Excel, PowerPoint, texto): todas generan su resultado. También se revisaron Ajustes, el inicio, todos los botones del editor, la cámara, Documentos y Nexa.
+- **Lector de texto (OCR) incluido**: `libs/tesseract/` (worker, motor LSTM con y sin SIMD, idioma español `best_int`; Apache-2.0). Antes se bajaba de un CDN la primera vez, y sin internet fallaba la cámara (nombre automático), Corregir, OCR y Extraer texto con un error técnico en inglés. Ahora funciona sin internet y se guarda en la caché permanente.
+- **Mensajes claros** cuando algo necesita internet, en lugar de errores técnicos.
+- **Repetido**: «Firmar PDF» era una versión reducida de «Editar PDF» con otro código. Ahora abre el mismo editor completo. El nombre queda en el menú.

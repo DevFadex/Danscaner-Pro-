@@ -473,6 +473,15 @@ await test('Actualizar la app no borra las herramientas guardadas ni el modelo d
   assert.deepEqual(r.afterClean,['webllm/model'],'la limpieza rápida borró el modelo: '+r.afterClean);
 });
 
+await test('Revisión: OCR sin internet (incluido en la app) y Firmar PDF usa el editor completo',async pg=>{
+  await pg.route(/cdn\.jsdelivr|cdnjs|unpkg|projectnaptha/,r=>r.abort());
+  const t=await pg.evaluate(async()=>{const c=document.createElement('canvas');c.width=900;c.height=300;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,900,300);x.fillStyle='#000';x.font='40px Arial';x.fillText('Acta de libertad del interno',40,120);
+    const r=await ocrCanvases(async fn=>{await fn(c)},'spa',1);busy(false);return r.join(' ')});
+  assert.ok(/libertad/i.test(t),'el OCR no funcionó sin internet: '+t);
+  assert.ok(await pg.evaluate(()=>TOOLS.find(t=>t.name==='Firmar PDF').ui===TOOLS.find(t=>t.name==='Editar PDF').ui),'Firmar PDF no usa el editor completo');
+  assert.equal(await pg.evaluate(()=>{let m='';const t=$('#toast');toast('Uncaught NetworkError: Failed to execute importScripts');m=t.textContent;return /Sin conexión/.test(m)}),true);
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();
