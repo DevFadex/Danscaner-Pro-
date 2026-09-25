@@ -301,3 +301,12 @@ En el editor, **Corregir** permite arreglar una palabra mal escrita de la hoja e
 - El modo **Certificado** de la cámara ahora arma una hoja **A4 blanca** con el certificado en su tamaño real (dentro de 148 × 210 mm, sin agrandar ni deformar), centrado. Si el certificado es apaisado, la hoja A4 sale acostada.
 - En el editor, **Hoja → Certificado centrado en hoja A4** aplica lo mismo a cualquier página. También está en Ajustes y en Exportar.
 - Las páginas guardadas antes como **Certificado (A5)** siguen saliendo en A5, y esa opción sigue disponible.
+
+## v45 — Nexa en dos modos, detener que siempre corta y enseñarle a Nexa
+
+- **Dos modos** en el menú de Nexa (antes eran «gratis», «local» y «básico»):
+  - **Nexa sin internet**: gratis y privada. Usa la IA del teléfono si está descargada; si no, el modo rápido (datos, resúmenes y búsquedas al instante). Para sacar datos de un documento usa siempre el modo rápido.
+  - **Nexa con internet**: Gemini gratis o la clave que tengas cargada. Si no hay conexión, responde sin internet.
+  - Las conversaciones viejas pasan solas al modo que corresponde.
+- **Detener (■)**: corta siempre, también mientras Nexa lee un escaneo sin texto (el OCR se cancela) o mientras prepara la IA. Lo que termine después en segundo plano ya no aparece en la conversación. La lectura avisa página por página, dentro de la conversación.
+- **Enseñar a Nexa**: en el chat («si te preguntan horario de visitas, respondé de 9 a 12») o en ⚙ Configurar Nexa → Enseñar a Nexa (agregar, ver, borrar, guardar y cargar un archivo `.json`). Lo enseñado se usa en los dos modos y queda solo en el teléfono. Trae de base respuestas sobre cómo usar la app.

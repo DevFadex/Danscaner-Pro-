@@ -1023,7 +1023,7 @@ const b=openSheet('Ajustes','<div class="set-list">'+setRow('sDesign','palette',
 +acc('🌓','Apariencia y nombres','Tema y nombre de los documentos',opt('<i data-ico="theme">🌓</i> Tema',sel('sTheme',[['system','Automático (según el teléfono)'],['light','Claro'],['dark','Oscuro']]))+opt('Plantilla de nombre por defecto',sel('sTpl',NAME_TEMPLATES.map(t=>[t,t]))))
 +acc('📄','PDF y texto (OCR)','Hoja, calidad, márgenes e idioma',opt('Idioma OCR',sel('sLang',[['spa','Español'],['eng','Inglés'],['spa+eng','Español + Inglés'],['por','Portugués']]))+'<div class="row">'+opt('Hoja PDF por defecto',sel('sSize',[['a4','A4'],['oficio','Oficio'],['carta','Carta'],['original','Tamaño imagen']]))+opt('Calidad PDF',sel('sQ',Object.entries(QUAL).map(([k,v])=>[k,v.label])))+'</div>'+opt('Márgenes por defecto (mm)','<input type="number" id="sMargin" min="0" max="40">'))
 +acc('🗄️','Datos del dispositivo',est||'Documentos guardados en este navegador','<p class="muted">'+est+'</p><button class="btn red block" id="sWipe">🗑 Borrar todos los documentos</button>')
-+'<p class="muted set-foot">Danscanner Pro · versión 44 · funciona en celular y PC · los documentos se guardan en este navegador.</p>');$('.sTpl',b).value=S.nameTemplate;$('.sFilter',b).value=S.filter;$('.sMax',b).value=String(S.maxCap);$('#sAuto').checked=S.autoCrop;$('#sAutoCap').checked=S.autoCapture;$('#sHd').checked=S.hd;$('#sDeskew').checked=S.deskew!==false;$('#sPrintBW').checked=S.printBW!==false;$('#sPro').checked=S.proFilters!==false;$('#sNative').checked=!!S.camNative;$('.sTheme',b).value=S.theme||'system';$('.sLang',b).value=S.lang;$('.sSize',b).value=S.size;$('.sQ',b).value=S.quality;$('#sMargin').value=S.margin;b.onchange=()=>{S.nameTemplate=$('.sTpl',b).value;S.filter=$('.sFilter',b).value;S.maxCap=+$('.sMax',b).value;S.autoCrop=$('#sAuto').checked;S.camNative=$('#sNative').checked;if(($('.sTheme',b).value)!==(S.theme||'system'))cambiarTema($('.sTheme',b).value);S.autoCapture=$('#sAutoCap').checked;S.hd=$('#sHd').checked;S.deskew=$('#sDeskew').checked;if((S.printBW!==false)!==$('#sPrintBW').checked){S.printBW=$('#sPrintBW').checked;if(FW.w){try{FW.w.terminate()}catch(e){}FW.w=null;FW.ok=null}}if((S.proFilters!==false)!==$('#sPro').checked){S.proFilters=$('#sPro').checked;useProFilters(S.proFilters)}S.lang=$('.sLang',b).value;S.size=$('.sSize',b).value;S.quality=$('.sQ',b).value;S.margin=+$('#sMargin').value||0;saveS();toast('Guardado')};$('#sDesign').onclick=async()=>{await Nav.back();designSheet()};$('#sAI').onclick=async()=>{await Nav.back();aiSheet()};$('#sSec').onclick=async()=>{await Nav.back();securitySheet()};$('#sSpace').onclick=async()=>{await Nav.back();storageSheet()};$('#sAbout').onclick=async()=>{await Nav.back();aboutSheet()};$('#sWipe').onclick=async()=>{if(!confirm('¿Borrar TODOS los documentos guardados?'))return;for(const m of await DB.metas())await DB.delDoc(m.id);refreshLists();toast('Documentos borrados')}}
++'<p class="muted set-foot">Danscanner Pro · versión 45 · funciona en celular y PC · los documentos se guardan en este navegador.</p>');$('.sTpl',b).value=S.nameTemplate;$('.sFilter',b).value=S.filter;$('.sMax',b).value=String(S.maxCap);$('#sAuto').checked=S.autoCrop;$('#sAutoCap').checked=S.autoCapture;$('#sHd').checked=S.hd;$('#sDeskew').checked=S.deskew!==false;$('#sPrintBW').checked=S.printBW!==false;$('#sPro').checked=S.proFilters!==false;$('#sNative').checked=!!S.camNative;$('.sTheme',b).value=S.theme||'system';$('.sLang',b).value=S.lang;$('.sSize',b).value=S.size;$('.sQ',b).value=S.quality;$('#sMargin').value=S.margin;b.onchange=()=>{S.nameTemplate=$('.sTpl',b).value;S.filter=$('.sFilter',b).value;S.maxCap=+$('.sMax',b).value;S.autoCrop=$('#sAuto').checked;S.camNative=$('#sNative').checked;if(($('.sTheme',b).value)!==(S.theme||'system'))cambiarTema($('.sTheme',b).value);S.autoCapture=$('#sAutoCap').checked;S.hd=$('#sHd').checked;S.deskew=$('#sDeskew').checked;if((S.printBW!==false)!==$('#sPrintBW').checked){S.printBW=$('#sPrintBW').checked;if(FW.w){try{FW.w.terminate()}catch(e){}FW.w=null;FW.ok=null}}if((S.proFilters!==false)!==$('#sPro').checked){S.proFilters=$('#sPro').checked;useProFilters(S.proFilters)}S.lang=$('.sLang',b).value;S.size=$('.sSize',b).value;S.quality=$('.sQ',b).value;S.margin=+$('#sMargin').value||0;saveS();toast('Guardado')};$('#sDesign').onclick=async()=>{await Nav.back();designSheet()};$('#sAI').onclick=async()=>{await Nav.back();aiSheet()};$('#sSec').onclick=async()=>{await Nav.back();securitySheet()};$('#sSpace').onclick=async()=>{await Nav.back();storageSheet()};$('#sAbout').onclick=async()=>{await Nav.back();aboutSheet()};$('#sWipe').onclick=async()=>{if(!confirm('¿Borrar TODOS los documentos guardados?'))return;for(const m of await DB.metas())await DB.delDoc(m.id);refreshLists();toast('Documentos borrados')}}
 $('#btnSettings').onclick=()=>settingsSheet();$('#navSettings').onclick=()=>settingsSheet();
 function go(v){$$('.view').forEach(x=>x.classList.toggle('active',x.id==='v-'+v));$$('.nav [data-go]').forEach(b=>b.classList.toggle('on',b.dataset.go===v));$('#topTitle').textContent={home:'Danscanner Pro',docs:'Documentos',tools:'Herramientas',nexa:'Nexa IA'}[v];window.scrollTo(0,0)}
 async function doAction(a){if(a==='cam-single')Cam.open('single');else if(a==='cam-batch')Cam.open('batch');else if(a==='import-img')$('#inImg').click();else if(a==='import-any')$('#inAny').click()}
@@ -2735,7 +2735,7 @@ const NexaBasic={
  async answer(q,docs){const n=nbNorm(q);const withText=docs.filter(d=>(d.text||'').trim().length>40);
   const wantSearch=/\b(busc\w*|encontr\w*|donde|que documentos?|cuales documentos?|menciona\w*|aparece\w*)\b/.test(n);
   if(wantSearch||!docs.length){const qm=q.match(/["“«](.+?)["”»]/);let term=qm?qm[1]:(()=>{const mm=/^.*?\b(?:busc\w*|encontr\w*|donde\s+(?:aparece|esta|figura|dice)\w*|que documentos?\s+\w+|cuales documentos?\s+\w+|menciona\w*|aparece\w*)\b\s*(?:(?:a|al|el|la|los|las|de|del|sobre|en|mis|documentos?)\s+)*/.exec(n);let t=mm?q.slice(mm[0].length):q;return t.replace(/\s*\b(en|de)\s+(mis|los|todos los)?\s*documentos?\b.*$/i,'').replace(/[¿?¡!.]+/g,'').trim()||q})();
-   if(!wantSearch&&!docs.length&&term.split(/\s+/).length>6)return '👋 Soy **Nexa básico**: funciono sin internet y sin costo.\n\nPara trabajar con un documento, adjuntalo con 📎 y pedime:\n- **Resumir** el documento\n- **Extraer datos**: personas, DNI, CUIL, expedientes, fechas y montos\n- **Corregir OCR**: ordeno el texto escaneado\n- **Buscar** en todos tus documentos (ej.: *buscá "Pérez"*)\n\nPara preguntas abiertas o redactar notas, activá **Nexa local** en ⚙ Configurar IA (también gratis).';
+   if(!wantSearch&&!docs.length&&term.split(/\s+/).length>6)return '👋 Soy **Nexa sin internet**: funciono sin conexión y sin costo.\n\nPara trabajar con un documento, adjuntalo con 📎 y pedime:\n- **Resumir** el documento\n- **Extraer datos**: personas, DNI, CUIL, expedientes, fechas y montos\n- **Corregir OCR**: ordeno el texto escaneado\n- **Buscar** en todos tus documentos (ej.: *buscá "Pérez"*)\n\nPara preguntas abiertas o redactar notas, pasá a **Nexa con internet** (gratis) desde el menú de arriba.';
    const r=await nbSearch(term);if(!r.length)return 'No encontré **'+esc(term)+'** en tus documentos guardados.\n\n*La búsqueda usa el texto extraído (OCR) de cada documento: si un escaneo todavía no tiene texto, adjuntalo con 📎 y lo leo.*';
    return '🔎 Encontré **'+r.length+'** documento(s) con **'+esc(term)+'**:\n\n'+r.map(x=>'- **'+x.m.name+'** — '+(x.snip?'…'+x.snip+'…':'(coincide el nombre)')).join('\n')+'\n\n*Para trabajar con uno, adjuntalo con 📎.*'}
   if(!withText.length)return 'No pude leer texto en los documentos adjuntos. Probá adjuntarlos de nuevo o usar **Extraer texto** en Herramientas.';
@@ -2744,7 +2744,7 @@ const NexaBasic={
   if(/correg|ocr|ortograf|limpi|prolij|ordena/.test(n))return per(t=>nbClean(t).slice(0,6000))+'\n\n*Texto ordenado: uní palabras cortadas, saqué espacios y saltos de línea sobrantes.*';
   const cats=[];if(/\bdni\b|documento/.test(n))cats.push('dni');if(/cuil|cuit/.test(n))cats.push('cuil');if(/fecha|plazo|venc|dia|cuando/.test(n))cats.push('fechas');if(/expte|expediente|causa|legajo|actuacion/.test(n))cats.push('expedientes');if(/monto|importe|pesos|\$|dinero|plata/.test(n))cats.push('montos');if(/persona|nombre|quien|interno|imputad|juez|fiscal/.test(n))cats.push('personas');if(/telefono|celular|contacto/.test(n))cats.push('telefonos');if(/mail|correo/.test(n))cats.push('emails');
   if(/\bdatos\b|\btodo|\blista/.test(n))cats.length=0;if(cats.length||/dato|extrae|extraer|lista/.test(n))return per(t=>nbEntitiesMd(nbEntities(t),cats));
-  return per(t=>nbEntitiesMd(nbEntities(t))+'\n\n**Resumen:**\n'+nbSummary(t,3).map(x=>'- '+x).join('\n'))+'\n\n*Soy Nexa básico: extraigo datos y resumo. Para preguntas abiertas o redactar notas, activá **Nexa local** en ⚙ Configurar IA (gratis).*'}};
+  return per(t=>nbEntitiesMd(nbEntities(t))+'\n\n**Resumen:**\n'+nbSummary(t,3).map(x=>'- '+x).join('\n'))+'\n\n*Nexa sin internet: extraigo datos y resumo al instante. Para preguntas abiertas o redactar notas, pasá a **Nexa con internet** (gratis) desde el menú de arriba.*'}};
 
 /* ---------- Nivel 2: IA local con WebLLM (WebGPU) ---------- */
 const WEBLLM_URL='libs/web-llm-0.2.85.js';
@@ -2773,7 +2773,7 @@ const NexaLocal={engine:null,loading:null,lib:null,prog:null,listeners:new Set()
 
 /* ---------- Nexa: modos gratis por defecto ---------- */
 const isCloud=p=>!!AI_PROV[p];
-const provName=p=>AI_PROV[p]?AI_PROV[p].n:p==='local'?'Local en el teléfono':p==='basic'?'Básico sin IA':'';
+const provName=p=>AI_PROV[p]?'Con internet · '+AI_PROV[p].n:p==='local'?'Sin internet · IA del teléfono':p==='basic'?'Sin internet':'';
 Object.assign(Nexa,{
  prov(){const p=this.st.prov;if(p==='auto')return NexaLocal.ready()?'local':'basic';return p},
  status(){if(!this.el)return;$('#nxProvL').textContent=this.provLabel();const p=this.prov();let h;
@@ -3425,7 +3425,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 3.5',APP_VER='44';
+const NEXA_VER='Nexa 4',APP_VER='45';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3486,7 +3486,7 @@ const NX_CAPS=[['Consultar tus documentos','Resumí el documento adjunto','resum
  ['Respaldo','Hacé un respaldo','guarda una copia de todos tus documentos']];
 const chip=(label,prompt)=>'[['+label+'|'+prompt+']]';
 function nexaSmallTalk(text){const n=nbNorm(text).replace(/[¿?¡!.,]/g,' ').replace(/\s+/g,' ').trim();if(!n||n.length>90)return null;
- const mode=()=>{const p=Nexa.prov();return p==='basic'?'Nexa básico (gratis, sin internet)':p==='local'?'Nexa local (IA en tu teléfono)':(AI_PROV[p]?AI_PROV[p].n+' con tu clave':p)};
+ const mode=()=>{const p=Nexa.prov();return p==='basic'?'Nexa sin internet (modo rápido)':p==='local'?'Nexa sin internet (IA del teléfono)':(AI_PROV[p]?AI_PROV[p].n+' con tu clave':p)};
  const caps='**Puedo ayudarte con:**\n'+NX_CAPS.map(([a,,d])=>'- **'+a+'**: '+d).join('\n')+'\n\n'+NX_CAPS.slice(0,7).map(([a,p])=>chip(a,p)).join(' ');
  if(/\b(como te llamas|cual es tu nombre|tu nombre|quien sos|quien eres|que sos|que eres|presentate)\b/.test(n)||/\bque version\b|\bversion\b/.test(n))
   return '**Soy Nexa IA**, la asistente de documentos de Danscanner Pro.\n\n- **Versión:** '+NEXA_VER+' · Danscanner Pro versión '+APP_VER+'\n- **Modo actual:** '+mode()+'\n- **Privacidad:** tus documentos no salen del teléfono (salvo que elijas una IA en la nube con tu clave).\n\n'+chip('¿Qué podés hacer?','¿Qué podés hacer?')+' '+chip('Configurar Nexa','__config');
@@ -3511,7 +3511,7 @@ document.addEventListener('click',async e=>{const c=e.target.closest('.nx-q[data
 {const _run=Nexa.run;Nexa.run=async function(prov,payload,hist,o){try{return await _run.apply(this,arguments)}catch(e){
   if(prov!=='local'||e.name==='AbortError')throw e;const why=/maxComputeWorkgroupStorageSize|WebGPU|adapter|device/i.test(e.message)?'Nexa local no es compatible con este teléfono':'Nexa local no pudo responder';
   if(/maxComputeWorkgroupStorageSize/.test(e.message)){const c=NexaLocal.cfg();c.unsupported=true;c.downloaded=false;if(this.st.prov==='local')this.st.prov='auto';saveS();this.save()}
-  const out=await _run.call(this,'basic',payload,hist,o);return '*'+why+'; te respondo con Nexa básico.*\n\n'+out}}}
+  const out=await _run.call(this,'basic',payload,hist,o);return '*'+why+'; te respondo en modo rápido.*\n\n'+out}}}
 /* auto: si Nexa local no es compatible, usa básico */
 {const _p=Nexa.prov;Nexa.prov=function(){const p=_p.apply(this,arguments);return p==='local'&&NexaLocal.cfg().unsupported?'basic':p}}
 /* básico: cuando un adjunto no tiene texto, lo dice claro y ofrece opciones */
@@ -3543,7 +3543,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='44 · 25/09/2026';
+const BUILD='45 · 25/09/2026';
 /* Botón Nexa arriba: se crea siempre, aunque otra parte de Nexa falle (antes, un error dejaba teléfonos sin el botón) */
 function ensureNexaTop(){const top=$('.top'),bs=$('#btnSettings');if(!top||!bs||$('#btnNexa'))return;const b=document.createElement('button');b.className='ib nx-top';b.id='btnNexa';b.dataset.go='nexa';b.title='Nexa IA';b.setAttribute('aria-label','Nexa IA');b.innerHTML='<i data-ico="nexa"></i><span>Nexa</span>';top.insertBefore(b,bs);iconize(b);const n=$('.nav [data-go="nexa"]');if(n)n.remove()}
 ensureNexaTop();addEventListener('load',ensureNexaTop);
@@ -3616,7 +3616,7 @@ const NexaCPU={w:null,loading:null,
   if(!isCloud(prov)||e.name==='AbortError')throw e;const quota=/429|quota|exhaust|rate|limit/i.test(e.message);
   if(prov==='gemini'&&quota){const a=AI();const cur=(a.models||{}).gemini||AI_PROV.gemini.m;if(cur!=='gemini-2.5-flash-lite'){a.models.gemini='gemini-2.5-flash-lite';saveS();try{return await _run.apply(this,arguments)}catch(e2){}}}
   if(!quota&&!/Failed to fetch|NetworkError|network/i.test(e.message))throw e;
-  const out=await _run.call(this,'basic',payload,hist,o);return '*'+(quota?'Se alcanzó el tope gratis de hoy':'Sin conexión a internet')+'; te respondo con Nexa básico.*\n\n'+out}}}
+  const out=await _run.call(this,'basic',payload,hist,o);return '*'+(quota?'Se alcanzó el tope gratis de hoy':'Sin conexión a internet')+'; te respondo sin internet.*\n\n'+out}}}
 document.head.insertAdjacentHTML('beforeend','<style id="v28Css">.nl-cpu{margin:8px 0 4px;padding:9px 11px;border-radius:10px;background:var(--soft,#e0f2fe);font-size:13px;line-height:1.45}.nl-cpu .ico{width:15px;height:15px;vertical-align:-3px}.nl-steps{margin:8px 0 10px 18px;font-size:13px;line-height:1.6}#nlFree .row{gap:8px}#nlFree input{flex:1;min-width:0}</style>');
 
 /* ===================== v30: Nexa moderna, cordial y con Gemini que elige su modelo solo ===================== */
@@ -4307,7 +4307,7 @@ function nxLocalLive(){try{return !!(NexaLocal.engine||(typeof NexaCPU!=='undefi
  if(!live&&dl)setTimeout(()=>{try{NexaLocal.load().catch(()=>{})}catch(e){}},30);
  try{await _ask.apply(this,arguments)}finally{this.st.prov=was}
  const last=this.st.msgs[this.st.msgs.length-1];if(this.st.msgs.length>n&&last&&last.role==='assistant'&&!greet){
-  last.text+=dl?'\n\n*Respuesta rápida mientras Nexa local se termina de cargar en el teléfono. En unos segundos las próximas respuestas las da la IA local.*':'\n\n*Nexa local todavía no está descargada, así que respondí en modo básico.* [[Descargar Nexa local|__config]]';this.save()}
+  last.text+=dl?'\n\n*Respuesta rápida mientras la IA del teléfono se termina de cargar. En unos segundos las próximas respuestas las da la IA del teléfono.*':'\n\n*Respondí en modo rápido. Para respuestas más completas sin internet, descargá la IA del teléfono.* [[Descargar IA del teléfono|__config]]';this.save()}
  this.status();this.render()}}
 
 /* ===== Danscanner Pro v40: diseño para computadora (pantallas anchas). En el celular no cambia nada ===== */
@@ -4495,6 +4495,107 @@ PAPER_NAMES.cert='Certificado (centrado en A4)';PAGE_MM.cert=[210,297];
 new MutationObserver(()=>{const g=document.querySelector('[data-pp="a5"]');if(g&&!document.querySelector('[data-pp="cert"]')){const b=g.cloneNode(true);b.dataset.pp='cert';b.textContent='Certificado centrado en hoja A4';b.classList.toggle('on',!!(Ed.p&&Ed.p.paper==='cert'));g.before(b)}
  for(const sel of document.querySelectorAll('.sSize,#exSize'))if(sel.querySelector('option[value="a5"]')&&!sel.querySelector('option[value="cert"]')){const o=document.createElement('option');o.value='cert';o.textContent='Certificado centrado en hoja A4';sel.querySelector('option[value="a5"]').before(o);if(sel.classList.contains('sSize')&&S.size==='cert')sel.value='cert'}}).observe(document.body,{childList:true,subtree:true});
 {const _pl=paperLbl;paperLbl=function(){_pl();const l=$('#editor [data-ed="paper"] .pp-l');if(l&&Ed.p&&Ed.p.paper==='cert')l.textContent='Cert.'}}
+
+/* ===== Danscanner Pro v45: Nexa en dos modos (sin internet / con internet), detener siempre funciona y enseñarle a Nexa ===== */
+/* 1) dos modos: «sin internet» (IA del teléfono si está descargada, si no el modo rápido) y «con internet» (Gemini gratis o tu clave) */
+NEXA_PROVS.splice(0,NEXA_PROVS.length,['offline','Nexa sin internet'],['online','Nexa con internet'],['anthropic','Claude'],['gemini','Gemini'],['openai','ChatGPT']);
+const nxCloud=()=>{const a=AI();if(AI_PROV[a.prov]&&aiKeyFor(a.prov))return a.prov;return ['gemini','anthropic','openai'].find(k=>aiKeyFor(k))||null};
+const nxLocalOk=()=>{try{return NexaLocal.ready()&&!NexaLocal.cfg().unsupported}catch(e){return false}};
+/* conversaciones y ajustes viejos: auto / local / básico pasan a «sin internet»; Claude, Gemini o ChatGPT pasan a «con internet» */
+function nxMode(p){if(p==='offline'||p==='online')return p;if(AI_PROV[p]){const a=AI();if(aiKeyFor(p))a.prov=p;return 'online'}if(p==='auto'&&nxCloud())return 'online';return 'offline'}
+function nxMigrate(){let raw=null;try{raw=JSON.parse(localStorage.getItem('ds_nexa')||'{}').prov}catch(e){}const m=nxMode(raw||Nexa.st.prov||'auto');if(Nexa.st.prov!==m){Nexa.st.prov=m;Nexa.save()}}
+{const _l=Nexa.load;Nexa.load=function(){const r=_l.apply(this,arguments);nxMigrate();return r}}
+{const _pv=Nexa.prov;Nexa.prov=function(){let p=this.st.prov;if(p==='auto'){p=this.st.prov='offline'}
+ if(p==='online'&&navigator.onLine!==false){const c=nxCloud();if(c)return c}
+ if(p==='online'||p==='offline')return nxLocalOk()?'local':'basic';
+ return _pv.apply(this,arguments)}}
+Nexa.provLabel=function(){const p=this.st.prov;return p==='online'?'Nexa con internet':p==='offline'||p==='auto'?'Nexa sin internet':(NEXA_PROVS.find(x=>x[0]===p)||['','Nexa'])[1]};
+{const _s=Nexa.status;Nexa.status=function(){const m=this.st.prov;if(!this.el||(m!=='online'&&m!=='offline'))return _s.apply(this,arguments);$('#nxProvL').textContent=this.provLabel();const p=this.prov();let h;
+ if(m==='online'&&isCloud(p))h='<span class="nx-pill"><span class="nx-dot"></span> Con internet · '+esc(AI_PROV[p].n)+'</span>';
+ else if(m==='online'&&navigator.onLine===false)h='<span class="nx-pill warn">Sin conexión · respondo sin internet</span>';
+ else if(m==='online')h='<span class="nx-pill warn">Falta activar internet (gratis) · <a id="nxSetup"><b>Activar</b></a></span>';
+ else h='<span class="nx-pill"><span class="nx-dot"></span> Sin internet · '+(p==='local'?'IA del teléfono':'modo rápido')+'</span>'+(p==='local'?'':' <a class="nx-mini" id="nxSetup">Mejorar respuestas →</a>');
+ $('#nxStat').innerHTML=h;const s=$('#nxSetup');if(s)s.onclick=()=>nexaSheet()}}
+$('#nxProv').onclick=e=>{e.stopPropagation();const menu=$('#nxMenu');menu.hidden=!menu.hidden;if(menu.hidden)return;const cur=Nexa.st.prov,c=nxCloud();
+ menu.innerHTML='<button data-p="offline"><b>Nexa sin internet</b>'+(cur==='offline'?' ✓':'')+'<small>Gratis y privada: todo queda en tu teléfono.'+(nxLocalOk()?' Usa la IA del teléfono.':' Rápida para datos, resúmenes y búsquedas.')+'</small></button>'
+  +'<button data-p="online"><b>Nexa con internet</b>'+(cur==='online'?' ✓':'')+'<small>Más inteligente: '+(c?esc(AI_PROV[c].n):'Gemini gratis (hay que activarlo una vez)')+'. Sin conexión, responde sin internet.</small></button>'};
+$('#nxMenu').onclick=e=>{const b=e.target.closest('[data-p]');if(!b)return;const p=b.dataset.p;$('#nxMenu').hidden=true;Nexa.st.prov=p;Nexa.save();Nexa.status();
+ if(p==='online'&&!nxCloud()){toast('Activá Nexa con internet: es gratis');nexaSheet()}else toast(p==='online'?'Nexa con internet':'Nexa sin internet')};
+/* textos: un solo nombre para cada modo */
+{const _ns=nexaSheet;nexaSheet=async function(){const r=await _ns.apply(this,arguments);const b=$('#sheetBody');if(!b)return r;
+ const w=document.createTreeWalker(b,NodeFilter.SHOW_TEXT);const rep=[[/1 · Nexa básico/g,'Sin internet · modo rápido'],[/2 · Nexa local/g,'Sin internet · IA del teléfono (opcional)'],[/Nexa básico/g,'el modo rápido'],[/Nexa local/g,'la IA del teléfono'],[/3 · IA en la nube \(opcional\)/g,'Con internet · Claude o ChatGPT (opcional, con tu clave)']];
+ for(let n;n=w.nextNode();){let t=n.nodeValue,o=t;for(const [a,z] of rep)t=t.replace(a,z);if(t!==o)n.nodeValue=t}return r}}
+$('#nxProvL')&&Nexa.status();nxMigrate();Nexa.status();
+
+/* 2) detener: el botón ■ corta siempre, aunque Nexa esté leyendo el documento o preparando la IA */
+const NxRun={cur:null};
+{const _ask=Nexa.ask;Nexa.ask=async function(msg){if(this!==Nexa)return _ask.apply(this,arguments);
+ const tok={dead:false,msg,prov:this.st.prov,kill:[],t0:Date.now()};NxRun.cur=tok;let det=null;const loc={};
+ /* si se detiene, lo que siga haciendo en segundo plano ya no toca la conversación ni la pantalla */
+ const px=new Proxy(Nexa,{get(t,k){if(tok.dead){if(k==='st')return det||(det={...t.st,msgs:t.st.msgs.slice(),docs:t.st.docs.slice()});if(k in loc)return loc[k];if(k==='render'||k==='save'||k==='btn'||k==='status'||k==='renderDocs'||k==='say')return ()=>{}}return Reflect.get(t,k,px)},
+  set(t,k,v){if(tok.dead){loc[k]=v;return true}return Reflect.set(t,k,v)}});
+ try{return await _ask.call(px,msg)}finally{if(NxRun.cur===tok)NxRun.cur=null;else if(tok.dead&&NxRun.cur){try{NxUI.t0=NxRun.cur.t0;if(!NxUI.tm)NxUI.tm=setInterval(()=>NxUI.tick(),1000)}catch(e){}}}}}
+Nexa.cancel=function(){const tok=NxRun.cur;if(!tok)return;
+ const streaming=this.ctrl&&!$('#nxLog .nx-typing');try{this.ctrl&&this.ctrl.abort()}catch(e){}
+ if(streaming){setTimeout(()=>{if(NxRun.cur===tok)this.cancel()},1500);if(!tok.soft){tok.soft=1;return}}
+ tok.dead=true;NxRun.cur=null;tok.kill.forEach(f=>{try{f()}catch(e){}});
+ this.ctrl=null;this.sending=false;this.lastErr='';this.st.prov=tok.prov;
+ const i=this.st.msgs.lastIndexOf(tok.msg);if(i>=0)this.st.msgs.splice(i);const inp=$('#nxIn');if(inp&&!inp.value.trim()&&tok.msg){inp.value=tok.msg.text||'';inp.oninput&&inp.oninput()}
+ try{NxUI.stop()}catch(e){}try{busy(false)}catch(e){}this.save();this.btn();this.render();toast('Detenido')};
+$('#nxSend').onclick=()=>{if(Nexa.sending){Nexa.cancel();return}Nexa.send()};
+/* leer un documento escaneado sin texto: avisa página por página y se puede detener al instante */
+Nexa.ensureText=async function(){const tok=NxRun.cur,vis=this.st.docs.filter(x=>x.vis);if(!vis.length)return;
+ this.say('Preparando la lectura del documento…');await loadLib('tess');let w=null;const kill=()=>{const x=w;w=null;try{x&&x.terminate()}catch(e){}};if(tok)tok.kill.push(kill);
+ try{for(const d of vis){const doc=await DB.getDoc(d.id);if(!doc||!doc.pages.length)continue;const n=Math.min(10,doc.pages.length),texts=[];
+  for(let i=0;i<n;i++){if(tok&&tok.dead)return;this.say('Leyendo «'+d.name+'» · página '+(i+1)+' de '+n+'…');
+   if(!w){w=await Tesseract.createWorker(S.lang,1);try{await w.setParameters({preserve_interword_spaces:'1',tessedit_pageseg_mode:'3',user_defined_dpi:'300'})}catch(e){}}
+   const prep=prepOcr(await renderPage(doc.pages[i],{maxSide:2200}));if(tok&&tok.dead)return;let r;try{r=await w.recognize(prep,{},{text:true,blocks:true})}catch(e){if(!w||(tok&&tok.dead))return;r=await w.recognize(prep)}texts.push(ocrLayout(r.data))}
+  const t=texts.join('\n\n').trim();doc.text=t.slice(0,20000);try{await DB.putDoc(doc)}catch(e){}d.text=t.slice(0,20000);d.vis=t.length<=40}}
+ finally{kill()}this.save();this.renderDocs()};
+/* sin internet: sacar datos de un documento lo hace el modo rápido (al instante), aunque esté la IA del teléfono */
+{const _run=Nexa.run;Nexa.run=async function(prov,payload,hist,o){if(prov==='local'&&this.st.docs.length){const q=nbNorm(lastUserText(hist||[]));if(/\b(extra\w*|saca\w*|dato\w*|informacion|dni|cuil|expediente\w*|fechas?|montos?|nombres?|personas?)\b/.test(q)&&!/redact|nota|escrib|explic/.test(q))return _run.call(this,'basic',payload,hist,o)}return _run.apply(this,arguments)}}
+
+/* 3) enseñarle a Nexa: lo que le enseñás lo usa en los dos modos y queda en este teléfono */
+function nxTeach(q,a){q=String(q).trim().replace(/[¿?]+/g,'').slice(0,300);a=String(a).trim().slice(0,3000);if(q.length<3||a.length<2)return null;const all=NexaKB.all();
+ const same=all.find(e=>NexaKB.sim(e.q,q)>.85);if(same){Object.assign(same,{a,t:Date.now(),src:'vos',good:true});NexaKB.save();return same}
+ const e={id:uid(),q,a,t:Date.now(),src:'vos',good:true,hits:0};all.unshift(e);NexaKB.save();return e}
+{const _ask=Nexa.ask;Nexa.ask=async function(msg){const m=String(msg&&msg.text||'').match(/^\s*(?:si|cuando)\s+(?:te\s+)?pregunt[\wáéíóú]*\s+(?:por\s+|sobre\s+|que\s+)?["“«]?(.+?)["”»]?\s*[,;:]\s*(?:respond[\wáéíóú]*|contest[\wáéíóú]*|dec[íi][\wáéíóú]*)(?:\s+que)?\s+(.+)$/i)||String(msg&&msg.text||'').match(/^\s*aprend[\wáéíóú]*\s+(?:que\s+)?(.+?)\s*(?:=|:|\bes\b)\s*(.+)$/i);
+ if(m&&nxTeach(m[1],m[2])){this.st.msgs.push({role:'assistant',text:'¡Aprendido! Cuando me pregunten **'+esc(m[1].trim())+'** voy a responder eso, con o sin internet.\n\n'+chip('Ver lo que aprendí','__config'),prov:'basic'});this.save();this.render();return}
+ return _ask.apply(this,arguments)}}
+/* la IA con internet también usa lo que le enseñaste */
+{const _s=Nexa.system;Nexa.system=function(){const r=_s.apply(this,arguments);const t=NexaKB.all().filter(e=>e.src==='vos'||e.src==='Danscanner').slice(0,40);
+ return t.length?r+'\n\nCONOCIMIENTO ENSEÑADO POR EL USUARIO (tiene prioridad; usalo cuando corresponda):\n'+t.map(e=>'- '+e.q+' → '+e.a.slice(0,400)).join('\n'):r}}
+/* lo enseñado se reconoce aunque haya un documento adjunto, si la pregunta no es sobre el documento */
+{const _a=NexaBasic.answer;NexaBasic.answer=async function(q,docs){const n=nbNorm(q);if((docs||[]).length&&!/document|adjunt|archivo|acta|escrito|resum|extra|dato|corrig|correg|busc/.test(n)){const f=NexaKB.find(q,.7);if(f&&(f.e.src==='vos'||f.e.src==='Danscanner')){f.e.hits++;NexaKB.save();return f.e.a}}return _a.apply(this,arguments)}}
+/* conocimiento de base sobre la app (no incluye datos de personas) */
+const NX_SEED=[
+ ['cómo escaneo un documento','Tocá **Escanear**, apuntá a la hoja y sacá la foto: la app detecta los bordes, la endereza y la deja en blanco y negro. Con **Lote** sacás varias hojas seguidas.'],
+ ['cómo escaneo un certificado médico','En la cámara elegí **Certificado**: sale en su tamaño real, centrado en una hoja A4 blanca.'],
+ ['me equivoqué de foto en la cámara cómo la borro','Con una sola foto aparece **Repetir / Agregar más / Listo**. En modo lote usá **Borrar última**.'],
+ ['cómo cambio el tamaño de la hoja','En el editor tocá **Hoja** y elegí A4, oficio, carta, certificado o tamaño de la foto. Podés aplicarlo a todas las páginas.'],
+ ['cómo corrijo una palabra mal escrita en un documento','En el editor tocá **Corregir**, marcá la palabra, escribí la correcta y aplicá: usa la misma letra y tamaño del documento.'],
+ ['cómo edito un pdf','En Herramientas abrí **Editar PDF**, elegí el archivo, entrá a la página y usá **Corregir** para borrar y escribir encima. Con los botones + y − hacés zoom.'],
+ ['cómo saco el texto de un documento','Abrí el documento y usá **Extraer texto (OCR)**: funciona sin internet.'],
+ ['la app funciona sin internet','Sí: escanear, recortar, filtros, PDF, OCR y **Nexa sin internet** funcionan sin conexión. Solo necesitan internet **Nexa con internet** y el traductor.'],
+ ['qué diferencia hay entre nexa sin internet y con internet','**Sin internet**: gratis y privada, todo queda en el teléfono; saca datos, resume y busca al instante. **Con internet**: más inteligente para redactar y responder preguntas abiertas (Gemini gratis o tu clave). Si no hay conexión, responde sin internet.'],
+ ['cómo le enseño algo a nexa','Escribime por ejemplo: **si te preguntan horario de visitas, respondé de 9 a 12**. También podés cargar respuestas en ⚙ Configurar Nexa → **Enseñar a Nexa**.']];
+(function(){if(S.nxSeed45)return;const all=NexaKB.all();for(const [q,a] of NX_SEED)if(!all.some(e=>NexaKB.sim(e.q,q)>.85))all.push({id:uid(),q,a,t:Date.now(),src:'Danscanner',good:true,hits:0});NexaKB.save();S.nxSeed45=true;try{saveS()}catch(e){}})();
+/* ⚙ Configurar Nexa → Enseñar a Nexa: agregar, ver, borrar, guardar en archivo y cargar desde archivo */
+{const _ns=nexaSheet;nexaSheet=async function(){const r=await _ns.apply(this,arguments);const b=$('#sheetBody');if(!b||b.querySelector('#nlTeach'))return r;const mine=NexaKB.all().filter(e=>e.src==='vos').length,tot=NexaKB.all().length;
+ const card='<div class="nl-card" id="nlTeach"><b>Enseñar a Nexa</b> <span class="nl-ok">'+tot+' respuesta(s)</span><small>Cargá preguntas y respuestas (horarios, pasos de un trámite, datos de la oficina). Nexa las usa con o sin internet. Quedan solo en este teléfono'+(mine?' · '+mine+' cargada(s) por vos':'')+'.</small>'
+  +'<input id="ntQ" placeholder="Pregunta (ej.: horario de visitas)"><textarea id="ntA" rows="2" placeholder="Respuesta de Nexa"></textarea>'
+  +'<div class="row"><button class="btn pri" id="ntAdd">Enseñar</button><button class="btn" id="ntSee">Ver</button><button class="btn" id="ntExp">Guardar archivo</button><button class="btn" id="ntImp">Cargar archivo</button></div><input type="file" id="ntFile" accept=".json,application/json" hidden><div id="ntList" hidden></div></div>';
+ const mem=b.querySelector('#nlMem');if(mem)mem.insertAdjacentHTML('afterend',card);else b.insertAdjacentHTML('afterbegin',card);
+ const list=()=>{const L=$('#ntList');L.hidden=false;const all=NexaKB.all();L.innerHTML=all.length?all.map(e=>'<div class="nt-row"><span><b>'+esc(e.q)+'</b><small>'+esc(NexaKB.clean(e.a).slice(0,140))+'</small></span><button data-ntdel="'+esc(e.id)+'" aria-label="Borrar">✕</button></div>').join(''):'<p class="muted">Todavía no aprendió nada.</p>'};
+ $('#ntAdd').onclick=()=>{const q=$('#ntQ').value,a=$('#ntA').value;if(!nxTeach(q,a))return toast('Escribí la pregunta y la respuesta');$('#ntQ').value=$('#ntA').value='';toast('✅ Nexa lo aprendió');list()};
+ $('#ntSee').onclick=list;
+ $('#ntList').onclick=e=>{const x=e.target.closest('[data-ntdel]');if(!x)return;NexaKB.d=NexaKB.all().filter(z=>z.id!==x.dataset.ntdel);NexaKB.save();list()};
+ $('#ntExp').onclick=()=>{const blob=new Blob([JSON.stringify({app:'Danscanner Pro',tipo:'nexa-conocimiento',v:1,items:NexaKB.all().map(({q,a,src,good})=>({q,a,src,good}))},null,1)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Nexa_conocimiento.json';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)};
+ $('#ntImp').onclick=()=>$('#ntFile').click();
+ $('#ntFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const j=JSON.parse(await f.text());const items=Array.isArray(j)?j:j.items;if(!Array.isArray(items))throw 0;let n=0;for(const it of items)if(it&&typeof it.q==='string'&&typeof it.a==='string'&&nxTeach(it.q,it.a))n++;toast('✅ Nexa aprendió '+n+' respuesta(s)');list()}catch(x){toast('⚠️ Ese archivo no es de Nexa')}e.target.value=''};
+ return r}}
+document.head.insertAdjacentHTML('beforeend','<style id="v45Css">.nx-menu{min-width:250px;max-width:min(320px,86vw)}.nx-menu button small{display:block;margin-top:2px;font-size:12px;line-height:1.35;white-space:normal}'
+ +'#nlTeach input,#nlTeach textarea{width:100%;box-sizing:border-box;margin-top:8px}#nlTeach .row{flex-wrap:wrap;gap:6px;margin-top:8px}#ntList{margin-top:8px;max-height:260px;overflow:auto}.nt-row{display:flex;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)}.nt-row span{flex:1;min-width:0;display:flex;flex-direction:column}.nt-row small{color:var(--tx2);font-size:12px}.nt-row button{width:34px;height:34px;flex:none}</style>');
 </script>
 </body>
 </html>
