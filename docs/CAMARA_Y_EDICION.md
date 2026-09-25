@@ -244,3 +244,10 @@ En el editor, **Corregir** permite arreglar una palabra mal escrita de la hoja e
 - En modo **Nexa local**, los saludos («hola», «gracias», «¿qué podés hacer?») se responden al instante con el modo básico.
 - Si el modelo todavía no está cargado en la memoria del teléfono, la pregunta la responde el modo básico con un aviso, y el modelo se carga en segundo plano. Las siguientes preguntas ya las responde la IA local.
 - Si el modelo no está descargado, responde en modo básico y ofrece «Descargar Nexa local».
+
+## v40 · Diseño para computadora
+
+- En pantallas de 1024 px o más aparece un **menú lateral** a la izquierda (marca, botón «Escanear», Inicio, Documentos, Herramientas, Ajustes) en lugar de la barra de abajo. El contenido usa todo el ancho, hasta 1560 px.
+- Las grillas se adaptan: herramientas en columnas automáticas y botones del inicio más grandes.
+- Nexa queda al lado del menú, más ancha (980 px), y ajusta su alto sin la barra de abajo.
+- Todo está dentro de `@media (min-width:1024px)`: **en el celular no cambia nada**.
