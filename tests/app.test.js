@@ -482,6 +482,32 @@ await test('Revisión: OCR sin internet (incluido en la app) y Firmar PDF usa el
   assert.equal(await pg.evaluate(()=>{let m='';const t=$('#toast');toast('Uncaught NetworkError: Failed to execute importScripts');m=t.textContent;return /Sin conexión/.test(m)}),true);
 });
 
+await test('Análisis del documento: formato, perspectiva, luz, sombras, nitidez y OCR, sin internet y sin modificar nada',async pg=>{
+  const ids=await pg.evaluate(async()=>{
+    const mkPage=blur=>{const c=document.createElement('canvas');c.width=1240;c.height=1754;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.fillStyle='#111';x.font='26px Times New Roman';
+      for(let y=160;y<1650;y+=39)x.fillText('Por la presente se informa al Juzgado que el interno solicita audiencia conforme',120,y);
+      if(!blur)return c;const d=document.createElement('canvas');d.width=c.width;d.height=c.height;const dx=d.getContext('2d');dx.filter='blur('+blur+'px)';dx.drawImage(c,0,0);return d};
+    const photo=(pc,shadow)=>{const c=document.createElement('canvas');c.width=1600;c.height=2100;const x=c.getContext('2d');x.fillStyle='#4a3a2c';x.fillRect(0,0,c.width,c.height);const s=Math.min(1280/pc.width,1785/pc.height);
+      x.drawImage(pc,(c.width-pc.width*s)/2,(c.height-pc.height*s)/2,pc.width*s,pc.height*s);if(shadow){x.fillStyle='rgba(0,0,0,.55)';x.beginPath();x.ellipse(1100,1550,480,420,.4,0,7);x.fill()}return c.toDataURL('image/jpeg',.9)};
+    const save=async(name,src)=>{const d=newDoc();d.name=name;d.pages.push(await makePage(src));await DB.putDoc(d);return d.id};
+    return [await save('Nítido',photo(mkPage(0))),await save('Movido',photo(mkPage(2.5))),await save('Con sombra',photo(mkPage(0),true))]});
+  await pg.click('#btnNexa');await W(300);
+  await pg.fill('#nxIn','analizá el documento');await pg.press('#nxIn','Enter');await W(400);
+  assert.match(await pg.evaluate(()=>Nexa.st.msgs.at(-1).text),/adjuntalo/);
+  const ask=async id=>{await pg.evaluate(async id=>{Nexa.attachDoc(await DB.getDoc(id))},id);const before=await pg.evaluate(async id=>JSON.stringify((await DB.getDoc(id)).pages),id);
+    await pg.fill('#nxIn','analizá la calidad del documento');await pg.press('#nxIn','Enter');await pg.waitForFunction(()=>!Nexa.sending&&/ANÁLISIS/.test((Nexa.st.msgs.at(-1)||{}).text||''),null,{timeout:20000});
+    assert.equal(await pg.evaluate(async id=>JSON.stringify((await DB.getDoc(id)).pages),id),before,'el análisis modificó el documento');
+    const t=await pg.evaluate(()=>Nexa.st.msgs.at(-1).text);await pg.evaluate(()=>{Nexa.st.docs=[];Nexa.save();Nexa.renderDocs()});return t};
+  const a=await ask(ids[0]);for(const k of ['Documento:** Sí','Formato aprox.:** A4','Perspectiva:** Buena','Iluminación:** Uniforme','Sombras:** Ninguna','Nitidez:** Alta','Texto detectable:** Sí','Calidad estimada OCR:** Alta','RECOMENDACIONES','sin internet'])assert.ok(a.includes(k),'nítido: falta '+k+'\n'+a);
+  const b=await ask(ids[1]);assert.ok(b.includes('Nitidez:** Baja')&&b.includes('Calidad estimada OCR:** Baja')&&/movida o desenfocada/.test(b),b);
+  const c=await ask(ids[2]);assert.ok(/Sombras:\*\* (Intensas|Moderadas)/.test(c)&&/sombras/i.test(c.split('RECOMENDACIONES')[1]),c);
+  /* editor: botón Analizar */
+  await pg.evaluate(async id=>{DOC=await DB.getDoc(id);openDocScreen();Ed.open(0)},ids[0]);await W(800);
+  await pg.click('#editor [data-ed="anal"]');await pg.waitForSelector('#sheetBody .an-md',{timeout:15000});
+  assert.match(await pg.textContent('#sheetBody'),/Perspectiva: Buena[\s\S]*RECOMENDACIONES/);
+  await pg.evaluate(()=>Nav.back());await W(300);
+});
+
 await test('Nexa en dos modos (sin internet / con internet), detener siempre corta y enseñarle a Nexa',async pg=>{
   await pg.click('#btnNexa');await W(300);
   assert.equal(await pg.evaluate(()=>Nexa.st.prov+'|'+Nexa.provLabel()+'|'+Nexa.prov()),'offline|Nexa sin internet|basic');

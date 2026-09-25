@@ -1023,7 +1023,7 @@ const b=openSheet('Ajustes','<div class="set-list">'+setRow('sDesign','palette',
 +acc('🌓','Apariencia y nombres','Tema y nombre de los documentos',opt('<i data-ico="theme">🌓</i> Tema',sel('sTheme',[['system','Automático (según el teléfono)'],['light','Claro'],['dark','Oscuro']]))+opt('Plantilla de nombre por defecto',sel('sTpl',NAME_TEMPLATES.map(t=>[t,t]))))
 +acc('📄','PDF y texto (OCR)','Hoja, calidad, márgenes e idioma',opt('Idioma OCR',sel('sLang',[['spa','Español'],['eng','Inglés'],['spa+eng','Español + Inglés'],['por','Portugués']]))+'<div class="row">'+opt('Hoja PDF por defecto',sel('sSize',[['a4','A4'],['oficio','Oficio'],['carta','Carta'],['original','Tamaño imagen']]))+opt('Calidad PDF',sel('sQ',Object.entries(QUAL).map(([k,v])=>[k,v.label])))+'</div>'+opt('Márgenes por defecto (mm)','<input type="number" id="sMargin" min="0" max="40">'))
 +acc('🗄️','Datos del dispositivo',est||'Documentos guardados en este navegador','<p class="muted">'+est+'</p><button class="btn red block" id="sWipe">🗑 Borrar todos los documentos</button>')
-+'<p class="muted set-foot">Danscanner Pro · versión 45 · funciona en celular y PC · los documentos se guardan en este navegador.</p>');$('.sTpl',b).value=S.nameTemplate;$('.sFilter',b).value=S.filter;$('.sMax',b).value=String(S.maxCap);$('#sAuto').checked=S.autoCrop;$('#sAutoCap').checked=S.autoCapture;$('#sHd').checked=S.hd;$('#sDeskew').checked=S.deskew!==false;$('#sPrintBW').checked=S.printBW!==false;$('#sPro').checked=S.proFilters!==false;$('#sNative').checked=!!S.camNative;$('.sTheme',b).value=S.theme||'system';$('.sLang',b).value=S.lang;$('.sSize',b).value=S.size;$('.sQ',b).value=S.quality;$('#sMargin').value=S.margin;b.onchange=()=>{S.nameTemplate=$('.sTpl',b).value;S.filter=$('.sFilter',b).value;S.maxCap=+$('.sMax',b).value;S.autoCrop=$('#sAuto').checked;S.camNative=$('#sNative').checked;if(($('.sTheme',b).value)!==(S.theme||'system'))cambiarTema($('.sTheme',b).value);S.autoCapture=$('#sAutoCap').checked;S.hd=$('#sHd').checked;S.deskew=$('#sDeskew').checked;if((S.printBW!==false)!==$('#sPrintBW').checked){S.printBW=$('#sPrintBW').checked;if(FW.w){try{FW.w.terminate()}catch(e){}FW.w=null;FW.ok=null}}if((S.proFilters!==false)!==$('#sPro').checked){S.proFilters=$('#sPro').checked;useProFilters(S.proFilters)}S.lang=$('.sLang',b).value;S.size=$('.sSize',b).value;S.quality=$('.sQ',b).value;S.margin=+$('#sMargin').value||0;saveS();toast('Guardado')};$('#sDesign').onclick=async()=>{await Nav.back();designSheet()};$('#sAI').onclick=async()=>{await Nav.back();aiSheet()};$('#sSec').onclick=async()=>{await Nav.back();securitySheet()};$('#sSpace').onclick=async()=>{await Nav.back();storageSheet()};$('#sAbout').onclick=async()=>{await Nav.back();aboutSheet()};$('#sWipe').onclick=async()=>{if(!confirm('¿Borrar TODOS los documentos guardados?'))return;for(const m of await DB.metas())await DB.delDoc(m.id);refreshLists();toast('Documentos borrados')}}
++'<p class="muted set-foot">Danscanner Pro · versión 46 · funciona en celular y PC · los documentos se guardan en este navegador.</p>');$('.sTpl',b).value=S.nameTemplate;$('.sFilter',b).value=S.filter;$('.sMax',b).value=String(S.maxCap);$('#sAuto').checked=S.autoCrop;$('#sAutoCap').checked=S.autoCapture;$('#sHd').checked=S.hd;$('#sDeskew').checked=S.deskew!==false;$('#sPrintBW').checked=S.printBW!==false;$('#sPro').checked=S.proFilters!==false;$('#sNative').checked=!!S.camNative;$('.sTheme',b).value=S.theme||'system';$('.sLang',b).value=S.lang;$('.sSize',b).value=S.size;$('.sQ',b).value=S.quality;$('#sMargin').value=S.margin;b.onchange=()=>{S.nameTemplate=$('.sTpl',b).value;S.filter=$('.sFilter',b).value;S.maxCap=+$('.sMax',b).value;S.autoCrop=$('#sAuto').checked;S.camNative=$('#sNative').checked;if(($('.sTheme',b).value)!==(S.theme||'system'))cambiarTema($('.sTheme',b).value);S.autoCapture=$('#sAutoCap').checked;S.hd=$('#sHd').checked;S.deskew=$('#sDeskew').checked;if((S.printBW!==false)!==$('#sPrintBW').checked){S.printBW=$('#sPrintBW').checked;if(FW.w){try{FW.w.terminate()}catch(e){}FW.w=null;FW.ok=null}}if((S.proFilters!==false)!==$('#sPro').checked){S.proFilters=$('#sPro').checked;useProFilters(S.proFilters)}S.lang=$('.sLang',b).value;S.size=$('.sSize',b).value;S.quality=$('.sQ',b).value;S.margin=+$('#sMargin').value||0;saveS();toast('Guardado')};$('#sDesign').onclick=async()=>{await Nav.back();designSheet()};$('#sAI').onclick=async()=>{await Nav.back();aiSheet()};$('#sSec').onclick=async()=>{await Nav.back();securitySheet()};$('#sSpace').onclick=async()=>{await Nav.back();storageSheet()};$('#sAbout').onclick=async()=>{await Nav.back();aboutSheet()};$('#sWipe').onclick=async()=>{if(!confirm('¿Borrar TODOS los documentos guardados?'))return;for(const m of await DB.metas())await DB.delDoc(m.id);refreshLists();toast('Documentos borrados')}}
 $('#btnSettings').onclick=()=>settingsSheet();$('#navSettings').onclick=()=>settingsSheet();
 function go(v){$$('.view').forEach(x=>x.classList.toggle('active',x.id==='v-'+v));$$('.nav [data-go]').forEach(b=>b.classList.toggle('on',b.dataset.go===v));$('#topTitle').textContent={home:'Danscanner Pro',docs:'Documentos',tools:'Herramientas',nexa:'Nexa IA'}[v];window.scrollTo(0,0)}
 async function doAction(a){if(a==='cam-single')Cam.open('single');else if(a==='cam-batch')Cam.open('batch');else if(a==='import-img')$('#inImg').click();else if(a==='import-any')$('#inAny').click()}
@@ -3425,7 +3425,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 4',APP_VER='45';
+const NEXA_VER='Nexa 4.1',APP_VER='46';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3543,7 +3543,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='45 · 25/09/2026';
+const BUILD='46 · 25/09/2026';
 /* Botón Nexa arriba: se crea siempre, aunque otra parte de Nexa falle (antes, un error dejaba teléfonos sin el botón) */
 function ensureNexaTop(){const top=$('.top'),bs=$('#btnSettings');if(!top||!bs||$('#btnNexa'))return;const b=document.createElement('button');b.className='ib nx-top';b.id='btnNexa';b.dataset.go='nexa';b.title='Nexa IA';b.setAttribute('aria-label','Nexa IA');b.innerHTML='<i data-ico="nexa"></i><span>Nexa</span>';top.insertBefore(b,bs);iconize(b);const n=$('.nav [data-go="nexa"]');if(n)n.remove()}
 ensureNexaTop();addEventListener('load',ensureNexaTop);
@@ -4596,6 +4596,82 @@ const NX_SEED=[
  return r}}
 document.head.insertAdjacentHTML('beforeend','<style id="v45Css">.nx-menu{min-width:250px;max-width:min(320px,86vw)}.nx-menu button small{display:block;margin-top:2px;font-size:12px;line-height:1.35;white-space:normal}'
  +'#nlTeach input,#nlTeach textarea{width:100%;box-sizing:border-box;margin-top:8px}#nlTeach .row{flex-wrap:wrap;gap:6px;margin-top:8px}#ntList{margin-top:8px;max-height:260px;overflow:auto}.nt-row{display:flex;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)}.nt-row span{flex:1;min-width:0;display:flex;flex-direction:column}.nt-row small{color:var(--tx2);font-size:12px}.nt-row button{width:34px;height:34px;flex:none}</style>');
+
+/* ===== Danscanner Pro v46: análisis del documento (calidad del escaneo) — sin internet y sin modificar nada ===== */
+const DocAn={
+ /* mide una página: forma de la hoja, perspectiva, luz, sombras, nitidez, texto y resolución */
+ async page(p){const img=await loadImg(p.orig);const W0=img.naturalWidth,H0=img.naturalHeight;
+  let q=p.quad||null;if(!q){try{q=detectQuad(img)}catch(e){}}
+  const pts=q?q.map(o=>({x:o.x*W0,y:o.y*H0})):null,d=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+  const r={edges:!!pts};
+  if(pts){let dev=0;for(let i=0;i<4;i++){const a=pts[(i+3)%4],b=pts[i],c=pts[(i+1)%4];const v1={x:a.x-b.x,y:a.y-b.y},v2={x:c.x-b.x,y:c.y-b.y};
+    const ang=Math.acos(Math.max(-1,Math.min(1,(v1.x*v2.x+v1.y*v2.y)/(Math.hypot(v1.x,v1.y)*Math.hypot(v2.x,v2.y)||1))))*180/Math.PI;dev=Math.max(dev,Math.abs(ang-90))}
+   const t=d(pts[0],pts[1]),bo=d(pts[3],pts[2]),le=d(pts[0],pts[3]),ri=d(pts[1],pts[2]);const key=1-Math.min(t/bo,bo/t,le/ri,ri/le);
+   r.dev=dev;r.key=key;r.persp=dev<5&&key<.06?'Buena':dev<12&&key<.15?'Regular':'Mala';
+   const wpx=(t+bo)/2,hpx=(le+ri)/2;r.wpx=Math.min(wpx,hpx);r.ratio=Math.max(wpx,hpx)/Math.max(1,Math.min(wpx,hpx));r.cover=Math.abs(pts.reduce((s,p,i)=>{const n=pts[(i+1)%4];return s+p.x*n.y-n.x*p.y},0))/2/(W0*H0)}
+  else{r.persp='Sin bordes a la vista';r.wpx=Math.min(W0,H0);r.ratio=Math.max(W0,H0)/Math.min(W0,H0)}
+  const rt=r.ratio;r.fmt=Math.abs(rt-1.414)<.075?'A4':Math.abs(rt-1.647)<.085?'Oficio (legal)':Math.abs(rt-1.294)<.045?'Carta':'Otro';
+  r.dpi=Math.round(r.wpx/(r.fmt==='A4'?8.27:8.5));
+  /* la hoja enderezada, en gris, a tamaño fijo */
+  let pc;try{pc=pts?warp(img,pts,1100):null}catch(e){pc=null}if(!pc){const s=1100/Math.max(W0,H0);pc=canvas(Math.round(W0*s),Math.round(H0*s));pc.getContext('2d').drawImage(img,0,0,pc.width,pc.height)}
+  const s=Math.min(1,1000/Math.max(pc.width,pc.height)),w=Math.round(pc.width*s),h=Math.round(pc.height*s),cv=canvas(w,h),cx=cv.getContext('2d',{willReadFrequently:true});cx.drawImage(pc,0,0,w,h);
+  const px=cx.getImageData(0,0,w,h).data,g=new Uint8Array(w*h);for(let i=0,j=0;i<g.length;i++,j+=4)g[i]=(px[j]*77+px[j+1]*150+px[j+2]*29)>>8;
+  /* papel: el tono claro de cada zona (grilla 8 × 8, dejando afuera el 4% del borde) */
+  const G=8,mx=Math.round(w*.04),my=Math.round(h*.04),cw=(w-2*mx)/G,ch=(h-2*my)/G,bg=[];
+  for(let gy=0;gy<G;gy++)for(let gx=0;gx<G;gx++){const hist=new Uint32Array(256);let n=0;for(let y=Math.round(my+gy*ch);y<my+(gy+1)*ch;y+=2)for(let x=Math.round(mx+gx*cw);x<mx+(gx+1)*cw;x+=2){hist[g[y*w+x]]++;n++}
+   let acc=0,k=255;for(;k>0;k--){acc+=hist[k];if(acc>=n*.1)break}bg.push(k)}
+  const bmax=Math.max(...bg),bmin=Math.min(...bg),bsort=[...bg].sort((a,b)=>a-b),bmed=bsort[bsort.length>>1];r.bright=bmed;
+  r.unif=(bmax-bmin)/Math.max(1,bmax);const depth=bmin/Math.max(1,bmax);
+  r.light=bmed<120?'Oscura':r.unif<.2?'Uniforme':'Irregular';r.shadows=depth<.6?'Intensas':depth<.86?'Moderadas':'Ninguna';
+  /* tinta: píxeles bastante más oscuros que el papel de su zona */
+  let ink=0,tot=0;const bgAt=(x,y)=>bg[Math.min(G-1,Math.max(0,Math.floor((y-my)/ch)))*G+Math.min(G-1,Math.max(0,Math.floor((x-mx)/cw)))];
+  for(let y=my;y<h-my;y+=2)for(let x=mx;x<w-mx;x+=2){tot++;if(g[y*w+x]<bgAt(x,y)*.7)ink++}r.ink=ink/Math.max(1,tot);
+  /* nitidez: qué tan abrupto es el paso de papel a tinta en los bordes de las letras */
+  const hs=new Uint32Array(256);let ne=0;for(let y=my+1;y<h-my-1;y++)for(let x=mx+1;x<w-mx-1;x++){const i=y*w+x;const gx=Math.abs(g[i+1]-g[i-1]),gy=Math.abs(g[i+w]-g[i-w]);const m=Math.min(255,Math.max(gx,gy));if(m>12){hs[m]++;ne++}}
+  let acc=0,p99=0;for(let k=255;k>0;k--){acc+=hs[k];if(acc>=ne*.02){p99=k;break}}const inkLvl=Math.max(20,bmed*.55);r.sharp=p99/inkLvl;
+  r.edge=ne/Math.max(1,w*h);r.text=(r.ink>.003||r.edge>.02)&&r.ink<.45&&r.edge>.004;
+  r.nit=!r.text?'—':r.sharp>=SHARP_HI?'Alta':r.sharp>=SHARP_LO?'Media':'Baja';
+  r.isDoc=r.edges||(r.text&&bmed>150);
+  const bad=(r.nit==='Baja')+(r.dpi<100)+(r.shadows==='Intensas')+(r.persp==='Mala')+(r.light==='Oscura'),mid=(r.nit==='Media')+(r.dpi<140)+(r.shadows==='Moderadas')+(r.persp==='Regular')+(r.light==='Irregular');
+  r.ocr=!r.text?'No aplica (sin texto)':bad?'Baja':mid>=2?'Media':mid?'Media':'Alta';if(r.ocr==='Media'&&mid===1&&r.nit==='Alta'&&r.shadows==='Moderadas')r.ocr='Alta';
+  return r},
+ recs(r,p){const L=[];
+  if(!r.isDoc)L.push('No parece un documento: sacá la foto con la hoja completa a la vista, sobre una superficie oscura.');
+  if(!r.edges&&r.isDoc)L.push('No se ven los 4 bordes de la hoja: alejá un poco el celular o ajustá el recorte a mano con **Recortar**.');
+  if(r.persp==='Mala')L.push('La hoja está muy inclinada: volvé a sacar la foto con el celular paralelo a la hoja, desde arriba.');
+  else if(r.persp==='Regular')L.push('Hay algo de inclinación: la app la corrige sola, pero de frente queda más nítido.');
+  if(r.light==='Oscura')L.push('La foto está oscura: buscá más luz o activá el flash.');
+  if(r.shadows==='Intensas')L.push('Hay sombras fuertes (mano o celular): cambiá de posición o usá luz de frente. El filtro **B/N** quita las sombras suaves.');
+  else if(r.shadows==='Moderadas'||r.light==='Irregular')L.push('La luz no es pareja: el filtro **B/N** o **Mejorar** lo compensa; si queda desparejo, sacala con luz más uniforme.');
+  if(r.nit==='Baja')L.push('La foto está movida o desenfocada: tocá la pantalla para enfocar y mantené quieto el celular (o activá **HD**).');
+  else if(r.nit==='Media')L.push('La nitidez es aceptable; si el texto es chico, acercate un poco o activá **HD**.');
+  if(r.text&&r.dpi<100)L.push('La resolución es baja (~'+r.dpi+' ppp): activá **HD** en la cámara o acercate a la hoja.');
+  if(r.fmt!=='Otro'&&r.edges)L.push('Formato detectado **'+r.fmt+'**: con tamaño «Automático» sale así en el PDF.'+(p&&p.paper?' (Esta página tiene elegida la hoja «'+(PAPER_NAMES[p.paper]||p.paper)+'».)':''));
+  if(!r.text)L.push('No se detecta texto: si es una imagen o una hoja en blanco, está bien; si tiene texto, revisá la luz y el enfoque.');
+  if(r.ocr==='Alta'&&L.length<=1)L.push('Está en buenas condiciones para extraer el texto (OCR).');
+  return L},
+ md(r,p,title){return '**ANÁLISIS**'+(title?' · '+esc(title):'')+'\n- **Documento:** '+(r.isDoc?'Sí':'No')+'\n- **Formato aprox.:** '+(r.edges?r.fmt:r.fmt+' (sin bordes a la vista)')+'\n- **Perspectiva:** '+r.persp+'\n- **Iluminación:** '+r.light+'\n- **Sombras:** '+r.shadows+'\n- **Nitidez:** '+r.nit+'\n- **Texto detectable:** '+(r.text?'Sí':'No')+'\n- **Calidad estimada OCR:** '+r.ocr+(r.text?' · resolución ~'+r.dpi+' ppp':'')
+  +'\n\n**RECOMENDACIONES**\n'+this.recs(r,p).map((x,i)=>(i+1)+'. '+x).join('\n')},
+ async doc(d,max=3){const doc=d.pages?d:await DB.getDoc(d.id);if(!doc||!doc.pages||!doc.pages.length)return '';const n=Math.min(max,doc.pages.length),out=[];
+  for(let i=0;i<n;i++){const r=await this.page(doc.pages[i]);out.push(this.md(r,doc.pages[i],'«'+doc.name+'»'+(doc.pages.length>1?' · página '+(i+1)+' de '+doc.pages.length:'')))}
+  return out.join('\n\n---\n\n')+(doc.pages.length>n?'\n\n*Analicé las primeras '+n+' páginas.*':'')}};
+const SHARP_HI=.9,SHARP_LO=.55;
+const NX_AN_RX=/\b(analiz\w*|analisis|calidad|diagnostic\w*|se ve bien|sirve para (el )?ocr|esta bien (sacad|escanead)\w*|revis\w* (el |la |este |esta )?(documento|escaneo|foto|imagen|hoja))\b/;
+/* Nexa: «analizá el documento» → informe medido en el teléfono (no usa internet ni cambia el documento) */
+{const _ask=Nexa.ask;Nexa.ask=async function(msg){const n=nbNorm(String(msg&&msg.text||''));if(!NX_AN_RX.test(n)||/redact|traduc|resum|extrae/.test(n))return _ask.apply(this,arguments);
+ const docs=this.st.docs.slice(0,2);let text;
+ if(!docs.length)text='Para analizar un escaneo, adjuntalo con 📎 y pedime **analizá el documento**.\n\n'+chip('Adjuntar y analizar','Analizá la calidad del documento adjunto');
+ else{this.sending=true;this.render();this.btn();try{this.say&&this.say('Analizando el escaneo…');const parts=[];for(const d of docs)parts.push(await DocAn.doc(d));
+   text='✅ *Medido en tu teléfono, sin internet. No se modificó el documento.*\n\n'+parts.filter(Boolean).join('\n\n---\n\n')}
+  catch(e){text='⚪ No pude analizar el documento: '+esc(e.message||String(e))}finally{this.sending=false;this.btn()}}
+ this.st.msgs.push({role:'assistant',text,prov:'basic'});this.save();this.render()}}
+NEXA_SUG.splice(1,0,['Analizar escaneo','Analizá la calidad del documento adjunto (perspectiva, luz, sombras, nitidez y OCR).']);
+/* editor: botón «Analizar» para la página actual */
+(function(){const foot=$('#editor .sfoot'),ref=foot&&(foot.querySelector('[data-ed="paper"]')||foot.querySelector('[data-ed="adj"]'));if(!foot||!ref||foot.querySelector('[data-ed="anal"]'))return;
+ const b=document.createElement('button');b.className='tb';b.dataset.ed='anal';b.innerHTML='<b data-ico="eye"></b><span>Analizar</span>';ref.after(b);iconize(b);
+ b.addEventListener('click',async e=>{e.stopImmediatePropagation();const p=Ed.p;if(!p)return;let r;try{busy('Analizando la página…');r=await DocAn.page(p)}catch(x){busy(false);return toast('❌ No se pudo analizar: '+x.message)}busy(false);
+  openSheet('Análisis del escaneo','<div class="nx-md an-md">'+nexaMd(DocAn.md(r,p,''))+'</div><p class="muted" style="margin-top:10px">Medido en tu teléfono, sin internet. El documento no se modificó.</p>')},true)})();
+document.head.insertAdjacentHTML('beforeend','<style id="v46Css">.an-md ul{margin:6px 0 10px;padding-left:18px}.an-md ol{padding-left:20px}.an-md li{margin:3px 0}</style>');
 </script>
 </body>
 </html>

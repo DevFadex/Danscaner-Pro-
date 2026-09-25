@@ -310,3 +310,11 @@ En el editor, **Corregir** permite arreglar una palabra mal escrita de la hoja e
   - Las conversaciones viejas pasan solas al modo que corresponde.
 - **Detener (■)**: corta siempre, también mientras Nexa lee un escaneo sin texto (el OCR se cancela) o mientras prepara la IA. Lo que termine después en segundo plano ya no aparece en la conversación. La lectura avisa página por página, dentro de la conversación.
 - **Enseñar a Nexa**: en el chat («si te preguntan horario de visitas, respondé de 9 a 12») o en ⚙ Configurar Nexa → Enseñar a Nexa (agregar, ver, borrar, guardar y cargar un archivo `.json`). Lo enseñado se usa en los dos modos y queda solo en el teléfono. Trae de base respuestas sobre cómo usar la app.
+
+## v46 — Análisis del documento
+
+- En Nexa (adjuntar el documento y pedir «analizá el documento», o la sugerencia **Analizar escaneo**) y en el editor (botón **Analizar**) sale un informe:
+  - documento, formato aproximado (A4 / oficio / carta / otro), perspectiva, iluminación, sombras, nitidez, texto detectable y calidad estimada del OCR (con resolución aproximada en ppp);
+  - recomendaciones concretas (repetir la foto de frente, más luz, filtro B/N, HD, enfoque).
+- Se mide en el teléfono, sin internet, y **no modifica** el documento.
+- Cómo se mide: bordes y ángulos de las esquinas (perspectiva), tono del papel en una grilla de 8 × 8 (luz y sombras), pendiente de los bordes de las letras (nitidez) y ancho de la hoja en píxeles (resolución).
