@@ -267,3 +267,31 @@ En el editor, **Corregir** permite arreglar una palabra mal escrita de la hoja e
 - **Lector de texto (OCR) incluido**: `libs/tesseract/` (worker, motor LSTM con y sin SIMD, idioma español `best_int`; Apache-2.0). Antes se bajaba de un CDN la primera vez, y sin internet fallaba la cámara (nombre automático), Corregir, OCR y Extraer texto con un error técnico en inglés. Ahora funciona sin internet y se guarda en la caché permanente.
 - **Mensajes claros** cuando algo necesita internet, en lugar de errores técnicos.
 - **Repetido**: «Firmar PDF» era una versión reducida de «Editar PDF» con otro código. Ahora abre el mismo editor completo. El nombre queda en el menú.
+
+## v43 · Detección de la hoja nueva, tamaño A4/oficio/certificado y borrar la foto en la cámara
+
+- **Detector nuevo** (`docQuad2`), para la foto final y la vista en vivo:
+  - busca líneas rectas con Hough, usando la orientación del gradiente;
+  - descarta o resta peso a los trazos finos (renglones y líneas de tabla) y busca por separado las líneas verticales y las horizontales;
+  - puntúa cada cuadrilátero posible por bordes marcados en los 4 lados, contraste hoja/mesa, área y proporción de hoja (A4, oficio, carta);
+  - después se ajusta con `refineQuad`; si no encuentra nada, usa el detector anterior.
+- **Resultados** en escenas simuladas (hoja sobre madera, gris, beige o azul, con perspectiva, sombras, tablas y otro papel detrás), medido con IoU contra el recorte real:
+
+  | Detector | IoU promedio | Malas (< 0,9) |
+  | --- | --- | --- |
+  | anterior | 0,61 | 54 de 80 |
+  | nuevo | 0,93 | 13 de 80 |
+
+  Los errores del PDF de muestra (tomar solo una tabla interna, dejar parte de la mesa o de otra hoja) son justamente los que corrige.
+- **Tamaño de hoja «Automático»** (nuevo predeterminado):
+  - si la foto tiene forma de A4, la página sale A4 exacta (210 × 297 mm);
+  - si tiene forma de oficio, sale oficio (216 × 356 mm);
+  - si tiene forma de carta, sale carta;
+  - si no coincide con ninguna, respeta la proporción de la foto.
+
+  En el editor, el botón **Hoja** permite elegir para cada página, o para todas: A4, Oficio, Carta, Certificado A5 (148 × 210 mm) o Tamaño de la foto.
+- **Modo Certificado** en la cámara: las páginas salen en A5, su tamaño real, sin agrandarse a A4.
+- **Borrar la foto en la cámara:**
+  - en **Individual**, después de la foto aparece una revisión con Repetir, Agregar más (pasa a lote) y Listo;
+  - en **Lote**, el botón «Borrar última».
+- **Enderezado**: ya no se inventa una inclinación en hojas casi vacías. Antes una hoja en blanco se giraba 6° y cambiaba de proporción.
