@@ -20,7 +20,7 @@ const DB_count=pg=>pg.evaluate(async()=>(await DB.metas()).length);
 const seedPage=pg=>pg.evaluate(async()=>{const c=document.createElement('canvas');c.width=500;c.height=700;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,500,700);x.fillStyle='#000';x.font='36px Arial';x.fillText('OFICIO 55',40,90);window._pg=await makePage(c.toDataURL('image/jpeg',.9),{auto:false,filter:'magia'})});
 const OFICIO='OFICIO N° 55/2026\nExpte. 23-26/2026. San Miguel de Tucumán, 12 de octubre de 2026.\nSe informa al Juzgado que el interno Juan Carlos PÉREZ, DNI 30.123.456, CUIL 20-30123456-7, solicita audiencia. El juez Martín Gómez fijó audiencia para el 20/10/2026. Se abonó $ 15.000,00. Contacto: tel. 381 555-1234, mail juzgado@justucuman.gov.ar.';
 
-async function test(name,fn){const browser=await chromium.launch({args:['--use-fake-ui-for-media-stream','--use-fake-device-for-media-stream']});let pg;
+async function test(name,fn){if(process.env.ONLY&&!name.includes(process.env.ONLY))return;const browser=await chromium.launch({args:['--use-fake-ui-for-media-stream','--use-fake-device-for-media-stream']});let pg;
   try{pg=await newPage(browser);await fn(pg);assert.deepEqual(pg.errors,[],'errores de JavaScript');results.push(['✅',name])}
   catch(e){results.push(['❌',name,e.message.replace(/\s+/g,' ').slice(0,300)])}
   finally{await browser.close()}}
@@ -230,7 +230,7 @@ await test('Nexa conversa (nombre, versión, qué puede hacer) con botones; íco
   await pg.click('#btnNexa');await W(300);
   for(const q of ['¿Para qué servís?','¿Cómo te llamás?']){await pg.fill('#nxIn',q);await pg.click('#nxSend');await W(600)}
   const log=await pg.textContent('#nxLog');
-  for(const w of ['Comprimir','Extraer datos','Soy Nexa IA','Versión','Nexa 3.'])assert.ok(log.includes(w),'falta '+w);
+  for(const w of ['Comprimir','Extraer datos','Soy Nexa IA','Versión','Nexa 4'])assert.ok(log.includes(w),'falta '+w);
   assert.ok((await pg.$$('.nx-q')).length>=6,'faltan los botones interactivos');
   assert.equal(await pg.$$eval('#nxLog .nx-md',els=>els.some(e=>/\p{Extended_Pictographic}/u.test(e.textContent))),false,'quedaron emojis en Nexa');
   await pg.click('.nav [data-go="tools"]');await W(300);
@@ -445,7 +445,7 @@ await test('Nexa local no deja esperando: saluda al instante y responde rápido 
   let last=await pg.evaluate(()=>Nexa.st.msgs.at(-1));assert.equal(last.role,'assistant');assert.ok(/(buen día|buenas tardes|buenas noches|hola)/i.test(last.text),last.text);assert.ok(Date.now()-t0<3000);
   await pg.fill('#nxIn','¿qué podés hacer?');await pg.press('#nxIn','Enter');await W(500);
   await pg.fill('#nxIn','como hago un oficio de traslado');await pg.press('#nxIn','Enter');await W(700);
-  last=await pg.evaluate(()=>Nexa.st.msgs.at(-1));assert.equal(last.role,'assistant');assert.ok(/Respuesta rápida mientras Nexa local/.test(last.text),last.text.slice(-200));
+  last=await pg.evaluate(()=>Nexa.st.msgs.at(-1));assert.equal(last.role,'assistant');assert.ok(/Respuesta rápida mientras la IA del teléfono/.test(last.text),last.text.slice(-200));
   assert.ok(await pg.evaluate(()=>window._loads>0),'no empezó a cargar el modelo');assert.equal(await pg.evaluate(()=>Nexa.st.prov),'local');
 });
 
@@ -480,6 +480,44 @@ await test('Revisión: OCR sin internet (incluido en la app) y Firmar PDF usa el
   assert.ok(/libertad/i.test(t),'el OCR no funcionó sin internet: '+t);
   assert.ok(await pg.evaluate(()=>TOOLS.find(t=>t.name==='Firmar PDF').ui===TOOLS.find(t=>t.name==='Editar PDF').ui),'Firmar PDF no usa el editor completo');
   assert.equal(await pg.evaluate(()=>{let m='';const t=$('#toast');toast('Uncaught NetworkError: Failed to execute importScripts');m=t.textContent;return /Sin conexión/.test(m)}),true);
+});
+
+await test('Nexa en dos modos (sin internet / con internet), detener siempre corta y enseñarle a Nexa',async pg=>{
+  await pg.click('#btnNexa');await W(300);
+  assert.equal(await pg.evaluate(()=>Nexa.st.prov+'|'+Nexa.provLabel()+'|'+Nexa.prov()),'offline|Nexa sin internet|basic');
+  await pg.click('#nxProv');await W(150);assert.equal(await pg.evaluate(()=>[...document.querySelectorAll('#nxMenu [data-p]')].map(b=>b.dataset.p).join(',')),'offline,online');
+  await pg.click('#nxMenu [data-p="online"]');await W(500);assert.equal(await pg.evaluate(()=>Nav.isOpen('sheet')),true,'no pidió activar internet');
+  await pg.evaluate(()=>Nav.back());await W(300);assert.match(await pg.textContent('#nxStat'),/Falta activar/);assert.equal(await pg.evaluate(()=>Nexa.prov()),'basic');
+  assert.equal(await pg.evaluate(()=>{const a=AI();a.keys.gemini='AIzaTEST_______________________';return Nexa.prov()}),'gemini');
+  assert.equal(await pg.evaluate(()=>[nxMode('local'),nxMode('basic'),nxMode('auto'),nxMode('openai')].join()),'offline,offline,online,online');
+  await pg.evaluate(()=>{AI().keys.gemini='';Nexa.st.prov='offline';Nexa.save();Nexa.status()});
+  /* detener mientras Nexa sigue trabajando: corta al instante y lo que termine después no aparece */
+  await pg.evaluate(()=>{window._ans=NexaBasic.answer;NexaBasic.answer=()=>new Promise(r=>{window._res=r})});
+  await pg.fill('#nxIn','resumí lo importante');await pg.press('#nxIn','Enter');await W(500);
+  assert.equal(await pg.evaluate(()=>Nexa.sending),true);
+  await pg.click('#nxSend');await W(300);
+  assert.equal(await pg.evaluate(()=>Nexa.sending+' '+Nexa.st.msgs.length+' '+$('#nxSend').classList.contains('stop')),'false 0 false');
+  assert.equal(await pg.inputValue('#nxIn'),'resumí lo importante');
+  await pg.evaluate(()=>{window._res('RESPUESTA VIEJA');NexaBasic.answer=window._ans});await W(400);
+  assert.equal(await pg.evaluate(()=>Nexa.st.msgs.length+' '+Nexa.sending+' '+Nexa.st.prov),'0 false offline');assert.ok(!/RESPUESTA VIEJA/.test(await pg.textContent('#nxLog')));
+  /* detener mientras lee un documento escaneado sin texto: corta la lectura (OCR) */
+  await seedPage(pg);await pg.evaluate(async()=>{const d=newDoc();d.name='Escaneo sin texto';d.pages.push({...window._pg,id:uid()});await DB.putDoc(d);Nexa.attachDoc(d);
+   await loadLib('tess');window._term=0;Tesseract.createWorker=async()=>({setParameters:async()=>{},recognize:()=>new Promise(()=>{}),terminate:async()=>{window._term++}})});
+  await pg.fill('#nxIn','sacá la información del documento');await pg.press('#nxIn','Enter');await W(1500);
+  assert.match(await pg.evaluate(()=>$('#nxLog .nx-typing')&&$('#nxLog .nx-typing').getAttribute('data-msg')||''),/Leyendo «Escaneo sin texto» · página 1 de 1/);
+  await pg.click('#nxSend');await W(300);assert.equal(await pg.evaluate(()=>Nexa.sending+' '+window._term+' '+$('#busy').classList.contains('on')),'false 1 false');
+  await pg.evaluate(()=>{Nexa.st.docs=[];Nexa.save();Nexa.renderDocs();$('#nxIn').value=''});
+  /* enseñar y que lo use */
+  await pg.fill('#nxIn','si te preguntan horario de visitas, respondé de 9 a 12 hs');await pg.press('#nxIn','Enter');await W(500);
+  assert.match(await pg.evaluate(()=>Nexa.st.msgs.at(-1).text),/Aprendido/);
+  await pg.fill('#nxIn','¿cuál es el horario de visitas?');await pg.press('#nxIn','Enter');await W(800);
+  assert.match(await pg.evaluate(()=>Nexa.st.msgs.at(-1).text),/9 a 12 hs/);
+  assert.ok(await pg.evaluate(()=>NexaKB.all().some(e=>e.src==='Danscanner')),'falta el conocimiento de base');
+  assert.match(await pg.evaluate(()=>Nexa.system()),/horario de visitas → de 9 a 12 hs/);
+  await pg.evaluate(()=>nexaSheet());await W(600);assert.equal(await pg.isVisible('#nlTeach'),true);
+  await pg.fill('#ntQ','teléfono de la oficina');await pg.fill('#ntA','381 000-0000');await pg.click('#ntAdd');await W(200);
+  assert.ok(await pg.evaluate(()=>NexaKB.all().some(e=>e.q==='teléfono de la oficina'&&e.src==='vos')));
+  await pg.evaluate(()=>Nav.back());await W(300);
 });
 
 await test('Certificado: sale en su tamaño real, centrado en una hoja A4 blanca',async pg=>{
