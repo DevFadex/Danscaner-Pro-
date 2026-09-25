@@ -295,3 +295,9 @@ En el editor, **Corregir** permite arreglar una palabra mal escrita de la hoja e
   - en **Individual**, después de la foto aparece una revisión con Repetir, Agregar más (pasa a lote) y Listo;
   - en **Lote**, el botón «Borrar última».
 - **Enderezado**: ya no se inventa una inclinación en hojas casi vacías. Antes una hoja en blanco se giraba 6° y cambiaba de proporción.
+
+## v44 — Certificado centrado en hoja A4
+
+- El modo **Certificado** de la cámara ahora arma una hoja **A4 blanca** con el certificado en su tamaño real (dentro de 148 × 210 mm, sin agrandar ni deformar), centrado. Si el certificado es apaisado, la hoja A4 sale acostada.
+- En el editor, **Hoja → Certificado centrado en hoja A4** aplica lo mismo a cualquier página. También está en Ajustes y en Exportar.
+- Las páginas guardadas antes como **Certificado (A5)** siguen saliendo en A5, y esa opción sigue disponible.
