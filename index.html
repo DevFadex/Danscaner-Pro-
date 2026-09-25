@@ -1023,7 +1023,7 @@ const b=openSheet('Ajustes','<div class="set-list">'+setRow('sDesign','palette',
 +acc('🌓','Apariencia y nombres','Tema y nombre de los documentos',opt('<i data-ico="theme">🌓</i> Tema',sel('sTheme',[['system','Automático (según el teléfono)'],['light','Claro'],['dark','Oscuro']]))+opt('Plantilla de nombre por defecto',sel('sTpl',NAME_TEMPLATES.map(t=>[t,t]))))
 +acc('📄','PDF y texto (OCR)','Hoja, calidad, márgenes e idioma',opt('Idioma OCR',sel('sLang',[['spa','Español'],['eng','Inglés'],['spa+eng','Español + Inglés'],['por','Portugués']]))+'<div class="row">'+opt('Hoja PDF por defecto',sel('sSize',[['a4','A4'],['oficio','Oficio'],['carta','Carta'],['original','Tamaño imagen']]))+opt('Calidad PDF',sel('sQ',Object.entries(QUAL).map(([k,v])=>[k,v.label])))+'</div>'+opt('Márgenes por defecto (mm)','<input type="number" id="sMargin" min="0" max="40">'))
 +acc('🗄️','Datos del dispositivo',est||'Documentos guardados en este navegador','<p class="muted">'+est+'</p><button class="btn red block" id="sWipe">🗑 Borrar todos los documentos</button>')
-+'<p class="muted set-foot">Danscanner Pro · versión 34 · funciona en celular y PC · los documentos se guardan en este navegador.</p>');$('.sTpl',b).value=S.nameTemplate;$('.sFilter',b).value=S.filter;$('.sMax',b).value=String(S.maxCap);$('#sAuto').checked=S.autoCrop;$('#sAutoCap').checked=S.autoCapture;$('#sHd').checked=S.hd;$('#sDeskew').checked=S.deskew!==false;$('#sPrintBW').checked=S.printBW!==false;$('#sPro').checked=S.proFilters!==false;$('#sNative').checked=!!S.camNative;$('.sTheme',b).value=S.theme||'system';$('.sLang',b).value=S.lang;$('.sSize',b).value=S.size;$('.sQ',b).value=S.quality;$('#sMargin').value=S.margin;b.onchange=()=>{S.nameTemplate=$('.sTpl',b).value;S.filter=$('.sFilter',b).value;S.maxCap=+$('.sMax',b).value;S.autoCrop=$('#sAuto').checked;S.camNative=$('#sNative').checked;if(($('.sTheme',b).value)!==(S.theme||'system'))cambiarTema($('.sTheme',b).value);S.autoCapture=$('#sAutoCap').checked;S.hd=$('#sHd').checked;S.deskew=$('#sDeskew').checked;if((S.printBW!==false)!==$('#sPrintBW').checked){S.printBW=$('#sPrintBW').checked;if(FW.w){try{FW.w.terminate()}catch(e){}FW.w=null;FW.ok=null}}if((S.proFilters!==false)!==$('#sPro').checked){S.proFilters=$('#sPro').checked;useProFilters(S.proFilters)}S.lang=$('.sLang',b).value;S.size=$('.sSize',b).value;S.quality=$('.sQ',b).value;S.margin=+$('#sMargin').value||0;saveS();toast('Guardado')};$('#sDesign').onclick=async()=>{await Nav.back();designSheet()};$('#sAI').onclick=async()=>{await Nav.back();aiSheet()};$('#sSec').onclick=async()=>{await Nav.back();securitySheet()};$('#sSpace').onclick=async()=>{await Nav.back();storageSheet()};$('#sAbout').onclick=async()=>{await Nav.back();aboutSheet()};$('#sWipe').onclick=async()=>{if(!confirm('¿Borrar TODOS los documentos guardados?'))return;for(const m of await DB.metas())await DB.delDoc(m.id);refreshLists();toast('Documentos borrados')}}
++'<p class="muted set-foot">Danscanner Pro · versión 35 · funciona en celular y PC · los documentos se guardan en este navegador.</p>');$('.sTpl',b).value=S.nameTemplate;$('.sFilter',b).value=S.filter;$('.sMax',b).value=String(S.maxCap);$('#sAuto').checked=S.autoCrop;$('#sAutoCap').checked=S.autoCapture;$('#sHd').checked=S.hd;$('#sDeskew').checked=S.deskew!==false;$('#sPrintBW').checked=S.printBW!==false;$('#sPro').checked=S.proFilters!==false;$('#sNative').checked=!!S.camNative;$('.sTheme',b).value=S.theme||'system';$('.sLang',b).value=S.lang;$('.sSize',b).value=S.size;$('.sQ',b).value=S.quality;$('#sMargin').value=S.margin;b.onchange=()=>{S.nameTemplate=$('.sTpl',b).value;S.filter=$('.sFilter',b).value;S.maxCap=+$('.sMax',b).value;S.autoCrop=$('#sAuto').checked;S.camNative=$('#sNative').checked;if(($('.sTheme',b).value)!==(S.theme||'system'))cambiarTema($('.sTheme',b).value);S.autoCapture=$('#sAutoCap').checked;S.hd=$('#sHd').checked;S.deskew=$('#sDeskew').checked;if((S.printBW!==false)!==$('#sPrintBW').checked){S.printBW=$('#sPrintBW').checked;if(FW.w){try{FW.w.terminate()}catch(e){}FW.w=null;FW.ok=null}}if((S.proFilters!==false)!==$('#sPro').checked){S.proFilters=$('#sPro').checked;useProFilters(S.proFilters)}S.lang=$('.sLang',b).value;S.size=$('.sSize',b).value;S.quality=$('.sQ',b).value;S.margin=+$('#sMargin').value||0;saveS();toast('Guardado')};$('#sDesign').onclick=async()=>{await Nav.back();designSheet()};$('#sAI').onclick=async()=>{await Nav.back();aiSheet()};$('#sSec').onclick=async()=>{await Nav.back();securitySheet()};$('#sSpace').onclick=async()=>{await Nav.back();storageSheet()};$('#sAbout').onclick=async()=>{await Nav.back();aboutSheet()};$('#sWipe').onclick=async()=>{if(!confirm('¿Borrar TODOS los documentos guardados?'))return;for(const m of await DB.metas())await DB.delDoc(m.id);refreshLists();toast('Documentos borrados')}}
 $('#btnSettings').onclick=()=>settingsSheet();$('#navSettings').onclick=()=>settingsSheet();
 function go(v){$$('.view').forEach(x=>x.classList.toggle('active',x.id==='v-'+v));$$('.nav [data-go]').forEach(b=>b.classList.toggle('on',b.dataset.go===v));$('#topTitle').textContent={home:'Danscanner Pro',docs:'Documentos',tools:'Herramientas',nexa:'Nexa IA'}[v];window.scrollTo(0,0)}
 async function doAction(a){if(a==='cam-single')Cam.open('single');else if(a==='cam-batch')Cam.open('batch');else if(a==='import-img')$('#inImg').click();else if(a==='import-any')$('#inAny').click()}
@@ -3425,7 +3425,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 3.3',APP_VER='34';
+const NEXA_VER='Nexa 3.3',APP_VER='35';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3543,7 +3543,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='34 · 25/09/2026';
+const BUILD='35 · 25/09/2026';
 /* Botón Nexa arriba: se crea siempre, aunque otra parte de Nexa falle (antes, un error dejaba teléfonos sin el botón) */
 function ensureNexaTop(){const top=$('.top'),bs=$('#btnSettings');if(!top||!bs||$('#btnNexa'))return;const b=document.createElement('button');b.className='ib nx-top';b.id='btnNexa';b.dataset.go='nexa';b.title='Nexa IA';b.setAttribute('aria-label','Nexa IA');b.innerHTML='<i data-ico="nexa"></i><span>Nexa</span>';top.insertBefore(b,bs);iconize(b);const n=$('.nav [data-go="nexa"]');if(n)n.remove()}
 ensureNexaTop();addEventListener('load',ensureNexaTop);
@@ -4067,6 +4067,22 @@ $('#fxBoxes').onclick=e=>{if(Fix.mark)return;const b=e.target.closest('[data-w]'
 (function(){const foot=$('#editor .sfoot'),ref=foot&&foot.querySelector('[data-ed="text"]');if(!foot||!ref||foot.querySelector('[data-ed="fix"]'))return;
  const b=document.createElement('button');b.className='tb';b.dataset.ed='fix';b.innerHTML='<b data-ico="spell"></b>Corregir';ref.before(b);iconize(b);
  b.addEventListener('click',e=>{e.stopImmediatePropagation();Fix.open()},true)})();
+
+/* ===== Danscanner Pro v35: Nexa IA solo para el administrador mientras está en desarrollo ===== */
+const NEXA_ADMIN_ONLY=true;
+function nexaAllowed(){if(!NEXA_ADMIN_ONLY)return true;const p=SB&&SB.profile;return !!(SB&&SB.ready&&p&&p.role==='admin'&&p.status==='activo')}
+function nexaGate(){const ok=nexaAllowed(),H=document.documentElement;H.classList.toggle('nx-locked',!ok);
+ const i=TOOLS.findIndex(t=>t.name==='Asistente IA'),row=i>=0&&document.querySelector('#toolsGrid [data-tool="'+i+'"]');if(row)row.hidden=!ok;
+ if(!ok&&$('#v-nexa')&&$('#v-nexa').classList.contains('active'))go('home');return ok}
+document.head.insertAdjacentHTML('beforeend','<style id="v35Css">html.nx-locked #btnNexa,html.nx-locked [data-go="nexa"],html.nx-locked #docNexa,html.nx-locked #aiCard,html.nx-locked .wiz-nexa,html.nx-locked #sAI,html.nx-locked #v-nexa{display:none!important}</style>');
+{const _g=go;go=function(v){if(v==='nexa'&&!nexaAllowed()){toast('Nexa IA está en desarrollo: por ahora solo la usa el administrador');v='home'}return _g.call(this,v)}}
+{const _a=applyPerms;applyPerms=function(){const r=_a.apply(this,arguments);nexaGate();return r}}
+{const _rt=renderTools;renderTools=function(){const r=_rt.apply(this,arguments);nexaGate();return r}}
+{const _s=aiSheet;aiSheet=function(){if(!nexaAllowed())return toast('Nexa IA está en desarrollo: por ahora solo la usa el administrador');return _s.apply(this,arguments)}}
+{const _s=nexaSheet;nexaSheet=function(){if(!nexaAllowed())return toast('Nexa IA está en desarrollo: por ahora solo la usa el administrador');return _s.apply(this,arguments)}}
+{const _s=tplSheet;tplSheet=function(){if(!nexaAllowed())return toast('Nexa IA está en desarrollo: por ahora solo la usa el administrador');return _s.apply(this,arguments)}}
+{const _o=sbSignOut;sbSignOut=function(){const r=_o.apply(this,arguments);SB.profile=null;nexaGate();return r}}
+nexaGate();
 </script>
 </body>
 </html>

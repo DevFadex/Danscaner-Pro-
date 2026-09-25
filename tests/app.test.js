@@ -12,6 +12,8 @@ async function newPage(browser){
   await pg.route('**/config.js',r=>r.fulfill({body:'',contentType:'text/javascript'}));
   await pg.goto(BASE+'/index.html');await W(1200);
   await pg.evaluate(async()=>{for(const m of await DB.metas())await DB.delDoc(m.id);localStorage.removeItem('ds_nexa');S.lastBackup=Date.now();saveS();refreshLists()});
+  /* las pruebas entran como administrador (Nexa está reservada al administrador mientras se desarrolla) */
+  await pg.evaluate(()=>{SB.ready=true;SB.profile={id:'t',role:'admin',status:'activo'};applyPerms()});
   return pg;
 }
 const DB_count=pg=>pg.evaluate(async()=>(await DB.metas()).length);
@@ -348,6 +350,17 @@ await test('Corregir texto: borra la palabra mal escrita, escribe la correcta y 
   /* a mano: el recuadro se ajusta a la tinta */
   const ib=await pg.evaluate(()=>{const c=canvas(200,100),x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,200,100);x.fillStyle='#000';x.fillRect(50,40,60,20);return fixInkBox(c,{x:.1,y:.1,w:.8,h:.8})});
   assert.ok(Math.abs(ib.x-.25)<.01&&Math.abs(ib.w-.3)<.01&&Math.abs(ib.y-.4)<.02,JSON.stringify(ib));
+});
+
+await test('Nexa IA solo para el administrador mientras está en desarrollo',async pg=>{
+  await pg.evaluate(()=>{SB.profile={id:'u',role:'usuario',status:'activo'};applyPerms();renderTools()});await W(200);
+  assert.equal(await pg.isVisible('#btnNexa'),false,'un usuario ve el botón Nexa');
+  const tool=await pg.evaluate(()=>{const i=TOOLS.findIndex(t=>t.name==='Asistente IA');const r=document.querySelector('#toolsGrid [data-tool="'+i+'"]');return !r||r.hidden});assert.ok(tool,'un usuario ve el Asistente IA en Herramientas');
+  await pg.evaluate(()=>go('nexa'));await W(200);assert.equal(await pg.isVisible('#v-nexa'),false,'un usuario pudo abrir Nexa');
+  await pg.click('#navSettings');await W(500);assert.equal(await pg.isVisible('#sAI'),false,'un usuario ve la configuración de Nexa');
+  await pg.evaluate(()=>Nav.back());await W(400);
+  await pg.evaluate(()=>{SB.profile={id:'a',role:'admin',status:'activo'};applyPerms()});await W(200);
+  assert.equal(await pg.isVisible('#btnNexa'),true,'el administrador no ve Nexa');await pg.click('#btnNexa');await W(300);assert.equal(await pg.isVisible('#v-nexa'),true);
 });
 
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
