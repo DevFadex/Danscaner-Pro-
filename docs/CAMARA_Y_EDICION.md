@@ -214,3 +214,12 @@ En el editor, **Corregir** permite arreglar una palabra mal escrita de la hoja e
 - En **Herramientas → Editar PDF**, cada página tiene el botón **Corregir** (o se toca la miniatura) y abre la misma pantalla de corrección del editor sobre esa página (renderizada a 2,5×).
 - Cada corrección se agrega al PDF como un parche de imagen solo en la zona de la palabra; el resto de la página queda igual (si el PDF tiene texto digital, sigue siendo texto).
 - **Zoom**: en Corregir, con dos dedos, rueda + Ctrl o los botones − / +; en **Colocar** (firma, texto, fecha, tapar, recortar) con dos dedos, rueda o − / +, y con un dedo se mueve la hoja cuando está ampliada. El zoom no cambia la posición ni el tamaño guardados.
+
+## v37 · Corregir con la misma letra y varias palabras
+
+- **PDF con texto digital**: se leen las palabras del archivo (sin OCR, funciona sin internet) con su posición exacta, la familia de letra (Times / Arial / Courier), negrita, cursiva y el tamaño en puntos. La corrección usa esos datos.
+- **Escaneos y fotos**: la palabra se compara con Arial, Times y Máquina en normal, negrita y cursiva (`fixDetect`), y se elige la que mejor coincide. Se muestra «Letra detectada: … · ≈12 pt» y se puede cambiar.
+- **Varias palabras**: buscar la frase («frias alberto tomas») o tocar la primera y la última palabra del renglón. La puntuación pegada (coma, punto, paréntesis) queda afuera y no se toca.
+- **Espaciado**: se mide el ancho real de la letra en el documento (`sx0`) y la palabra nueva se escribe con el mismo espaciado.
+- **Acomodar renglón** (activado por defecto): si la palabra nueva es más corta o más larga, el resto del renglón se corre para que no quede hueco ni se superponga.
+- Al correr el renglón, lo que queda libre al final se rellena con el papel de arriba y de abajo (`fixFillCols`), así sigue el degradé de la hoja. En los escaneos, la caja de las palabras se vuelve a medir sobre la tinta, así la cola de una coma no agranda la letra.

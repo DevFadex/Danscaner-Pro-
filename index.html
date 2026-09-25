@@ -1023,7 +1023,7 @@ const b=openSheet('Ajustes','<div class="set-list">'+setRow('sDesign','palette',
 +acc('🌓','Apariencia y nombres','Tema y nombre de los documentos',opt('<i data-ico="theme">🌓</i> Tema',sel('sTheme',[['system','Automático (según el teléfono)'],['light','Claro'],['dark','Oscuro']]))+opt('Plantilla de nombre por defecto',sel('sTpl',NAME_TEMPLATES.map(t=>[t,t]))))
 +acc('📄','PDF y texto (OCR)','Hoja, calidad, márgenes e idioma',opt('Idioma OCR',sel('sLang',[['spa','Español'],['eng','Inglés'],['spa+eng','Español + Inglés'],['por','Portugués']]))+'<div class="row">'+opt('Hoja PDF por defecto',sel('sSize',[['a4','A4'],['oficio','Oficio'],['carta','Carta'],['original','Tamaño imagen']]))+opt('Calidad PDF',sel('sQ',Object.entries(QUAL).map(([k,v])=>[k,v.label])))+'</div>'+opt('Márgenes por defecto (mm)','<input type="number" id="sMargin" min="0" max="40">'))
 +acc('🗄️','Datos del dispositivo',est||'Documentos guardados en este navegador','<p class="muted">'+est+'</p><button class="btn red block" id="sWipe">🗑 Borrar todos los documentos</button>')
-+'<p class="muted set-foot">Danscanner Pro · versión 36 · funciona en celular y PC · los documentos se guardan en este navegador.</p>');$('.sTpl',b).value=S.nameTemplate;$('.sFilter',b).value=S.filter;$('.sMax',b).value=String(S.maxCap);$('#sAuto').checked=S.autoCrop;$('#sAutoCap').checked=S.autoCapture;$('#sHd').checked=S.hd;$('#sDeskew').checked=S.deskew!==false;$('#sPrintBW').checked=S.printBW!==false;$('#sPro').checked=S.proFilters!==false;$('#sNative').checked=!!S.camNative;$('.sTheme',b).value=S.theme||'system';$('.sLang',b).value=S.lang;$('.sSize',b).value=S.size;$('.sQ',b).value=S.quality;$('#sMargin').value=S.margin;b.onchange=()=>{S.nameTemplate=$('.sTpl',b).value;S.filter=$('.sFilter',b).value;S.maxCap=+$('.sMax',b).value;S.autoCrop=$('#sAuto').checked;S.camNative=$('#sNative').checked;if(($('.sTheme',b).value)!==(S.theme||'system'))cambiarTema($('.sTheme',b).value);S.autoCapture=$('#sAutoCap').checked;S.hd=$('#sHd').checked;S.deskew=$('#sDeskew').checked;if((S.printBW!==false)!==$('#sPrintBW').checked){S.printBW=$('#sPrintBW').checked;if(FW.w){try{FW.w.terminate()}catch(e){}FW.w=null;FW.ok=null}}if((S.proFilters!==false)!==$('#sPro').checked){S.proFilters=$('#sPro').checked;useProFilters(S.proFilters)}S.lang=$('.sLang',b).value;S.size=$('.sSize',b).value;S.quality=$('.sQ',b).value;S.margin=+$('#sMargin').value||0;saveS();toast('Guardado')};$('#sDesign').onclick=async()=>{await Nav.back();designSheet()};$('#sAI').onclick=async()=>{await Nav.back();aiSheet()};$('#sSec').onclick=async()=>{await Nav.back();securitySheet()};$('#sSpace').onclick=async()=>{await Nav.back();storageSheet()};$('#sAbout').onclick=async()=>{await Nav.back();aboutSheet()};$('#sWipe').onclick=async()=>{if(!confirm('¿Borrar TODOS los documentos guardados?'))return;for(const m of await DB.metas())await DB.delDoc(m.id);refreshLists();toast('Documentos borrados')}}
++'<p class="muted set-foot">Danscanner Pro · versión 37 · funciona en celular y PC · los documentos se guardan en este navegador.</p>');$('.sTpl',b).value=S.nameTemplate;$('.sFilter',b).value=S.filter;$('.sMax',b).value=String(S.maxCap);$('#sAuto').checked=S.autoCrop;$('#sAutoCap').checked=S.autoCapture;$('#sHd').checked=S.hd;$('#sDeskew').checked=S.deskew!==false;$('#sPrintBW').checked=S.printBW!==false;$('#sPro').checked=S.proFilters!==false;$('#sNative').checked=!!S.camNative;$('.sTheme',b).value=S.theme||'system';$('.sLang',b).value=S.lang;$('.sSize',b).value=S.size;$('.sQ',b).value=S.quality;$('#sMargin').value=S.margin;b.onchange=()=>{S.nameTemplate=$('.sTpl',b).value;S.filter=$('.sFilter',b).value;S.maxCap=+$('.sMax',b).value;S.autoCrop=$('#sAuto').checked;S.camNative=$('#sNative').checked;if(($('.sTheme',b).value)!==(S.theme||'system'))cambiarTema($('.sTheme',b).value);S.autoCapture=$('#sAutoCap').checked;S.hd=$('#sHd').checked;S.deskew=$('#sDeskew').checked;if((S.printBW!==false)!==$('#sPrintBW').checked){S.printBW=$('#sPrintBW').checked;if(FW.w){try{FW.w.terminate()}catch(e){}FW.w=null;FW.ok=null}}if((S.proFilters!==false)!==$('#sPro').checked){S.proFilters=$('#sPro').checked;useProFilters(S.proFilters)}S.lang=$('.sLang',b).value;S.size=$('.sSize',b).value;S.quality=$('.sQ',b).value;S.margin=+$('#sMargin').value||0;saveS();toast('Guardado')};$('#sDesign').onclick=async()=>{await Nav.back();designSheet()};$('#sAI').onclick=async()=>{await Nav.back();aiSheet()};$('#sSec').onclick=async()=>{await Nav.back();securitySheet()};$('#sSpace').onclick=async()=>{await Nav.back();storageSheet()};$('#sAbout').onclick=async()=>{await Nav.back();aboutSheet()};$('#sWipe').onclick=async()=>{if(!confirm('¿Borrar TODOS los documentos guardados?'))return;for(const m of await DB.metas())await DB.delDoc(m.id);refreshLists();toast('Documentos borrados')}}
 $('#btnSettings').onclick=()=>settingsSheet();$('#navSettings').onclick=()=>settingsSheet();
 function go(v){$$('.view').forEach(x=>x.classList.toggle('active',x.id==='v-'+v));$$('.nav [data-go]').forEach(b=>b.classList.toggle('on',b.dataset.go===v));$('#topTitle').textContent={home:'Danscanner Pro',docs:'Documentos',tools:'Herramientas',nexa:'Nexa IA'}[v];window.scrollTo(0,0)}
 async function doAction(a){if(a==='cam-single')Cam.open('single');else if(a==='cam-batch')Cam.open('batch');else if(a==='import-img')$('#inImg').click();else if(a==='import-any')$('#inAny').click()}
@@ -3425,7 +3425,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 3.3',APP_VER='36';
+const NEXA_VER='Nexa 3.3',APP_VER='37';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3543,7 +3543,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='36 · 25/09/2026';
+const BUILD='37 · 25/09/2026';
 /* Botón Nexa arriba: se crea siempre, aunque otra parte de Nexa falle (antes, un error dejaba teléfonos sin el botón) */
 function ensureNexaTop(){const top=$('.top'),bs=$('#btnSettings');if(!top||!bs||$('#btnNexa'))return;const b=document.createElement('button');b.className='ib nx-top';b.id='btnNexa';b.dataset.go='nexa';b.title='Nexa IA';b.setAttribute('aria-label','Nexa IA');b.innerHTML='<i data-ico="nexa"></i><span>Nexa</span>';top.insertBefore(b,bs);iconize(b);const n=$('.nav [data-go="nexa"]');if(n)n.remove()}
 ensureNexaTop();addEventListener('load',ensureNexaTop);
@@ -3970,8 +3970,15 @@ function fixInkBox(c,b){const cw=c.width,ch=c.height,X=Math.max(0,Math.floor(b.x
 /* dibuja una corrección: tapa la palabra con el color del papel de alrededor y escribe el texto nuevo con el color de la tinta */
 function drawFix(c,o){const cw=c.width,ch=c.height;if(!cw||!ch||!o)return;const x=c.getContext('2d',{willReadFrequently:true});
  const bx=o.x*cw,by=o.y*ch,bw=o.w*cw,bh=o.h*ch,fs=o.fs*ch*(o.k||1);x.font=fixFont(o,fs);const t=String(o.t||'');const tw=t?x.measureText(t).width:0;
- const sx=tw>bw*1.25?Math.max(.62,bw*1.25/tw):1,dw=Math.max(bw,tw*sx),pad=Math.max(2,bh*.18);
- const X0=Math.max(0,Math.floor(bx-pad)),Y0=Math.max(0,Math.floor(by-pad)),X1=Math.min(cw,Math.ceil(bx+dw+pad)),Y1=Math.min(ch,Math.ceil(by+bh+pad));if(X1-X0<2||Y1-Y0<2)return null;
+ const k0=clamp(o.sx0||1,.7,1.4),pad=Math.max(2,bh*.18),lx1=(o.lx1||0)*cw;let rfx=0;
+ /* acomodar el renglón: si la palabra nueva es más corta o más larga, el resto del renglón se corre para que no quede hueco ni se pise */
+ if(o.rf!==0&&t&&lx1>bx+bw+1){const d=Math.round(tw*k0-bw);if(Math.abs(d)>=1&&(d<0||lx1+d<cw*.985))rfx=d}
+ const sx=rfx?k0:(tw*k0>bw*1.15?Math.max(.62,bw*1.15/tw):k0),dw=rfx?tw*k0:Math.max(bw,tw*sx);let strip=null;
+ if(rfx){const bl=o.bl*ch,sy0=Math.max(0,Math.floor(Math.min((o.ly0??o.y)*ch-pad*.6,bl-fs*.88))),sy1=Math.min(ch,Math.ceil(Math.max((o.ly1??(o.y+o.h))*ch+pad*.6,bl+fs*.3))),sx0=Math.ceil(bx+bw+1),sx1=Math.min(cw,Math.ceil(lx1+pad));
+  if(sx1>sx0&&sy1>sy0){const S=x.getImageData(sx0,sy0,sx1-sx0,sy1-sy0),pd=S.data,arr=[];for(let i=0;i<pd.length;i+=12)arr.push([pd[i]*.299+pd[i+1]*.587+pd[i+2]*.114,pd[i],pd[i+1],pd[i+2]]);arr.sort((a,b)=>a[0]-b[0]);
+   const z=arr.slice(Math.floor(arr.length*.6)),pc=[1,2,3].map(k=>z.reduce((a,p)=>a+p[k],0)/Math.max(1,z.length));x.fillStyle='rgb('+pc.map(Math.round).join(',')+')';
+   if(rfx<0)fixFillCols(x,sx1+rfx,sx1,sy0,sy1,cw,ch,pc);else x.fillRect(sx0,sy0,rfx,sy1-sy0);x.putImageData(S,sx0+rfx,sy0);strip={dst:sx0+rfx,X1:Math.min(cw,sx1+Math.max(0,rfx)),Y0:sy0,Y1:sy1}}else rfx=0}
+ const X0=Math.max(0,Math.floor(bx-pad)),Y0=Math.max(0,Math.floor(by-pad)),X1=Math.min(cw,Math.ceil(strip?Math.max(bx+dw,strip.dst):bx+dw+pad)),Y1=Math.min(ch,Math.ceil(by+bh+pad));if(X1-X0<2||Y1-Y0<2)return null;
  const R=Math.max(2,Math.round(pad)),rx0=Math.max(0,X0-R),ry0=Math.max(0,Y0-R),rx1=Math.min(cw,X1+R),ry1=Math.min(ch,Y1+R),rw=rx1-rx0,rh=ry1-ry0;
  const src=x.getImageData(rx0,ry0,rw,rh).data;const side={t:[],b:[],l:[],r:[]},ins=[];
  for(let yy=ry0;yy<ry1;yy++)for(let xx=rx0;xx<rx1;xx++){const i=((yy-ry0)*rw+(xx-rx0))*4,px=[src[i]*.299+src[i+1]*.587+src[i+2]*.114,src[i],src[i+1],src[i+2]];
@@ -3979,14 +3986,14 @@ function drawFix(c,o){const cw=c.width,ch=c.height;if(!cw||!ch||!o)return;const 
  const all=[].concat(side.t,side.b,side.l,side.r);if(!all.length)return;
  const paper=a=>{if(!a.length)return null;const s=a.slice().sort((p,q)=>p[0]-q[0]),z=s.slice(Math.floor(s.length*.45),Math.max(Math.floor(s.length*.97),Math.floor(s.length*.45)+1));const m=[0,0,0,0];for(const p of z)for(let k=0;k<4;k++)m[k]+=p[k]/z.length;let v=0;for(const p of z)v+=(p[0]-m[0])**2;m.sd=Math.sqrt(v/z.length);return m};
  const g=paper(all),T=paper(side.t)||g,B=paper(side.b)||g,Lf=paper(side.l)||g,Rt=paper(side.r)||g;
- let ink=FIX_INK[o.ink];if(!ink){const s=ins.slice().sort((p,q)=>p[0]-q[0]),i0=Math.floor(s.length*.02),i1=Math.max(i0+1,Math.floor(s.length*.2)),m=[0,0,0,0];for(let i=i0;i<i1&&i<s.length;i++)for(let k=0;k<4;k++)m[k]+=s[i][k]/(i1-i0);ink=(s.length&&g[0]-m[0]>45)?[m[1],m[2],m[3]]:FIX_INK.negro}
+ let ink=FIX_INK[o.ink];if(!ink){const s=ins.slice().sort((p,q)=>p[0]-q[0]),i0=Math.floor(s.length*.01),i1=Math.max(i0+1,Math.floor(s.length*(o.src==='pdf'?.05:.12))),m=[0,0,0,0];for(let i=i0;i<i1&&i<s.length;i++)for(let k=0;k<4;k++)m[k]+=s[i][k]/(i1-i0);ink=(s.length&&g[0]-m[0]>45)?[m[1],m[2],m[3]]:FIX_INK.negro}
  /* papel: mezcla suave de los cuatro lados, con el mismo grano de la foto y bordes difuminados */
  const W=X1-X0,H=Y1-Y0,out=x.getImageData(X0,Y0,W,H),od=out.data,nz=Math.min(5,g.sd*.7),fe=Math.max(1,pad*.7);
  for(let yy=0;yy<H;yy++){const v=H>1?yy/(H-1):.5;for(let xx=0;xx<W;xx++){const u=W>1?xx/(W-1):.5,i=(yy*W+xx)*4;
-  const ex=Math.min(xx+X0-(bx-pad),bx+dw+pad-(xx+X0)),ey=Math.min(yy+Y0-(by-pad),by+bh+pad-(yy+Y0)),al=Math.min(1,Math.max(0,Math.min(ex,ey)/fe)),n=(Math.random()+Math.random()-1)*nz;
+  const ex=rfx?xx+X0-(bx-pad):Math.min(xx+X0-(bx-pad),bx+dw+pad-(xx+X0)),ey=Math.min(yy+Y0-(by-pad),by+bh+pad-(yy+Y0)),al=Math.min(1,Math.max(0,Math.min(ex,ey)/fe)),n=(Math.random()+Math.random()-1)*nz;
   for(let k=1;k<4;k++){const col=((1-u)*Lf[k]+u*Rt[k]+(1-v)*T[k]+v*B[k])/2+n;od[i+k-1]=od[i+k-1]*(1-al)+col*al}}}
  x.putImageData(out,X0,Y0);
- if(t){x.save();x.font=fixFont(o,fs);x.textBaseline='alphabetic';x.fillStyle='rgb('+ink.map(v=>Math.round(v)).join(',')+')';if('filter' in x&&fs>14)x.filter='blur('+Math.min(1.2,fs*.012).toFixed(2)+'px)';x.translate(bx,o.bl*ch);x.scale(sx,1);x.fillText(t,0,0);x.restore()}return {X0,Y0,X1:Math.min(cw,X1),Y1:Math.min(ch,Math.ceil(Math.max(Y1,o.bl*ch+fs*.32)+1))}}
+ if(t){x.save();x.font=fixFont(o,fs);x.textBaseline='alphabetic';x.fillStyle='rgb('+ink.map(v=>Math.round(v)).join(',')+')';if('filter' in x&&fs>14&&o.src!=='pdf')x.filter='blur('+Math.min(1.2,fs*.012).toFixed(2)+'px)';x.translate(bx,o.bl*ch);x.scale(sx,1);x.fillText(t,0,0);x.restore()}const R0={X0,Y0,X1:Math.min(cw,X1),Y1:Math.min(ch,Math.ceil(Math.max(Y1,o.bl*ch+fs*.32)+1))};R0.dx=rfx;if(strip){R0.X1=Math.max(R0.X1,strip.X1);R0.Y0=Math.min(R0.Y0,strip.Y0);R0.Y1=Math.max(R0.Y1,strip.Y1)}return R0}
 {const _rp=renderPage;renderPage=async function(p,o){const c=await _rp.apply(this,arguments);if(p&&Array.isArray(p.fixes)&&p.fixes.length&&!(o&&o.noFix))for(const f of p.fixes)drawFix(c,f);return c}}
 {const _s=Hist.snap.bind(Hist);Hist.snap=function(p){const o=JSON.parse(_s(p));o.fixes=(p.fixes||[]).map(f=>({...f}));return JSON.stringify(o)}}
 
@@ -4041,7 +4048,7 @@ const Fix={p:null,c:null,base:null,words:[],sel:null,o:null,zoom:1,mark:false,wo
  upd(){const o=this.o;if(!o)return;o.t=$('#fxTxt').value;if(!o.orig){const k=o.k;fixMetrics(o);o.k=k}this.paint();const cv=$('#fxCv'),P=$('#fxPrev'),m=o.h*cv.height*1.6,sx=Math.max(0,o.x*cv.width-m*2),sy=Math.max(0,o.y*cv.height-m),sw=Math.min(cv.width-sx,o.w*cv.width*1.6+m*4),sh=Math.min(cv.height-sy,o.h*cv.height+m*2);
   const sc=Math.min(3,700/sw);P.width=Math.max(1,Math.round(sw*sc));P.height=Math.max(1,Math.round(sh*sc));P.getContext('2d').drawImage(cv,sx,sy,sw,sh,0,0,P.width,P.height)},
  cancel(){this.o=null;this.sel=null;$('#fxPanel').hidden=true;$('#fxSel').hidden=true;$$('#fxBoxes>b.sel').forEach(b=>b.classList.remove('sel'));this.paint()},
- commit(list){const p=this.p;if((!p&&!this.onCommit)||!list.length)return;if(p)p.fixes=[...(p.fixes||[]),...list.map(o=>({...o}))];const rects=list.map(o=>drawFix(this.base,o));if(this.onCommit)try{this.onCommit(list,rects,this.base)}catch(e){console.warn(e)}
+ commit(list){const p=this.p;if((!p&&!this.onCommit)||!list.length)return;if(p)p.fixes=[...(p.fixes||[]),...list.map(o=>({...o}))];const rects=list.map(o=>drawFix(this.base,o));this._lastRects=rects;this._lastList=list;if(this.onCommit)try{this.onCommit(list,rects,this.base)}catch(e){console.warn(e)}
   for(const o of list){const i=this.words.findIndex(w=>Math.abs(w.x-o.x)<1e-6&&Math.abs(w.y-o.y)<1e-6);if(i>=0){this.words[i].t=o.t||'';const b=$('#fxBoxes>b[data-w="'+i+'"]');if(b)b.remove()}}
   this.o=null;this.cancel();if(!p)return;if(p===Ed.p)Ed.touch(false);else{p._dirty=true;saveDoc()}},
  apply(){const o=this.o;if(!o)return;o.t=$('#fxTxt').value;if(o.t.trim()===o.orig.trim()&&o.orig&&!confirm('La palabra no cambió. ¿Aplicar igual?'))return;const was=o.orig;this.commit([o]);toast(o.t?'Corregido: «'+(was||'…')+'» → «'+o.t+'»':'Palabra borrada')},
@@ -4119,6 +4126,90 @@ const PlZ={z:1,tx:0,ty:0,
  st.addEventListener('wheel',e=>{e.preventDefault();PlZ.set(PlZ.z*(e.deltaY<0?1.15:.87))},{passive:false})})();
 {const _po=placeOverlay;placeOverlay=function(){PlZ.reset();return _po.apply(this,arguments)}}
 document.head.insertAdjacentHTML('beforeend','<style id="v36Css">#plImg{transform-origin:center center;will-change:transform}.pl-zl{font-size:12px;min-width:40px;text-align:center;color:var(--tx2)}#placer .shead .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.gridwrap .pgimg{cursor:pointer}</style>');
+
+/* ===== Danscanner Pro v37: Corregir con la MISMA letra del documento y varias palabras a la vez ===== */
+fixFont=function(o,px){return (o.i?'italic ':'')+(o.b?'bold ':'')+Math.max(1,px).toFixed(1)+'px '+(FIX_FONTS[o.f]||FIX_FONTS.sans)};
+/* ancho real de la letra en el documento (espaciado/condensado) respecto de la letra de la app */
+{const _fm=fixMetrics;fixMetrics=function(o){if(!o.fixedMetrics)_fm(o);o.sx0=1;const B=Fix.base,ar=B?B.width/B.height:0;
+ if(ar&&o.orig&&o.fs>0){const m=canvas(4,4).getContext('2d');m.font=fixFont(o,100);const bb=m.measureText(o.orig);const iw=o.fixedMetrics?bb.width:(bb.actualBoundingBoxLeft||0)+(bb.actualBoundingBoxRight||bb.width);if(iw>0)o.sx0=clamp(o.w*ar/(iw*o.fs/100),.7,1.4)}return o}}
+function pdfFontMeta(name,fo){const n=String(name||'').toLowerCase().replace(/^[a-z]{6}\+/,'');let f='sans';
+ if(/courier|mono|consol|typewriter|lucidaconsole/.test(n))f='mono';else if(/sans|arial|helvet|calibri|verdana|tahoma|segoe|trebuchet|gothic|univers|futura/.test(n))f='sans';else if(/times|serif|roman|georgia|garamond|cambria|bookman|palatino|century|minion|baskerville/.test(n))f='serif';
+ const b=(fo&&(fo.bold||fo.black))||/bold|black|heavy|semibold|demi|,b(\b|$)|-b(\b|$)/.test(n)?1:0,i=(fo&&fo.italic)||/italic|oblique|,i(\b|$)/.test(n)?1:0;return {f,b,i}}
+/* palabras de un PDF con texto digital: posición exacta, letra, negrita/cursiva y tamaño en puntos */
+async function pdfWordsOf(pdf,n,scale,cw,ch){const pg=await pdf.getPage(n),vp=pg.getViewport({scale}),tc=await pg.getTextContent(),U=(window.pdfjsLib||{}).Util;if(!U)return [];const m=canvas(4,4).getContext('2d'),out=[];
+ for(const it of tc.items){const s=it.str||'';if(!s.trim())continue;const tx=U.transform(vp.transform,it.transform),fh=Math.hypot(tx[2],tx[3]);if(fh<3||Math.abs(tx[1])>fh*.05||Math.abs(tx[2])>fh*.05)continue;
+  let fo=null;try{fo=pg.commonObjs.get(it.fontName)}catch(e){}const st=(tc.styles||{})[it.fontName]||{};const meta=pdfFontMeta((fo&&fo.name||'')+' '+(st.fontFamily||''),fo);
+  const W=(it.width||0)*scale,x0=tx[4],bl=tx[5];m.font=fixFont(meta,100);const tot=m.measureText(s).width||1;const re=/\S+/g;let mm;
+  while((mm=re.exec(s))){const pre=m.measureText(s.slice(0,mm.index)).width/tot*W,ww=m.measureText(mm[0]).width/tot*W;
+   out.push({t:mm[0],x:(x0+pre)/cw,y:(bl-fh*.8)/ch,w:ww/cw,h:fh*1.02/ch,meta:{...meta,fs:fh/ch,bl:bl/ch,pt:fh/scale}})}}
+ return out}
+/* documentos escaneados: compara la palabra con Arial / Times / Máquina, normal, negrita y cursiva, y elige la que mejor coincide */
+function fixDetect(base,o){if(!base||!o.orig||o.orig.replace(/\s/g,'').length<2)return null;const cw=base.width,ch=base.height,bx=Math.floor(o.x*cw),by=Math.floor(o.y*ch),bw=Math.max(2,Math.round(o.w*cw)),bh=Math.max(2,Math.round(o.h*ch));
+ const H=40,W=Math.round(bw*H/bh);if(W<8||W>1600)return null;const sc=canvas(W,H),sx=sc.getContext('2d',{willReadFrequently:true});sx.drawImage(base,bx,by,bw,bh,0,0,W,H);const d=sx.getImageData(0,0,W,H).data,L=new Float32Array(W*H);let mn=255,mx=0;
+ for(let i=0;i<W*H;i++){const v=d[i*4]*.299+d[i*4+1]*.587+d[i*4+2]*.114;L[i]=v;if(v<mn)mn=v;if(v>mx)mx=v}if(mx-mn<40)return null;const th=(mn+mx)/2,A=new Uint8Array(W*H);let nA=0;for(let i=0;i<W*H;i++)if(L[i]<th){A[i]=1;nA++}
+ const dil=M=>{const R=new Uint8Array(W*H);for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(M[y*W+x])for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const yy=y+dy,xx=x+dx;if(yy>=0&&yy<H&&xx>=0&&xx<W)R[yy*W+xx]=1}return R};const Ad=dil(A);
+ const tc=canvas(W,H),tx=tc.getContext('2d',{willReadFrequently:true});let best=null;
+ for(const f of ['sans','serif','mono'])for(const b of [0,1])for(const it of [0,1]){const c=_fixMet({...o,f,b,i:it,fixedMetrics:0});const s=H/bh,fsPx=c.fs*ch*s,blPx=(c.bl-o.y)*ch*s;tx.setTransform(1,0,0,1,0,0);tx.clearRect(0,0,W,H);tx.font=fixFont(c,fsPx);
+  const bb=tx.measureText(o.orig),lf=bb.actualBoundingBoxLeft||0,iw=lf+(bb.actualBoundingBoxRight||bb.width);if(!(iw>0))continue;const scl=W/iw;tx.fillStyle='#000';tx.setTransform(scl,0,0,1,lf*scl,0);tx.fillText(o.orig,0,blPx);
+  const e=tx.getImageData(0,0,W,H).data,B=new Uint8Array(W*H);let nB=0;for(let i=0;i<W*H;i++)if(e[i*4+3]>110){B[i]=1;nB++}if(!nB)continue;const Bd=dil(B);let i1=0,i2=0;for(let i=0;i<W*H;i++){if(A[i]&&Bd[i])i1++;if(B[i]&&Ad[i])i2++}
+  const score=(i1+i2)/(nA+nB)-Math.abs(Math.log(scl))*.6-(it?.02:0);if(!best||score>best.score)best={f,b,i:it,score,scl}}
+ return best}
+const _fixMet=o=>{const k=fixMetrics;return k(o)};
+/* deja afuera la puntuación pegada (coma, punto, paréntesis) para que quede igual que en el original */
+function fixTrimPunct(w,first,last){if(!w)return w;let t=w.t,x=w.x,ww=w.w;const m=canvas(4,4).getContext('2d');m.font=fixFont(w.meta||{},100);const W=m.measureText(t).width||1;
+ const tr=last&&t.match(/^(.*?[\p{L}\d])([,.;:)\]»"'”]+)$/u);if(tr){const k=m.measureText(tr[1]).width/W;ww=ww*k;t=tr[1]}
+ const ld=first&&t.match(/^([(\[«"'“]+)(.*)$/u);if(ld&&ld[2]){const k=m.measureText(ld[1]).width/(m.measureText(t).width||1);x+=ww*k;ww=ww*(1-k);t=ld[2]}
+ return t===w.t?w:{...w,t,x,w:ww}}
+/* rellena columnas con el papel de arriba y de abajo (sigue el degradé y la textura de la hoja) */
+function fixFillCols(x,a,b,y0,y1,cw,ch,pc){a=Math.max(0,Math.floor(a));b=Math.min(cw,Math.ceil(b));const w=b-a,h=y1-y0;if(w<1||h<1)return;const up=Math.max(0,y0-4),dn=Math.min(ch-4,y1);
+ const U=x.getImageData(a,up,w,4).data,D=x.getImageData(a,dn,w,4).data,out=x.getImageData(a,y0,w,h),od=out.data;
+ const best=(A,i)=>{let m=-1,r=null;for(let k=0;k<4;k++){const j=(k*w+i)*4,l=A[j]+A[j+1]+A[j+2];if(l>m){m=l;r=[A[j],A[j+1],A[j+2]]}}return (r&&m>(pc[0]+pc[1]+pc[2])*.8)?r:pc};
+ const Us=[],Ds=[];for(let i=0;i<w;i++){Us.push(best(U,i));Ds.push(best(D,i))}const sm=A=>A.map((_,i)=>{const r=[0,0,0];let n=0;for(let j=Math.max(0,i-6);j<=Math.min(w-1,i+6);j++){for(let k=0;k<3;k++)r[k]+=A[j][k];n++}return r.map(v=>v/n)});const Uf=sm(Us),Df=sm(Ds);
+ for(let i=0;i<w;i++){const u=Uf[i],d=Df[i];for(let y=0;y<h;y++){const v=h>1?y/(h-1):.5,j=(y*w+i)*4,n=(Math.random()-.5)*2;for(let k=0;k<3;k++)od[j+k]=u[k]*(1-v)+d[k]*v+n;od[j+3]=255}}x.putImageData(out,a,y0)}
+function fixSameLine(a,b){if(!a||!b)return false;const t=Math.max(a.y,b.y),bt=Math.min(a.y+a.h,b.y+b.h);return bt-t>Math.min(a.h,b.h)*.4}
+Object.assign(Fix,{selIdx:[],hitGroups:[],
+ group(idx){const ws=idx.map(i=>fixTrimPunct(this.words[i],i===idx[0],i===idx[idx.length-1]));const x0=Math.min(...ws.map(w=>w.x)),y0=Math.min(...ws.map(w=>w.y)),x1=Math.max(...ws.map(w=>w.x+w.w)),y1=Math.max(...ws.map(w=>w.y+w.h));
+  const m0=ws[0].meta;return {box:{x:x0,y:y0,w:x1-x0,h:y1-y0},orig:ws.map(w=>w.t).join(' '),meta:m0?{...m0,fs:Math.max(...ws.map(w=>w.meta?w.meta.fs:0)),pt:Math.max(...ws.map(w=>w.meta?w.meta.pt:0))}:null}},
+ build(box,orig,meta,tmpl){const o={fix:1,x:box.x,y:box.y,w:box.w,h:box.h,orig:orig||'',t:orig||'',f:S.fixFont||'sans',b:0,i:0,k:1,ink:'',src:''};
+  if(meta){Object.assign(o,{f:meta.f,b:meta.b,i:meta.i,fs:meta.fs,bl:meta.bl,pt:meta.pt,fixedMetrics:1,src:'pdf'})}
+  else if(tmpl){o.f=tmpl.f;o.b=tmpl.b;o.i=tmpl.i;o.src=tmpl.src}
+  else if(orig&&this.base){const ib=fixInkBox(this.base,{x:o.x,y:o.y-o.h*.1,w:o.w,h:o.h*1.2});if(ib&&ib.h>o.h*.4){o.x=ib.x;o.y=ib.y;o.w=ib.w;o.h=ib.h}}
+  if(!meta&&!tmpl&&orig){const dd=fixDetect(this.base,o);if(dd){o.f=dd.f;o.b=dd.b;o.i=dd.i;o.src='det'}}
+  fixMetrics(o);if(tmpl){o.k=tmpl.k||1;o.ink=tmpl.ink||''}return o},
+ lineOf(o,idx){const ws=(this.words||[]).filter((w,i)=>w.t&&!(idx||[]).includes(i)&&fixSameLine(w,o));const rt=ws.filter(w=>w.x>=o.x+o.w-o.h*.2);
+  /* la puntuación pegada a la última palabra elegida también se corre con el renglón */
+  const tail=(idx||[]).map(i=>this.words[i]).filter(w=>w&&w.x+w.w>o.x+o.w+o.h*.05);
+  const all=ws.concat([o]);o.ly0=Math.min(...all.map(w=>w.y));o.ly1=Math.max(...all.map(w=>w.y+w.h));const ends=rt.concat(tail).map(w=>w.x+w.w);o.lx1=ends.length?Math.max(...ends):0;return o},
+ pick(box,orig,meta,idx){const o=this.lineOf(this.build(box,orig,meta),idx);this.sel=box;this.o=o;this.selIdx=idx||[];const s=$('#fxSel');s.hidden=!!(idx&&idx.length);Object.assign(s.style,{left:box.x*100+'%',top:box.y*100+'%',width:box.w*100+'%',height:box.h*100+'%'});
+  $('#fxTxt').value=orig||'';$('#fxPanel').hidden=false;this.opts();this.upd();setTimeout(()=>{const i=$('#fxTxt');i.focus();try{i.select()}catch(e){}},50)},
+ det(){const o=this.o,el=$('#fxDet');if(!o||!el||!this.base)return;const nm={sans:'Arial',serif:'Times New Roman',mono:'Máquina (Courier)'}[o.f]||'Arial',k=o.k||1;
+  const pt=o.pt?Math.round(o.pt*k*2)/2:Math.round(o.fs*k*this.base.height/this.base.width*595*2)/2;const n=(this.selIdx||[]).length;
+  el.innerHTML='Letra '+(o.src==='pdf'?'del archivo':o.src==='det'?'detectada':'elegida')+': <b>'+nm+(o.b?' · negrita':'')+(o.i?' · cursiva':'')+' · '+(o.pt?'':'≈')+pt+' pt</b>'+(n>1?' · '+n+' palabras':'')+(n===1?'<br><small>Para cambiar varias palabras juntas, tocá también la última del renglón.</small>':'')},
+ applyAll(){const o=this.o;if(!o)return;const t=$('#fxTxt').value,q=fixNorm(o.orig),list=[];this.words.forEach(w=>{if(w.t&&fixNorm(w.t)===q){const n=this.build(w,w.t,w.meta||null,w.meta?null:o);n.k=o.k;n.ink=o.ink;n.t=t;n.rf=0;list.push(n)}});this.commit(list);toast('Corregidas '+list.length+' palabras')},
+ find(){const raw=$('#fxFind').value.trim(),toks=fixNorm(raw).split(/\s+/).filter(Boolean),W=this.words;this.hitGroups=[];
+  if(toks.length)for(let i=0;i<W.length;i++){const g=[];let ok=true;for(let j=0;j<toks.length;j++){const w=W[i+j];if(!w||!w.t||!fixNorm(w.t).includes(toks[j])||(j&&!fixSameLine(W[i],w))){ok=false;break}g.push(i+j)}if(ok)this.hitGroups.push(g)}
+  const hit=new Set(this.hitGroups.flat());let first=null;$$('#fxBoxes>b').forEach(b=>{const h=hit.has(+b.dataset.w);b.classList.toggle('hit',h);if(h&&!first)first=b});const n=this.hitGroups.length;
+  if(toks.length&&W.length)this.msg(n?(n===1?'Encontré 1 vez «':'Encontré '+n+' veces «')+raw+'». Tocá la marcada para corregirla.':'No encontré «'+raw+'». Probá con parte de la palabra o marcala a mano.');
+  if(first)first.scrollIntoView({block:'center',inline:'center',behavior:'smooth'});return n}});
+{const _c=Fix.cancel.bind(Fix);Fix.cancel=function(){this.selIdx=[];return _c()}}
+{const _c=Fix.commit.bind(Fix);Fix.commit=function(list){const idx=(this.selIdx||[]).slice();this._lastRects=null;const r=_c(list);
+  (this._lastRects||[]).forEach((R,j)=>{const o=(this._lastList||[])[j];if(!R||!R.dx||!o||!this.base)return;const d=R.dx/this.base.width;this.words.forEach((w,i)=>{if(!w.t||idx.includes(i)||!fixSameLine(w,o)||w.x<o.x+o.w-o.h*.2)return;w.x+=d;const b=$('#fxBoxes>b[data-w="'+i+'"]');if(b)b.style.left=(w.x*100)+'%'})});for(const i of idx){if(this.words[i])this.words[i].t='';const b=$('#fxBoxes>b[data-w="'+i+'"]');if(b)b.remove()}return r}}
+{const _o=Fix.opts.bind(Fix);Fix.opts=function(){_o();if(this.o){$('#fxIt').classList.toggle('on',!!this.o.i);const rb=$('#fxRf');if(rb){rb.classList.toggle('on',this.o.rf!==0);rb.hidden=!this.o.lx1}this.det()}}}
+{const _u=Fix.upd.bind(Fix);Fix.upd=function(){_u();this.det()}}
+Fix.refit=function(){const o=this.o;if(!o)return;const k=o.k;o.src=o.src==='pdf'?'pdf':'';fixMetrics(o);o.k=k;this.opts();this.upd()};
+/* textos de PDF digitales: se usan las palabras del archivo (sin OCR, funciona sin internet) */
+{const _oc=Fix.ocr.bind(Fix);Fix.ocr=async function(){const ps=this._pdfSrc;this._pdfSrc=null;if(ps){let ws=[];try{ws=await pdfWordsOf(ps.pdf,ps.n,ps.scale,this.base.width,this.base.height)}catch(e){}
+  if(ws.length>2){this._tok=(this._tok||0)+1;this.setWords(ws);this.msg('Leí el texto del PDF con su letra original. Buscá la palabra o frase arriba (por ej.: «Frias Alberto Tomas») o tocala en la hoja.');return}}return _oc()}}
+{const _pf=pdfFixPage;pdfFixPage=function(pdf,n){Fix._pdfSrc={pdf,n,scale:2.5};return _pf.apply(this,arguments)}}
+{const _o=Fix.open.bind(Fix);Fix.open=function(){this._pdfSrc=null;return _o()}}
+$('#fxBoxes').onclick=e=>{if(Fix.mark)return;const b=e.target.closest('[data-w]');if(!b)return;const i=+b.dataset.w,W=Fix.words;let idx=[i];
+ const grp=(Fix.hitGroups||[]).find(g=>g.includes(i)&&g.length>1);
+ if(grp)idx=grp.slice();else if(Fix.o&&Fix.selIdx.length&&!Fix.selIdx.includes(i)&&fixSameLine(W[Fix.selIdx[0]],W[i])){const lo=Math.min(i,...Fix.selIdx),hi=Math.max(i,...Fix.selIdx);idx=[];for(let k=lo;k<=hi;k++)if(W[k]&&W[k].t&&fixSameLine(W[k],W[i]))idx.push(k)}
+ $$('#fxBoxes>b.sel').forEach(x=>x.classList.remove('sel'));idx.forEach(k=>{const el=$('#fxBoxes>b[data-w="'+k+'"]');if(el)el.classList.add('sel')});const g=Fix.group(idx);Fix.pick(g.box,g.orig,g.meta,idx)};
+(function(){const bo=$('#fxBold');if(bo&&!$('#fxIt')){bo.insertAdjacentHTML('afterend','<button class="fx-o" id="fxIt"><i>K</i></button>');$('#fxIt').onclick=()=>{if(!Fix.o)return;Fix.o.i=Fix.o.i?0:1;Fix.refit()}}
+ const er=$('#fxErase');if(er&&!$('#fxRf')){er.insertAdjacentHTML('beforebegin','<button class="fx-o on" id="fxRf" title="Si la palabra nueva es más corta o más larga, corre el resto del renglón">Acomodar renglón</button>');$('#fxRf').onclick=()=>{if(!Fix.o)return;Fix.o.rf=Fix.o.rf===0?1:0;Fix.opts();Fix.upd()}}
+ const pv=$('#fxPrev');if(pv&&!$('#fxDet'))pv.insertAdjacentHTML('afterend','<div id="fxDet" class="fx-det"></div>')})();
+document.head.insertAdjacentHTML('beforeend','<style id="v37Css">.fx-det{font-size:12.5px;color:var(--tx2);line-height:1.35}.fx-det b{color:var(--tx)}.fx-det small{font-size:11.5px}#fxBoxes>b.sel{background:#e5322d33;outline:2px solid #e5322d}</style>');
 </script>
 </body>
 </html>
