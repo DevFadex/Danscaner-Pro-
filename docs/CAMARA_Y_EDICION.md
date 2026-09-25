@@ -238,3 +238,9 @@ En el editor, **Corregir** permite arreglar una palabra mal escrita de la hoja e
   - Botón para volver al final de la conversación.
   - Vibración corta al terminar de responder.
 - **Conversaciones**: se guardan solas y se ven con el botón del reloj. Se pueden buscar, abrir y borrar. «Nueva conversación» guarda la anterior en lugar de borrarla.
+
+## v39 · Nexa local nunca deja esperando (Nexa 3.5)
+
+- En modo **Nexa local**, los saludos («hola», «gracias», «¿qué podés hacer?») se responden al instante con el modo básico.
+- Si el modelo todavía no está cargado en la memoria del teléfono, la pregunta la responde el modo básico con un aviso, y el modelo se carga en segundo plano. Las siguientes preguntas ya las responde la IA local.
+- Si el modelo no está descargado, responde en modo básico y ofrece «Descargar Nexa local».

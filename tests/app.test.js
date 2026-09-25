@@ -438,6 +438,17 @@ await test('Nexa más rápida e interactiva: modo rápido, menos texto a la IA l
   assert.ok(await pg.evaluate(()=>Nexa.st.msgs.some(m=>/qué podés hacer/.test(m.text))),'no abrió la conversación guardada');
 });
 
+await test('Nexa local no deja esperando: saluda al instante y responde rápido mientras el modelo carga',async pg=>{
+  await pg.evaluate(()=>{const c=NexaLocal.cfg();c.downloaded=true;c.base='cpu-0.5b';NexaLocal.engine=null;NexaCPU.w=null;window._loads=0;NexaLocal.load=function(){window._loads++;return new Promise(()=>{})};Nexa.st.prov='local';Nexa.st.msgs=[]});
+  await pg.click('#btnNexa');await W(300);
+  const t0=Date.now();await pg.fill('#nxIn','hola');await pg.press('#nxIn','Enter');await W(500);
+  let last=await pg.evaluate(()=>Nexa.st.msgs.at(-1));assert.equal(last.role,'assistant');assert.ok(/(buen día|buenas tardes|buenas noches|hola)/i.test(last.text),last.text);assert.ok(Date.now()-t0<3000);
+  await pg.fill('#nxIn','¿qué podés hacer?');await pg.press('#nxIn','Enter');await W(500);
+  await pg.fill('#nxIn','como hago un oficio de traslado');await pg.press('#nxIn','Enter');await W(700);
+  last=await pg.evaluate(()=>Nexa.st.msgs.at(-1));assert.equal(last.role,'assistant');assert.ok(/Respuesta rápida mientras Nexa local/.test(last.text),last.text.slice(-200));
+  assert.ok(await pg.evaluate(()=>window._loads>0),'no empezó a cargar el modelo');assert.equal(await pg.evaluate(()=>Nexa.st.prov),'local');
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();
