@@ -306,6 +306,26 @@ await test('Nexa aprende de Gemini: guarda respuestas, las reutiliza sin interne
   const ex=await pg.evaluate(()=>Nexa.localMsgs([{role:'user',text:'como hago un oficio de traslado'}])[0].content);assert.ok(/EJEMPLOS DE BUENAS RESPUESTAS/.test(ex));
 });
 
+await test('Paquete Nexa: plantillas, consultas sobre muchos documentos, voz y plazos',async pg=>{
+  await pg.evaluate(async()=>{const mk=async(name,text,created)=>{const d=newDoc();d.name=name;d.text=text;d.created=created;d.autoDone=true;await DB.putDoc(d)};
+    const now=Date.now(),in3=new Date(now+3*864e5),f=d=>pad2(d.getDate())+'/'+pad2(d.getMonth()+1)+'/'+d.getFullYear(),mes=new Date().toLocaleDateString('es-AR',{month:'long'});
+    await mk('Oficio 55','OFICIO N° 55. San Miguel de Tucumán, 10 de '+mes+' de '+new Date().getFullYear()+'. Juzgado de Ejecución Penal II. Expte. N° 23-26/2026. El interno PÉREZ, Juan Carlos, DNI 30.123.456, será trasladado a Unidad 5.',now-864e5);
+    await mk('Oficio 60','OFICIO N° 60. Expte. N° 99-10/2026. Interno GÓMEZ, Luis. DNI 28.555.444. La audiencia fue fijada para el día '+f(in3)+'.',now-2*864e5);
+    window._mes=mes;await refreshLists()});await W(800);
+  assert.ok(await pg.$('#plazosCard'),'no aparece la tarjeta de plazos en el inicio');
+  await pg.click('#btnNexa');await W(300);const mes=await pg.evaluate(()=>window._mes);
+  await pg.fill('#nxIn','¿Qué oficios de '+mes+' mencionan a Pérez?');await pg.click('#nxSend');await W(600);
+  let log=await pg.textContent('#nxLog');assert.ok(/Encontré 1 oficio/.test(log)&&/Oficio 55/.test(log),log.slice(-400));
+  await pg.fill('#nxIn','listame los expedientes de este mes');await pg.click('#nxSend');await W(600);log=await pg.textContent('#nxLog');assert.ok(/99-10\/2026/.test(log)&&/23-26\/2026/.test(log),log.slice(-400));
+  await pg.fill('#nxIn','¿qué plazos tengo?');await pg.click('#nxSend');await W(500);log=await pg.textContent('#nxLog');assert.ok(/Audiencia/.test(log)&&/Oficio 60/.test(log),log.slice(-300));
+  await pg.fill('#nxIn','recordame llamar al juzgado el 30/12');await pg.click('#nxSend');await W(500);assert.ok(await pg.evaluate(()=>Plazos.all().some(x=>/llamar al juzgado/i.test(x.label))));
+  await pg.fill('#nxIn','haceme un oficio de traslado');await pg.click('#nxSend');await W(900);
+  assert.equal(await pg.inputValue('[data-f="dni"]'),'28.555.444');await pg.click('#tplGo');await W(600);
+  log=await pg.textContent('#nxLog');assert.ok(/GÓMEZ, Luis/.test(log)&&/99-10\/2026/.test(log),'plantilla sin datos');
+  assert.ok(await pg.$('.nx-acts [data-nx="speak"]'),'falta el botón Escuchar');
+  const sp=await pg.evaluate(()=>{let said='';Object.defineProperty(window,'speechSynthesis',{configurable:true,value:{cancel(){},getVoices:()=>[],speak(u){said=u.text}}});NexaVoice.speak('**Hola** [[Botón|x]]');return said});assert.equal(sp,'Hola');
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();
