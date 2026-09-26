@@ -4756,6 +4756,13 @@ const OcrConf={cur:null,last:null,
   doc.closest('.rtpage').insertAdjacentHTML('beforebegin','<div class="ocr-conf '+lvl+'" id="ocrConf"><b>Confianza de la lectura: '+s.mean+'%</b> · '+(marked?marked+' palabra(s) dudosa(s) marcadas en amarillo':'sin palabras dudosas')+(lvl==='bad'?'<br><small>La lectura es poco confiable: revisá el texto o repetí el escaneo (con <b>Analizar</b> ves qué mejorar).</small>':'')+(marked?' <button class="btn sm" id="ocrUnmark">Quitar marcas</button>':'')+'</div>');
   const u=$('#ocrUnmark');if(u)u.onclick=()=>{doc.querySelectorAll('mark.ocr-low').forEach(m=>m.replaceWith(document.createTextNode(m.textContent)));doc.normalize();doc.dispatchEvent(new Event('input'));u.remove();toast('Marcas quitadas')}}}}catch(e){console.warn(e)}return r}}
 document.head.insertAdjacentHTML('beforeend','<style id="v47Css">mark.ocr-low{background:#fde68a;color:inherit;border-radius:3px;padding:0 1px}.ocr-conf{margin:0 0 8px;padding:9px 11px;border-radius:10px;font-size:13px;line-height:1.45;background:#ecfdf5;border:1px solid #a7f3d0}.ocr-conf.mid{background:#fffbeb;border-color:#fde68a}.ocr-conf.bad{background:#fef2f2;border-color:#fecaca}.ocr-conf .btn{margin-left:6px}[data-theme="dark"] .ocr-conf{background:#12302a;border-color:#1f5d4c}[data-theme="dark"] .ocr-conf.mid{background:#3a2f0b;border-color:#6b5712}[data-theme="dark"] .ocr-conf.bad{background:#3b1414;border-color:#7a2a2a}[data-theme="dark"] mark.ocr-low{background:#7a5b0a}</style>');
+
+/* dictado por voz: se puede activar o desactivar (⚙ Configurar Nexa → Voz) */
+function nxMicApply(){const m=$('#nxMic');if(!m)return;const on=S.nexaMic!==false;m.hidden=!on;if(!on){try{m.classList.contains('on')&&m.click()}catch(e){}}}
+nxMicApply();
+{const _ns=nexaSheet;nexaSheet=async function(){const r=await _ns.apply(this,arguments);const v=$('#sheetBody #nlVoice');if(v&&!v.querySelector('#nlMicOn')){
+ v.insertAdjacentHTML('afterbegin','<label class="chk" style="margin-bottom:8px"><input type="checkbox" id="nlMicOn" '+(S.nexaMic!==false?'checked':'')+'> <span><b>Dictar por voz</b><small>Muestra el micrófono para dictarle a Nexa. Desactivalo si no lo usás.</small></span></label>');
+ $('#nlMicOn').onchange=e=>{S.nexaMic=e.target.checked;saveS();nxMicApply();toast(S.nexaMic?'Dictado por voz activado':'Dictado por voz desactivado')}}return r}}
 </script>
 </body>
 </html>

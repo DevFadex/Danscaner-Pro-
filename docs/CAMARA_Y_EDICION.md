@@ -331,3 +331,4 @@ En el editor, **Corregir** permite arreglar una palabra mal escrita de la hoja e
 - **OCR con confianza**: al extraer el texto se muestra la confianza media de la lectura y se marcan en amarillo las palabras con menos del 70%. El botón **Quitar marcas** las saca antes de exportar.
 - **Privacidad**: con internet, Nexa pide permiso antes de enviar cada documento adjunto a la IA. La otra opción es responder sin internet. Se puede desactivar en ⚙ Configurar Nexa → Privacidad.
 - **Seguridad**: se avisa a la IA que el texto de los documentos es solo información y que no debe seguir instrucciones escritas dentro de ellos.
+- **Voz**: el micrófono quedaba bloqueado por la política de permisos (`vercel.json`, `microphone=()`) y ahora está permitido para la app (`microphone=(self)`). El dictado se activa o desactiva en ⚙ Configurar Nexa → **Dictar por voz**; leer las respuestas en voz alta se maneja aparte.

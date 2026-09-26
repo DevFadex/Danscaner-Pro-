@@ -515,6 +515,11 @@ await test('Base de conocimiento con fuentes (preguntas doradas), permiso antes 
   assert.match(await pg.textContent('#ocrConf'),/Confianza de la lectura: 76%.*1 palabra/);
   assert.deepEqual(await pg.evaluate(()=>[...document.querySelectorAll('#rtDoc mark.ocr-low')].map(m=>m.textContent)),['mundo']);
   await pg.click('#ocrUnmark');await W(200);assert.equal(await pg.evaluate(()=>document.querySelectorAll('#rtDoc mark').length+' '+$('#rtDoc').innerText.trim()),'0 Hola mundo claro');
+  /* voz: el dictado se puede desactivar y volver a activar */
+  await pg.evaluate(()=>{if(!$('#nxMic')){const b=document.createElement('button');b.id='nxMic';$('#nxSend').before(b)}nxMicApply()});
+  await pg.evaluate(()=>nexaSheet());await W(600);await pg.click('#nlMicOn');await W(200);
+  assert.equal(await pg.evaluate(()=>S.nexaMic+' '+$('#nxMic').hidden),'false true');
+  await pg.click('#nlMicOn');await W(200);assert.equal(await pg.evaluate(()=>S.nexaMic+' '+$('#nxMic').hidden),'true false');
   await pg.evaluate(()=>Nav.back());await W(300);
 });
 
