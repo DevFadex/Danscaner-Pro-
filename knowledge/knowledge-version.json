@@ -1,0 +1,14 @@
+{
+  "version": "1.0.0",
+  "actualizado": "2026-09-25",
+  "archivos": [
+    {"ruta": "danscaner/manual.md", "titulo": "Manual de Danscanner Pro"},
+    {"ruta": "danscaner/herramientas.md", "titulo": "Herramientas"},
+    {"ruta": "danscaner/nexa.md", "titulo": "Nexa"},
+    {"ruta": "documentos/escaneo.md", "titulo": "Buen escaneo"},
+    {"ruta": "documentos/formatos.md", "titulo": "Tamaños de hoja"},
+    {"ruta": "documentos/ocr.md", "titulo": "OCR"},
+    {"ruta": "documentos/pdf.md", "titulo": "PDF"},
+    {"ruta": "soporte/problemas.md", "titulo": "Solución de problemas"}
+  ]
+}

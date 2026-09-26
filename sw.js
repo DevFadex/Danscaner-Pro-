@@ -1,8 +1,8 @@
 // Danscanner Pro — funcionamiento sin conexión
-const VERSION = 'danscaner-v46';
+const VERSION = 'danscaner-v47';
 // Herramientas (PDF, OCR, idioma español, Word, Excel, IA local): se guardan aparte y NO se borran al actualizar la app
 const LIBS = 'danscaner-libs';
-const SHELL = ['./', './index.html', './manifest.webmanifest', './icon.svg', './icon-192.png', './icon-512.png', './icon-maskable-192.png', './icon-maskable-512.png', './apple-touch-icon.png', './mod/admin.js', './mod/texto.js', './mod/excel.js', './mod/pptx.js', './mod/diseno.js'];
+const SHELL = ['./', './index.html', './manifest.webmanifest', './icon.svg', './icon-192.png', './icon-512.png', './icon-maskable-192.png', './icon-maskable-512.png', './apple-touch-icon.png', './mod/admin.js', './mod/texto.js', './mod/excel.js', './mod/pptx.js', './mod/diseno.js', './knowledge/knowledge-version.json', './knowledge/danscaner/manual.md', './knowledge/danscaner/herramientas.md', './knowledge/danscaner/nexa.md', './knowledge/documentos/escaneo.md', './knowledge/documentos/formatos.md', './knowledge/documentos/ocr.md', './knowledge/documentos/pdf.md', './knowledge/soporte/problemas.md'];
 const CDN = /(cdnjs\.cloudflare\.com|cdn\.jsdelivr\.net|unpkg\.com|tessdata\.projectnaptha\.com|fonts\.gstatic\.com|fonts\.googleapis\.com)$/;
 const isLib = u => { try { const url = new URL(u); return (url.origin === self.location.origin && url.pathname.includes('/libs/')) || CDN.test(url.hostname); } catch (e) { return false; } };
 

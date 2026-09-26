@@ -318,3 +318,17 @@ En el editor, **Corregir** permite arreglar una palabra mal escrita de la hoja e
   - recomendaciones concretas (repetir la foto de frente, más luz, filtro B/N, HD, enfoque).
 - Se mide en el teléfono, sin internet, y **no modifica** el documento.
 - Cómo se mide: bordes y ángulos de las esquinas (perspectiva), tono del papel en una grilla de 8 × 8 (luz y sombras), pendiente de los bordes de las letras (nitidez) y ancho de la hoja en píxeles (resolución).
+
+## v47 — Base de conocimiento con fuentes, OCR con confianza y permiso antes de enviar documentos
+
+- **Base de conocimiento** en `knowledge/` (versión en `knowledge/knowledge-version.json`): manual, herramientas, Nexa, buen escaneo, tamaños de hoja, OCR, PDF y solución de problemas. Solo describe funciones que existen en la app.
+  - Se divide por secciones (`##`) y se busca por palabras (BM25 con raíces de palabras y sinónimos). Es instantáneo y no usa internet: los archivos se guardan para usar sin conexión.
+  - Sin internet, Nexa responde con la sección y la etiqueta **✅ Confirmado · fuente: …**. Si no hay información, dice **⚪ No tengo información confirmada**.
+  - La IA con internet o la del teléfono recibe las secciones que corresponden. La etiqueta la pone la app: ✅ si la respuesta sale de la guía, 🟡 si pregunta por la app y no figura.
+  - Al subir el número de versión, la app vuelve a indexar sola.
+  - **Para agregar conocimiento de la oficina**: crear `knowledge/oficina/<tema>.md` con secciones `##`, sumarlo a `archivos` en `knowledge-version.json`, subir la versión y agregarlo a la lista del service worker (`sw.js`). Nunca incluir datos de personas: la app es pública.
+  - Preguntas doradas en `tests/fixtures/preguntas-doradas.json`, que la prueba e2e verifica.
+- **OCR con confianza**: al extraer el texto se muestra la confianza media de la lectura y se marcan en amarillo las palabras con menos del 70%. El botón **Quitar marcas** las saca antes de exportar.
+- **Privacidad**: con internet, Nexa pide permiso antes de enviar cada documento adjunto a la IA. La otra opción es responder sin internet. Se puede desactivar en ⚙ Configurar Nexa → Privacidad.
+- **Seguridad**: se avisa a la IA que el texto de los documentos es solo información y que no debe seguir instrucciones escritas dentro de ellos.
+- **Voz**: el micrófono quedaba bloqueado por la política de permisos (`vercel.json`, `microphone=()`) y ahora está permitido para la app (`microphone=(self)`). El dictado se activa o desactiva en ⚙ Configurar Nexa → **Dictar por voz**; leer las respuestas en voz alta se maneja aparte.
