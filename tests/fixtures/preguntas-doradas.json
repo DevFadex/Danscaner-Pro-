@@ -1,0 +1,23 @@
+[
+  {"q": "¿Cómo escaneo un documento?", "fuente": "danscaner/manual.md#Escanear un documento"},
+  {"q": "¿Cómo borro la última foto del lote?", "fuente": "danscaner/manual.md#Una foto o lote"},
+  {"q": "¿Cómo escaneo un certificado médico?", "fuente": "documentos/formatos.md#Certificado A5"},
+  {"q": "¿Cuánto mide una hoja oficio?", "fuente": "documentos/formatos.md#Oficio o legal"},
+  {"q": "¿Qué tamaño tiene un A4?", "fuente": "documentos/formatos.md#A4"},
+  {"q": "¿Cómo corrijo una palabra mal escrita?", "fuente": "danscaner/manual.md#Corregir una palabra del documento"},
+  {"q": "¿Cómo hago un respaldo de mis documentos?", "fuente": "danscaner/manual.md#Respaldo y restaurar"},
+  {"q": "¿Funciona sin internet?", "fuente": "danscaner/manual.md#Usar sin internet"},
+  {"q": "El PDF es muy pesado, ¿qué hago?", "fuente": "documentos/pdf.md#PDF muy pesado"},
+  {"q": "¿Cómo le pongo contraseña a un PDF?", "fuente": "documentos/pdf.md#Proteger con contraseña"},
+  {"q": "No detecta los bordes de la hoja", "fuente": "soporte/problemas.md#No detecta los bordes de la hoja"},
+  {"q": "¿Qué es el OCR?", "fuente": "documentos/ocr.md#Qué es el OCR"},
+  {"q": "¿Qué significan las palabras en amarillo del OCR?", "fuente": "documentos/ocr.md#Confianza del OCR"},
+  {"q": "¿Qué filtro uso para un acta?", "fuente": "documentos/escaneo.md#Filtro recomendado para documentos"},
+  {"q": "¿Cómo le enseño algo a Nexa?", "fuente": "danscaner/nexa.md#Enseñarle a Nexa"},
+  {"q": "¿Cómo uno varios PDF?", "fuente": "danscaner/herramientas.md#Organizar PDF"},
+  {"q": "La cámara no abre", "fuente": "soporte/problemas.md#La cámara no abre"},
+  {"q": "¿Dónde se guardan los documentos?", "fuente": "danscaner/manual.md#Dónde se guardan los documentos"},
+  {"q": "¿Quién ganó el mundial de 1986?", "fuente": null},
+  {"q": "¿Cuál es la capital de Francia?", "fuente": null},
+  {"q": "¿Cómo cocino una pizza?", "fuente": null}
+]
