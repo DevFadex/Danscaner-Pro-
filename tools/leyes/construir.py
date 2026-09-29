@@ -16,8 +16,10 @@ CRUDO = AQUI / "crudo"
 SALIDA = RAIZ / "knowledge" / "leyes"
 
 SUF = r"(?:\s*(?:bis|ter|qu[aá]ter|quinquies|sexies|septies|octies|nonies|decies))?"
-RX_ART = re.compile(r"(?:^|\n)\s*ART[IÍ]CULO\s+(\d+" + SUF + r")\s*[º°o]?\s*[.:\-–—]+\s*", re.I)
-RX_ENC = re.compile(r"^\s*(LIBRO|T[IÍ]TULO|CAP[IÍ]TULO|SECCI[OÓ]N|PARTE)\b[^\n]{0,120}$", re.I | re.M)
+# encabezados de artículo: en mayúscula o con inicial mayúscula («ARTICULO 1º.-», «Artículo 109:», «Art. 109. -»);
+# las menciones dentro del texto («el artículo 186.») van en minúscula y no cuentan
+RX_ART = re.compile(r"(?:^|\n|(?<=[.;:]) )\s*(?:ART[IÍ]CULO|Art[ií]culo|Art\.)\s+(\d+" + SUF + r")\s*[º°o]?\s*[.:\-–—]+\s*")
+RX_ENC = re.compile(r"^\s*(LIBRO|Libro|T[IÍ]TULO|T[ií]tulo|CAP[IÍ]TULO|Cap[ií]tulo|SECCI[OÓ]N|Secci[oó]n|PARTE)\b[^\n]{0,120}$", re.M)
 RX_REF = re.compile(r"\bart(?:[íi]culos?|s?\.)\s*((?:\d+" + SUF + r"(?:\s*[º°])?(?:\s*,\s*|\s+y\s+|\s+o\s+|\s+a\s+|\s*-\s*)?)+)", re.I)
 
 def limpiar(h):
@@ -32,28 +34,52 @@ def norm_num(n):
     n = re.sub(r"\s+", " ", n.strip().lower()).replace("quáter", "quater")
     return n
 
-def articulos(texto):
-    """Separa el texto en artículos, respetando el orden y guardando el encabezado (libro/título/capítulo) vigente."""
-    marcas = list(RX_ART.finditer(texto))
-    out, vistos = [], set()
-    for i, m in enumerate(marcas):
-        fin = marcas[i + 1].start() if i + 1 < len(marcas) else len(texto)
-        cuerpo = texto[m.end():fin].strip()
-        previo = texto[marcas[i - 1].end() if i else 0:m.start()]
-        encs = RX_ENC.findall(previo)
+def unir_renglones(t):
+    """InfoLeg corta los renglones a lo ancho de la página: se unen, salvo antes de un inciso o un punto y aparte."""
+    t = re.sub(r"(?<![.:;])[ \t]*\n[ \t]*(?!(?:\d+\s*[º°)\-.]|[a-zñ]\s*[).]\s|[IVX]+\s*[.)\-]|[-–—•]))", " ", t)
+    return re.sub(r"[ \t]{2,}", " ", t).strip()
+
+def marcas(texto):
+    """Inicios de artículo que siguen la numeración (descarta menciones como «artículo 186.» dentro del texto)."""
+    out, last = [], 0
+    for m in RX_ART.finditer(texto):
         n = norm_num(m.group(1))
-        # los textos actualizados a veces repiten un número (texto anterior / nota): se queda con el primero
+        base = int(re.match(r"\d+", n).group(0))
+        if base == last or (last < base <= last + 25) or (not out and base == 1):
+            out.append((m, n))
+            last = base
+    return out
+
+def articulos(texto):
+    """Separa el texto en artículos, en orden. Si un artículo aparece como título («Artículo 109: Defensor común») y
+    enseguida su cuerpo («Art. 109. - …»), los une; si un número se repite más adelante, se queda con el primero."""
+    ms = marcas(texto)
+    out, vistos = [], {}
+    for i, (m, n) in enumerate(ms):
+        fin = ms[i + 1][0].start() if i + 1 < len(ms) else len(texto)
+        cuerpo = texto[m.end():fin].strip()
+        cuerpo = re.split(r"\n\s*\(?\s*(?:Art[íi]culo sustituido|Art[íi]culo incorporado|Nota Infoleg|Expresi[óo]n sustituida)", cuerpo, 1)[0].strip()
         if n in vistos:
+            prev = out[vistos[n]]
+            if len(prev["t"]) < 140 and "ti" not in prev:
+                prev["ti"] = prev["t"].strip(" .:-")
+                prev["t"] = cuerpo[:6000]
             continue
-        vistos.add(n)
-        cuerpo = re.split(r"\n\s*(?:\(?Art[íi]culo sustituido|\(?Art[íi]culo incorporado|\(?Nota Infoleg)", cuerpo, 1)[0].strip()
+        vistos[n] = len(out)
         out.append({"n": n, "t": cuerpo[:6000]})
+    for a in out:
+        a["t"] = re.sub(r"^[\s\-–—.:]+", "", a["t"])
+        # algunos textos repiten el encabezado adentro («Artículo 16: …»)
+        a["t"] = re.sub(r"^(?:ART[IÍ]CULO|Art[ií]culo|Art\.)\s+" + re.escape(a["n"]) + r"\s*[º°]?\s*[.:\-–—]+\s*", "", a["t"], flags=re.I)
+        a["t"] = unir_renglones(a["t"])
+        if "ti" in a:
+            a["ti"] = re.sub(r"^[\s\-–—.:]+", "", a["ti"])
     return out
 
 def encabezados(texto):
     """Para cada artículo, el último LIBRO / TÍTULO / CAPÍTULO que aparece antes."""
     res, cur = {}, {}
-    pos_arts = [(m.start(), norm_num(m.group(1))) for m in RX_ART.finditer(texto)]
+    pos_arts = [(m.start(), n) for m, n in marcas(texto)]
     encs = [(m.start(), m.group(0).strip()) for m in RX_ENC.finditer(texto)]
     j = 0
     for pos, n in pos_arts:
@@ -69,9 +95,20 @@ def encabezados(texto):
         res.setdefault(n, " › ".join(cur[x] for x in ("LIBRO", "TITULO", "CAPITULO") if x in cur))
     return res
 
+RX_OTRA = re.compile(r"^\s*[º°]?\s*(?:,?\s*(?:inc(?:iso)?s?\.?|ap(?:artado)?\.?)\s*[\w°º)]+\s*,?)*\s*(?:de\s+la|del|de)\s+(?:Ley|ley|Decreto|decreto|C[oó]digo|Convenci[oó]n|Constituci[oó]n|Reglamento|r[ée]gimen|Estatuto)", re.I)
+
 def referencias(t):
+    """Artículos de la MISMA norma que el texto menciona. Se descartan las notas de InfoLeg entre paréntesis
+    («sustituido por art. 3° de la Ley …») y las menciones a otras normas («artículos 5° y 6° de la ley 23.737»)."""
+    t = re.sub(r"\([^()]*(?:Ley|ley|B\.O\.|Decreto|sustituid|incorporad|derogad)[^()]*\)", " ", t)
     refs = []
     for m in RX_REF.finditer(t):
+        if RX_OTRA.match(t[m.end():m.end() + 60]):
+            continue
+        if re.search(r"(incorporad|sustituid|derogad|modificad|agregad)[oa]s?\s+por\s*$", t[max(0, m.start() - 30):m.start()], re.I):
+            continue
+        if re.match(r"[^.;]{0,60}\b(?:Ley|ley|Decreto)\s+N", t[m.end():m.end() + 80]):
+            continue
         for x in re.findall(r"\d+" + SUF, m.group(1), re.I):
             refs.append(norm_num(x))
     return refs
@@ -124,6 +161,10 @@ def main():
             continue
         meta = json.loads((CRUDO / f"{f['id']}.meta.json").read_text(encoding="utf-8"))
         texto = limpiar(crudo.read_text(encoding="utf-8"))
+        if f.get("desde"):
+            m0 = re.search(f["desde"], texto)
+            if m0:
+                texto = texto[m0.start():]
         arts = articulos(texto)
         enc = encabezados(texto)
         for a in arts:

@@ -1,13 +1,59 @@
 {
   "nota": "Textos oficiales de InfoLeg (Ministerio de Justicia de la Nación). Se descargan con descargar.py y se procesan con construir.py.",
   "leyes": [
-    {"id": "cp", "nombre": "Código Penal de la Nación", "norma": "Ley 11.179 (texto actualizado)", "alias": ["cp", "codigo penal", "código penal", "c.p."],
-     "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/15000-19999/16546/texact.htm"},
-    {"id": "cppf", "nombre": "Código Procesal Penal Federal", "norma": "Ley 27.063 (texto ordenado Decreto 118/2019)", "alias": ["cppf", "cpp", "codigo procesal penal", "código procesal penal", "procesal penal federal"],
-     "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/315000-319999/319681/texact.htm"},
-    {"id": "cppn", "nombre": "Código Procesal Penal de la Nación (anterior)", "norma": "Ley 23.984", "alias": ["cppn", "codigo procesal penal de la nacion", "código procesal penal de la nación", "23984", "23.984"],
-     "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/383/texact.htm"},
-    {"id": "ep", "nombre": "Ley de Ejecución de la Pena Privativa de la Libertad", "norma": "Ley 24.660 (texto actualizado)", "alias": ["24660", "24.660", "ejecucion de la pena", "ejecución de la pena", "ley de ejecucion", "ley de ejecución"],
-     "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/35000-39999/37872/texact.htm"}
+    {
+      "id": "cp",
+      "nombre": "Código Penal de la Nación",
+      "norma": "Ley 11.179 (texto actualizado)",
+      "alias": [
+        "cp",
+        "codigo penal",
+        "código penal",
+        "c.p."
+      ],
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/15000-19999/16546/texact.htm"
+    },
+    {
+      "id": "cppf",
+      "nombre": "Código Procesal Penal Federal",
+      "norma": "Ley 27.063, texto ordenado por Decreto 118/2019 (Anexo I)",
+      "alias": [
+        "cppf",
+        "cpp",
+        "codigo procesal penal",
+        "código procesal penal",
+        "procesal penal federal"
+      ],
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/315000-319999/319681/norma.htm",
+      "desde": "ART[IÍ]CULO\\s+1\\s*[º°]?\\s*\\.?-\\s*Juicio previo"
+    },
+    {
+      "id": "cppn",
+      "nombre": "Código Procesal Penal de la Nación (anterior)",
+      "norma": "Ley 23.984",
+      "alias": [
+        "cppn",
+        "codigo procesal penal de la nacion",
+        "código procesal penal de la nación",
+        "23984",
+        "23.984"
+      ],
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/383/texact.htm",
+      "desde": "Art[ií]culo\\s+1\\s*[º°]?\\s*-\\s*Nadie podr"
+    },
+    {
+      "id": "ep",
+      "nombre": "Ley de Ejecución de la Pena Privativa de la Libertad",
+      "norma": "Ley 24.660 (texto actualizado)",
+      "alias": [
+        "24660",
+        "24.660",
+        "ejecucion de la pena",
+        "ejecución de la pena",
+        "ley de ejecucion",
+        "ley de ejecución"
+      ],
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/35000-39999/37872/texact.htm"
+    }
   ]
 }
