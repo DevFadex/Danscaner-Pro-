@@ -812,6 +812,16 @@ await test('Estilos de imagen profesionales: 10 estilos, intensidad, fotos grand
   await pg.evaluate(()=>Nav.back());await W(300);
 });
 
+await test('Nombre unificado Danscanner Pro, aviso de firma y SheetJS actualizado (sin fallas conocidas)',async pg=>{
+  const r=await pg.evaluate(async()=>{await loadLib('xlsx');const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['Nombre','DNI'],['Ana',123]]),'Hoja');const out=XLSX.write(wb,{type:'array',bookType:'xlsx'});const back=XLSX.read(out,{type:'array'});
+    return {v:XLSX.version,csv:XLSX.utils.sheet_to_csv(back.Sheets.Hoja),html:/<table/.test(XLSX.utils.sheet_to_html(back.Sheets.Hoja)),range:XLSX.utils.decode_range(back.Sheets.Hoja['!ref']).e.r}});
+  assert.equal(r.v,'0.20.3');assert.equal(r.csv.trim(),'Nombre,DNI\nAna,123');assert.ok(r.html);assert.equal(r.range,1);
+  const man=await pg.evaluate(async()=>(await fetch('manifest.webmanifest')).json());assert.equal(man.name,'Danscanner Pro');assert.equal(man.short_name,'Danscanner Pro');
+  assert.equal(await pg.evaluate(()=>/Danscanner(?! Pro)/.test(document.body.innerText)),false,'quedó "Danscanner" sin "Pro" en pantalla');
+  await pg.evaluate(()=>{signatureSheet()});await W(400);const t=await pg.textContent('#sheetBody .sig-legal');assert.match(t,/no es firma digital/);assert.match(t,/Ley 25\.506/);
+  await pg.evaluate(()=>Nav.back());await W(300);
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();

@@ -7,7 +7,7 @@
 | Elemento | Régimen | Cómo protegerlo | Estado / acción |
 |---|---|---|---|
 | **Software** (código fuente y objeto) | Obra protegida por la **Ley 11.723** (art. 1, incorporado por la Ley 25.036). Se explota por licencias de uso o reproducción (art. 55 bis) | La protección nace con la creación. El **depósito o registro en la DNDA** sirve como prueba de autoría y fecha. **Recomendado** | Depositar una versión con el código propio (sin las bibliotecas de terceros) |
-| **Nombre "Danscanner Pro"** y **logotipo** | **Marca**: se protege con el **registro ante el INPI** (Ley 22.362, no consultada en esta sesión) | Buscar antecedentes, registrar en las clases que correspondan (por ejemplo, software y servicios) | ⚠️ **Unificar el nombre**: hoy aparece como "Danescaner", "Danscaner" y "Danscanner" |
+| **Nombre "Danscanner Pro"** y **logotipo** | **Marca**: se protege con el **registro ante el INPI** (Ley 22.362, no consultada en esta sesión) | Buscar antecedentes, registrar en las clases que correspondan (por ejemplo, software y servicios) | ✅ Unificado como **"Danscanner Pro"** (v57). Búsqueda web del 29/09/2026 sin coincidencias. **Falta buscarlo en el INPI** antes de registrarlo |
 | **Diseño e interfaz** | Pueden protegerse como obra (aspectos originales) o, según el caso, como modelo o diseño industrial | Guardar pruebas de fecha: capturas, repositorio con historial | El historial de Git ya es evidencia de fecha |
 | **Textos propios** (manual, ayuda, base de conocimiento, textos de Nexa) | Obra literaria (Ley 11.723) | Aviso de copyright en la app | — |
 | **Íconos SVG propios** | Obra, si son originales | Aviso de copyright | Confirmar que ninguno esté copiado de otro set |

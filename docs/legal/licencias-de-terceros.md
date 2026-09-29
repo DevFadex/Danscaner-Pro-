@@ -18,7 +18,7 @@
 | **html2pdf.js** 0.10.1 | HTML a PDF | **MIT** ✅ | Sí | Aviso y licencia | **Incluye jsPDF (MIT ✅) y html2canvas (MIT ✅)**: sus avisos también |
 | **html2canvas** | Capturas HTML | **MIT** ✅ | Sí | Aviso y licencia | — |
 | **jsQR** 1.4.0 | Leer códigos QR | **Apache-2.0** ✅ | Sí | Licencia y avisos | — |
-| **SheetJS CE (xlsx)** 0.18.5 | Excel | **Apache-2.0** ✅ | Sí | Licencia y avisos | ⚠️ Afectada por CVE-2023-30533 y CVE-2024-22363: actualizar a 0.20.2 o posterior (cdn.sheetjs.com) |
+| **SheetJS CE (xlsx)** 0.20.3 | Excel | **Apache-2.0** ✅ (`libs/LICENSE-sheetjs.txt`) | Sí | Licencia y avisos | ✅ Actualizada en la v57 (corrige CVE-2023-30533 y CVE-2024-22363). Obtenida de la réplica npm `@e965/xlsx`; verificar contra cdn.sheetjs.com |
 | **JSZip** 3.10.1 | ZIP | **MIT o GPLv3** (a elección) ✅ | Sí | **Elegir MIT** y conservar el aviso | — |
 | **PptxGenJS** 3.12.0 | PowerPoint | **MIT** ✅ | Sí | Aviso y licencia | El bundle incluye JSZip |
 | **docx-preview** | Vista previa de Word | **Apache-2.0** ✅ | Sí | Licencia y avisos | — |

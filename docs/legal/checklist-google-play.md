@@ -29,13 +29,13 @@ Estado al 29/09/2026: ✅ listo · ⚠️ falta o hay que corregir · ⬜ trámi
 ## Funciones
 - [ ] ✅ **OCR** local (Tesseract, Apache-2.0)
 - [ ] ⚠️ **IA:** divulgación y consentimiento antes de enviar (ya existe para Nexa: revisar el texto contra `textos-en-la-app.md`)
-- [ ] ⚠️ **IA generativa (Nexa):** botón **Reportar respuesta** dentro de la app
+- [ ] ⬜ **IA generativa (Nexa):** hoy solo la ve el administrador. Antes de habilitarla para usuarios: botón **Reportar respuesta**
 - [ ] ⚠️ **Traductor:** reemplazar el endpoint `client=gtx` y revisar o quitar MyMemory. Agregar aviso previo
 - [ ] ⚠️ **Dictado:** aviso previo y reconocimiento en el dispositivo cuando esté disponible
-- [ ] ⚠️ **Firmar PDF:** aviso de que no es firma digital
+- [x] ✅ **Firmar PDF:** aviso de que no es firma digital (v57)
 - [ ] ⚠️ **APIs externas:** ninguna clave propia en la app ✅. Las claves del usuario quedan locales ✅
 - [ ] ⚠️ **SDKs y bibliotecas:** servir desde `libs/` y dejar de cargar CDN y Google Fonts en producción
-- [ ] ⚠️ **Licencias:** incluir `LICENCIAS-TERCEROS.txt` y la pantalla de licencias. **Quitar Qwen2.5-3B** si hay uso comercial. **Actualizar SheetJS** a 0.20.2 o posterior
+- [ ] ⚠️ **Licencias:** incluir `LICENCIAS-TERCEROS.txt` y la pantalla de licencias. **Quitar Qwen2.5-3B** si hay uso comercial. SheetJS ✅ actualizada a 0.20.3 (v57)
 
 ## Cuentas y eliminación
 - [ ] ⚠️ **Eliminar mi cuenta dentro de la app.** Función segura en el servidor: por ejemplo, una función SQL `security definer` que borre `auth.users` del usuario actual, o una Edge Function

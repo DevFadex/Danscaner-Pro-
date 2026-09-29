@@ -427,3 +427,11 @@ En el editor, **Corregir** permite arreglar una palabra mal escrita de la hoja e
   - Las fotos de más de 1400 px se procesan reducidas y vuelven a su tamaño, así no se tilda el teléfono.
 - **Intensidad** Suave, Normal o Fuerte. Las miniaturas se regeneran al cambiarla y se guarda por página (`p.artK`).
 - Las páginas con los estilos anteriores siguen funcionando: los nombres internos `cartoon`, `relief`, `anaglyph`, `minimal` y `sketch` no cambiaron.
+
+## v57 — Nombre unificado, aviso de firma y SheetJS actualizado
+
+- **Nombre:** todo lo que ve el usuario dice **"Danscanner Pro"** (manifiesto, avisos, notificaciones, Nexa, guía y base de conocimiento). Los identificadores internos (`danescaner_pro` en IndexedDB y las cachés `danscaner-*`) quedan igual, para no perder datos. La búsqueda del 29/09/2026 no encontró apps ni marcas con ese nombre; falta la consulta en el INPI.
+- **Firma:** la pantalla de firma aclara que la firma es una imagen, que **no es firma digital** (Ley 25.506) y que solo se usa la propia o una autorizada.
+- **SheetJS 0.20.3** (antes 0.18.5): corrige CVE-2023-30533 y CVE-2024-22363.
+  - Se tomó de la réplica npm `@e965/xlsx`, porque el CDN oficial está bloqueado en este entorno; conviene verificar el archivo contra cdn.sheetjs.com.
+  - La licencia está en `libs/LICENSE-sheetjs.txt`.
