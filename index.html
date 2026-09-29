@@ -1023,7 +1023,7 @@ const b=openSheet('Ajustes','<div class="set-list">'+setRow('sDesign','palette',
 +acc('🌓','Apariencia y nombres','Tema y nombre de los documentos',opt('<i data-ico="theme">🌓</i> Tema',sel('sTheme',[['system','Automático (según el teléfono)'],['light','Claro'],['dark','Oscuro']]))+opt('Plantilla de nombre por defecto',sel('sTpl',NAME_TEMPLATES.map(t=>[t,t]))))
 +acc('📄','PDF y texto (OCR)','Hoja, calidad, márgenes e idioma',opt('Idioma OCR',sel('sLang',[['spa','Español'],['eng','Inglés'],['spa+eng','Español + Inglés'],['por','Portugués']]))+'<div class="row">'+opt('Hoja PDF por defecto',sel('sSize',[['a4','A4'],['oficio','Oficio'],['carta','Carta'],['original','Tamaño imagen']]))+opt('Calidad PDF',sel('sQ',Object.entries(QUAL).map(([k,v])=>[k,v.label])))+'</div>'+opt('Márgenes por defecto (mm)','<input type="number" id="sMargin" min="0" max="40">'))
 +acc('🗄️','Datos del dispositivo',est||'Documentos guardados en este navegador','<p class="muted">'+est+'</p><button class="btn red block" id="sWipe">🗑 Borrar todos los documentos</button>')
-+'<p class="muted set-foot">Danscanner Pro · versión 47 · funciona en celular y PC · los documentos se guardan en este navegador.</p>');$('.sTpl',b).value=S.nameTemplate;$('.sFilter',b).value=S.filter;$('.sMax',b).value=String(S.maxCap);$('#sAuto').checked=S.autoCrop;$('#sAutoCap').checked=S.autoCapture;$('#sHd').checked=S.hd;$('#sDeskew').checked=S.deskew!==false;$('#sPrintBW').checked=S.printBW!==false;$('#sPro').checked=S.proFilters!==false;$('#sNative').checked=!!S.camNative;$('.sTheme',b).value=S.theme||'system';$('.sLang',b).value=S.lang;$('.sSize',b).value=S.size;$('.sQ',b).value=S.quality;$('#sMargin').value=S.margin;b.onchange=()=>{S.nameTemplate=$('.sTpl',b).value;S.filter=$('.sFilter',b).value;S.maxCap=+$('.sMax',b).value;S.autoCrop=$('#sAuto').checked;S.camNative=$('#sNative').checked;if(($('.sTheme',b).value)!==(S.theme||'system'))cambiarTema($('.sTheme',b).value);S.autoCapture=$('#sAutoCap').checked;S.hd=$('#sHd').checked;S.deskew=$('#sDeskew').checked;if((S.printBW!==false)!==$('#sPrintBW').checked){S.printBW=$('#sPrintBW').checked;if(FW.w){try{FW.w.terminate()}catch(e){}FW.w=null;FW.ok=null}}if((S.proFilters!==false)!==$('#sPro').checked){S.proFilters=$('#sPro').checked;useProFilters(S.proFilters)}S.lang=$('.sLang',b).value;S.size=$('.sSize',b).value;S.quality=$('.sQ',b).value;S.margin=+$('#sMargin').value||0;saveS();toast('Guardado')};$('#sDesign').onclick=async()=>{await Nav.back();designSheet()};$('#sAI').onclick=async()=>{await Nav.back();aiSheet()};$('#sSec').onclick=async()=>{await Nav.back();securitySheet()};$('#sSpace').onclick=async()=>{await Nav.back();storageSheet()};$('#sAbout').onclick=async()=>{await Nav.back();aboutSheet()};$('#sWipe').onclick=async()=>{if(!confirm('¿Borrar TODOS los documentos guardados?'))return;for(const m of await DB.metas())await DB.delDoc(m.id);refreshLists();toast('Documentos borrados')}}
++'<p class="muted set-foot">Danscanner Pro · versión 48 · funciona en celular y PC · los documentos se guardan en este navegador.</p>');$('.sTpl',b).value=S.nameTemplate;$('.sFilter',b).value=S.filter;$('.sMax',b).value=String(S.maxCap);$('#sAuto').checked=S.autoCrop;$('#sAutoCap').checked=S.autoCapture;$('#sHd').checked=S.hd;$('#sDeskew').checked=S.deskew!==false;$('#sPrintBW').checked=S.printBW!==false;$('#sPro').checked=S.proFilters!==false;$('#sNative').checked=!!S.camNative;$('.sTheme',b).value=S.theme||'system';$('.sLang',b).value=S.lang;$('.sSize',b).value=S.size;$('.sQ',b).value=S.quality;$('#sMargin').value=S.margin;b.onchange=()=>{S.nameTemplate=$('.sTpl',b).value;S.filter=$('.sFilter',b).value;S.maxCap=+$('.sMax',b).value;S.autoCrop=$('#sAuto').checked;S.camNative=$('#sNative').checked;if(($('.sTheme',b).value)!==(S.theme||'system'))cambiarTema($('.sTheme',b).value);S.autoCapture=$('#sAutoCap').checked;S.hd=$('#sHd').checked;S.deskew=$('#sDeskew').checked;if((S.printBW!==false)!==$('#sPrintBW').checked){S.printBW=$('#sPrintBW').checked;if(FW.w){try{FW.w.terminate()}catch(e){}FW.w=null;FW.ok=null}}if((S.proFilters!==false)!==$('#sPro').checked){S.proFilters=$('#sPro').checked;useProFilters(S.proFilters)}S.lang=$('.sLang',b).value;S.size=$('.sSize',b).value;S.quality=$('.sQ',b).value;S.margin=+$('#sMargin').value||0;saveS();toast('Guardado')};$('#sDesign').onclick=async()=>{await Nav.back();designSheet()};$('#sAI').onclick=async()=>{await Nav.back();aiSheet()};$('#sSec').onclick=async()=>{await Nav.back();securitySheet()};$('#sSpace').onclick=async()=>{await Nav.back();storageSheet()};$('#sAbout').onclick=async()=>{await Nav.back();aboutSheet()};$('#sWipe').onclick=async()=>{if(!confirm('¿Borrar TODOS los documentos guardados?'))return;for(const m of await DB.metas())await DB.delDoc(m.id);refreshLists();toast('Documentos borrados')}}
 $('#btnSettings').onclick=()=>settingsSheet();$('#navSettings').onclick=()=>settingsSheet();
 function go(v){$$('.view').forEach(x=>x.classList.toggle('active',x.id==='v-'+v));$$('.nav [data-go]').forEach(b=>b.classList.toggle('on',b.dataset.go===v));$('#topTitle').textContent={home:'Danscanner Pro',docs:'Documentos',tools:'Herramientas',nexa:'Nexa IA'}[v];window.scrollTo(0,0)}
 async function doAction(a){if(a==='cam-single')Cam.open('single');else if(a==='cam-batch')Cam.open('batch');else if(a==='import-img')$('#inImg').click();else if(a==='import-any')$('#inAny').click()}
@@ -3425,7 +3425,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 4.2',APP_VER='47';
+const NEXA_VER='Nexa 4.5',APP_VER='48';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3543,7 +3543,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='47 · 25/09/2026';
+const BUILD='48 · 29/09/2026';
 /* Botón Nexa arriba: se crea siempre, aunque otra parte de Nexa falle (antes, un error dejaba teléfonos sin el botón) */
 function ensureNexaTop(){const top=$('.top'),bs=$('#btnSettings');if(!top||!bs||$('#btnNexa'))return;const b=document.createElement('button');b.className='ib nx-top';b.id='btnNexa';b.dataset.go='nexa';b.title='Nexa IA';b.setAttribute('aria-label','Nexa IA');b.innerHTML='<i data-ico="nexa"></i><span>Nexa</span>';top.insertBefore(b,bs);iconize(b);const n=$('.nav [data-go="nexa"]');if(n)n.remove()}
 ensureNexaTop();addEventListener('load',ensureNexaTop);
@@ -4763,6 +4763,132 @@ nxMicApply();
 {const _ns=nexaSheet;nexaSheet=async function(){const r=await _ns.apply(this,arguments);const v=$('#sheetBody #nlVoice');if(v&&!v.querySelector('#nlMicOn')){
  v.insertAdjacentHTML('afterbegin','<label class="chk" style="margin-bottom:8px"><input type="checkbox" id="nlMicOn" '+(S.nexaMic!==false?'checked':'')+'> <span><b>Dictar por voz</b><small>Muestra el micrófono para dictarle a Nexa. Desactivalo si no lo usás.</small></span></label>');
  $('#nlMicOn').onchange=e=>{S.nexaMic=e.target.checked;saveS();nxMicApply();toast(S.nexaMic?'Dictado por voz activado':'Dictado por voz desactivado')}}return r}}
+
+/* ===== Danscanner Pro v48: tres voces para Nexa con velocidad ajustable mientras habla, y estilos artísticos en el editor ===== */
+/* 1) voz: lee por frases; la velocidad, la pausa y la voz se pueden cambiar en cualquier momento */
+const NX_VOICES=[['clara','Clara','voz aguda y amable'],['grave','Grave','voz más baja y pausada'],['neutra','Neutra','voz de locución, tono medio']];
+const NxTTS={q:[],i:0,on:false,paused:false,cur:null,
+ rate(){return Math.min(2,Math.max(.6,+S.nexaRate||1.05))},
+ prof(){return NX_VOICES.some(v=>v[0]===S.nexaVoz)?S.nexaVoz:'clara'},
+ /* elige voces distintas en español según el perfil; si el teléfono tiene una sola, cambia el tono */
+ pick(p){const vs=(window.speechSynthesis&&speechSynthesis.getVoices()||[]).filter(v=>/^es/i.test(v.lang));
+  const fem=/(female|mujer|helena|laura|sabina|paulina|monica|mónica|lucia|lucía|elena|sofia|sofía|isabela|marisol|conchita|penelope|lupe|camila|valentina|google español)/i,mal=/(male|hombre|pablo|raul|raúl|jorge|diego|enrique|juan|alvaro|álvaro|carlos|miguel|andres|andrés|tomas|tomás)/i;
+  const ar=vs.filter(v=>/es[-_](AR|419|US|MX)/i.test(v.lang)),es=vs.filter(v=>/es[-_]ES/i.test(v.lang)),order=[...ar,...es,...vs.filter(v=>!ar.includes(v)&&!es.includes(v))];
+  let v=null,pitch=1;
+  if(p==='clara'){v=order.find(x=>fem.test(x.name)&&!mal.test(x.name))||order[0];pitch=1.12}
+  else if(p==='grave'){v=order.find(x=>mal.test(x.name))||order[1]||order[0];pitch=v&&mal.test(v.name)?.95:.78}
+  else{const nm=o=>o&&o.v&&o.v.name,c=nm(this.pick('clara')),g=nm(this.pick('grave'));v=order.find(x=>x.name!==c&&x.name!==g)||order[2]||order[0];pitch=v&&(v.name===c||v.name===g)?.93:1}
+  return {v,pitch}},
+ split(t){const out=[];for(const s of String(t).match(/[^.!?;:\n]+[.!?;:]*|\n+/g)||[]){const x=s.trim();if(!x)continue;if(x.length<=220){out.push(x);continue}for(let k=0;k<x.length;k+=200){const cut=x.slice(k,k+200);out.push(cut)}}return out},
+ speak(t){if(!('speechSynthesis' in window))return toast('Este teléfono no permite leer en voz alta');this.stop(true);this.q=this.split(t);this.i=0;this.on=true;this.paused=false;this.bar();setTimeout(()=>this.next(),60)},
+ next(){if(!this.on||this.paused)return;if(this.i>=this.q.length){this.stop();return}
+  const u=new SpeechSynthesisUtterance(this.q[this.i]);u.lang='es-AR';const {v,pitch}=this.pick(this.prof());if(v){try{u.voice=v}catch(e){}u.lang=v.lang;u._vn=v.name}u.pitch=pitch;u.rate=this.rate();
+  u.onend=u.onerror=()=>{if(u._skip||this.cur!==u)return;this.i++;this.next()};this.cur=u;try{speechSynthesis.speak(u)}catch(e){this.stop()}this.bar()},
+ restart(){if(!this.on)return;if(this.cur)this.cur._skip=true;try{speechSynthesis.cancel()}catch(e){}if(!this.paused)setTimeout(()=>this.next(),60);this.bar()},
+ setRate(r){S.nexaRate=Math.round(Math.min(2,Math.max(.6,r))*20)/20;saveS();this.restart()},
+ pause(){if(!this.on)return;this.paused=!this.paused;this.restart()},
+ stop(quiet){if(this.cur)this.cur._skip=true;this.cur=null;this.on=false;this.paused=false;try{speechSynthesis.cancel()}catch(e){}if(!quiet){$$('.nx-acts [data-nx="speak"]').forEach(b=>b.classList.remove('on'))}this.bar()},
+ bar(){let b=$('#nxTts');const inp=$('#v-nexa .nx-input');if(!inp)return;if(!b){inp.insertAdjacentHTML('beforebegin','<div class="nx-tts" id="nxTts" hidden><span class="nx-tts-l"><i data-ico="speaker"></i> <b id="nxTtsV"></b></span><button data-tts="slow" aria-label="Más lento">−</button><b id="nxTtsR"></b><button data-tts="fast" aria-label="Más rápido">+</button><button data-tts="pause" id="nxTtsP" aria-label="Pausa">❚❚</button><button data-tts="stop" aria-label="Detener">■</button></div>');b=$('#nxTts');iconize(b);
+   b.onclick=e=>{const x=e.target.closest('[data-tts]');if(!x)return;const a=x.dataset.tts;if(a==='slow')this.setRate(this.rate()-.15);else if(a==='fast')this.setRate(this.rate()+.15);else if(a==='pause')this.pause();else this.stop()}}
+  b.hidden=!this.on;$('#nxTtsR').textContent=this.rate().toFixed(2).replace(/0$/,'').replace('.',',')+'×';$('#nxTtsV').textContent=(this.paused?'En pausa · ':'Leyendo · ')+(NX_VOICES.find(v=>v[0]===this.prof())||NX_VOICES[0])[1];$('#nxTtsP').textContent=this.paused?'▶':'❚❚'}};
+NexaVoice.speak=function(t){NxTTS.speak(this.plain(t))};NexaVoice.stop=function(){NxTTS.stop()};
+Object.defineProperty(NexaVoice,'on',{get(){return NxTTS.on},set(v){},configurable:true});
+try{speechSynthesis.onvoiceschanged=()=>{}}catch(e){}
+/* ⚙ Configurar Nexa → Voz: elegir voz, probarla y la velocidad */
+{const _ns=nexaSheet;nexaSheet=async function(){const r=await _ns.apply(this,arguments);const v=$('#sheetBody #nlVoice');if(v&&!v.querySelector('#nlVoz')){
+ v.insertAdjacentHTML('beforeend','<div id="nlVoz" style="margin-top:10px"><b>Voz de Nexa</b><div class="nl-voz">'+NX_VOICES.map(([k,n,d])=>'<label class="chk"><input type="radio" name="nlVoz" value="'+k+'" '+(NxTTS.prof()===k?'checked':'')+'> <span><b>'+n+'</b><small>'+d+'</small></span><button class="btn sm" data-vtry="'+k+'">▶ Probar</button></label>').join('')+'</div>'
+  +'<label class="nl-rate">Velocidad <input type="range" id="nlRate" min="0.6" max="2" step="0.05" value="'+NxTTS.rate()+'"> <b id="nlRateV">'+NxTTS.rate().toFixed(2)+'×</b></label><small>Mientras Nexa habla podés cambiar la velocidad con − y +, pausar o detener.</small></div>');
+ v.onchange=e=>{if(e.target.name==='nlVoz'){S.nexaVoz=e.target.value;NxTTS.tp=null;saveS();NxTTS.restart()}if(e.target.id==='nlRate'){NxTTS.setRate(+e.target.value);$('#nlRateV').textContent=NxTTS.rate().toFixed(2)+'×'}};
+ v.addEventListener('input',e=>{if(e.target.id==='nlRate')$('#nlRateV').textContent=(+e.target.value).toFixed(2)+'×'});
+ v.addEventListener('click',e=>{const t=e.target.closest('[data-vtry]');if(!t)return;e.preventDefault();NxTTS.speak('Hola, soy Nexa. Así suena la voz '+(NX_VOICES.find(x=>x[0]===t.dataset.vtry)||[])[1]+'.');NxTTS.tp=t.dataset.vtry})}return r}}
+/* la voz de prueba usa el perfil que se está probando */
+NxTTS.tp=null;NxTTS.prof=function(){const p=this.tp||S.nexaVoz;return NX_VOICES.some(v=>v[0]===p)?p:'clara'};
+{const _st=NxTTS.stop.bind(NxTTS);NxTTS.stop=function(q){if(!q)this.tp=null;return _st(q)}}
+
+/* 2) estilos artísticos de la imagen (editor → Estilo): caricatura, relieve 3D, anaglifo 3D, minimalista y boceto. No toca la foto original */
+const ART_STYLES=[['','Ninguno'],['cartoon','Animado (caricatura)'],['relief','Relieve 3D'],['anaglyph','Anaglifo 3D (lentes rojo y azul)'],['minimal','Minimalista'],['sketch','Boceto a lápiz']];
+const Art={
+ blur(src,w,h,r){const out=new Float32Array(src.length),tmp=new Float32Array(src.length);for(let y=0;y<h;y++){let s=0;const o=y*w;for(let x=-r;x<=r;x++)s+=src[o+Math.min(w-1,Math.max(0,x))];for(let x=0;x<w;x++){tmp[o+x]=s/(2*r+1);s+=src[o+Math.min(w-1,x+r+1)]-src[o+Math.max(0,x-r)]}}
+  for(let x=0;x<w;x++){let s=0;for(let y=-r;y<=r;y++)s+=tmp[Math.min(h-1,Math.max(0,y))*w+x];for(let y=0;y<h;y++){out[y*w+x]=s/(2*r+1);s+=tmp[Math.min(h-1,y+r+1)*w+x]-tmp[Math.max(0,y-r)*w+x]}}return out},
+ chans(d,n){const R=new Float32Array(n),G=new Float32Array(n),B=new Float32Array(n);for(let i=0,j=0;i<n;i++,j+=4){R[i]=d[j];G[i]=d[j+1];B[i]=d[j+2]}return [R,G,B]},
+ gray(d,n){const g=new Float32Array(n);for(let i=0,j=0;i<n;i++,j+=4)g[i]=d[j]*.299+d[j+1]*.587+d[j+2]*.114;return g},
+ edges(g,w,h){const e=new Float32Array(g.length);for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){const i=y*w+x;const gx=g[i-w+1]+2*g[i+1]+g[i+w+1]-g[i-w-1]-2*g[i-1]-g[i+w-1],gy=g[i+w-1]+2*g[i+w]+g[i+w+1]-g[i-w-1]-2*g[i-w]-g[i-w+1];e[i]=Math.hypot(gx,gy)}return e},
+ palette(d,n,k){const pts=[];const step=Math.max(1,Math.floor(n/6000));for(let i=0;i<n;i+=step)pts.push([d[i*4],d[i*4+1],d[i*4+2]]);let c=[];for(let i=0;i<k;i++)c.push(pts[Math.floor((i+.5)*pts.length/k)].slice());
+  const lum=p=>p[0]*.3+p[1]*.59+p[2]*.11;pts.sort((a,b)=>lum(a)-lum(b));c=c.map((_,i)=>pts[Math.floor((i+.5)*pts.length/k)].slice());
+  for(let it=0;it<8;it++){const s=c.map(()=>[0,0,0,0]);for(const p of pts){let b=0,bd=1e9;for(let j=0;j<k;j++){const q=c[j],dd=(p[0]-q[0])**2+(p[1]-q[1])**2+(p[2]-q[2])**2;if(dd<bd){bd=dd;b=j}}const t=s[b];t[0]+=p[0];t[1]+=p[1];t[2]+=p[2];t[3]++}c=c.map((q,j)=>s[j][3]?[s[j][0]/s[j][3],s[j][1]/s[j][3],s[j][2]/s[j][3]]:q)}return c},
+ apply(c,style){const w=c.width,h=c.height,n=w*h,x=c.getContext('2d',{willReadFrequently:true}),im=x.getImageData(0,0,w,h),d=im.data,sc=Math.max(1,Math.round(Math.max(w,h)/900));
+  if(style==='cartoon'){const [R,G,B]=this.chans(d,n).map(a=>this.blur(a,w,h,sc));const g=this.gray(d,n),e=this.edges(this.blur(g,w,h,sc),w,h);let mx=0;for(let i=0;i<n;i+=7)if(e[i]>mx)mx=e[i];const th=Math.max(40,mx*.22),L=5,q=v=>Math.round(v/255*(L-1))*255/(L-1);
+   for(let i=0,j=0;i<n;i++,j+=4){if(e[i]>th){d[j]=d[j+1]=d[j+2]=25;continue}d[j]=Math.min(255,q(R[i])*1.06);d[j+1]=Math.min(255,q(G[i])*1.06);d[j+2]=Math.min(255,q(B[i])*1.06)}}
+  else if(style==='relief'){const g=this.blur(this.gray(d,n),w,h,Math.max(1,sc>>1));const k=2*sc;for(let y=0;y<h;y++)for(let xx=0;xx<w;xx++){const i=y*w+xx,a=g[Math.max(0,y-k)*w+Math.max(0,xx-k)],b=g[Math.min(h-1,y+k)*w+Math.min(w-1,xx+k)];const s=Math.max(.45,Math.min(1.6,1+(a-b)/90)),j=i*4;d[j]=Math.min(255,d[j]*s);d[j+1]=Math.min(255,d[j+1]*s);d[j+2]=Math.min(255,d[j+2]*s)}}
+  else if(style==='anaglyph'){const g=this.gray(d,n),off=Math.max(4,Math.round(w*.012));for(let y=0;y<h;y++)for(let xx=0;xx<w;xx++){const j=(y*w+xx)*4;d[j]=g[y*w+Math.max(0,xx-off)];d[j+1]=g[y*w+Math.min(w-1,xx+off)]*.9;d[j+2]=g[y*w+Math.min(w-1,xx+off)]}}
+  else if(style==='minimal'){const [R,G,B]=this.chans(d,n).map(a=>this.blur(a,w,h,2*sc));const tmp=new Uint8ClampedArray(n*4);for(let i=0,j=0;i<n;i++,j+=4){tmp[j]=R[i];tmp[j+1]=G[i];tmp[j+2]=B[i]}const pal=this.palette(tmp,n,4);
+   for(let i=0,j=0;i<n;i++,j+=4){let b=0,bd=1e9;for(let k=0;k<pal.length;k++){const q=pal[k],dd=(R[i]-q[0])**2+(G[i]-q[1])**2+(B[i]-q[2])**2;if(dd<bd){bd=dd;b=k}}d[j]=pal[b][0];d[j+1]=pal[b][1];d[j+2]=pal[b][2]}}
+  else if(style==='sketch'){const g=this.gray(d,n),inv=new Float32Array(n);for(let i=0;i<n;i++)inv[i]=255-g[i];const bl=this.blur(inv,w,h,4*sc);for(let i=0,j=0;i<n;i++,j+=4){const v=Math.min(255,g[i]*255/Math.max(1,255-bl[i]));const t=v>245?255:v*.92;d[j]=d[j+1]=d[j+2]=t}}
+  x.putImageData(im,0,0);return c}};
+{const _rp=renderPage;renderPage=async function(p,o){const c=await _rp.apply(this,arguments);if(p&&p.art&&!(o&&o.noArt)){try{Art.apply(c,p.art)}catch(e){console.warn(e)}}return c}}
+{const _s=Hist.snap.bind(Hist);Hist.snap=function(p){const o=JSON.parse(_s(p));o.art=p.art||'';return JSON.stringify(o)}}
+(function(){const foot=$('#editor .sfoot'),ref=foot&&(foot.querySelector('[data-ed="anal"]')||foot.querySelector('[data-ed="adj"]'));if(!foot||!ref||foot.querySelector('[data-ed="art"]'))return;
+ const b=document.createElement('button');b.className='tb';b.dataset.ed='art';b.innerHTML='<b data-ico="palette"></b><span>Estilo</span>';ref.after(b);iconize(b);
+ b.addEventListener('click',async e=>{e.stopImmediatePropagation();const p=Ed.p;if(!p)return;const cur=p.art||'';
+  const bd=openSheet('Estilo de la imagen','<p class="muted">Convierte la foto en un estilo artístico. La foto original no se modifica: elegí «Ninguno» para volver.</p><div class="art-grid">'+ART_STYLES.map(([k,n])=>'<button class="art-o'+(k===cur?' on':'')+'" data-art="'+k+'"><img alt=""><span>'+n+'</span></button>').join('')+'</div><label class="chk" style="margin-top:10px"><input type="checkbox" id="artAll"> Aplicar a todas las páginas</label>');
+  try{const base=await renderPage({...p,art:''},{maxSide:260});for(const [k] of ART_STYLES){const t=canvas(base.width,base.height);t.getContext('2d').drawImage(base,0,0);if(k)Art.apply(t,k);const im=bd.querySelector('[data-art="'+k+'"] img');if(im)im.src=t.toDataURL('image/jpeg',.8)}}catch(x){}
+  bd.onclick=async ev=>{const o=ev.target.closest('[data-art]');if(!o)return;const k=o.dataset.art,all=$('#artAll').checked;for(const q of all?DOC.pages:[p]){if(k)q.art=k;else delete q.art;q._dirty=true}await Nav.back();Ed.touch(false);toast('Estilo: '+(ART_STYLES.find(x=>x[0]===k)||['',''])[1]+(all?' (todas las páginas)':''))}},true)})();
+document.head.insertAdjacentHTML('beforeend','<style id="v48Css">'
+ +'.nx-tts{display:flex;align-items:center;gap:6px;margin:4px 0 2px;padding:6px 8px;border-radius:12px;background:var(--bg2);border:1px solid var(--line);font-size:13px}.nx-tts[hidden]{display:none}.nx-tts-l{flex:1;min-width:0;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.nx-tts-l .ico{width:16px;height:16px}.nx-tts button{min-width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--bg);font-weight:700}#nxTtsR{min-width:44px;text-align:center}'
+ +'.nl-voz{display:flex;flex-direction:column;gap:6px;margin:6px 0}.nl-voz label{display:flex;align-items:center;gap:8px}.nl-voz label span{flex:1;display:flex;flex-direction:column}.nl-rate{display:flex;align-items:center;gap:8px;margin:6px 0}.nl-rate input{flex:1}'
+ +'.art-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.art-o{display:flex;flex-direction:column;gap:4px;padding:6px;border:2px solid var(--line);border-radius:12px;background:var(--bg2);font-size:12px;text-align:center}.art-o.on{border-color:var(--pri,#0e7490)}.art-o img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:8px;background:#ddd}</style>');
+
+/* 3) leyes en el teléfono: textos oficiales de InfoLeg (knowledge/leyes), consulta por artículo o por tema, y artículos relacionados (grafo de graphify) */
+const LEY_SUF='(?:\\s*(?:bis|ter|quater|quinquies|sexies|septies|octies|nonies|decies))?';
+const Leyes={idx:null,data:{},rel:null,
+ async index(){if(this.idx)return this.idx;try{const r=await fetch('knowledge/leyes/indice.json',{cache:'no-cache'});this.idx=r.ok?await r.json():{leyes:[]}}catch(e){this.idx={leyes:[]}}if(!Array.isArray(this.idx.leyes))this.idx.leyes=[];return this.idx},
+ async ley(id){if(this.data[id])return this.data[id];const m=(await this.index()).leyes.find(l=>l.id===id);if(!m)return null;
+  try{const r=await fetch('knowledge/leyes/'+m.archivo);if(!r.ok)return null;const d=await r.json();
+   const df=new Map();let tot=0;for(const a of d.articulos){a.tf=new Map();const ts=Know.terms((a.u||'')+' '+a.t);a.len=ts.length;tot+=ts.length;for(const t of ts)a.tf.set(t,(a.tf.get(t)||0)+1);for(const t of a.tf.keys())df.set(t,(df.get(t)||0)+1)}
+   d.df=df;d.avg=tot/Math.max(1,d.articulos.length);d.byN=new Map(d.articulos.map(a=>[a.n,a]));return this.data[id]=d}catch(e){return null}},
+ async rels(){if(this.rel)return this.rel;try{const r=await fetch('knowledge/leyes/relaciones.json');this.rel=r.ok?await r.json():{}}catch(e){this.rel={}}return this.rel},
+ /* qué ley nombra la pregunta (por sus alias) */
+ async which(q){const n=' '+nbNorm(q).replace(/[^a-z0-9ñ. ]/g,' ').replace(/\s+/g,' ')+' ';const L=(await this.index()).leyes;let best=null,bl=0;
+  for(const l of L)for(const a of l.alias||[]){const x=' '+nbNorm(a)+' ';if(n.includes(x)&&x.length>bl){best=l;bl=x.length}}return best},
+ artRef(q){const m=nbNorm(q).match(new RegExp('\\bart(?:iculo|\\.)?\\s*(\\d+'+LEY_SUF+')\\b'));return m?m[1].replace(/\s+/g,' ').trim():null},
+ search(d,q,n=3){const qt=[...new Set(Know.terms(q))].filter(t=>!/^(codig|penal|proce|feder|nacio|ley|artic|dice|sobre)/.test(t));if(!qt.length)return [];const N=d.articulos.length,k1=1.2,b=.75;
+  return d.articulos.map(a=>{let s=0,hit=0;for(const t of qt){const f=a.tf.get(t);if(!f)continue;hit++;const df=d.df.get(t)||0;s+=Math.log(1+(N-df+.5)/(df+.5))*f*(k1+1)/(f+k1*(1-b+b*a.len/d.avg))}return {a,s,cov:hit/qt.length}}).filter(x=>x.s>0&&x.cov>=.5).sort((x,y)=>y.s-x.s).slice(0,n)},
+ fecha(d){try{return new Date(d.descargado+'T12:00:00').toLocaleDateString('es-AR')}catch(e){return d.descargado}},
+ fuente(d){return '✅ *Texto oficial · '+esc(d.norma)+' · fuente: InfoLeg ('+esc(d.fuente)+'), descargado el '+this.fecha(d)+'*'},
+ async relLine(d,a){const r=(await this.rels())[d.id+':'+a.n];if(!r)return '';const ks=[...new Set([...(r.remite||[]),...(r.citado||[])])].slice(0,6);if(!ks.length)return '';
+  const idx=(await this.index()).leyes;return '\n\n**Artículos relacionados:** '+ks.map(k=>{const [lid,n]=k.split(':');const l=idx.find(x=>x.id===lid);return chip((l?l.abrev:lid)+' art. '+n,'Artículo '+n+' '+((l&&l.alias&&l.alias[0])||lid))}).join(' ')},
+ fmt(d,a,full){const t=full||a.t.length<=1400?a.t:a.t.slice(0,1400)+'…';return '**'+esc(d.nombre)+' — art. '+esc(a.n)+'**'+(a.u?'\n*'+esc(a.u)+'*':'')+'\n\n'+esc(t)},
+ /* responde una consulta legal; null si no corresponde */
+ async answer(q){const n=nbNorm(q);const art=this.artRef(q),ley=await this.which(q),legal=/\b(codigo|ley|articulo|art\.|delito|pena|prision|reclusion|excarcel|condicional|salidas? transitorias?|imputad|querell|fiscal|juez|sobreseim|prescrip|homicid|robo|hurto|estafa|lesion|amenaza|ejecucion de la pena|libertad asistida|computo)\b/.test(n);
+  const idx=await this.index();if(!idx.leyes.length){if(ley||(art&&/codigo|ley|penal|procesal/.test(n)))return '⚪ Todavía no están cargados los códigos en la app.\n\nCuando se carguen (textos oficiales de InfoLeg), vas a poder pedir, por ejemplo, **artículo 79 del Código Penal**, sin internet.';return null}
+  if(art){let cands=ley?[ley]:idx.leyes;const found=[];for(const l of cands){const d=await this.ley(l.id);const a=d&&d.byN.get(art);if(a)found.push([d,a])}
+   if(!found.length)return ley?'⚪ No encontré el **artículo '+esc(art)+'** en '+esc(ley.nombre)+'.':null;
+   if(found.length>1&&!ley)return '¿De qué norma es el **artículo '+esc(art)+'**?\n\n'+found.map(([d])=>chip(d.nombre,'Artículo '+art+' '+(idx.leyes.find(l=>l.id===d.id).alias[0]))).join(' ');
+   const [d,a]=found[0];return this.fmt(d,a,true)+'\n\n'+this.fuente(d)+(await this.relLine(d,a))}
+  if(!ley&&(!legal||!nxIsQuestion(q)||/redact|resum|extra|adjunt|nota|oficio|escrito|document|busc|correg|traduc/.test(n)))return null;
+  const hits=[];for(const l of ley?[ley]:idx.leyes){const d=await this.ley(l.id);if(d)for(const h of this.search(d,q,3))hits.push({...h,d})}
+  hits.sort((x,y)=>y.s-x.s);const top=hits.filter(h=>h.s>=Math.max(2,hits[0]?hits[0].s*.55:0)).slice(0,3);
+  if(!top.length)return ley?'⚪ No encontré artículos sobre eso en '+esc(ley.nombre)+'. Probá con otras palabras o pedí un artículo por número.':null;
+  this.lastHits=top;return 'Encontré estos artículos:\n\n'+top.map(h=>this.fmt(h.d,h.a)+'\n\n'+chip('Ver art. '+h.a.n+' completo','Artículo '+h.a.n+' '+(idx.leyes.find(l=>l.id===h.d.id).alias[0]))).join('\n\n---\n\n')+'\n\n'+[...new Set(top.map(h=>h.d))].map(d=>this.fuente(d)).join('\n')}};
+Leyes.index();
+/* en Nexa: el artículo pedido sale al instante del texto oficial; las consultas por tema, con internet, se las pasa a la IA con los artículos para que cite */
+{const _ask=Nexa.ask;Nexa.ask=async function(msg){const q=String(msg&&msg.text||'');if(!msg||msg.role!=='user'||this.st.docs.some(d=>d.fresh))return _ask.apply(this,arguments);
+ const art=Leyes.artRef(q);let out=null;
+ if(art||!isCloud(this.prov())){try{out=await Leyes.answer(q)}catch(e){out=null}}
+ else{try{const d=await Leyes.answer(q);this._leyCtx=d&&Leyes.lastHits?Leyes.lastHits:null}catch(e){this._leyCtx=null}}
+ if(out){this.st.msgs.push({role:'assistant',text:out,prov:'basic'});this.save();this.render();return}
+ try{return await _ask.apply(this,arguments)}finally{this._leyCtx=null;Leyes.lastHits=null}}}
+{const _s=Nexa.system;Nexa.system=function(){let r=_s.apply(this,arguments);const h=this._leyCtx;
+ if(h&&h.length)r+='\n\nTEXTO OFICIAL DE LAS NORMAS (InfoLeg). Basá la respuesta en estos artículos, citalos como «art. N de la norma» y no inventes artículos ni contenidos que no estén acá:\n'+h.map(x=>'['+x.d.nombre+', art. '+x.a.n+']\n'+x.a.t.slice(0,1800)).join('\n\n');return r}}
+
+/* 4) comandos rápidos: escribí «/» en Nexa */
+const NX_CMDS=[['/articulo','Buscar un artículo de una ley','Artículo '],['/ley','Qué dice una ley sobre un tema','¿Qué dice el Código Penal sobre '],['/resumir','Resumir el documento adjunto','Resumí el documento adjunto'],['/datos','Extraer datos del documento','Extraé los datos del documento adjunto'],['/analizar','Analizar la calidad del escaneo','Analizá la calidad del documento adjunto'],['/redactar','Redactar una nota formal','Redactá una nota formal sobre '],['/corregir','Corregir ortografía y redacción','Corregí la ortografía y la redacción de este texto: '],['/explicar','Explicar en lenguaje simple','Explicá en lenguaje simple: '],['/buscar','Buscar en mis documentos','Buscá "" en mis documentos'],['/ayuda','Cómo usar Danscanner','¿Cómo escaneo un documento?']];
+(function(){const inp=$('#nxIn');if(!inp)return;let box=null;const hide=()=>{if(box)box.hidden=true};
+ const show=()=>{const v=inp.value;if(!/^\/\S*$/.test(v)){hide();return}const f=nbNorm(v.slice(1));const L=NX_CMDS.filter(c=>nbNorm(c[0].slice(1)).startsWith(f)||nbNorm(c[1]).includes(f));if(!L.length){hide();return}
+  if(!box){box=document.createElement('div');box.className='nx-cmds';box.id='nxCmds';inp.closest('.nx-input').before(box);box.onclick=e=>{const b=e.target.closest('[data-cmd]');if(!b)return;const c=NX_CMDS.find(x=>x[0]===b.dataset.cmd);inp.value=c[2];inp.oninput&&inp.oninput();hide();inp.focus();const k=c[2].indexOf('""');try{const p=k>=0?k+1:c[2].length;inp.setSelectionRange(p,p)}catch(x){}if(!/[ :"]$/.test(c[2])&&k<0)Nexa.send()}}
+  box.innerHTML=L.map(c=>'<button data-cmd="'+c[0]+'"><b>'+c[0]+'</b><span>'+esc(c[1])+'</span></button>').join('');box.hidden=false};
+ inp.addEventListener('input',show);inp.addEventListener('blur',()=>setTimeout(hide,200))})();
+document.head.insertAdjacentHTML('beforeend','<style id="v48bCss">.nx-cmds{display:flex;flex-direction:column;gap:2px;margin:4px 0;padding:4px;border:1px solid var(--line);border-radius:12px;background:var(--bg2);max-height:240px;overflow:auto}.nx-cmds[hidden]{display:none}.nx-cmds button{display:flex;gap:10px;align-items:baseline;text-align:left;padding:8px 10px;border-radius:8px}.nx-cmds button:hover{background:var(--bg3)}.nx-cmds b{min-width:84px;color:var(--nx,#0e7490)}.nx-cmds span{color:var(--tx2);font-size:13px}</style>');
 </script>
 </body>
 </html>
