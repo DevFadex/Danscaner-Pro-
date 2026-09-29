@@ -357,3 +357,17 @@ En el editor, **Corregir** permite arreglar una palabra mal escrita de la hoja e
 - Las dos se transcribieron a mano desde copias escaneadas que dio el usuario, página por página contra la imagen. El texto está en `tools/leyes/transcripcion/`. Nexa las cita con esa aclaración y recomienda verificar contra el original ante cualquier duda.
 - `tools/leyes/fuentes.json` admite fuentes con `"transcripcion"`. Los títulos de sección que quedan sueltos en esos textos se pasan como sección del artículo siguiente.
 - Arreglo de paso: los encabezados de libro, título y capítulo ya no toman renglones partidos del texto de un artículo.
+
+## v51 — Varias páginas a la vez y visor con zoom
+
+- **Documento → ☑️ Seleccionar**: se tocan las páginas para marcarlas, o se usa Todas / Ninguna. Con las marcadas se puede:
+  - 🗑 Borrar varias juntas, con **↶ Deshacer**. No deja borrar todas.
+  - ↻ Girar.
+  - 📄 Extraer a un documento nuevo, sin tocar el original.
+  - 🔍 Verlas con zoom.
+- **Visor con zoom** (🔍 Ver / Zoom en el documento, 🔍 en el editor de página y en cada página de Editar, Censurar y Recortar PDF):
+  - Pellizco, rueda del mouse, doble toque (acerca al 250 % donde se toca, otro doble toque vuelve).
+  - Arrastrar para moverse, deslizar para pasar de página, botones − ＋ ⤢ y flechas del teclado. Hasta 600 %.
+- **Editar PDF → 🗑 en cada página** marca las páginas que se van a borrar. También se puede escribir un rango (ej. `2-5,9`) → Marcar. Se quitan al guardar, junto con las demás ediciones.
+- **Documentos → Seleccionar → Todos** marca todos los documentos visibles para borrarlos, unirlos o bajarlos juntos.
+- **Corregir texto**: ya copiaba letra, tamaño, negrita y color, y corría el resto del renglón. Ahora, si la palabra nueva es más larga y el renglón no tiene lugar para correrse entero, se corre lo que entra y la palabra se angosta apenas lo justo. Antes quedaba toda comprimida.

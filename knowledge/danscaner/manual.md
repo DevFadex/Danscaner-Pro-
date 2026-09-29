@@ -38,3 +38,7 @@ Escanear, recortar, filtros, crear PDF, OCR, corregir texto, analizar y Nexa sin
 
 ## Estilos artísticos de una foto
 En el editor, el botón Estilo convierte la foto en Animado (caricatura), Relieve 3D, Anaglifo 3D (para lentes rojo y azul), Minimalista o Boceto a lápiz. La foto original no se modifica: con «Ninguno» vuelve a como estaba.
+
+## Borrar o girar varias páginas y ver con zoom
+
+En el documento tocá **☑️ Seleccionar** y marcá las páginas (o **Todas**). Después elegí 🗑 Borrar (con ↶ Deshacer si te equivocaste), ↻ Girar o 📄 Extraer a un documento nuevo. Para leer mejor una página tocá **🔍 Ver / Zoom**: acercá con los dedos, la rueda del mouse o doble toque, y deslizá para pasar de página. En **Editar PDF** cada página tiene 🔍 para verla grande y 🗑 para marcarla y borrarla al guardar; también podés escribir un rango como `2-5,9` y tocar Marcar. Para borrar varios documentos: Documentos → Seleccionar → Todos (o marcá los que quieras) → 🗑.
