@@ -683,6 +683,51 @@ await test('Escaneo: detección de la hoja (tablas, otro papel detrás, sombras)
   assert.equal(await pg.evaluate(()=>Ed.p.paper),'oficio');assert.match(await pg.textContent('#editor [data-ed="paper"]'),/Oficio/);
 });
 
+await test('Varias páginas a la vez: borrar con deshacer, girar, extraer, visor con zoom y borrar páginas en Editar PDF',async pg=>{
+  await seedPage(pg);await pg.evaluate(async()=>{DOC=newDoc();for(let i=0;i<6;i++)DOC.pages.push({...structuredClone(window._pg),id:'p'+i});openDocScreen()});await W(600);
+  await pg.click('#docSelect');await W(200);assert.equal(await pg.isVisible('#pgSelBar'),true);
+  for(const i of [1,3,4])await pg.click('#pageGrid .pg[data-i="'+i+'"]');await W(200);
+  assert.equal(await pg.evaluate(()=>Nav.isOpen('editor')),false,'tocar una página en modo selección abrió el editor');
+  assert.match(await pg.textContent('#pgSelC'),/3 de 6/);
+  /* girar las marcadas */
+  await pg.click('#pgSelBar [data-ps="rot"]');await W(800);assert.deepEqual(await pg.evaluate(()=>DOC.pages.map(p=>p.rot||0)),[0,90,0,90,90,0]);
+  /* extraer a un documento nuevo */
+  await pg.click('#pgSelBar [data-ps="ext"]');await W(1000);  const nd=await pg.evaluate(async()=>{const r=await new Promise(res=>{const q=DB.db.transaction('docs').objectStore('docs').getAll();q.onsuccess=()=>res(q.result)});const d=r.find(x=>/\(pág\. 2, 4, 5\)/.test(x.name));return d?d.pages.length:0});
+  assert.equal(nd,3,'no se creó el documento extraído');
+  /* borrar varias y deshacer */
+  pg.once('dialog',d=>d.accept());await pg.click('#pgSelBar [data-ps="del"]');await W(400);
+  assert.deepEqual(await pg.evaluate(()=>DOC.pages.map(p=>p.id)),['p0','p2','p5']);assert.equal(await pg.isVisible('#pgSelBar [data-ps="undo"]'),true);
+  await pg.click('#pgSelBar [data-ps="undo"]');await W(300);assert.equal(await pg.evaluate(()=>DOC.pages.length),6,'deshacer no recuperó las páginas');
+  await pg.click('#pgSelBar [data-ps="all"]');await W(100);await pg.click('#pgSelBar [data-ps="del"]');await W(200);assert.equal(await pg.evaluate(()=>DOC.pages.length),6,'dejó borrar todas');
+  await pg.click('#pgSelBar [data-ps="exit"]');await W(200);assert.equal(await pg.isVisible('#pgSelBar'),false);
+  /* visor con zoom: botones, rueda, doble toque y pasar de página */
+  await pg.click('#docZoom');await pg.waitForFunction(()=>$('#zmImg').naturalWidth>0,null,{timeout:8000});
+  assert.match(await pg.textContent('#zmT'),/Página 1 de 6/);
+  const w0=await pg.$eval('#zmImg',i=>i.getBoundingClientRect().width);await pg.click('#zmIn');await W(100);const w1=await pg.$eval('#zmImg',i=>i.getBoundingClientRect().width);assert.ok(w1>w0*1.4,'no hace zoom '+w0+' → '+w1);
+  const box=await pg.$eval('#zmStage',e=>{const r=e.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}});await pg.mouse.move(box.x,box.y);await pg.mouse.wheel(0,-400);await W(100);assert.ok(await pg.evaluate(()=>Zoom.s)>1.6,'la rueda no acerca');
+  await pg.click('#zmFit');assert.equal(await pg.evaluate(()=>Zoom.s),1);
+  await pg.mouse.click(box.x,box.y);await pg.mouse.click(box.x,box.y);await W(100);assert.equal(await pg.evaluate(()=>Zoom.s),2.5,'el doble toque no acerca');
+  await pg.click('#zmNext');await W(600);assert.match(await pg.textContent('#zmT'),/Página 2 de 6/);assert.equal(await pg.evaluate(()=>Zoom.s),1);
+  await pg.evaluate(()=>Nav.back());await W(400);await pg.evaluate(()=>Nav.back());await W(400);
+  /* Editar PDF: marcar varias páginas para borrar (con 🗑 y con rango) y guardar sin ellas */
+  const b64=await pg.evaluate(async()=>{await loadLib('pdflib');const d=await PDFLib.PDFDocument.create(),f=await d.embedFont(PDFLib.StandardFonts.Helvetica);for(let i=1;i<=6;i++){const p=d.addPage([300,400]);p.drawText('HOJA '+i,{x:40,y:300,size:24,font:f})}const u=await d.save();let s='';for(const b of u)s+=String.fromCharCode(b);return btoa(s)});
+  await pg.evaluate(()=>openTool(TOOLS.findIndex(t=>t.name==='Editar PDF')));await W(600);if(await pg.evaluate(()=>$('#sheet').classList.contains('open'))){await pg.evaluate(()=>Nav.back());await W(500)}
+  await pg.setInputFiles('#toolBody .fp input[type=file]',{name:'veinte.pdf',mimeType:'application/pdf',buffer:Buffer.from(b64,'base64')});await W(800);if(await pg.$('#srcYes'))await pg.click('#srcYes');await W(2000);
+  await pg.click('#toolBody .pg[data-n="2"] [data-del]');await pg.fill('#toolBody .delr','4-5');await pg.click('#toolBody [data-dr="mark"]');await W(100);
+  assert.match(await pg.textContent('#toolBody .delc'),/3 página\(s\) para borrar: 2, 4, 5/);assert.equal(await pg.$$eval('#toolBody .pg.deleted',x=>x.length),3);
+  await pg.click('#toolBody .pg[data-n="3"] [data-z]');await pg.waitForFunction(()=>$('#zmImg').naturalWidth>0,null,{timeout:8000});assert.match(await pg.textContent('#zmT'),/Página 3 de 6/);await pg.evaluate(()=>Nav.back());await W(400);
+  await pg.click('#toolBody .run');await W(2500);assert.match(await pg.textContent('#toolBody .result'),/Listo/);
+  await pg.evaluate(()=>{window.download=b=>{window._dl=b}});await pg.click('#toolBody .result [data-dl="0"]');await W(200);
+  const n=await pg.evaluate(async()=>{const b=await window._dl.arrayBuffer();const d=await PDFLib.PDFDocument.load(b);return d.getPageCount()});assert.equal(n,3,'el PDF guardado no quitó las páginas');
+  /* Corregir: si el renglón no entra entero, se corre lo que hay de lugar (no queda pisado ni con hueco) */
+  const rf=await pg.evaluate(()=>{const c=canvas(400,100),x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,400,100);x.fillStyle='#000';x.font='30px Arial';x.fillText('ab cd efgh',40,60);
+    const r=drawFix(c,{x:.1,y:.3,w:.1,h:.35,fs:.3,bl:.6,t:'PALABRALARGA',lx1:.95,ly0:.3,ly1:.65});return r&&r.dx});
+  assert.ok(rf>0&&rf<=14,'no corrió el renglón lo que entraba: '+rf);
+  /* lista de documentos: marcar todos */
+  await pg.evaluate(()=>{while(Nav.stack.length)Nav._pop()});await pg.evaluate(()=>refreshLists());await W(600);
+  const hasList=await pg.evaluate(()=>!!$('#selToggle'));if(hasList){await pg.evaluate(()=>{$('#selToggle').click()});await W(200);await pg.evaluate(()=>$('#selAll').click());await W(100);assert.ok(await pg.evaluate(()=>selected.size)>=2,'Todos no marcó');await pg.evaluate(()=>$('#selToggle').click())}
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();
