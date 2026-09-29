@@ -412,3 +412,18 @@ En el editor, **Corregir** permite arreglar una palabra mal escrita de la hoja e
   - Quién lo manda, por ejemplo "Juzgado de Ejecución Penal de la II Nominación". Solo toma nombres propios: en "informa al Juzgado que…" no inventa nada.
   - Se aplica al cerrar el documento si todavía tiene el nombre por defecto.
   - Ahora también funciona sin internet, con el OCR incluido en la app.
+
+## v56 — Estilos de imagen profesionales
+
+- **10 estilos**: Animado, Cómic, Óleo, Acuarela, Boceto a lápiz, Minimalista (plano), Relieve 3D, Blanco y negro cine, Vintage y Anaglifo 3D.
+- **Técnica** (todo en el teléfono, sin internet):
+  - Filtro guiado: suaviza piel y fondos sin borrar bordes ni formar bloques.
+  - Kuwahara: pinceladas del óleo y formas planas del minimalista.
+  - Cuantización del brillo que conserva el color: la piel no queda gris.
+  - Líneas finas por diferencia de gaussianas, trama de puntos para el cómic, iluminación por relieve, grano, viñeta y curva de contraste.
+- **Se adapta a la foto**:
+  - Corrige los niveles de luz antes de convertir.
+  - Detecta si es un documento y usa un suavizado más leve para que el texto siga legible.
+  - Las fotos de más de 1400 px se procesan reducidas y vuelven a su tamaño, así no se tilda el teléfono.
+- **Intensidad** Suave, Normal o Fuerte. Las miniaturas se regeneran al cambiarla y se guarda por página (`p.artK`).
+- Las páginas con los estilos anteriores siguen funcionando: los nombres internos `cartoon`, `relief`, `anaglyph`, `minimal` y `sketch` no cambiaron.
