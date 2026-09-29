@@ -756,6 +756,16 @@ await test('Administración: mi cuenta (usuario y cambiar contraseña), crear cu
   await pg.evaluate(()=>{while(Nav.stack.length)Nav._pop();SB.user=null});
 });
 
+await test('Versión: los usuarios ven la pública (1.2) y el administrador la interna',async pg=>{
+  const foot=async()=>{await pg.evaluate(()=>settingsSheet());await pg.waitForSelector('#sUpd');const t=await pg.textContent('#sheetBody .set-foot');await pg.evaluate(()=>Nav.back());await W(300);return t};
+  await pg.evaluate(()=>{SB.ready=true;SB.profile={id:'u',role:'usuario',status:'activo'}});
+  const u=await foot();assert.match(u,/versión 1\.2/);assert.ok(!/53|BUILD/.test(u),'el usuario ve la versión interna: '+u);
+  await pg.evaluate(()=>{SB.profile={id:'a',role:'admin',status:'activo'}});
+  const a=await foot();assert.ok(a.includes('versión '+await pg.evaluate(()=>BUILD)),a);assert.match(a,/usuarios ven 1\.2/);
+  assert.equal(await pg.evaluate(()=>{SB.profile={id:'u',role:'usuario',status:'activo'};return verLabel()}),'1.2');
+  await pg.evaluate(()=>{SB.profile={id:'t',role:'admin',status:'activo'}});
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();
