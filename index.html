@@ -3430,7 +3430,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 4.5',APP_VER='53';
+const NEXA_VER='Nexa 4.5',APP_VER='54';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3548,7 +3548,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='53 · 29/09/2026';
+const BUILD='54 · 29/09/2026';
 /* Versión que ven los usuarios: se cambia a mano solo cuando se decide publicar una versión nueva para todos.
    El administrador ve la versión interna (BUILD) con cada cambio. */
 const PUBLIC_VER='1.2';
@@ -4976,6 +4976,9 @@ function pwChangeSheet(recovery){if(!SB.ready||!SB.client||!SB.user)return toast
   if(error)return msg(/reauth|recent/i.test(error.message)?'Por seguridad, cerrá sesión, entrá de nuevo y volvé a intentar.':/same|different/i.test(error.message)?'Tiene que ser distinta de la anterior.':'Error: '+error.message);
   toast('Contraseña cambiada ✓. La próxima vez entrá con la nueva.',4500);Nav.back()}}
 if(SB_RECOVERY)(async()=>{for(let i=0;i<80&&!(SB.ready&&SB.user);i++)await sleep(500);if(SB.user){try{history.replaceState(null,'',location.pathname)}catch(e){}pwChangeSheet(true)}})();
+
+/* v54 · Nexa en PC: letra, burbujas y cuadro de texto más grandes, y la conversación ocupa más ancho */
+document.head.insertAdjacentHTML('beforeend','<style id="v54Css">@media (min-width:1024px){#v-nexa.view{max-width:min(1240px,calc(100vw - 280px))!important;width:100%!important}#v-nexa .nx-md,#v-nexa .nx-md p,#v-nexa .nx-md li{font-size:18px!important;line-height:1.65!important}#v-nexa .nx-md h1,#v-nexa .nx-md h2,#v-nexa .nx-md h3{font-size:21px!important}#v-nexa .nx-msg.ai{max-width:96%!important;padding:18px 22px!important;border-radius:20px!important}#v-nexa .nx-bub{font-size:18px!important;line-height:1.55!important;padding:12px 18px!important;border-radius:20px!important}#v-nexa .nx-q{font-size:15.5px!important;padding:10px 16px!important}#v-nexa .nx-acts button{font-size:14px!important;height:34px!important}#v-nexa .nx-log{gap:20px!important}#v-nexa .nx-input{min-height:72px!important;padding:10px 12px!important;border-radius:22px!important}#v-nexa #nxIn{font-size:18px!important;line-height:1.5!important;min-height:50px!important;max-height:45vh!important;padding:12px 8px!important}#v-nexa .nx-ib,#v-nexa .nx-send{width:48px!important;height:48px!important}#v-nexa .nx-ib .ico,#v-nexa .nx-send .ico{width:24px!important;height:24px!important}#v-nexa .nx-prov{font-size:14.5px!important;padding:8px 14px!important}#v-nexa .nx-hb{width:44px!important;height:44px!important}#v-nexa .nx-empty h3{font-size:30px!important}#v-nexa .nx-empty p{font-size:17px!important}#v-nexa .nx-sugs button{font-size:16px!important;padding:14px 16px!important}}</style>');
 </script>
 </body>
 </html>
