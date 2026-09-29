@@ -47,6 +47,6 @@ En el documento tocá **☑️ Seleccionar** y marcá las páginas (o **Todas**)
 
 El usuario para entrar es tu correo. La contraseña no se puede ver en ningún lado (se guarda cifrada), ni siquiera el administrador puede verla: si no la recordás, cambiala en Ajustes → 🔑 Cambiar contraseña, o tocá "Olvidé mi contraseña" al entrar y seguí el enlace del correo. El administrador puede crear cuentas con usuario y contraseña (Administrar accesos → Crear cuenta con usuario y contraseña): la contraseña se muestra una sola vez para copiarla o mandarla.
 
-## Compartir a Danscanner desde WhatsApp o la galería
+## Compartir a Danscanner Pro desde WhatsApp o la galería
 
-En Android, con la app instalada en la pantalla de inicio: en WhatsApp, la galería o el correo tocá Compartir y elegí **Danscanner**. Las fotos o PDF entran como un documento nuevo. Al cerrarlo, la app lee el contenido y le pone nombre sola (tipo, número, juzgado o dependencia, expediente y fecha). En iPhone esta opción no existe; ahí usá Importar.
+En Android, con la app instalada en la pantalla de inicio: en WhatsApp, la galería o el correo tocá Compartir y elegí **Danscanner Pro**. Las fotos o PDF entran como un documento nuevo. Al cerrarlo, la app lee el contenido y le pone nombre sola (tipo, número, juzgado o dependencia, expediente y fecha). En iPhone esta opción no existe; ahí usá Importar.
