@@ -536,7 +536,7 @@ await test('Nexa: tres voces con velocidad ajustable, estilos de imagen, leyes c
   await seedPage(pg);await pg.evaluate(async()=>{DOC=newDoc();DOC.pages.push({...window._pg,id:uid()});openDocScreen();Ed.open(0)});await W(800);
   const px=await pg.evaluate(async()=>{const p=Ed.p;const a=await renderPage({...p,art:''},{maxSide:300}),b=await renderPage({...p,art:'cartoon'},{maxSide:300});const da=a.getContext('2d').getImageData(0,0,a.width,a.height).data,db=b.getContext('2d').getImageData(0,0,b.width,b.height).data;let d=0;for(let i=0;i<da.length;i+=4)d+=Math.abs(da[i]-db[i]);return d});
   assert.ok(px>0,'el estilo no cambió la imagen');
-  await pg.click('#editor [data-ed="art"]');await W(800);assert.equal(await pg.evaluate(()=>document.querySelectorAll('#sheetBody [data-art]').length),6);
+  await pg.click('#editor [data-ed="art"]');await W(800);assert.equal(await pg.evaluate(()=>document.querySelectorAll('#sheetBody [data-art]').length),11);
   await pg.click('#sheetBody [data-art="minimal"]');await W(500);assert.equal(await pg.evaluate(()=>Ed.p.art),'minimal');
   await pg.evaluate(()=>Nav.back());await W(300);
 });
@@ -791,6 +791,24 @@ await test('Compartir a Danscanner desde otra app (foto y PDF) y nombre automát
   const n=await pg.evaluate(()=>importShared());assert.equal(n,1);await W(500);
   assert.equal(await pg.evaluate(()=>DOC&&DOC.pages.length),2,'no entraron las 2 páginas del PDF');assert.equal(await pg.evaluate(()=>Nav.isOpen('docScreen')),true);
   assert.equal(await pg.evaluate(async()=>(await (await caches.open('danscaner-share')).keys()).length),0,'quedaron archivos compartidos guardados');
+  await pg.evaluate(()=>Nav.back());await W(300);
+});
+
+await test('Estilos de imagen profesionales: 10 estilos, intensidad, fotos grandes y documentos legibles',async pg=>{
+  const r=await pg.evaluate(()=>{const mk=(w,h)=>{const c=canvas(w,h),x=c.getContext('2d');const g=x.createLinearGradient(0,0,w,h);g.addColorStop(0,'#d9a066');g.addColorStop(1,'#3b5b8c');x.fillStyle=g;x.fillRect(0,0,w,h);x.fillStyle='#c33';x.beginPath();x.arc(w/2,h/2,w/5,0,7);x.fill();return c};
+    const out={};for(const [k] of ART_STYLES.slice(1)){const c=mk(400,300);const t0=performance.now();Art.apply(c,k,2);const d=c.getContext('2d').getImageData(0,0,400,300).data;let bad=0;for(let i=0;i<d.length;i+=4)if(Number.isNaN(d[i]))bad++;out[k]=[Math.round(performance.now()-t0),bad]}
+    /* la intensidad cambia el resultado */const a=mk(300,200),b=mk(300,200);Art.apply(a,'cartoon',1);Art.apply(b,'cartoon',3);const da=a.getContext('2d').getImageData(0,0,300,200).data,db=b.getContext('2d').getImageData(0,0,300,200).data;let dif=0;for(let i=0;i<da.length;i+=4)dif+=Math.abs(da[i]-db[i]);
+    /* foto grande: se procesa reducida y vuelve a su tamaño */const G=mk(3000,2000);const t1=performance.now();Art.apply(G,'oil',2);const big=[G.width,G.height,Math.round(performance.now()-t1)];
+    /* documento: el texto sigue oscuro sobre papel claro */const D=canvas(600,800),x=D.getContext('2d');x.fillStyle='#fafafa';x.fillRect(0,0,600,800);x.fillStyle='#111';x.font='bold 28px Arial';for(let y=60;y<760;y+=44)x.fillText('OFICIO N° 1234 JUZGADO',30,y);
+    const doc=Art.docLike(D.getContext('2d').getImageData(0,0,600,800).data,480000);Art.apply(D,'cartoon',2);const dd=D.getContext('2d').getImageData(0,0,600,800).data;let dark=0,light=0;for(let i=0;i<dd.length;i+=4){const l=dd[i]*.3+dd[i+1]*.59+dd[i+2]*.11;if(l<90)dark++;else if(l>200)light++}
+    return {out,dif,big,doc,dark:dark/480000,light:light/480000}});
+  assert.equal(Object.keys(r.out).length,10);for(const [k,[ms,bad]] of Object.entries(r.out)){assert.equal(bad,0,k+' dejó valores inválidos');assert.ok(ms<4000,k+' tarda '+ms+' ms')}
+  assert.ok(r.dif>1000,'la intensidad no cambia nada');assert.deepEqual(r.big.slice(0,2),[3000,2000]);assert.ok(r.big[2]<8000,'foto grande lenta: '+r.big[2]);
+  assert.equal(r.doc,true,'no reconoce el documento');assert.ok(r.dark>.04&&r.light>.5,'el texto del documento se perdió '+JSON.stringify(r));
+  /* la pantalla de Estilo guarda la intensidad */
+  await seedPage(pg);await pg.evaluate(async()=>{DOC=newDoc();DOC.pages.push({...window._pg,id:uid()});openDocScreen();Ed.open(0)});await W(800);
+  await pg.click('#editor [data-ed="art"]');await W(600);await pg.click('#artK [data-k="3"]');await W(300);await pg.click('#sheetBody [data-art="watercolor"]');await W(500);
+  assert.deepEqual(await pg.evaluate(()=>[Ed.p.art,Ed.p.artK]),['watercolor',3]);
   await pg.evaluate(()=>Nav.back());await W(300);
 });
 
