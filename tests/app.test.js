@@ -78,7 +78,7 @@ await test('Organización: nombre, carpeta y etiqueta automáticos',async pg=>{
   await seedPage(pg);
   const r=await pg.evaluate(async t=>{await DB.putDoc({id:'o1',name:'Escaneo 24-09-2026 10.00',created:1,updated:Date.now(),text:t,pages:[window._pg]});await Org.auto('o1');const m=(await DB.metas()).find(x=>x.id==='o1');
     await DB.putDoc({id:'o2',name:'Mi nombre',created:1,updated:Date.now(),text:t,pages:[window._pg]});await Org.auto('o2');const m2=(await DB.metas()).find(x=>x.id==='o2');return {m,m2}},OFICIO);
-  assert.equal(r.m.name,'Oficio · Expte 23-26/2026 · 12-10-2026');assert.equal(r.m.folder,'Expte 23-26/2026');assert.deepEqual(r.m.tags,['Judicial']);
+  assert.equal(r.m.name,'Oficio N° 55/2026 · Expte 23-26/2026 · 12-10-2026');assert.equal(r.m.folder,'Expte 23-26/2026');assert.deepEqual(r.m.tags,['Judicial']);
   assert.equal(r.m2.name,'Mi nombre','pisó un nombre manual');
   await pg.click('.nav [data-go="docs"]');await W(300);
   assert.match(await pg.textContent('#docFolders'),/Expte 23-26\/2026/);
@@ -772,6 +772,26 @@ await test('Nexa en PC: letra y cuadro de texto más grandes (en el celular no c
   const [m]=await fs();await pg.setViewportSize({width:1366,height:768});await W(400);const [d,h]=await fs();
   assert.ok(d>=18&&d>m,'la letra en PC no es más grande: '+m+' → '+d);assert.ok(h>=48,'el cuadro de texto es chico: '+h);
   await pg.setViewportSize({width:390,height:844});await W(200);
+});
+
+await test('Compartir a Danscanner desde otra app (foto y PDF) y nombre automático con número y juzgado',async pg=>{
+  /* el nombre que se arma leyendo el documento */
+  const nm=await pg.evaluate(()=>[docAnalyze('PODER JUDICIAL DE TUCUMÁN\nJuzgado de Ejecución Penal de la II Nominación, San Miguel de Tucumán\nOFICIO N° 1234/26\nExpte. N° 5678/2025\nSan Miguel de Tucumán, 12 de marzo de 2026').name,docAnalyze('Fiscalía de Instrucción Penal VI. Nota Nro. 45-2026. Tucumán 03/04/2026.').name,docAnalyze('ACTA labrada en la Unidad Penal de Villa Urquiza el 5/6/2026').name]);
+  assert.deepEqual(nm,['Oficio N° 1234/26 · Juzgado de Ejecución Penal de la II Nominación · Expte 5678/2025 · 12-03-2026','Nota N° 45-2026 · Fiscalía de Instrucción Penal VI · 03-04-2026','Acta · Unidad Penal de Villa Urquiza · 05-06-2026']);
+  /* el manifiesto declara que la app recibe archivos compartidos */
+  const man=await pg.evaluate(async()=>(await fetch('manifest.webmanifest')).json());assert.equal(man.share_target.method,'POST');assert.equal(man.share_target.params.files[0].name,'files');
+  /* otra pestaña con el service worker recibe lo compartido (como hace el teléfono) */
+  const ctx2=await pg.context().browser().newContext();const p2=await ctx2.newPage();await p2.route('**/config.js',r=>r.fulfill({body:'',contentType:'text/javascript'}));await p2.goto(BASE+'/index.html',{waitUntil:'domcontentloaded'});
+  await p2.evaluate(async()=>{await navigator.serviceWorker.register('sw.js');await navigator.serviceWorker.ready});
+  await p2.goto(BASE+'/manifest.webmanifest',{waitUntil:'domcontentloaded'});await p2.waitForFunction(()=>!!navigator.serviceWorker.controller,null,{timeout:10000});
+  const url=await p2.evaluate(async()=>{const c=new OffscreenCanvas(400,560),x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,400,560);x.fillStyle='#000';x.font='30px Arial';x.fillText('FOTO',40,80);const jpg=await c.convertToBlob({type:'image/jpeg'});
+    const fd=new FormData();fd.append('files',new File([jpg],'foto whatsapp.jpg',{type:'image/jpeg'}));fd.append('text','hola');const r=await fetch('./?share-target=1',{method:'POST',body:fd});const k=await (await caches.open('danscaner-share')).keys();return r.url+' '+k.length});
+  assert.match(url,/\?shared=1 1$/,'el service worker no guardó lo compartido: '+url);await ctx2.close();
+  await pg.evaluate(async()=>{await loadLib('pdflib');const d=await PDFLib.PDFDocument.create();d.addPage([300,400]);d.addPage([300,400]);const b=new Blob([await d.save()],{type:'application/pdf'});const c=await caches.open('danscaner-share');await c.put('./__compartido/z',new Response(b,{headers:{'Content-Type':'application/pdf','X-Name':encodeURIComponent('oficio.pdf')}}))});
+  const n=await pg.evaluate(()=>importShared());assert.equal(n,1);await W(500);
+  assert.equal(await pg.evaluate(()=>DOC&&DOC.pages.length),2,'no entraron las 2 páginas del PDF');assert.equal(await pg.evaluate(()=>Nav.isOpen('docScreen')),true);
+  assert.equal(await pg.evaluate(async()=>(await (await caches.open('danscaner-share')).keys()).length),0,'quedaron archivos compartidos guardados');
+  await pg.evaluate(()=>Nav.back());await W(300);
 });
 
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));

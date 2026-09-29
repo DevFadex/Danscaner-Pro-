@@ -2945,12 +2945,19 @@ function docAnalyze(text){const t=String(text||''),n=nbNorm(t),head=n.slice(0,90
  const tags=[];if(/psicolog|psiquiatr|medic|salud mental|clinic|diagnostic|confidencial|reservad/.test(n))tags.push('Confidencial');
  if(/juzgado|\bjuez|expte|expediente|\bcausa\b|fiscal|tribunal|camara|oficio|cedula|sentencia|resolucion|decreto|ejecucion penal/.test(n))tags.push('Judicial');
  else if(/\bnota\b|informe|\bacta\b|constancia|certificad|planilla|solicitud|memorandum|administraci/.test(n))tags.push('Administrativo');
- const name=[type,exp?'Expte '+exp:'',date].filter(Boolean).join(' · ');
- return {type,exp,date,tags,name,folder:exp?'Expte '+exp:''}}
+ /* número del oficio / nota / resolución y quién lo manda (juzgado, fiscalía, etc.) */
+ let num='';if(type){const k=nbNorm(type).split(' ')[0],m=new RegExp('\\b'+k+'[a-z]*\\s*(?:n(?:ro|ú?m(?:ero)?)?\\s*[°º.]?|#)\\s*[:\\-]?\\s*(\\d[\\d.]*(?:\\s*[\\/\\-]\\s*\\d{2,4})?)','i').exec(n.slice(0,1500));if(m)num=m[1].replace(/\s+/g,'')}
+ let from='';{const RX=/\b(juzgado|fiscal[ií]a|c[aá]mara|tribunal|defensor[ií]a|unidad fiscal|unidad penal|direcci[oó]n general|servicio penitenciario|polic[ií]a)\b/gi,CON=/^(de|del|la|las|los|y|e|en|el)$/i,OK=/^([A-ZÁÉÍÓÚÑ][\wÁÉÍÓÚÑáéíóúñ.]*|[IVXL]+|N[°º]|\d+[°ºª]?)$/;let m;const T=t.slice(0,1500);
+  while(!from&&(m=RX.exec(T))){const w=T.slice(m.index+m[0].length).split('\n')[0].trim().split(/\s+/),out=[m[0]];let real=0;
+   for(const raw of w){const x=raw.replace(/[,.;:]+$/,'');if(!x)break;if(CON.test(x)){out.push(x.toLowerCase());continue}if(OK.test(x)){out.push(x);real++;if(x!==raw)break;continue}break}
+   while(out.length&&CON.test(out[out.length-1]))out.pop();if(real){from=out.join(' ');}}
+  if(from){from=from.replace(/\s+(?:de\s+)?(?:San Miguel|Tucum[aá]n)(?:\s.*)?$/,'').trim();if(from.length>48)from=from.slice(0,48).replace(/\s+\S*$/,'');from=from.charAt(0).toUpperCase()+from.slice(1)}}
+ const name=[type?(type+(num?' N° '+num:'')):'',from,exp?'Expte '+exp:'',date].filter(Boolean).join(' · ').slice(0,110);
+ return {type,num,from,exp,date,tags,name,folder:exp?'Expte '+exp:''}}
 const isDefaultName=nm=>/\d{2}-\d{2}-\d{4} \d{2}\.\d{2}$/.test(nm||'')||/^Escaneo\b/i.test(nm||'');
 const Org={q:Promise.resolve(),busy:0,
  async headText(d){const t=(d.text||d.head||'').trim();if(t.length>40)return t;if(!d.pages.length)return '';
-  if(navigator.onLine===false)throw new Error('sin conexión');let w=null;
+  let w=null;
   const job=(async()=>{await loadLib('tess');w=await Tesseract.createWorker(S.lang||'spa',1);const c=await renderPage(d.pages[0],{maxSide:1800});const {data}=await w.recognize(c);return (data.text||'').trim()})();
   try{return await Promise.race([job,new Promise((_,rej)=>setTimeout(()=>rej(new Error('tiempo agotado')),90000))])}finally{if(w)try{await w.terminate()}catch(e){}}},
  enqueue(id){if(S.autoOrganize===false)return;this.q=this.q.then(()=>this.auto(id)).catch(e=>console.warn('Organizar:',e&&e.message))},
@@ -3430,7 +3437,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 4.5',APP_VER='54';
+const NEXA_VER='Nexa 4.5',APP_VER='55';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3548,7 +3555,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='54 · 29/09/2026';
+const BUILD='55 · 29/09/2026';
 /* Versión que ven los usuarios: se cambia a mano solo cuando se decide publicar una versión nueva para todos.
    El administrador ve la versión interna (BUILD) con cada cambio. */
 const PUBLIC_VER='1.2';
@@ -4979,6 +4986,16 @@ if(SB_RECOVERY)(async()=>{for(let i=0;i<80&&!(SB.ready&&SB.user);i++)await sleep
 
 /* v54 · Nexa en PC: letra, burbujas y cuadro de texto más grandes, y la conversación ocupa más ancho */
 document.head.insertAdjacentHTML('beforeend','<style id="v54Css">@media (min-width:1024px){#v-nexa.view{max-width:min(1240px,calc(100vw - 280px))!important;width:100%!important}#v-nexa .nx-md,#v-nexa .nx-md p,#v-nexa .nx-md li{font-size:18px!important;line-height:1.65!important}#v-nexa .nx-md h1,#v-nexa .nx-md h2,#v-nexa .nx-md h3{font-size:21px!important}#v-nexa .nx-msg.ai{max-width:96%!important;padding:18px 22px!important;border-radius:20px!important}#v-nexa .nx-bub{font-size:18px!important;line-height:1.55!important;padding:12px 18px!important;border-radius:20px!important}#v-nexa .nx-q{font-size:15.5px!important;padding:10px 16px!important}#v-nexa .nx-acts button{font-size:14px!important;height:34px!important}#v-nexa .nx-log{gap:20px!important}#v-nexa .nx-input{min-height:72px!important;padding:10px 12px!important;border-radius:22px!important}#v-nexa #nxIn{font-size:18px!important;line-height:1.5!important;min-height:50px!important;max-height:45vh!important;padding:12px 8px!important}#v-nexa .nx-ib,#v-nexa .nx-send{width:48px!important;height:48px!important}#v-nexa .nx-ib .ico,#v-nexa .nx-send .ico{width:24px!important;height:24px!important}#v-nexa .nx-prov{font-size:14.5px!important;padding:8px 14px!important}#v-nexa .nx-hb{width:44px!important;height:44px!important}#v-nexa .nx-empty h3{font-size:30px!important}#v-nexa .nx-empty p{font-size:17px!important}#v-nexa .nx-sugs button{font-size:16px!important;padding:14px 16px!important}}</style>');
+
+/* v55 · Recibir archivos compartidos desde otra app (WhatsApp, galería, correo): entran como documento nuevo */
+async function importShared(){let c;try{c=await caches.open('danscaner-share')}catch(e){return 0}const keys=await c.keys();if(!keys.length)return 0;
+ const files=[];for(const k of keys){const r=await c.match(k);if(!r)continue;const b=await r.blob();let name='compartido';try{name=decodeURIComponent(r.headers.get('X-Name')||name)}catch(e){}files.push(new File([b],name,{type:b.type||r.headers.get('Content-Type')||''}))}
+ await caches.delete('danscaner-share');if(!files.length)return 0;
+ for(let i=0;i<120&&!DB.db;i++)await sleep(250);
+ await withBusy(async()=>{busy('Recibiendo '+files.length+' archivo(s)…');if(Nav.isOpen('docScreen'))await Nav.back();DOC=newDoc();const pages=await importFiles(files,{auto:S.autoCrop});
+  if(!pages.length){DOC=null;throw new Error('No se pudo leer lo que compartiste')}await addPages(pages);toast('📥 Recibido: '+files.length+' archivo(s), '+pages.length+' página(s). Al cerrar el documento se le pone nombre solo.',5000)});
+ return files.length}
+if(/[?&]shared=1/.test(location.search)){try{history.replaceState(null,'',location.pathname)}catch(e){}setTimeout(()=>importShared().catch(e=>toast(e.message,4000)),900)}
 </script>
 </body>
 </html>

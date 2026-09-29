@@ -1,5 +1,5 @@
 // Danscanner Pro — funcionamiento sin conexión
-const VERSION = 'danscaner-v54';
+const VERSION = 'danscaner-v55';
 // Herramientas (PDF, OCR, idioma español, Word, Excel, IA local): se guardan aparte y NO se borran al actualizar la app
 const LIBS = 'danscaner-libs';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon.svg', './icon-192.png', './icon-512.png', './icon-maskable-192.png', './icon-maskable-512.png', './apple-touch-icon.png', './mod/admin.js', './mod/texto.js', './mod/excel.js', './mod/pptx.js', './mod/diseno.js', './knowledge/knowledge-version.json', './knowledge/danscaner/manual.md', './knowledge/danscaner/herramientas.md', './knowledge/danscaner/nexa.md', './knowledge/documentos/escaneo.md', './knowledge/documentos/formatos.md', './knowledge/documentos/ocr.md', './knowledge/documentos/pdf.md', './knowledge/soporte/problemas.md', './knowledge/leyes/indice.json', './knowledge/leyes/relaciones.json', './knowledge/leyes/cp.json', './knowledge/leyes/cppf.json', './knowledge/leyes/cppn.json', './knowledge/leyes/ep.json', './knowledge/leyes/sppt.json', './knowledge/leyes/rd905.json'];
@@ -34,8 +34,24 @@ const fromLibs = req => caches.open(LIBS).then(c => c.match(req).then(hit => hit
   return r;
 })));
 
+// Compartir desde otra app (WhatsApp, galería, correo) → los archivos se guardan un momento y la app los importa
+const SHARE = 'danscaner-share';
+async function recibirCompartido(req) {
+  try {
+    const fd = await req.formData();
+    const c = await caches.open(SHARE);
+    let i = 0;
+    for (const f of fd.getAll('files')) {
+      if (!f || typeof f === 'string' || !f.size) continue;
+      await c.put('./__compartido/' + Date.now() + '-' + (i++), new Response(f, { headers: { 'Content-Type': f.type || 'application/octet-stream', 'X-Name': encodeURIComponent(f.name || 'compartido') } }));
+    }
+  } catch (err) {}
+  return Response.redirect('./?shared=1', 303);
+}
+
 self.addEventListener('fetch', e => {
   const req = e.request;
+  if (req.method === 'POST' && new URL(req.url).searchParams.has('share-target')) { e.respondWith(recibirCompartido(req)); return; }
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
 

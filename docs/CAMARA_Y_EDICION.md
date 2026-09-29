@@ -399,3 +399,16 @@ En el editor, **Corregir** permite arreglar una palabra mal escrita de la hoja e
   - Cuadro de texto más alto: crece hasta el 45 % de la pantalla.
   - La conversación usa más ancho, hasta 1240 px.
 - En el celular no cambia nada.
+
+## v55 — Compartir a Danscanner y nombre automático más completo
+
+- **Compartir desde otra app** (WhatsApp, galería, correo, Archivos): el menú Compartir muestra **Danscanner** y lo compartido entra como documento nuevo. Acepta fotos y PDF, uno o varios.
+  - `manifest.webmanifest` declara `share_target`: POST multipart, campo `files`.
+  - `sw.js` recibe el POST, guarda los archivos un momento en la caché `danscaner-share` y abre `./?shared=1`.
+  - La app los importa con `importShared()` y borra esa caché.
+  - Requisitos: Android con Chrome o Edge y la app instalada en la pantalla de inicio. iPhone no permite que las apps web aparezcan en el menú Compartir.
+- **Nombre automático**: además de tipo, expediente y fecha, ahora suma:
+  - El número del oficio, nota o resolución, por ejemplo "Oficio N° 1234/26".
+  - Quién lo manda, por ejemplo "Juzgado de Ejecución Penal de la II Nominación". Solo toma nombres propios: en "informa al Juzgado que…" no inventa nada.
+  - Se aplica al cerrar el documento si todavía tiene el nombre por defecto.
+  - Ahora también funciona sin internet, con el OCR incluido en la app.
