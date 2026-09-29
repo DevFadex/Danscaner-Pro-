@@ -42,3 +42,7 @@ En el editor, el botón Estilo convierte la foto en Animado (caricatura), Reliev
 ## Borrar o girar varias páginas y ver con zoom
 
 En el documento tocá **☑️ Seleccionar** y marcá las páginas (o **Todas**). Después elegí 🗑 Borrar (con ↶ Deshacer si te equivocaste), ↻ Girar o 📄 Extraer a un documento nuevo. Para leer mejor una página tocá **🔍 Ver / Zoom**: acercá con los dedos, la rueda del mouse o doble toque, y deslizá para pasar de página. En **Editar PDF** cada página tiene 🔍 para verla grande y 🗑 para marcarla y borrarla al guardar; también podés escribir un rango como `2-5,9` y tocar Marcar. Para borrar varios documentos: Documentos → Seleccionar → Todos (o marcá los que quieras) → 🗑.
+
+## Usuario y contraseña
+
+El usuario para entrar es tu correo. La contraseña no se puede ver en ningún lado (se guarda cifrada), ni siquiera el administrador puede verla: si no la recordás, cambiala en Ajustes → 🔑 Cambiar contraseña, o tocá "Olvidé mi contraseña" al entrar y seguí el enlace del correo. El administrador puede crear cuentas con usuario y contraseña (Administrar accesos → Crear cuenta con usuario y contraseña): la contraseña se muestra una sola vez para copiarla o mandarla.

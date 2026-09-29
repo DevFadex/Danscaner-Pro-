@@ -371,3 +371,16 @@ En el editor, **Corregir** permite arreglar una palabra mal escrita de la hoja e
 - **Editar PDF → 🗑 en cada página** marca las páginas que se van a borrar. También se puede escribir un rango (ej. `2-5,9`) → Marcar. Se quitan al guardar, junto con las demás ediciones.
 - **Documentos → Seleccionar → Todos** marca todos los documentos visibles para borrarlos, unirlos o bajarlos juntos.
 - **Corregir texto**: ya copiaba letra, tamaño, negrita y color, y corría el resto del renglón. Ahora, si la palabra nueva es más larga y el renglón no tiene lugar para correrse entero, se corre lo que entra y la palabra se angosta apenas lo justo. Antes quedaba toda comprimida.
+
+## v52 — Panel de administrador: cuentas y contraseñas
+
+- **Mi cuenta**, arriba del panel: muestra tu nombre y tu **usuario para entrar** (el correo). Tiene ✏️ Cambiar mi nombre y 🔑 Cambiar mi contraseña.
+- **La contraseña no se puede ver**, ni la propia ni la de otros. Supabase la guarda cifrada (hash) y nadie puede leerla, tampoco el administrador. Por eso existe la opción de poner una nueva.
+- **Crear cuenta con usuario y contraseña**:
+  - El administrador carga nombre, correo, contraseña (🎲 propone una segura) y rol.
+  - La cuenta queda activa y la pantalla muestra usuario y contraseña **una sola vez**, con Copiar y Enviar.
+  - Se crea con un cliente de Supabase aparte y sin guardar sesión, así el administrador no pierde la suya.
+  - Si Supabase tiene activo "Confirm email", la persona tiene que tocar el enlace del correo antes de entrar.
+- **Ficha de cada usuario**: muestra el usuario para entrar, ✏️ Cambiar nombre y 🔑 Enlace para nueva contraseña (llega por correo).
+- **Ajustes → 🔑 Cambiar contraseña**: cualquier usuario con sesión iniciada puede cambiar la suya.
+- **Arreglo**: el enlace de "Olvidé mi contraseña" iniciaba sesión pero no pedía la contraseña nueva. Ahora abre la pantalla para ponerla.
