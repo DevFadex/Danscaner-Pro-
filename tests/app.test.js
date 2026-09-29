@@ -482,6 +482,18 @@ await test('Revisión: OCR sin internet (incluido en la app) y Firmar PDF usa el
   assert.equal(await pg.evaluate(()=>{let m='';const t=$('#toast');toast('Uncaught NetworkError: Failed to execute importScripts');m=t.textContent;return /Sin conexión/.test(m)}),true);
 });
 
+await test('Leyes oficiales cargadas (InfoLeg): artículo exacto, búsqueda por tema y relacionados',async pg=>{
+  await pg.click('#btnNexa');await W(300);await pg.evaluate(()=>{Nexa.st.prov='offline';Nexa.st.msgs=[]});
+  const ask=async q=>{const n=await pg.evaluate(()=>Nexa.st.msgs.length);await pg.fill('#nxIn',q);await pg.press('#nxIn','Enter');await pg.waitForFunction(n=>Nexa.st.msgs.length>=n+2&&!Nexa.sending,n,{timeout:20000});return pg.evaluate(()=>Nexa.st.msgs.at(-1).text)};
+  const idx=await pg.evaluate(async()=>(await Leyes.index()).leyes.map(l=>l.id+':'+l.total).join());assert.match(idx,/cp:\d{3},cppf:\d{3},cppn:\d{3},ep:\d{3}/);
+  let t=await ask('artículo 79 del código penal');assert.ok(/Código Penal de la Nación — art\. 79/.test(t)&&/ocho a veinticinco años/.test(t)&&/fuente: InfoLeg/.test(t),t);
+  t=await ask('art 80 cp');assert.ok(/reclusión perpetua/.test(t)&&/CP art\. 52/.test(t),'relacionados del art. 80: '+t.slice(-300));
+  t=await ask('¿Qué dice la ley 24.660 sobre las salidas transitorias?');assert.ok(/Ley de Ejecución de la Pena Privativa de la Libertad — art\. 1[67]/.test(t),t.slice(0,400));
+  t=await ask('¿Qué dice el código procesal penal federal sobre la prisión preventiva?');assert.ok(/Código Procesal Penal Federal — art\./.test(t)&&/prisión preventiva/i.test(t),t.slice(0,300));
+  t=await ask('artículo 1');assert.match(t,/¿De qué norma es el \*\*artículo 1\*\*/);
+  t=await ask('artículo 999 del código penal');assert.match(t,/No encontré el \*\*artículo 999\*\*/);
+});
+
 await test('Nexa: tres voces con velocidad ajustable, estilos de imagen, leyes con artículos relacionados y comandos /',async pg=>{
   /* voces: se reemplaza la síntesis de voz del navegador por una de prueba */
   await pg.evaluate(()=>{window._utt=[];const fake={speak(u){window._utt.push({t:u.text,rate:u.rate,pitch:u.pitch,v:u._vn||(u.voice&&u.voice.name)});setTimeout(()=>u.onend&&u.onend(),250)},cancel(){},pause(){},resume(){},
@@ -500,8 +512,10 @@ await test('Nexa: tres voces con velocidad ajustable, estilos de imagen, leyes c
   await pg.fill('#nxIn','/res');await pg.dispatchEvent('#nxIn','input');await W(150);assert.match(await pg.textContent('#nxCmds'),/\/resumir/);
   await pg.fill('#nxIn','');await pg.dispatchEvent('#nxIn','input');
   /* leyes: sin cargar avisa; con los textos (de prueba) responde el artículo exacto, con fuente y relacionados */
+  await pg.route('**/knowledge/leyes/*',r=>r.fulfill({status:404,body:''}));await pg.evaluate(()=>{Leyes.idx=null;Leyes.data={};Leyes.rel=null});
   await pg.fill('#nxIn','artículo 79 del código penal');await pg.press('#nxIn','Enter');await W(600);
   assert.match(await pg.evaluate(()=>Nexa.st.msgs.at(-1).text),/Todavía no están cargados los códigos/);
+  await pg.unroute('**/knowledge/leyes/*');
   const fx={'indice.json':{version:'2026-09-29',leyes:[{id:'lp',nombre:'Ley de Prueba',norma:'Ley 0 (texto de prueba)',abrev:'LP',fuente:'https://example.invalid/lp',descargado:'2026-09-29',alias:['ley de prueba','lp'],archivo:'lp.json',total:3}]},
     'lp.json':{id:'lp',nombre:'Ley de Prueba',norma:'Ley 0 (texto de prueba)',abrev:'LP',fuente:'https://example.invalid/lp',descargado:'2026-09-29',articulos:[{n:'1',t:'Primer artículo de prueba sobre la remisión de expedientes.',u:'TITULO I'},{n:'2',t:'Segundo artículo de prueba: conforme el artículo 1, la remisión se hace en diez días.',u:'TITULO I'},{n:'3',t:'Tercer artículo sin relación.'}]},
     'relaciones.json':{'lp:1':{remite:[],citado:['lp:2']},'lp:2':{remite:['lp:1'],citado:[]}}};

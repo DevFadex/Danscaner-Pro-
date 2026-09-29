@@ -15,7 +15,7 @@ def main(ids):
     for f in fuentes:
         if ids and f["id"] not in ids:
             continue
-        req = urllib.request.Request(f["url"], headers={"User-Agent": "Mozilla/5.0 (Danscanner Pro; actualizacion de leyes)"})
+        req = urllib.request.Request(f["url"], headers={"User-Agent": "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36"})
         with urllib.request.urlopen(req, timeout=60) as r:
             data = r.read()
         # InfoLeg publica en windows-1252 / latin-1

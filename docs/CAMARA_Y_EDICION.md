@@ -339,3 +339,13 @@ En el editor, **Corregir** permite arreglar una palabra mal escrita de la hoja e
 - **Estilos artísticos** (editor → **Estilo**): Animado (caricatura), Relieve 3D, Anaglifo 3D, Minimalista y Boceto a lápiz. Se aplican al mostrar y exportar la página; la foto original no se toca.
 - **Leyes** (`knowledge/leyes/`, ver `tools/leyes/README.md`): textos oficiales de InfoLeg separados por artículo. Nexa responde el **artículo exacto** con la fuente y la fecha, busca **por tema** y muestra los **artículos relacionados**, calculados con un grafo de **graphify**. Con internet, la IA recibe los artículos para citarlos. Si los códigos no están cargados, lo avisa.
 - **Comandos rápidos**: escribir «/» en Nexa muestra /articulo, /ley, /resumir, /datos, /analizar, /redactar, /corregir, /explicar, /buscar y /ayuda.
+
+## v49 — Códigos cargados (InfoLeg)
+
+- Textos oficiales descargados de InfoLeg el 29/09/2026 y separados por artículo con `tools/leyes`:
+  - Código Penal de la Nación, Ley 11.179, texto actualizado: 389 artículos.
+  - Código Procesal Penal Federal, Ley 27.063, texto ordenado por el Decreto 118/2019, Anexo I: 397 artículos. InfoLeg no publica un texto actualizado de este código; es el texto ordenado de 2019.
+  - Código Procesal Penal de la Nación (anterior), Ley 23.984, texto actualizado: 572 artículos.
+  - Ley 24.660 de Ejecución de la Pena, texto actualizado: 242 artículos.
+- Grafo de graphify con 1600 artículos y 551 remisiones entre artículos de una misma norma. Se descartan las notas de modificación de InfoLeg y las menciones a otras leyes.
+- Se precargan para usar sin internet, alrededor de 1 MB.
