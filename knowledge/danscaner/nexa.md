@@ -19,7 +19,7 @@ Sin internet, nada sale del teléfono. Con internet, antes de enviar un document
 Nexa tiene tres voces: Clara, Grave y Neutra. Se eligen y se prueban en ⚙ Configurar Nexa → Voz, donde también está la velocidad. Mientras Nexa habla aparece una barra con − y + para cambiar la velocidad, pausa y ■ para detener. Las voces dependen de las que tenga instaladas el teléfono.
 
 ## Leyes en Nexa
-Nexa tiene cargados, con el texto oficial de InfoLeg: el Código Penal de la Nación, el Código Procesal Penal Federal, el Código Procesal Penal de la Nación (anterior) y la Ley 24.660 de Ejecución de la Pena. Pedí un artículo (por ejemplo «artículo 79 del Código Penal» o «art 17 de la 24.660») o preguntá por un tema («¿qué dice la 24.660 sobre salidas transitorias?»). Responde sin internet, con la fuente, la fecha y los artículos relacionados.
+Nexa tiene cargados, con el texto oficial de InfoLeg: el Código Penal de la Nación, el Código Procesal Penal Federal, el Código Procesal Penal de la Nación (anterior) y la Ley 24.660 de Ejecución de la Pena. También tiene la Ley 9.914 del Servicio Penitenciario de Tucumán y el Reglamento de sumarios disciplinarios de internos (Resolución 905/19 DGSPPT), transcriptos de copias escaneadas. Pedí un artículo (por ejemplo «artículo 79 del Código Penal» o «art 17 de la 24.660») o preguntá por un tema («¿qué dice la 24.660 sobre salidas transitorias?»). Responde sin internet, con la fuente, la fecha y los artículos relacionados.
 
 ## Comandos rápidos
 Escribí «/» en Nexa para ver los comandos: /articulo, /ley, /resumir, /datos, /analizar, /redactar, /corregir, /explicar, /buscar y /ayuda.

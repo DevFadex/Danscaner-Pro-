@@ -54,6 +54,50 @@
         "ley de ejecución"
       ],
       "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/35000-39999/37872/texact.htm"
+    },
+    {
+      "id": "sppt",
+      "nombre": "Régimen del Servicio Penitenciario de Tucumán",
+      "norma": "Ley 9.914 (ratifica el Decreto Acuerdo 7/7 (MS) del 26/08/2025; deroga la Ley 4.611)",
+      "abrev": "Ley 9.914",
+      "alias": [
+        "9914",
+        "9.914",
+        "ley 9914",
+        "ley 9.914",
+        "servicio penitenciario de tucuman",
+        "servicio penitenciario provincial",
+        "ley del servicio penitenciario",
+        "ley organica del servicio penitenciario",
+        "ley organica penitenciaria"
+      ],
+      "url": "https://boletin.tucuman.gob.ar",
+      "fecha": "2025-09-19",
+      "transcripcion": "transcripcion/ley9914.txt",
+      "origen": "Boletín Oficial de Tucumán (Ley 9.914 y su Anexo, copia escaneada provista por el usuario). Transcripción: verificar contra el original ante cualquier duda."
+    },
+    {
+      "id": "rd905",
+      "nombre": "Reglamento de sumarios disciplinarios de internos (SPPT)",
+      "norma": "Resolución 905/19 DGSPPT (17/07/2019), Anexo 1",
+      "abrev": "Res. 905/19",
+      "alias": [
+        "905",
+        "905/19",
+        "resolucion 905",
+        "res 905",
+        "reglamento disciplinario",
+        "reglamento de disciplina",
+        "reglamento de sumarios",
+        "sumarios disciplinarios",
+        "sumario disciplinario",
+        "disciplina de internos"
+      ],
+      "url": "",
+      "fecha": "2019-07-17",
+      "transcripcion": "transcripcion/res905.txt",
+      "desde": "ARTICULO 1: Este reglamento",
+      "origen": "Resolución 905/19 de la Dirección General del Servicio Penitenciario de Tucumán (copia escaneada provista por el usuario). Transcripción: verificar contra el original ante cualquier duda."
     }
   ]
 }
