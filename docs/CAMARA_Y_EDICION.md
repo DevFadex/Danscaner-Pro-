@@ -384,3 +384,18 @@ En el editor, **Corregir** permite arreglar una palabra mal escrita de la hoja e
 - **Ficha de cada usuario**: muestra el usuario para entrar, ✏️ Cambiar nombre y 🔑 Enlace para nueva contraseña (llega por correo).
 - **Ajustes → 🔑 Cambiar contraseña**: cualquier usuario con sesión iniciada puede cambiar la suya.
 - **Arreglo**: el enlace de "Olvidé mi contraseña" iniciaba sesión pero no pedía la contraseña nueva. Ahora abre la pantalla para ponerla.
+
+## v53 — Versión pública para los usuarios
+
+- Los usuarios ven **versión 1.2** en Ajustes y en Nexa. El número está en `PUBLIC_VER`, en `index.html`, y se cambia a mano solo cuando se decide anunciar una versión nueva para todos.
+- El administrador (rol admin y activo en Supabase) ve la versión interna (`BUILD`), que cambia con cada modificación, y la aclaración "los usuarios ven 1.2".
+- Se quitó el número fijo del pie de Ajustes. De ahora en más, en cada versión se actualizan `BUILD`, `APP_VER` y `VERSION` en `sw.js`.
+
+## v54 — Nexa más grande en la PC
+
+- En pantallas de 1024 px o más, Nexa agranda todo:
+  - Letra de las respuestas a 18 px y burbujas más amplias.
+  - Botones de sugerencia y de acciones más grandes.
+  - Cuadro de texto más alto: crece hasta el 45 % de la pantalla.
+  - La conversación usa más ancho, hasta 1240 px.
+- En el celular no cambia nada.
