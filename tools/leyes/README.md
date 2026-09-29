@@ -12,3 +12,7 @@ python3 tools/leyes/construir.py # separa por artículo y genera indice.json, <l
 - Cada artículo guarda su texto, el libro / título / capítulo, la URL de InfoLeg y la fecha de descarga; Nexa los muestra como **texto oficial** con esa fuente.
 - `relaciones.json` sale del grafo de graphify (`knowledge/leyes/graphify-out/graph.json`): para cada artículo, a qué artículos remite y cuáles lo citan. Se puede explorar con `graphify explain "CP art. 80" --graph knowledge/leyes/graphify-out/graph.json`.
 - Para actualizar los textos, volver a correr los dos scripts y subir los archivos. Son normas públicas: no contienen datos de personas.
+
+## graphify en Claude Code
+
+El skill de graphify está en `.claude/skills/graphify/` (licencia Apache-2.0, con `LICENSE` y `NOTICE`), así que las sesiones de Claude Code en este repositorio pueden usar `/graphify`. El hook `.claude/hooks/session-start.sh` (configurado en `.claude/settings.json`) instala la herramienta `graphify` (`pip install graphifyy`) al iniciar cada sesión en la web.
