@@ -728,6 +728,34 @@ await test('Varias páginas a la vez: borrar con deshacer, girar, extraer, visor
   const hasList=await pg.evaluate(()=>!!$('#selToggle'));if(hasList){await pg.evaluate(()=>{$('#selToggle').click()});await W(200);await pg.evaluate(()=>$('#selAll').click());await W(100);assert.ok(await pg.evaluate(()=>selected.size)>=2,'Todos no marcó');await pg.evaluate(()=>$('#selToggle').click())}
 });
 
+await test('Administración: mi cuenta (usuario y cambiar contraseña), crear cuenta con contraseña y enlace para nueva contraseña',async pg=>{
+  await pg.evaluate(()=>{const rows=[{id:'me',email:'yo@x.com',full_name:'Yo Admin',role:'admin',status:'activo',created_at:new Date().toISOString()}];window._rows=rows;
+    SB.ready=true;SB.user={id:'me',email:'yo@x.com'};SB.profile=rows[0];SB.cfg={url:'https://x.supabase.co',anonKey:'k'};
+    const q=()=>{const st={};const api={select(){return api},order(){return api},update(v){st.upd=v;return api},delete(){return api},eq(k,v){st.eq=v;return api},then(res,rej){let out;if(st.upd){const r=rows.find(x=>x.id===st.eq);if(r)Object.assign(r,st.upd);out={data:r?[{id:r.id}]:[],error:null}}else out={data:rows.map(r=>({...r})),error:null};return Promise.resolve(out).then(res,rej)}};return api};
+    SB.client={from:q,auth:{updateUser:async o=>{window._upd=o;return {error:null}},resetPasswordForEmail:async m=>{window._reset=m;return {error:null}}}};
+    window.supabase={createClient:()=>({auth:{signUp:async({email,password,options})=>{rows.push({id:'n1',email,full_name:null,role:'usuario',status:'pendiente',created_at:new Date().toISOString()});window._su={email,password,nm:options.data.full_name};return {data:{user:{id:'n1',identities:[{}]},session:null},error:null}}}})}});
+  await pg.evaluate(()=>adminSheet());await pg.waitForSelector('#admMyUser',{timeout:8000});
+  assert.equal(await pg.textContent('#admMyUser'),'yo@x.com');assert.match(await pg.textContent('#admRoot'),/no se puede ver/);
+  /* cambiar mi contraseña */
+  await pg.click('#admMyPw');await pg.waitForSelector('#pwN1');await pg.fill('#pwN1','clave123');await pg.fill('#pwN2','clave124');await pg.click('#pwGo');await W(100);
+  assert.match(await pg.textContent('#pwMsg'),/no coinciden/);await pg.fill('#pwN2','clave123');await pg.click('#pwGo');await W(300);
+  assert.equal(await pg.evaluate(()=>window._upd&&window._upd.password),'clave123');
+  /* crear una cuenta con usuario y contraseña */
+  await pg.evaluate(()=>adminSheet());await pg.waitForSelector('#admCreate');await pg.click('#admCreate');await pg.waitForSelector('#acPw');
+  assert.ok((await pg.inputValue('#acPw')).length>=10,'no propone una contraseña');
+  await pg.fill('#acName','Ana Gómez');await pg.fill('#acMail','Ana@Ejemplo.com');await pg.fill('#acPw','Tucuman2026');await pg.click('#acGo');await pg.waitForSelector('#acOutP',{timeout:8000});
+  assert.equal(await pg.textContent('#acOutP'),'Tucuman2026');assert.equal(await pg.textContent('#acOutU'),'ana@ejemplo.com');
+  assert.deepEqual(await pg.evaluate(()=>window._su),{email:'ana@ejemplo.com',password:'Tucuman2026',nm:'Ana Gómez'});
+  assert.deepEqual(await pg.evaluate(()=>{const r=_rows.find(x=>x.id==='n1');return [r.status,r.role,r.full_name]}),['activo','usuario','Ana Gómez']);
+  assert.match(await pg.textContent('#sheetBody'),/confirmar el correo/);
+  /* ficha: usuario, contraseña cifrada, enlace para nueva contraseña y cambiar nombre */
+  await pg.evaluate(()=>adminSheet());await pg.waitForSelector('.admin-user[data-id="n1"]');await pg.click('.admin-user[data-id="n1"]');await W(300);
+  assert.match(await pg.textContent('#admRoot'),/Usuario para entrar\s*ana@ejemplo\.com/);
+  pg.once('dialog',d=>d.accept());await pg.click('#admRoot [data-act="reset"]');await W(300);assert.equal(await pg.evaluate(()=>window._reset),'ana@ejemplo.com');
+  pg.once('dialog',d=>d.accept('Ana María Gómez'));await pg.click('#admRoot [data-act="name"]');await W(300);assert.equal(await pg.evaluate(()=>_rows.find(x=>x.id==='n1').full_name),'Ana María Gómez');
+  await pg.evaluate(()=>{while(Nav.stack.length)Nav._pop();SB.user=null});
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();
