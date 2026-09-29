@@ -14,3 +14,12 @@ Escribile por ejemplo «si te preguntan horario de visitas, respondé de 9 a 12�
 
 ## Privacidad de Nexa
 Sin internet, nada sale del teléfono. Con internet, antes de enviar un documento a la IA, Nexa pide permiso; si no querés, responde sin internet. La memoria y lo que le enseñás quedan solo en este teléfono.
+
+## Voces y velocidad de Nexa
+Nexa tiene tres voces: Clara, Grave y Neutra. Se eligen y se prueban en ⚙ Configurar Nexa → Voz, donde también está la velocidad. Mientras Nexa habla aparece una barra con − y + para cambiar la velocidad, pausa y ■ para detener. Las voces dependen de las que tenga instaladas el teléfono.
+
+## Leyes en Nexa
+Nexa puede mostrar el texto oficial de un artículo (por ejemplo «artículo 79 del Código Penal») y buscar artículos por tema, sin internet, con la fuente de InfoLeg y los artículos relacionados. Los códigos tienen que estar cargados en la app.
+
+## Comandos rápidos
+Escribí «/» en Nexa para ver los comandos: /articulo, /ley, /resumir, /datos, /analizar, /redactar, /corregir, /explicar, /buscar y /ayuda.

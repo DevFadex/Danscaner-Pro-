@@ -332,3 +332,10 @@ En el editor, **Corregir** permite arreglar una palabra mal escrita de la hoja e
 - **Privacidad**: con internet, Nexa pide permiso antes de enviar cada documento adjunto a la IA. La otra opción es responder sin internet. Se puede desactivar en ⚙ Configurar Nexa → Privacidad.
 - **Seguridad**: se avisa a la IA que el texto de los documentos es solo información y que no debe seguir instrucciones escritas dentro de ellos.
 - **Voz**: el micrófono quedaba bloqueado por la política de permisos (`vercel.json`, `microphone=()`) y ahora está permitido para la app (`microphone=(self)`). El dictado se activa o desactiva en ⚙ Configurar Nexa → **Dictar por voz**; leer las respuestas en voz alta se maneja aparte.
+
+## v48 — Voces de Nexa, estilos de imagen, leyes y comandos rápidos
+
+- **Voces**: tres perfiles (Clara, Grave, Neutra) que eligen voces distintas en español del teléfono, o cambian el tono si hay una sola. Nexa lee por frases, así que la **velocidad** (0,6× a 2×), la **pausa** y la voz se cambian mientras habla, desde la barra que aparece sobre el cuadro de texto o desde ⚙ Configurar Nexa → Voz.
+- **Estilos artísticos** (editor → **Estilo**): Animado (caricatura), Relieve 3D, Anaglifo 3D, Minimalista y Boceto a lápiz. Se aplican al mostrar y exportar la página; la foto original no se toca.
+- **Leyes** (`knowledge/leyes/`, ver `tools/leyes/README.md`): textos oficiales de InfoLeg separados por artículo. Nexa responde el **artículo exacto** con la fuente y la fecha, busca **por tema** y muestra los **artículos relacionados**, calculados con un grafo de **graphify**. Con internet, la IA recibe los artículos para citarlos. Si los códigos no están cargados, lo avisa.
+- **Comandos rápidos**: escribir «/» en Nexa muestra /articulo, /ley, /resumir, /datos, /analizar, /redactar, /corregir, /explicar, /buscar y /ayuda.

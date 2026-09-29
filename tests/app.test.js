@@ -325,7 +325,7 @@ await test('Paquete Nexa: plantillas, consultas sobre muchos documentos, voz y p
   assert.equal(await pg.inputValue('[data-f="dni"]'),'28.555.444');await pg.click('#tplGo');await W(600);
   log=await pg.textContent('#nxLog');assert.ok(/GÓMEZ, Luis/.test(log)&&/99-10\/2026/.test(log),'plantilla sin datos');
   assert.ok(await pg.$('.nx-acts [data-nx="speak"]'),'falta el botón Escuchar');
-  const sp=await pg.evaluate(()=>{let said='';Object.defineProperty(window,'speechSynthesis',{configurable:true,value:{cancel(){},getVoices:()=>[],speak(u){said=u.text}}});NexaVoice.speak('**Hola** [[Botón|x]]');return said});assert.equal(sp,'Hola');
+  const sp=await pg.evaluate(async()=>{let said='';Object.defineProperty(window,'speechSynthesis',{configurable:true,value:{cancel(){},getVoices:()=>[],speak(u){said=u.text}}});NexaVoice.speak('**Hola** [[Botón|x]]');await new Promise(r=>setTimeout(r,200));return said});assert.equal(sp,'Hola');
 });
 
 await test('Corregir texto: borra la palabra mal escrita, escribe la correcta y se puede deshacer',async pg=>{
@@ -480,6 +480,47 @@ await test('Revisión: OCR sin internet (incluido en la app) y Firmar PDF usa el
   assert.ok(/libertad/i.test(t),'el OCR no funcionó sin internet: '+t);
   assert.ok(await pg.evaluate(()=>TOOLS.find(t=>t.name==='Firmar PDF').ui===TOOLS.find(t=>t.name==='Editar PDF').ui),'Firmar PDF no usa el editor completo');
   assert.equal(await pg.evaluate(()=>{let m='';const t=$('#toast');toast('Uncaught NetworkError: Failed to execute importScripts');m=t.textContent;return /Sin conexión/.test(m)}),true);
+});
+
+await test('Nexa: tres voces con velocidad ajustable, estilos de imagen, leyes con artículos relacionados y comandos /',async pg=>{
+  /* voces: se reemplaza la síntesis de voz del navegador por una de prueba */
+  await pg.evaluate(()=>{window._utt=[];const fake={speak(u){window._utt.push({t:u.text,rate:u.rate,pitch:u.pitch,v:u._vn||(u.voice&&u.voice.name)});setTimeout(()=>u.onend&&u.onend(),250)},cancel(){},pause(){},resume(){},
+    getVoices(){return [{name:'Google español',lang:'es-ES'},{name:'Paulina',lang:'es-MX'},{name:'Jorge',lang:'es-AR'}]}};Object.defineProperty(window,'speechSynthesis',{value:fake,configurable:true})});
+  assert.equal(await pg.evaluate(()=>['clara','grave','neutra'].map(p=>NxTTS.pick(p).v.name).join()),'Paulina,Jorge,Google español');
+  await pg.click('#btnNexa');await W(300);
+  await pg.evaluate(()=>{S.nexaRate=1;S.nexaVoz='grave';NxTTS.speak('Primera frase. Segunda frase. Tercera frase. Cuarta frase.')});await W(120);
+  assert.equal(await pg.isVisible('#nxTts'),true);assert.match(await pg.textContent('#nxTts'),/Leyendo · Grave/);
+  await pg.click('#nxTts [data-tts="fast"]');await W(200);assert.equal(await pg.evaluate(()=>S.nexaRate),1.15);
+  assert.equal(await pg.evaluate(()=>Math.round(window._utt.at(-1).rate*100)/100+' '+window._utt.at(-1).v),'1.15 Jorge');
+  await pg.click('#nxTts [data-tts="pause"]');await W(150);assert.match(await pg.textContent('#nxTts'),/En pausa/);const n0=await pg.evaluate(()=>window._utt.length);await W(200);assert.equal(await pg.evaluate(()=>window._utt.length),n0,'siguió hablando en pausa');
+  await pg.click('#nxTts [data-tts="pause"]');await pg.waitForFunction(()=>!NxTTS.on,null,{timeout:5000});assert.equal(await pg.isVisible('#nxTts'),false);
+  assert.ok(await pg.evaluate(()=>window._utt.map(u=>u.t).includes('Cuarta frase.')));
+  await pg.evaluate(()=>nexaSheet());await W(600);assert.equal(await pg.evaluate(()=>document.querySelectorAll('#nlVoz [name="nlVoz"]').length),3);await pg.evaluate(()=>Nav.back());await W(300);
+  /* comandos con «/» */
+  await pg.fill('#nxIn','/res');await pg.dispatchEvent('#nxIn','input');await W(150);assert.match(await pg.textContent('#nxCmds'),/\/resumir/);
+  await pg.fill('#nxIn','');await pg.dispatchEvent('#nxIn','input');
+  /* leyes: sin cargar avisa; con los textos (de prueba) responde el artículo exacto, con fuente y relacionados */
+  await pg.fill('#nxIn','artículo 79 del código penal');await pg.press('#nxIn','Enter');await W(600);
+  assert.match(await pg.evaluate(()=>Nexa.st.msgs.at(-1).text),/Todavía no están cargados los códigos/);
+  const fx={'indice.json':{version:'2026-09-29',leyes:[{id:'lp',nombre:'Ley de Prueba',norma:'Ley 0 (texto de prueba)',abrev:'LP',fuente:'https://example.invalid/lp',descargado:'2026-09-29',alias:['ley de prueba','lp'],archivo:'lp.json',total:3}]},
+    'lp.json':{id:'lp',nombre:'Ley de Prueba',norma:'Ley 0 (texto de prueba)',abrev:'LP',fuente:'https://example.invalid/lp',descargado:'2026-09-29',articulos:[{n:'1',t:'Primer artículo de prueba sobre la remisión de expedientes.',u:'TITULO I'},{n:'2',t:'Segundo artículo de prueba: conforme el artículo 1, la remisión se hace en diez días.',u:'TITULO I'},{n:'3',t:'Tercer artículo sin relación.'}]},
+    'relaciones.json':{'lp:1':{remite:[],citado:['lp:2']},'lp:2':{remite:['lp:1'],citado:[]}}};
+  await pg.route('**/knowledge/leyes/*',r=>{const k=r.request().url().split('/').pop();return fx[k]?r.fulfill({body:JSON.stringify(fx[k]),contentType:'application/json'}):r.fulfill({status:404,body:''})});
+  await pg.evaluate(()=>{Leyes.idx=null;Leyes.data={};Leyes.rel=null});
+  await pg.fill('#nxIn','artículo 2 de la ley de prueba');await pg.press('#nxIn','Enter');await W(700);
+  let t=await pg.evaluate(()=>Nexa.st.msgs.at(-1).text);
+  assert.ok(/Ley de Prueba — art\. 2/.test(t)&&/diez días/.test(t)&&/✅ \*Texto oficial · Ley 0 \(texto de prueba\) · fuente: InfoLeg/.test(t)&&/\[\[LP art\. 1\|/.test(t),t);
+  await pg.fill('#nxIn','¿Qué dice la ley de prueba sobre la remisión de expedientes?');await pg.press('#nxIn','Enter');await W(700);
+  t=await pg.evaluate(()=>Nexa.st.msgs.at(-1).text);assert.ok(/Encontré estos artículos/.test(t)&&/art\. 1\*\*/.test(t)&&!/Tercer artículo/.test(t),t);
+  await pg.fill('#nxIn','redactá una nota al juez');await pg.press('#nxIn','Enter');await W(700);
+  assert.ok(!/Encontré estos artículos/.test(await pg.evaluate(()=>Nexa.st.msgs.at(-1).text)),'respondió con artículos a un pedido de redacción');
+  /* estilos de imagen en el editor */
+  await seedPage(pg);await pg.evaluate(async()=>{DOC=newDoc();DOC.pages.push({...window._pg,id:uid()});openDocScreen();Ed.open(0)});await W(800);
+  const px=await pg.evaluate(async()=>{const p=Ed.p;const a=await renderPage({...p,art:''},{maxSide:300}),b=await renderPage({...p,art:'cartoon'},{maxSide:300});const da=a.getContext('2d').getImageData(0,0,a.width,a.height).data,db=b.getContext('2d').getImageData(0,0,b.width,b.height).data;let d=0;for(let i=0;i<da.length;i+=4)d+=Math.abs(da[i]-db[i]);return d});
+  assert.ok(px>0,'el estilo no cambió la imagen');
+  await pg.click('#editor [data-ed="art"]');await W(800);assert.equal(await pg.evaluate(()=>document.querySelectorAll('#sheetBody [data-art]').length),6);
+  await pg.click('#sheetBody [data-art="minimal"]');await W(500);assert.equal(await pg.evaluate(()=>Ed.p.art),'minimal');
+  await pg.evaluate(()=>Nav.back());await W(300);
 });
 
 await test('Base de conocimiento con fuentes (preguntas doradas), permiso antes de enviar documentos y OCR con confianza',async pg=>{

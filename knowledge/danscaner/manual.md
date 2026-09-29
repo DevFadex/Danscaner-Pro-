@@ -13,7 +13,7 @@ Documento es el modo normal. Libro sirve para libros abiertos. DNI / Tarjeta arm
 Los filtros son: Original, Aclarar, Mejorar, Magia Pro, Sin sombras, Gris, B/N y Ahorro tinta. B/N deja el fondo blanco y el texto negro, ideal para documentos. Sin sombras compensa la luz despareja.
 
 ## Editor de páginas
-Tocá una página para abrir el editor. Ahí podés recortar y ajustar las esquinas, girar, cambiar el filtro, el brillo y el contraste, elegir el tamaño de la hoja (botón Hoja), arreglar un error del texto (Corregir) y analizar la calidad del escaneo (Analizar).
+Tocá una página para abrir el editor. Ahí podés recortar y ajustar las esquinas, girar, cambiar el filtro, el brillo y el contraste, elegir el tamaño de la hoja (botón Hoja), arreglar un error del texto (Corregir), analizar la calidad del escaneo (Analizar) y aplicar un estilo artístico a una foto (Estilo).
 
 ## Corregir una palabra del documento
 En el editor tocá Corregir, marcá la palabra o frase, escribí la correcta y aplicá. La corrección usa la misma letra, tamaño y negrita del documento y se puede deshacer. También funciona en Editar PDF, página por página.
@@ -35,3 +35,6 @@ En Ajustes → Espacio usado ves cuánto ocupan los documentos y las herramienta
 
 ## Usar sin internet
 Escanear, recortar, filtros, crear PDF, OCR, corregir texto, analizar y Nexa sin internet funcionan sin conexión, una vez que la app se abrió al menos una vez con internet. Necesitan internet Nexa con internet y el Traductor.
+
+## Estilos artísticos de una foto
+En el editor, el botón Estilo convierte la foto en Animado (caricatura), Relieve 3D, Anaglifo 3D (para lentes rojo y azul), Minimalista o Boceto a lápiz. La foto original no se modifica: con «Ninguno» vuelve a como estaba.
