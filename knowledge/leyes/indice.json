@@ -68,6 +68,51 @@
    ],
    "archivo": "ep.json",
    "total": 242
+  },
+  {
+   "id": "sppt",
+   "nombre": "Régimen del Servicio Penitenciario de Tucumán",
+   "norma": "Ley 9.914 (ratifica el Decreto Acuerdo 7/7 (MS) del 26/08/2025; deroga la Ley 4.611)",
+   "abrev": "Ley 9.914",
+   "fuente": "https://boletin.tucuman.gob.ar",
+   "descargado": "2025-09-19",
+   "origen": "Boletín Oficial de Tucumán (Ley 9.914 y su Anexo, copia escaneada provista por el usuario). Transcripción: verificar contra el original ante cualquier duda.",
+   "alias": [
+    "9914",
+    "9.914",
+    "ley 9914",
+    "ley 9.914",
+    "servicio penitenciario de tucuman",
+    "servicio penitenciario provincial",
+    "ley del servicio penitenciario",
+    "ley organica del servicio penitenciario",
+    "ley organica penitenciaria"
+   ],
+   "archivo": "sppt.json",
+   "total": 193
+  },
+  {
+   "id": "rd905",
+   "nombre": "Reglamento de sumarios disciplinarios de internos (SPPT)",
+   "norma": "Resolución 905/19 DGSPPT (17/07/2019), Anexo 1",
+   "abrev": "Res. 905/19",
+   "fuente": "",
+   "descargado": "2019-07-17",
+   "origen": "Resolución 905/19 de la Dirección General del Servicio Penitenciario de Tucumán (copia escaneada provista por el usuario). Transcripción: verificar contra el original ante cualquier duda.",
+   "alias": [
+    "905",
+    "905/19",
+    "resolucion 905",
+    "res 905",
+    "reglamento disciplinario",
+    "reglamento de disciplina",
+    "reglamento de sumarios",
+    "sumarios disciplinarios",
+    "sumario disciplinario",
+    "disciplina de internos"
+   ],
+   "archivo": "rd905.json",
+   "total": 44
   }
  ]
 }

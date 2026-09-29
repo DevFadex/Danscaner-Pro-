@@ -19,7 +19,7 @@ SUF = r"(?:\s*(?:bis|ter|qu[aá]ter|quinquies|sexies|septies|octies|nonies|decie
 # encabezados de artículo: en mayúscula o con inicial mayúscula («ARTICULO 1º.-», «Artículo 109:», «Art. 109. -»);
 # las menciones dentro del texto («el artículo 186.») van en minúscula y no cuentan
 RX_ART = re.compile(r"(?:^|\n|(?<=[.;:]) )\s*(?:ART[IÍ]CULO|Art[ií]culo|Art\.)\s+(\d+" + SUF + r")\s*[º°o]?\s*[.:\-–—]+\s*")
-RX_ENC = re.compile(r"^\s*(LIBRO|Libro|T[IÍ]TULO|T[ií]tulo|CAP[IÍ]TULO|Cap[ií]tulo|SECCI[OÓ]N|Secci[oó]n|PARTE)\b[^\n]{0,120}$", re.M)
+RX_ENC = re.compile(r"^\s*(LIBRO|Libro|T[IÍ]TULO|T[ií]tulo|CAP[IÍ]TULO|Cap[ií]tulo|SECCI[OÓ]N|Secci[oó]n|PARTE)\s+(?:[IVXLC]+\b|\d+|PRIMER[OA]?|SEGUND[OA]|TERCER[OA]?|CUART[OA]|QUINT[OA]|SEXT[OA]|S[ÉE]PTIM[OA]|OCTAV[OA]|NOVEN[OA]|D[ÉE]CIM[OA]|[ÚU]NIC[OA]|Primer[oa]?|Segund[oa]|Tercer[oa]?|Cuart[oa]|Quint[oa]|[ÚU]nic[oa])(?![^\n]*,)[^\n]{0,60}$", re.M)
 RX_REF = re.compile(r"\bart(?:[íi]culos?|s?\.)\s*((?:\d+" + SUF + r"(?:\s*[º°])?(?:\s*,\s*|\s+y\s+|\s+o\s+|\s+a\s+|\s*-\s*)?)+)", re.I)
 
 def limpiar(h):
@@ -38,6 +38,36 @@ def unir_renglones(t):
     """InfoLeg corta los renglones a lo ancho de la página: se unen, salvo antes de un inciso o un punto y aparte."""
     t = re.sub(r"(?<![.:;])[ \t]*\n[ \t]*(?!(?:\d+\s*[º°)\-.]|[a-zñ]\s*[).]\s|[IVX]+\s*[.)\-]|[-–—•]))", " ", t)
     return re.sub(r"[ \t]{2,}", " ", t).strip()
+
+RX_TITULO = re.compile(r"^(?!(?:ART[IÍ]CULO|Art[ií]culo|Art\.)\s)(?![a-zñ0-9]{1,3}[.)\-]\s?)(?![IVX]+[.)]\s)[A-ZÁÉÍÓÚÑ\-][^\n]{1,85}(?<![.;:,])$")
+
+def marcar_titulos(texto):
+    """En las transcripciones, los renglones sueltos sin punto final son títulos de sección («Régimen de Licencias»)."""
+    return "\n".join("§§" + l.strip() if RX_TITULO.match(l.strip()) and not l.strip().startswith("-") else l for l in texto.split("\n"))
+
+def aplicar_titulos(arts, previo=""):
+    """Saca los títulos del final de cada artículo y los usa como sección de los artículos siguientes."""
+    cap, sec = "", ""
+    for p in re.findall(r"§§([^\n]+)", previo):
+        if re.match(r"CAP[IÍ]TULO\b", p):
+            cap, sec = p.strip(), ""
+        elif re.match(r"CAP[IÍ]TULO\b", cap) and not sec and cap.count(" ") < 2:
+            cap = cap + " " + p.strip()
+        elif cap:
+            sec = p.strip()
+    for a in arts:
+        if cap or sec:
+            a["u"] = " › ".join(x for x in (cap, sec) if x)
+        partes = re.split(r"\s*§§", a["t"])
+        a["t"] = partes[0].strip()
+        for p in partes[1:]:
+            p = p.strip()
+            if re.match(r"CAP[IÍ]TULO\b", p):
+                cap, sec = p, ""
+            elif cap and re.match(r"CAP[IÍ]TULO\b", cap) and not sec and len(p) > 0 and cap.count(" ") < 2:
+                cap = cap + " " + p
+            else:
+                sec = p
 
 def marcas(texto):
     """Inicios de artículo que siguen la numeración (descarta menciones como «artículo 186.» dentro del texto)."""
@@ -155,26 +185,39 @@ def main():
     SALIDA.mkdir(parents=True, exist_ok=True)
     indice, leyes = [], []
     for f in fuentes:
-        crudo = CRUDO / f"{f['id']}.htm"
-        if not crudo.exists():
+        if f.get("transcripcion"):
+            # documentos escaneados (no están en InfoLeg): texto transcripto a mano desde el PDF
+            texto = (AQUI / f["transcripcion"]).read_text(encoding="utf-8")
+            meta = {"url": f["url"], "descargado": f["fecha"]}
+        else:
+            crudo = CRUDO / f"{f['id']}.htm"
+        if not f.get("transcripcion") and not crudo.exists():
             print(f"{f['id']}: falta {crudo.name} (correr descargar.py)")
             continue
-        meta = json.loads((CRUDO / f"{f['id']}.meta.json").read_text(encoding="utf-8"))
-        texto = limpiar(crudo.read_text(encoding="utf-8"))
+        if not f.get("transcripcion"):
+            meta = json.loads((CRUDO / f"{f['id']}.meta.json").read_text(encoding="utf-8"))
+            texto = limpiar(crudo.read_text(encoding="utf-8"))
         if f.get("desde"):
             m0 = re.search(f["desde"], texto)
             if m0:
                 texto = texto[m0.start():]
+        if f.get("transcripcion"):
+            texto = marcar_titulos(texto)
         arts = articulos(texto)
+        if f.get("transcripcion"):
+            m0 = RX_ART.search(texto)
+            aplicar_titulos(arts, texto[:m0.start()] if m0 else "")
         enc = encabezados(texto)
         for a in arts:
             if enc.get(a["n"]):
                 a["u"] = enc[a["n"]]
-        abrev = {"cp": "CP", "cppf": "CPPF", "cppn": "CPPN", "ep": "Ley 24.660"}.get(f["id"], f["id"].upper())
+        abrev = f.get("abrev") or {"cp": "CP", "cppf": "CPPF", "cppn": "CPPN", "ep": "Ley 24.660"}.get(f["id"], f["id"].upper())
         doc = {"id": f["id"], "nombre": f["nombre"], "norma": f["norma"], "abrev": abrev, "fuente": meta["url"],
                "descargado": meta["descargado"], "articulos": arts}
+        if f.get("origen"):
+            doc["origen"] = f["origen"]
         (SALIDA / f"{f['id']}.json").write_text(json.dumps(doc, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-        indice.append({k: doc[k] for k in ("id", "nombre", "norma", "abrev", "fuente", "descargado")} | {"alias": f["alias"], "archivo": f"{f['id']}.json", "total": len(arts)})
+        indice.append({k: doc[k] for k in ("id", "nombre", "norma", "abrev", "fuente", "descargado") if k in doc} | ({"origen": doc["origen"]} if "origen" in doc else {}) | {"alias": f["alias"], "archivo": f"{f['id']}.json", "total": len(arts)})
         leyes.append(doc)
         print(f"{f['id']}: {len(arts)} artículos")
     if not leyes:

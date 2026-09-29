@@ -349,3 +349,11 @@ En el editor, **Corregir** permite arreglar una palabra mal escrita de la hoja e
   - Ley 24.660 de Ejecución de la Pena, texto actualizado: 242 artículos.
 - Grafo de graphify con 1600 artículos y 551 remisiones entre artículos de una misma norma. Se descartan las notas de modificación de InfoLeg y las menciones a otras leyes.
 - Se precargan para usar sin internet, alrededor de 1 MB.
+
+## v50 — Normas provinciales: Ley 9.914 y Resolución 905/19
+
+- **Ley 9.914** (Tucumán, 2025): ratifica el Decreto Acuerdo 7/7 (MS) del 26/08/2025, el nuevo régimen del Servicio Penitenciario Provincial, y deroga la Ley 4.611. Son 193 artículos, con capítulo y sección.
+- **Resolución 905/19 DGSPPT**: el Reglamento General para sumarios disciplinarios de internos, Anexo 1. Son 44 artículos, con sección.
+- Las dos se transcribieron a mano desde copias escaneadas que dio el usuario, página por página contra la imagen. El texto está en `tools/leyes/transcripcion/`. Nexa las cita con esa aclaración y recomienda verificar contra el original ante cualquier duda.
+- `tools/leyes/fuentes.json` admite fuentes con `"transcripcion"`. Los títulos de sección que quedan sueltos en esos textos se pasan como sección del artículo siguiente.
+- Arreglo de paso: los encabezados de libro, título y capítulo ya no toman renglones partidos del texto de un artículo.
