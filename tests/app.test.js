@@ -822,6 +822,48 @@ await test('Nombre unificado Danscanner Pro, aviso de firma y SheetJS actualizad
   await pg.evaluate(()=>Nav.back());await W(300);
 });
 
+await test('Cámara de lote rápida: el disparador queda libre, las fotos se procesan en orden, recorte del marco en vivo y perfil recomendado',async pg=>{
+  /* perfil recomendado aplicado la primera vez */
+  const prof=await pg.evaluate(()=>[S.camProfile,S.camPrefMode,S.autoCapture,S.autoCrop,S.hd,S.v58cam]);assert.deepEqual(prof,['lote','batch',true,true,true,true]);
+  /* el marco del video se lleva a la foto aunque tengan otra proporción */
+  const mh=await pg.evaluate(()=>camMapHint({q:[{x:0,y:0},{x:1,y:0},{x:1,y:1},{x:0,y:1}],vw:1080,vh:1920},3000,4000).map(p=>[+p.x.toFixed(3),+p.y.toFixed(3)]));
+  assert.deepEqual(mh,[[.125,0],[.875,0],[.875,1],[.125,1]]);
+  assert.equal(await pg.evaluate(()=>camMapHint({q:[{x:0,y:0},{x:1,y:0},{x:1,y:1},{x:0,y:1}],vw:1920,vh:1080},3000,4000)),null,'con orientación distinta no debe usarse');
+  /* foto sin bordes claros: se usa el marco que se veía en vivo */
+  const hq=await pg.evaluate(async()=>{const c=canvas(1500,2000),x=c.getContext('2d');x.fillStyle='#f2f2f2';x.fillRect(0,0,1500,2000);x.fillStyle='#000';x.font='40px serif';for(let y=300;y<1700;y+=60)x.fillText('Texto de prueba del documento',260,y);
+    const q=[{x:.15,y:.1},{x:.85,y:.1},{x:.85,y:.9},{x:.15,y:.9}];const p=await makePage(c.toDataURL('image/jpeg',.9),{hint:{q,vw:1500,vh:2000}});return [p.hinted,p.quad.map(v=>[+v.x.toFixed(2),+v.y.toFixed(2)])]});
+  assert.equal(hq[0],true,'no usó el marco en vivo');assert.ok(Math.abs(hq[1][0][0]-.15)<.04&&Math.abs(hq[1][2][1]-.9)<.04,'recorte lejos del marco: '+JSON.stringify(hq[1]));
+  /* lote: tres fotos seguidas sin esperar el procesado */
+  await pg.evaluate(()=>{S.camFast=true;S.autoCapture=false;const _mp=makePage;window.makePage=async function(){await new Promise(r=>setTimeout(r,700));return _mp.apply(this,arguments)};Cam.open('batch')});
+  await pg.waitForFunction(()=>Cam.stream&&$('#camVideo').videoWidth>0,null,{timeout:15000});
+  const times=await pg.evaluate(async()=>{const t=[];for(let i=0;i<3;i++){const a=performance.now();await Cam.shoot();t.push(Math.round(performance.now()-a))}return t});
+  assert.ok(times.every(x=>x<650),'el disparador esperó al procesado: '+times);
+  assert.equal(await pg.textContent('#camCount'),'3');assert.ok(await pg.evaluate(()=>Cam._pend)>=2,'no quedó nada en proceso');
+  await pg.click('#camUndo');await W(100);assert.equal(await pg.textContent('#camCount'),'2');
+  /* terminar con fotos en proceso: espera y entrega todas, en orden */
+  await pg.evaluate(()=>{Cam.batch.forEach((p,i)=>p._n=i)});await pg.evaluate(()=>Nav.back());await W(300);
+  await pg.waitForFunction(()=>!Cam._pend&&!$('#busy').classList.contains('on')&&DOC&&DOC.pages.length===2,null,{timeout:15000});
+  assert.equal(await pg.evaluate(()=>DOC.pages.length),2);
+  /* perfiles en el panel y la pantalla de inicio abre en lote */
+  await pg.evaluate(()=>{Nav.back();camApplyProfile('manual',true)});await W(300);
+  assert.deepEqual(await pg.evaluate(()=>[S.autoCapture,S.camPrefMode,S.camProfile]),[false,'batch','manual']);
+  await pg.evaluate(()=>doAction('cam-single'));await pg.waitForFunction(()=>Nav.isOpen('camera'),null,{timeout:5000});assert.equal(await pg.evaluate(()=>Cam.mode),'batch','no abrió en lote');
+  await pg.click('#camCfg');await W(200);assert.equal(await pg.$$eval('#camPanel [data-prof]',x=>x.length),4);await pg.click('#camPanel [data-prof="lote"]');await W(100);
+  assert.deepEqual(await pg.evaluate(()=>[S.camProfile,S.autoCapture]),['lote',true]);
+  await pg.click('#camCfg');await W(100);const vb=await pg.$eval('#camVideo',v=>{const r=v.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}});await pg.mouse.click(vb.x,vb.y);await W(200);assert.equal(await pg.evaluate(()=>!$('#camFocus').hidden),true,'no marcó el punto de enfoque');
+  await pg.evaluate(()=>Nav.back());await W(300);
+});
+
+await test('Magia Pro con fotocopia clara: el texto tenue queda oscuro y gris (no se lava ni se pone azul), aunque quede un borde oscuro',async pg=>{
+  const r=await pg.evaluate(async()=>{const W=1200,H=1700;const txt=(x,col)=>{x.fillStyle=col;x.font='18px Times New Roman';for(let y=H*.2;y<H*.8;y+=40)x.fillText('OFICIO N° 1234/26 - EXPTE. 5678/2025 - SAN MIGUEL DE TUCUMAN',60,y)};
+    const c=canvas(W,H),x=c.getContext('2d');const g=x.createLinearGradient(0,0,W,H);g.addColorStop(0,'#ece9e2');g.addColorStop(1,'#d8d3ca');x.fillStyle=g;x.fillRect(0,0,W,H);x.fillStyle='#1a1a22';x.fillRect(0,0,W,H*.07);txt(x,'rgb(196,196,196)');
+    const m=canvas(W,H),mx=m.getContext('2d');mx.fillStyle='#fff';mx.fillRect(0,0,W,H);txt(mx,'#000');const M=mx.getImageData(0,0,W,H).data;
+    applyFilter(c,'magia',0,0,{});const B=c.getContext('2d').getImageData(0,0,W,H).data;let ts=0,tn=0,blue=0,ps=0,pn=0;
+    for(let y=Math.round(H*.15);y<H*.85;y++)for(let xx=0;xx<W;xx++){const i=(y*W+xx)*4,o=B[i]*.3+B[i+1]*.59+B[i+2]*.11;if(M[i]<60){ts+=o;tn++;if(B[i+2]-B[i]>25)blue++}else if(M[i]>250){ps+=o;pn++}}
+    return {texto:ts/tn,papel:ps/pn,azul:blue/tn}});
+  assert.ok(r.texto<120,'el texto tenue quedó claro: '+JSON.stringify(r));assert.ok(r.papel>245,'el papel no quedó blanco: '+JSON.stringify(r));assert.ok(r.azul<.05,'el gris se volvió azul: '+JSON.stringify(r));
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();

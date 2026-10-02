@@ -50,3 +50,7 @@ El usuario para entrar es tu correo. La contraseña no se puede ver en ningún l
 ## Compartir a Danscanner Pro desde WhatsApp o la galería
 
 En Android, con la app instalada en la pantalla de inicio: en WhatsApp, la galería o el correo tocá Compartir y elegí **Danscanner Pro**. Las fotos o PDF entran como un documento nuevo. Al cerrarlo, la app lee el contenido y le pone nombre sola (tipo, número, juzgado o dependencia, expediente y fecha). En iPhone esta opción no existe; ahí usá Importar.
+
+## Escanear en lote rápido
+
+La cámara viene con el perfil **Lote automático**: apoyá la hoja, esperá el marco verde y la foto sale sola; poné la siguiente hoja y repetí. No hace falta esperar a que se procese: el contador muestra las que se están terminando. Si una salió mal, tocá **Borrar última**. Tocá la imagen para enfocar en un punto. En ⚙️ → **Perfil de escaneo** podés elegir Lote manual (vos disparás), Lote ultrarrápido (instantáneo, un poco menos nítido) o Una sola hoja. Con fotocopias claras usá **Magia Pro**: oscurece el texto tenue sin lavarlo.

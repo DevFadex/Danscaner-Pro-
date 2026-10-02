@@ -435,3 +435,24 @@ En el editor, **Corregir** permite arreglar una palabra mal escrita de la hoja e
 - **SheetJS 0.20.3** (antes 0.18.5): corrige CVE-2023-30533 y CVE-2024-22363.
   - Se tomó de la réplica npm `@e965/xlsx`, porque el CDN oficial está bloqueado en este entorno; conviene verificar el archivo contra cdn.sheetjs.com.
   - La licencia está en `libs/LICENSE-sheetjs.txt`.
+
+## v58 — Cámara de lote rápida y Magia Pro para fotocopias claras
+
+- **Lote sin esperas:** la foto se toma y el disparador queda libre al instante.
+  - El recorte, el filtro y la miniatura siguen en una cola en segundo plano y en orden. El contador muestra las fotos que todavía se están procesando.
+  - "Borrar última" cancela la última foto aunque siga en proceso.
+  - Si se toca "Listo" con fotos en proceso, la cámara se apaga, se espera a que terminen y se entregan todas juntas.
+- **Recorte igual al marco en vivo:** la foto HD suele tener otro encuadre que el video. El marco verde se traslada a la foto (recorte centrado según la proporción) y se afina con `refineQuad`. Se usa si la detección sobre la foto se aleja más de un 3,5 % del marco visto. Así no entra la mesa ni el borde de otra hoja.
+- **Detección más ágil:** revisa cada 240 ms (antes 380), tolera más el pulso (0,04, antes 0,028) y la auto-captura dispara con 3 cuadros quietos (antes 4).
+- **Tocar para enfocar** en el punto tocado, con `pointsOfInterest` y `single-shot`, si el teléfono lo permite.
+- **Perfiles** (⚙️ → Perfil de escaneo):
+  - **Lote automático** (recomendado y predeterminado);
+  - Lote manual;
+  - Lote ultrarrápido (cuadro de video, instantáneo);
+  - Una sola hoja.
+  
+  La pantalla de inicio abre la cámara en el modo de siempre. Si se cambia una opción suelta, el perfil pasa a personalizado.
+- **Magia Pro con fotocopias claras:**
+  - El punto negro tenía un tope fijo de 150, así que la tinta más clara que eso salía casi blanca. Ahora sigue a la tinta real, medida contra el papel y en el centro de la hoja, para que un borde de mesa no la engañe.
+  - En hojas de tinta tenue se descuenta el tinte que el papel amarillento le da al gris, que antes se pintaba de azul como si fuera birome.
+  - Las hojas con texto oscuro y birome quedan igual que antes.
