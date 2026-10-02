@@ -2090,22 +2090,37 @@ function flatField(d,w,h){const B=Math.max(4,Math.round(Math.max(w,h)/220)),sw=M
    texto a negro con bordes suaves y tinta de color (birome azul, sellos, membretes) conservada y reforzada.
    m: 'magia' (como Magic Pro), 'mejorar' (más natural), 'color' (color vivo), 'gris'. */
 function csEnhance(d,w,h,m,over){const CS_P={magia:{bpk:.95,wp:220,g:1.2,sat:2.5,mix:1,cg:1.9,pc:30,c0:10,cr:16},mejorar:{bpk:.7,wp:232,g:1.05,sat:2.1,mix:1,cg:2.2,pc:30,c0:10,cr:16},aclarar:{bpk:.35,wp:240,g:.9,sat:1.25,mix:.6,cg:1.3,pc:30,c0:10,cr:16},color:{bpk:.8,wp:226,g:1.15,sat:2.1,mix:.9,cg:1.7,pc:26,c0:8,cr:14},gris:{bpk:.95,wp:220,g:1.2,sat:0,mix:0,c0:10,cr:16}};
- const P=Object.assign({cbp:.5,cwp:250,cg:1.6,pc:28,lc:5,lmin:40,amax:5},CS_P[m]||CS_P.magia,over||self.CS_OVER||{});flatField(d,w,h);unsharpPro(d,w,h,.55,1);
- const H=new Uint32Array(256);let ni=0;for(let i=0;i<d.length;i+=12){const l=(d[i]*77+d[i+1]*150+d[i+2]*29)>>8;if(l<185){H[l]++;ni++}}
- let ink=110;if(ni>50){let a=0;for(let v=0;v<256;v++){a+=H[v];if(a>=ni*.5){ink=v;break}}}
- const bp=Math.max(20,Math.min(150,ink*P.bpk)),wp=P.wp,span=Math.max(30,wp-bp),cur=new Float32Array(256);
+ const P=Object.assign({cbp:.5,cwp:250,cg:1.6,pc:28,lc:5,lmin:40,amax:5},CS_P[m]||CS_P.magia,over||self.CS_OVER||{});
+ /* color del papel antes de blanquearlo: al dividir por un papel amarillento, la tinta gris neutra se corre hacia el azul.
+    Se descuenta el tinte que comparte la mayoría del texto de la página (no el de una firma en birome), y como máximo lo que explica el papel. */
+ let kr=0,kg=0,kb=0,cr0=0,cg0=0,cb0=0;{const Hp=new Uint32Array(256);let n=0;for(let i=0;i<d.length;i+=48){Hp[(d[i]*77+d[i+1]*150+d[i+2]*29)>>8]++;n++}let t=255,a=0;for(let v=255;v>=0;v--){a+=Hp[v];if(a>=n*.25){t=v;break}}
+  let sr=0,sg=0,sb=0,k=0;for(let i=0;i<d.length;i+=48){if(((d[i]*77+d[i+1]*150+d[i+2]*29)>>8)>=t){sr+=d[i];sg+=d[i+1];sb+=d[i+2];k++}}
+  if(k>20){sr/=k;sg/=k;sb/=k;const pm=(sr+sg+sb)/3;if(sr>20&&sg>20&&sb>20&&Math.max(sr,sg,sb)-Math.min(sr,sg,sb)<60){cr0=pm/sr-1;cg0=pm/sg-1;cb0=pm/sb-1}}}
+ flatField(d,w,h);unsharpPro(d,w,h,.55,1);
+ /* tinta real de la hoja, medida contra el papel (no con un umbral fijo): así una fotocopia clara no se lava.
+    Se mide en el centro de la hoja, para que un borde de mesa que haya quedado en el recorte no la engañe. */
+ const HA=new Uint32Array(256),H=new Uint32Array(256);let na=0,ni=0;{const st=Math.max(1,Math.round(Math.sqrt(w*h/250000))),y0=(h*.08)|0,y1=h*.92,x0=(w*.08)|0,x1=w*.92;
+  for(let y=y0;y<y1;y+=st)for(let x=x0,i=(y*w+x)*4;x<x1;x+=st,i+=st*4){HA[(d[i]*77+d[i+1]*150+d[i+2]*29)>>8]++;na++}}
+ let paper=235;{let a=0;for(let v=0;v<256;v++){a+=HA[v];if(a>=na*.6){paper=v;break}}}
+ const cut=Math.max(60,Math.min(paper-18,232));for(let v=0;v<cut;v++){H[v]=HA[v];ni+=HA[v]}
+ let ink=110;if(ni>Math.max(50,na*.002)){let a=0;for(let v=0;v<256;v++){a+=H[v];if(a>=ni*.5){ink=v;break}}}
+ /* solo en hojas de tinta tenue: ahí todo el texto es gris y el papel amarillento lo corre al azul */
+ if(ink>150&&(cr0||cb0)){const R=[],G=[],Bv=[],st=Math.max(4,Math.round(d.length/4/40000))*4;for(let i=0;i<d.length&&R.length<40000;i+=st){const l=d[i]*.299+d[i+1]*.587+d[i+2]*.114;if(l<cut&&l>40){R.push((d[i]-l)/l);G.push((d[i+1]-l)/l);Bv.push((d[i+2]-l)/l)}}
+  if(R.length>200){const med=a=>{a.sort((x,y)=>x-y);return a[a.length>>1]},lim=(m,c)=>c>0?Math.max(0,Math.min(m,c)):Math.min(0,Math.max(m,c));kr=lim(med(R),cr0);kg=lim(med(G),cg0);kb=lim(med(Bv),cb0)}}
+ /* tinta tenue (fotocopia clara, impresora gastada): el punto negro sigue a la tinta y el blanco queda por encima de ella */
+ const faint=ink>150,lcE=faint?Math.max(P.lc,7):P.lc,bp=faint?Math.max(20,Math.min(ink*P.bpk,paper-40)):Math.max(20,Math.min(150,ink*P.bpk)),wp=faint?Math.max(P.wp,Math.min(paper-8,ink+20)):P.wp,span=Math.max(30,wp-bp),cur=new Float32Array(256);
  for(let v=0;v<256;v++){const t=Math.max(0,Math.min(1,(v-bp)/span));cur[v]=255*Math.pow(t,P.g)}
  /* color local de la tinta: las cámaras guardan el color con menos detalle que el brillo (croma submuestreada y suavizada),
     así un trazo fino de birome azul llega casi gris. Se promedia el color de la tinta vecina, ponderado por lo oscura que es. */
  const q=Math.max(1,Math.ceil(Math.max(w,h)/1400)),qw=Math.ceil(w/q),qh=Math.ceil(h/q),qn=qw*qh,AW=new Float32Array(qn),AR=new Float32Array(qn),AB=new Float32Array(qn);
- if(P.sat&&P.loc!==0){for(let y=0;y<h;y++){const ry=((y/q)|0)*qw;for(let x=0,i=y*w*4;x<w;x++,i+=4){const r=d[i],g=d[i+1],b=d[i+2],l=r*.299+g*.587+b*.114;if(l>=235)continue;const wt=(235-l)/235,k=ry+((x/q)|0);AW[k]+=wt;AR[k]+=wt*(r-l);AB[k]+=wt*(b-l)}}
+ if(P.sat&&P.loc!==0){for(let y=0;y<h;y++){const ry=((y/q)|0)*qw;for(let x=0,i=y*w*4;x<w;x++,i+=4){const r=d[i],g=d[i+1],b=d[i+2],l=r*.299+g*.587+b*.114;if(l>=235)continue;const wt=(235-l)/235,k=ry+((x/q)|0);AW[k]+=wt;AR[k]+=wt*(r-l-l*kr);AB[k]+=wt*(b-l-l*kb)}}
   const Rb=Math.max(1,Math.round(3/q+1)),tmp=new Float32Array(qn);
   for(const A of [AW,AR,AB]){for(let y=0;y<qh;y++){let s2=0;for(let x=-Rb;x<qw+Rb;x++){if(x+Rb<qw)s2+=A[y*qw+x+Rb];if(x-Rb-1>=0)s2-=A[y*qw+x-Rb-1];if(x>=0&&x<qw)tmp[y*qw+x]=s2}}
    for(let x=0;x<qw;x++){let s2=0;for(let y=-Rb;y<qh+Rb;y++){if(y+Rb<qh)s2+=tmp[(y+Rb)*qw+x];if(y-Rb-1>=0)s2-=tmp[(y-Rb-1)*qw+x];if(y>=0&&y<qh)A[y*qw+x]=s2}}}}
- for(let i=0,px=0;i<d.length;i+=4,px++){let r=d[i],g=d[i+1],b=d[i+2];const l=r*.299+g*.587+b*.114,li=l|0;let c=Math.max(r,g,b)-Math.min(r,g,b);
+ for(let i=0,px=0;i<d.length;i+=4,px++){let r=d[i],g=d[i+1],b=d[i+2];const l=r*.299+g*.587+b*.114,li=l|0;let c=Math.max(r-l*kr,g-l*kg,b-l*kb)-Math.min(r-l*kr,g-l*kg,b-l*kb);
   if(P.sat&&P.loc!==0&&l<250){const y=(px/w)|0,k=((y/q)|0)*qw+(((px-y*w)/q)|0),aw=AW[k];if(aw>.02){const vr=AR[k]/aw,vb=AB[k]/aw,vg=-(.299*vr+.114*vb)/.587,cm=Math.max(vr,vg,vb)-Math.min(vr,vg,vb);
    /* solo tintas reales (azul, violeta, rojo, verde): el amarillo o marrón residual del papel no se refuerza */
-   const ink=(vb>2&&vb>=vg)||(vr>2&&vg<-1&&vb>-vr*.6);if(ink&&cm>=P.lc&&cm>c*.8){const f=(l<wp?1:.7)*Math.min(P.amax,Math.max(1,P.lmin/cm));r=l+vr*f;g=l+vg*f;b=l+vb*f;c=Math.max(c,cm*f)}}}
+   const ink=(vb>2&&vb>=vg)||(vr>2&&vg<-1&&vb>-vr*.6);if(ink&&cm>=lcE&&cm>c*.8){const f=(l<wp?1:.7)*Math.min(P.amax,Math.max(1,P.lmin/cm));r=l+vr*f;g=l+vg*f;b=l+vb*f;c=Math.max(c,cm*f)}}}
   const n=cur[li];let wc=P.sat?Math.max(0,Math.min(1,(c-P.c0)/P.cr)):0;if(l>=wp&&c<P.pc)wc=0;
   if(wc<=0){d[i]=d[i+1]=d[i+2]=n;continue}
   const tc=Math.max(0,Math.min(1,(l-bp*P.cbp)/Math.max(30,P.cwp-bp*P.cbp))),nc=255*Math.pow(tc,P.cg),L2=nc+(l-nc)*(1-P.mix),s=P.sat;let R=L2+(r-l)*s,G=L2+(g-l)*s,Bq=L2+(b-l)*s;
@@ -3378,12 +3393,12 @@ Cam.shoot=async function(){if(!this.stream){const m=this.mode;NativeCam.open(m);
  this.batch.push(...pages);this.updUI()}catch(e){toast('Error al capturar: '+e.message)}this.busy=false};
 
 /* ---- detección en vivo: marco celeste, verde cuando está quieto, auto-captura en cualquier modo ---- */
-const CAM_STEADY=4;
+const CAM_STEADY=3;
 Cam.detect=function(){const v=$('#camVideo');if(!v.videoWidth||this.busy)return;const svg=$('#camSvg'),hint=$('#camHint'),shot=$('#camShot');
- const cnt=this.mode==='batch'?' · '+this.batch.length+' foto(s)':'';
+ const cnt=this.mode==='batch'?' · '+(this.batch.length+(this._pend||0))+' foto(s)'+(this._pend?' (procesando '+this._pend+')':''):'';
  if(!S.autoCrop){svg.innerHTML='';hint.textContent=(this.mode==='batch'?'Lote':'Encuadre automático apagado')+cnt;this._stable=0;this._lastQuad=null;shot.classList.remove('arming');return}
  let q=detectQuad(v);if(q&&this.prevQ)q=q.map((p,i)=>({x:p.x*.6+this.prevQ[i].x*.4,y:p.y*.6+this.prevQ[i].y*.4}));this.prevQ=q;
- if(q&&this._lastQuad){const diff=q.reduce((s,p,i)=>s+Math.hypot(p.x-this._lastQuad[i].x,p.y-this._lastQuad[i].y),0);this._stable=diff<0.028?this._stable+1:0}else this._stable=0;this._lastQuad=q;
+ if(q&&this._lastQuad){const diff=q.reduce((s,p,i)=>s+Math.hypot(p.x-this._lastQuad[i].x,p.y-this._lastQuad[i].y),0);this._stable=diff<0.04?this._stable+1:0}else this._stable=0;this._lastQuad=q;
  const auto=S.autoCapture&&!this.replaceId,steady=q&&this._stable>=2;
  const cw=v.clientWidth,ch=v.clientHeight,s=Math.max(cw/v.videoWidth,ch/v.videoHeight),w=v.videoWidth*s,h=v.videoHeight*s,ox=(cw-w)/2,oy=(ch-h)/2,X=p=>ox+p.x*w,Y=p=>oy+p.y*h;
  svg.setAttribute('viewBox','0 0 '+cw+' '+ch);
@@ -3437,7 +3452,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 4.5',APP_VER='57';
+const NEXA_VER='Nexa 4.5',APP_VER='58';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3555,7 +3570,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='57 · 29/09/2026';
+const BUILD='58 · 02/10/2026';
 /* Versión que ven los usuarios: se cambia a mano solo cuando se decide publicar una versión nueva para todos.
    El administrador ve la versión interna (BUILD) con cada cambio. */
 const PUBLIC_VER='1.2';
@@ -5052,6 +5067,95 @@ Object.assign(Art,{
 
 /* v57 · aviso legal en la firma */
 document.head.insertAdjacentHTML('beforeend','<style id="v57Css">.sig-legal{font-size:12.5px;line-height:1.45;margin:0 0 10px;padding:8px 10px;border-radius:10px;background:var(--bg2);border:1px solid var(--line);color:var(--tx2)}</style>');
+
+/* v58 · cámara de lote rápida y precisa:
+   - la foto se toma y el disparador queda libre al instante; recorte, filtro y miniatura siguen en segundo plano y en orden;
+   - el recorte respeta el marco que se veía en vivo (verde), aunque la foto HD tenga otro encuadre que el video;
+   - detección más ágil, tocar la pantalla para enfocar y perfiles de escaneo con uno recomendado para lote. */
+const CAM_PROFILES={
+ lote:{n:'Lote automático',d:'Recomendado: saca sola cuando la hoja está quieta. Máxima calidad.',mode:'batch',autoCrop:true,autoCapture:true,hd:true,camFast:false,maxCap:4200},
+ manual:{n:'Lote manual',d:'Vos tocás el disparador. Máxima calidad.',mode:'batch',autoCrop:true,autoCapture:false,hd:true,camFast:false,maxCap:4200},
+ rapido:{n:'Lote ultrarrápido',d:'Toma el cuadro del video: instantáneo, un poco menos nítido.',mode:'batch',autoCrop:true,autoCapture:true,hd:true,camFast:true,maxCap:3000},
+ individual:{n:'Una sola hoja',d:'Muestra la foto para confirmar o repetir.',mode:'single',autoCrop:true,autoCapture:false,hd:true,camFast:false,maxCap:4200}};
+function camApplyProfile(k,quiet){const P=CAM_PROFILES[k];if(!P)return;S.camProfile=k;S.camPrefMode=P.mode;S.autoCrop=P.autoCrop;S.autoCapture=P.autoCapture;S.hd=P.hd;S.camFast=P.camFast;S.maxCap=P.maxCap;
+ if(!S.filter||S.filter==='original'||S.filter==='documento')S.filter='magia';saveS();if(Nav.isOpen('camera')&&!Cam.replaceId){Cam.mode=P.mode;Cam.updUI()}if(typeof camHomeLbl==='function')camHomeLbl();if(!quiet)toast('Perfil: '+P.n,2200)}
+if(S.v58cam!==true){camApplyProfile('lote',true);S.v58cam=true;S.v58hello=true;try{saveS()}catch(e){}}
+
+/* el marco en vivo, llevado a la foto: el video suele ser un recorte centrado del sensor con otra proporción */
+function camMapHint(h,W,H){if(!h||!h.q||!h.vw||!h.vh||!W||!H)return null;const av=h.vw/h.vh,ap=W/H;if((av>1)!==(ap>1)&&Math.abs(av-1)>.05&&Math.abs(ap-1)>.05)return null;
+ return h.q.map(p=>{let x=p.x,y=p.y;if(av>ap)y=.5+(y-.5)*ap/av;else if(av<ap)x=.5+(x-.5)*av/ap;return {x:Math.max(0,Math.min(1,x)),y:Math.max(0,Math.min(1,y))}})}
+{const _mp=makePage;makePage=function(src,o){if(!o||!o.hint)return _mp.apply(this,arguments);const h=o.hint,o2=Object.assign({},o);delete o2.hint;
+ return _mp(src,o2).then(async p=>{try{if(!p||(o2.auto??S.autoCrop)===false)return p;const img=await loadImg(p.orig),hq=camMapHint(h,img.naturalWidth,img.naturalHeight);if(!hq)return p;
+  const dist=p.quad?p.quad.reduce((s2,c,i)=>s2+Math.hypot(c.x-hq[i].x,c.y-hq[i].y),0)/4:1;
+  if(dist>.035){p.quad=refineQuad(img,hq);p.hinted=true;await makeThumb(p)}}catch(e){console.warn('marco en vivo',e)}return p})}}
+Cam._hintNow=function(){const v=$('#camVideo');return this._lastQuad&&v&&v.videoWidth?{q:this._lastQuad.map(p=>({x:p.x,y:p.y})),vw:v.videoWidth,vh:v.videoHeight}:null};
+/* también en «Individual» y al reemplazar una página */
+{const _mp=makePage;makePage=function(src,o){if(typeof Cam!=='undefined'&&Cam._shotHint&&Nav.isOpen('camera')&&!(o&&o.hint)){const h=Cam._shotHint;Cam._shotHint=null;return _mp.call(this,src,Object.assign({},o||{},{hint:h}))}return _mp.apply(this,arguments)}}
+
+/* captura: foto del sensor (HD) o cuadro del video (ultrarrápido) */
+async function camGrab(){const v=$('#camVideo');
+ if(S.hd&&!S.camFast&&'ImageCapture' in window&&Cam.track){try{const blob=await Promise.race([hiResPhoto(Cam.track),sleep(6000).then(()=>null)]);if(blob&&blob.size>1000){const src=await imageBlobToSrc(blob);if(src)return src}}catch(e){}}
+ if(!v.videoWidth)throw new Error('La cámara no está lista');const c=canvas(v.videoWidth,v.videoHeight);c.getContext('2d').drawImage(v,0,0);
+ if(S.hd&&!S.camFast&&!Cam._hdWarned){Cam._hdWarned=true;toast('ℹ️ Este teléfono no entrega la foto HD al navegador: se usa el cuadro de video ('+v.videoWidth+'×'+v.videoHeight+').',6000)}
+ return c.toDataURL('image/jpeg',.95)}
+
+/* lote: el procesado va en una cola; el disparador se libera apenas la foto está tomada */
+Cam._q=Promise.resolve();Cam._pend=0;Cam._sid=0;Cam._late=[];Cam._jobs=[];Cam._cancel=new Set();Cam._seq=0;
+{const _o=Cam.open;Cam.open=async function(mode){if(mode==='single'&&!this.replaceId&&!(typeof _srcHook!=='undefined'&&_srcHook)&&this._fromMain&&S.camPrefMode==='batch')mode='batch';this._fromMain=false;this._sid++;
+ const r=await _o.call(this,mode);if(this.timer&&this.stream){clearInterval(this.timer);this.timer=setInterval(()=>this.detect(),240)}
+ if(S.v58hello&&Nav.isOpen('camera')){S.v58hello=false;saveS();toast('📸 Perfil recomendado: Lote automático. Lo cambiás en ⚙️ → Perfil',4500)}return r}}
+{const _sh=Cam.shoot;Cam.shoot=async function(){
+ if(!this.replaceId&&this.stream)this._shotHint=this._hintNow();
+ if(this.mode!=='batch'||this.replaceId||!this.stream)return _sh.apply(this,arguments);
+ if(this.busy)return;this.busy=true;const fl=$('#camera .flash');fl.classList.remove('go');void fl.offsetWidth;fl.classList.add('go');$('#camShot').classList.remove('arming');
+ const hint=this._shotHint;this._shotHint=null;const kind=this.kind,sid=this._sid;let src;
+ try{src=await camGrab()}catch(e){this.busy=false;toast('Error al capturar: '+e.message);return}
+ this.busy=false;navigator.vibrate&&navigator.vibrate(40);const n=++this._seq;this._jobs.push(n);this._pend++;this.updUI();
+ const job=async()=>{let pages=[];try{if(!this._cancel.has(n)){const p=await makePage(src,kind==='board'?{filter:'pizarra',hint}:{hint});if(p){if(kind==='cert'&&(!p.paper||p.paper==='a5'))p.paper='cert';pages=kind==='book'?await splitBook(p):[p]}}}
+  catch(e){toast('No se pudo procesar una foto: '+e.message,4000)}
+  finally{if(typeof src==='string'&&src.startsWith('blob:')){URL.revokeObjectURL(src);_imgCache.delete(src)}}
+  if(this._cancel.has(n)){this._cancel.delete(n);pages=[]}else{const i=this._jobs.indexOf(n);if(i>=0)this._jobs.splice(i,1);this._pend--}
+  if(this._sid===sid&&Nav.isOpen('camera'))this.batch.push(...pages);else this._late.push(...pages);
+  if(this._closing)busy(this._pend?'Terminando de procesar '+this._pend+' foto(s)…':'Guardando…');this.updUI();await sleep(0)};
+ this._q=this._q.then(job,job)}}
+/* al terminar con fotos todavía en proceso: se apaga la cámara, se esperan y se entregan todas juntas, en orden */
+{const _st=Cam.stop;Cam.stop=function(){if(!this._pend)return _st.apply(this,arguments);const args=arguments;
+ clearInterval(this.timer);try{this.stream&&this.stream.getTracks().forEach(t=>t.stop())}catch(e){}
+ const have=this.batch;this.batch=[];this._late=[];this._sid++;this._closing=true;busy('Terminando de procesar '+this._pend+' foto(s)…');
+ this._q.then(()=>{this._closing=false;busy(false);this.batch=have.concat(this._late);this._late=[];_st.apply(this,args)})}}
+$('#camDone').onclick=async()=>{if(!Cam.batch.length&&!Cam._pend)return toast('Todavía no sacaste fotos');await Nav.back()};
+$('#camUndo').onclick=()=>{if(Cam._jobs.length){const n=Cam._jobs.pop();Cam._cancel.add(n);Cam._pend--;Cam.updUI();toast('Foto borrada');return}if(!Cam.batch.length)return;Cam.batch.pop();Cam.updUI();toast('Foto borrada')};
+{const _u=Cam.updUI;Cam.updUI=function(){const r=_u.apply(this,arguments);const pend=this._pend||0,c=$('#camCount');if(c)c.textContent=this.batch.length+pend;const d=$('#camDone');if(d)d.classList.toggle('working',pend>0);
+ const b=$('#camUndo');if(b)b.hidden=!(this.mode==='batch'&&(this.batch.length||pend));return r}}
+$$('#camera [data-mode]').forEach(b=>b.addEventListener('click',()=>{if(!Cam.replaceId){S.camPrefMode=b.dataset.mode;saveS();camHomeLbl()}}));
+/* la pantalla de inicio abre la cámara en el modo de siempre */
+{const _da=doAction;doAction=function(a){if(a==='cam-single')Cam._fromMain=true;return _da.apply(this,arguments)}}
+function camHomeLbl(){$$('[data-act="cam-single"] small').forEach(s=>s.textContent=S.camPrefMode==='batch'?'Lote':'Individual')}camHomeLbl();
+
+/* tocar la imagen para enfocar ahí (si el teléfono lo permite) */
+(function(){const st=$('#camera .cam-stage');if(!st||$('#camFocus'))return;st.insertAdjacentHTML('beforeend','<div class="cam-focus" id="camFocus" hidden></div>');
+ st.addEventListener('click',async e=>{if(!(e.target.id==='camVideo'||e.target.closest('#camSvg')))return;const tr=Cam.track,v=$('#camVideo');if(!tr||!v.videoWidth)return;
+  const r=v.getBoundingClientRect(),s=Math.max(r.width/v.videoWidth,r.height/v.videoHeight),w=v.videoWidth*s,h=v.videoHeight*s,ox=r.left+(r.width-w)/2,oy=r.top+(r.height-h)/2;
+  const x=Math.max(0,Math.min(1,(e.clientX-ox)/w)),y=Math.max(0,Math.min(1,(e.clientY-oy)/h));const f=$('#camFocus'),sr=st.getBoundingClientRect();
+  f.style.left=(e.clientX-sr.left)+'px';f.style.top=(e.clientY-sr.top)+'px';f.hidden=false;f.classList.remove('go');void f.offsetWidth;f.classList.add('go');clearTimeout(f._t);f._t=setTimeout(()=>{f.hidden=true},1200);
+  let caps={};try{caps=tr.getCapabilities?tr.getCapabilities():{}}catch(_){}const adv={};if(caps.pointsOfInterest!==undefined||'pointsOfInterest' in caps)adv.pointsOfInterest=[{x,y}];
+  const fm=caps.focusMode||[];if(fm.includes('single-shot'))adv.focusMode='single-shot';else if(fm.includes('continuous'))adv.focusMode='continuous';
+  if(caps.exposureMode&&caps.exposureMode.includes('continuous'))adv.exposureMode='continuous';
+  try{if(Object.keys(adv).length)await tr.applyConstraints({advanced:[adv]})}catch(_){}
+  if(adv.focusMode==='single-shot')setTimeout(()=>{if(Cam.track===tr)tr.applyConstraints({advanced:[{focusMode:'continuous'}]}).catch(()=>{})},2500)})})();
+
+/* perfiles en el panel ⚙️ de la cámara */
+{const _r=camPanelRender;camPanelRender=function(){const r=_r.apply(this,arguments);const P=$('#camPanel');if(!P||P.hidden||P.querySelector('.cprof'))return r;
+ P.insertAdjacentHTML('afterbegin','<div class="cph">Perfil de escaneo</div><div class="cprof">'+Object.entries(CAM_PROFILES).map(([k,v])=>'<button data-prof="'+k+'" class="'+(S.camProfile===k?'on':'')+'"><b>'+v.n+(k==='lote'?' ⭐':'')+'</b><small>'+v.d+'</small></button>').join('')+'</div>'
+  +'<div class="cpgrid" style="margin-top:6px">'+'<button class="cptog '+(S.camFast?'on':'')+'" data-cp2="fast"><i data-ico="zap"></i><span>Captura ultrarrápida</span><em>'+(S.camFast?'Sí':'No')+'</em></button></div>');
+ iconize&&iconize(P);return r}}
+$('#camPanel').addEventListener('click',e=>{const p=e.target.closest('[data-prof]');if(p){e.stopImmediatePropagation();camApplyProfile(p.dataset.prof);camPanelRender();return}
+ const f=e.target.closest('[data-cp2="fast"]');if(f){e.stopImmediatePropagation();S.camFast=!S.camFast;S.camProfile='';saveS();toast(S.camFast?'Captura ultrarrápida: usa el cuadro del video':'Captura con la foto HD del sensor');camPanelRender()}},true);
+/* si se toca una opción suelta, el perfil pasa a «personalizado» */
+$('#camPanel').addEventListener('click',e=>{if(e.target.closest('[data-cp],[data-cf],[data-mc]')&&S.camProfile){S.camProfile='';saveS()}},true);
+document.head.insertAdjacentHTML('beforeend','<style id="v58Css">.cprof{display:flex;flex-direction:column;gap:6px;margin-bottom:6px}.cprof button{display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:2px;padding:9px 12px;border-radius:12px;background:#ffffff14;color:#fff;border:1.5px solid transparent}.cprof button.on{border-color:#22d3ee;background:#22d3ee22}.cprof small{color:#cbd5e1;font-size:11.5px}'
+ +'.cam-focus{position:absolute;width:74px;height:74px;margin:-37px 0 0 -37px;border:2px solid #facc15;border-radius:12px;pointer-events:none;z-index:5}.cam-focus.go{animation:camF .5s ease-out}@keyframes camF{from{transform:scale(1.5);opacity:.3}to{transform:none;opacity:1}}.cam-focus[hidden]{display:none}'
+ +'#camDone.working #camCount{animation:camW 1s linear infinite}@keyframes camW{50%{opacity:.45}}</style>');
 </script>
 </body>
 </html>
