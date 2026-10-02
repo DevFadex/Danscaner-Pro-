@@ -864,6 +864,33 @@ await test('Magia Pro con fotocopia clara: el texto tenue queda oscuro y gris (n
   assert.ok(r.texto<120,'el texto tenue quedó claro: '+JSON.stringify(r));assert.ok(r.papel>245,'el papel no quedó blanco: '+JSON.stringify(r));assert.ok(r.azul<.05,'el gris se volvió azul: '+JSON.stringify(r));
 });
 
+await test('Cámara: descarta fotos movidas (repite sola una vez), elige la más nítida de una ráfaga y avisa de reflejos',async pg=>{
+  /* nitidez: una foto movida mide mucho menos que la nítida, aunque cambie el contraste o la resolución */
+  const m=await pg.evaluate(()=>{const doc=(W,H,blur,ink)=>{const c=canvas(W,H),x=c.getContext('2d');x.fillStyle='#f4f1ea';x.fillRect(0,0,W,H);x.fillStyle=ink||'#222';x.font=Math.round(W/34)+'px serif';x.filter=blur?'blur('+blur+'px)':'none';for(let y=H*.15;y<H*.9;y+=H/24)x.fillText('Por la presente se informa al señor juez lo solicitado',W*.08,y);return c};
+    const S=c=>camSharpCenter(c,c.width,c.height);return {nit:S(doc(1080,1920)),hd:S(doc(3000,4000)),mov:S(doc(1080,1920,4)),movHd:S(doc(3000,4000,11)),gris:S(doc(1080,1920,0,'#888'))}});
+  assert.ok(m.mov<m.nit*.5,'no distingue la foto movida '+JSON.stringify(m));assert.ok(m.movHd<m.nit*.5,'no distingue la HD movida '+JSON.stringify(m));
+  assert.ok(m.hd>m.nit*.5,'castiga la foto HD nítida '+JSON.stringify(m));assert.ok(m.gris>m.nit*.6,'depende del contraste '+JSON.stringify(m));
+  /* reflejo: mancha quemada sobre la hoja */
+  const g=await pg.evaluate(()=>{const mk=spot=>{const c=canvas(1080,1920),x=c.getContext('2d');x.fillStyle='#d9d4c8';x.fillRect(0,0,1080,1920);if(spot){const r=x.createRadialGradient(600,800,10,600,800,160);r.addColorStop(0,'#fff');r.addColorStop(.7,'#fff');r.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=r;x.fillRect(400,600,400,400)}x.fillStyle='#222';x.font='30px serif';for(let y=300;y<1700;y+=60)x.fillText('Texto del documento de prueba',150,y);return c};
+    const q=[{x:.1,y:.1},{x:.9,y:.1},{x:.9,y:.9},{x:.1,y:.9}];return [camGlareOf(mk(true),q,1080,1920).glare,camGlareOf(mk(false),q,1080,1920).glare]});
+  assert.deepEqual(g,[true,false],'aviso de reflejo');
+  /* captura HD: si sale movida repite sola y, si sigue movida, la descarta sin sumarla al lote */
+  await pg.evaluate(()=>{S.camFast=false;S.autoCapture=false;Cam.open('batch')});await pg.waitForFunction(()=>Cam.stream&&$('#camVideo').videoWidth>0,null,{timeout:15000});
+  const r=await pg.evaluate(async()=>{const mk=b=>{const c=canvas(1500,2000),x=c.getContext('2d');x.fillStyle='#f4f1ea';x.fillRect(0,0,1500,2000);x.fillStyle='#222';x.font='44px serif';x.filter=b?'blur('+b+'px)':'none';for(let y=300;y<1800;y+=80)x.fillText('Por la presente se informa al señor juez',100,y);return c.toDataURL('image/jpeg',.9)};
+    const nit=camSharpCenter(await loadImg(mk(0)),1500,2000);Cam._sharpHist=[nit,nit,nit];Cam._lastQuad=null;
+    let calls=0;const seq=[8,0];window.hiResPhoto=async()=>{const b=seq[Math.min(calls++,1)];return await (await fetch(mk(b))).blob()};
+    await Cam.shoot();const a=[calls,Cam.batch.length+Cam._pend];
+    calls=0;seq[0]=8;seq[1]=8;await Cam.shoot();return {primera:a,segunda:[calls,Cam.batch.length+Cam._pend]}});
+  assert.deepEqual(r.primera,[2,1],'no repitió la foto movida '+JSON.stringify(r));assert.deepEqual(r.segunda,[2,1],'sumó una foto movida al lote '+JSON.stringify(r));
+  /* ultrarrápido: de la ráfaga se queda con el cuadro más nítido */
+  const best=await pg.evaluate(async()=>{const v=$('#camVideo'),vw=v.videoWidth,vh=v.videoHeight;const c=canvas(vw,vh),x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,vw,vh);x.fillStyle='#000';x.font=Math.round(vw/30)+'px serif';for(let y=vh*.1;y<vh*.95;y+=vh/20)x.fillText('NITIDO NITIDO NITIDO NITIDO NITIDO NITIDO',vw*.05,y);
+    const s0=camSharpCenter(c,vw,vh),b2=canvas(vw,vh);b2.getContext('2d').filter='blur(6px)';b2.getContext('2d').drawImage(c,0,0);const s2=camSharpCenter(b2,vw,vh);
+    const sv=camSharpCenter(v,vw,vh);S.camFast=true;Cam._sharpHist=[];Cam._buf=[{c,s:s0,t:performance.now()},{c:b2,s:s2,t:performance.now()}];const src=await camGrab();const img=await loadImg(src);const got=camSharpCenter(img,vw,vh),top=Math.max(s0,sv);
+    return [got>=top*.5&&got>s2*2,[got,s0,s2,sv].map(z=>+z.toFixed(2))]});
+  assert.ok(best[0],'no eligió el cuadro más nítido de la ráfaga '+best[1]);
+  await pg.evaluate(()=>{Cam.batch=[];Cam._jobs=[];Cam._pend=0;Nav.back()});await W(400);
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();
