@@ -465,3 +465,14 @@ En el editor, **Corregir** permite arreglar una palabra mal escrita de la hoja e
 - **Foto HD movida:** se repite sola una vez. Si sigue movida, se descarta, no entra al lote y vibra con el aviso "Salió movida…". En auto-captura la hoja queda lista para dispararse de nuevo.
 - **Ultrarrápido (mejor de varias tomas):** compara el cuadro actual con los dos últimos guardados mientras la hoja estaba quieta y se queda con el más nítido. No espera nada, así que el disparador sigue siendo instantáneo aunque haya fotos procesándose.
 - **Reflejos:** dentro de la hoja se busca una zona quemada (casi blanca, sin color) más clara que el papel. Si ocupa más del 0,6 %, aparece en vivo el aviso "✨ Reflejo de luz sobre la hoja: inclinala un poco o mové la luz".
+
+## v60 — Lote: hojas al revés, repetidas y revisión antes de guardar
+
+- **Enderezar** (`pageOrient`), sin internet ni OCR:
+  - Si los renglones son verticales, la hoja está de costado.
+  - Para saber si está al revés, en cada renglón se compara la tinta por encima de la zona central de las letras (astas de l, d, t, b, mayúsculas y tildes) con la de abajo (p, q, g, j, y). En latín las astas hacia arriba son mayoría.
+  - Se corrige la rotación de la página y se avisa. Si el texto es todo en mayúsculas o hay pocos renglones, no se adivina.
+- **Hojas repetidas** (`pageSig` y `sigSim`): por cada renglón se registra dónde caen las palabras y los espacios. Se busca un único corrimiento y escala para toda la página.
+  - La misma hoja con otro recorte da ≈ 0,88; otra hoja del mismo formato ≈ 0,67. Desde 0,80 se marca como repetida.
+- **Revisión al tocar "Listo"** (en lote): grilla con avisos (Repetida de la N, Enderezada, Sin bordes), girar o borrar cada hoja, "Seguir sacando" o "Guardar N páginas".
+- Las opciones "Enderezar hojas al revés" y "Revisar el lote al terminar" se pueden apagar en ⚙️.

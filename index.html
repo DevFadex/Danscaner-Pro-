@@ -3452,7 +3452,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 4.5',APP_VER='59';
+const NEXA_VER='Nexa 4.5',APP_VER='60';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3570,7 +3570,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='59 · 02/10/2026';
+const BUILD='60 · 02/10/2026';
 /* Versión que ven los usuarios: se cambia a mano solo cuando se decide publicar una versión nueva para todos.
    El administrador ve la versión interna (BUILD) con cada cambio. */
 const PUBLIC_VER='1.2';
@@ -5111,7 +5111,7 @@ Cam._q=Promise.resolve();Cam._pend=0;Cam._sid=0;Cam._late=[];Cam._jobs=[];Cam._c
  const hint=this._shotHint;this._shotHint=null;const kind=this.kind,sid=this._sid;let src;
  try{src=await camGrab()}catch(e){this.busy=false;if(e&&e.blur){this._shotQ=null;this._stable=0;navigator.vibrate&&navigator.vibrate([30,60,30]);toast('📸 '+e.message,2800);return}toast('Error al capturar: '+e.message);return}
  this.busy=false;navigator.vibrate&&navigator.vibrate(40);const n=++this._seq;this._jobs.push(n);this._pend++;this.updUI();
- const job=async()=>{let pages=[];try{if(!this._cancel.has(n)){const p=await makePage(src,kind==='board'?{filter:'pizarra',hint}:{hint});if(p){if(kind==='cert'&&(!p.paper||p.paper==='a5'))p.paper='cert';pages=kind==='book'?await splitBook(p):[p]}}}
+ const job=async()=>{let pages=[];try{if(!this._cancel.has(n)){const p=await makePage(src,kind==='board'?{filter:'pizarra',hint}:{hint});if(p){if(kind==='cert'&&(!p.paper||p.paper==='a5'))p.paper='cert';pages=kind==='book'?await splitBook(p):[p];if(!this._cancel.has(n)&&typeof camPostProcess==='function')await camPostProcess(pages,kind)}}}
   catch(e){toast('No se pudo procesar una foto: '+e.message,4000)}
   finally{if(typeof src==='string'&&src.startsWith('blob:')){URL.revokeObjectURL(src);_imgCache.delete(src)}}
   if(this._cancel.has(n)){this._cancel.delete(n);pages=[]}else{const i=this._jobs.indexOf(n);if(i>=0)this._jobs.splice(i,1);this._pend--}
@@ -5200,6 +5200,60 @@ function camAnalyze(){const v=$('#camVideo');if(!v||!v.videoWidth||Cam.busy||!Na
   if(k===0){toast('📸 Salió movida: repito la foto…',1400);await sleep(120)}}
  throw camBlurErr()}}
 document.head.insertAdjacentHTML('beforeend','<style id="v59Css">.cam-glare{position:absolute;left:50%;top:64px;transform:translateX(-50%);z-index:4;max-width:88%;padding:7px 12px;border-radius:14px;background:#facc15e6;color:#111;font-size:13px;font-weight:700;text-align:center}.cam-glare[hidden]{display:none}</style>');
+
+/* v60 · lote: hojas repetidas, páginas al revés o de costado y revisión antes de guardar */
+function camGray(c,maxW){const s=Math.min(1,maxW/Math.max(c.width,c.height)),W=Math.max(8,Math.round(c.width*s)),H=Math.max(8,Math.round(c.height*s));const t=canvas(W,H),x=t.getContext('2d',{willReadFrequently:true});x.drawImage(c,0,0,W,H);
+ const d=x.getImageData(0,0,W,H).data,g=new Uint8Array(W*H);for(let i=0,j=0;i<g.length;i++,j+=4)g[i]=(d[j]*77+d[j+1]*150+d[j+2]*29)>>8;return {g,W,H}}
+/* orientación del texto: renglones horizontales o verticales y, en latín, más astas hacia arriba (l, d, t, b, mayúsculas, tildes) que hacia abajo (p, q, g, j, y) */
+function pageOrient(c){let {g,W,H}=camGray(c,1000);const hist=new Uint32Array(256);for(const v of g)hist[v]++;let th=0;{const n=g.length;let sum=0;for(let v=0;v<256;v++)sum+=v*hist[v];let sb=0,wb=0,best=0;for(let v=0;v<256;v++){wb+=hist[v];if(!wb)continue;const wf=n-wb;if(!wf)break;sb+=v*hist[v];const mb=sb/wb,mf=(sum-sb)/wf,b=wb*wf*(mb-mf)*(mb-mf);if(b>best){best=b;th=v}}}
+ let ink=new Uint8Array(W*H),nk=0;for(let i=0;i<g.length;i++)if(g[i]<th&&g[i]<200){ink[i]=1;nk++}const fr=nk/(W*H);if(fr<.004||fr>.3)return {rot:0,why:'poca tinta'};
+ const prof=(I,w,h,rows)=>{const p=new Float32Array(rows?h:w);for(let y=0;y<h;y++)for(let x=0;x<w;x++)if(I[y*w+x])p[rows?y:x]++;return p};
+ const nv=p=>{let m=0;for(const v of p)m+=v;m/=p.length;let s=0;for(const v of p)s+=(v-m)*(v-m);return m>0?s/p.length/(m*m):0};
+ let rot=0;const rv=nv(prof(ink,W,H,true)),cv=nv(prof(ink,W,H,false));
+ if(cv>rv*1.35){/* renglones verticales: se gira 90° y se sigue */const I2=new Uint8Array(W*H);for(let y=0;y<H;y++)for(let x=0;x<W;x++)I2[x*H+(H-1-y)]=ink[y*W+x];ink=I2;const t=W;W=H;H=t;rot=90}else if(rv<cv*1.1)return {rot:0,why:'sin renglones claros'};
+ const P=prof(ink,W,H,true);let mx=0;for(const v of P)if(v>mx)mx=v;const lt=Math.max(2,mx*.08);let asc=0,desc=0,lines=0;
+ for(let y=0;y<H;){if(P[y]<lt){y++;continue}let y1=y;while(y1<H&&P[y1]>=lt)y1++;const h=y1-y;if(h>=6){let m=0;for(let k=y;k<y1;k++)if(P[k]>m)m=P[k];let c0=y,c1=y1-1;while(c0<y1&&P[c0]<m*.45)c0++;while(c1>y&&P[c1]<m*.45)c1--;
+   if(c1>c0){for(let k=y;k<c0;k++)asc+=P[k];for(let k=c1+1;k<y1;k++)desc+=P[k];lines++}}y=y1}
+ if(lines<3||asc+desc<20)return {rot:0,why:'pocos renglones',lines};const sc=(asc-desc)/(asc+desc);
+ if(sc<-.12)rot=(rot+180)%360;else if(sc<.12)return {rot:rot===90?0:0,why:'dudoso',sc,lines};return {rot,sc,lines}}
+/* firma de la hoja para detectar repetidas: en cada renglón, dónde caen las palabras y los espacios.
+   Dos textos distintos con el mismo formato tienen renglones en el mismo lugar, pero no las mismas palabras. */
+function pageSig(c){const {g,W,H}=camGray(c,800);const hist=new Uint32Array(256);for(const v of g)hist[v]++;let th=128;{const n=g.length;let sum=0;for(let v=0;v<256;v++)sum+=v*hist[v];let sb=0,wb=0,best=0;for(let v=0;v<256;v++){wb+=hist[v];if(!wb)continue;const wf=n-wb;if(!wf)break;sb+=v*hist[v];const mb=sb/wb,mf=(sum-sb)/wf,b=wb*wf*(mb-mf)*(mb-mf);if(b>best){best=b;th=v}}}
+ const row=new Float32Array(H);for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(g[y*W+x]<th)row[y]++;let mx=0;for(const v of row)if(v>mx)mx=v;const lt=Math.max(2,mx*.06),lines=[];
+ for(let y=0;y<H;){if(row[y]<lt){y++;continue}let y1=y;while(y1<H&&row[y1]>=lt)y1++;if(y1-y>=4){const p=new Float32Array(W);for(let k=y;k<y1;k++)for(let x=0;x<W;x++)if(g[k*W+x]<th)p[x]++;
+   const q=new Float32Array(W);for(let x=0;x<W;x++){let s=0,n=0;for(let o=-1;o<=1;o++){const z=x+o;if(z>=0&&z<W){s+=p[z];n++}}q[x]=s/n}let m=0;for(const v of q)m+=v;m/=W;let sd=0;for(let x=0;x<W;x++){q[x]-=m;sd+=q[x]*q[x]}sd=Math.sqrt(sd/W);if(sd>.05){for(let x=0;x<W;x++)q[x]/=sd;lines.push(q)}}y=y1}
+ return {W,lines}}
+function sigSim(A,B){if(!A||!B||A.lines.length<3||B.lines.length<3||A.W!==B.W)return 0;const W=A.W,nA=A.lines.length,nB=B.lines.length;let best=0;
+ /* la misma hoja fotografiada dos veces se corre y escala igual en todos los renglones: se busca un solo corrimiento para toda la página */
+ for(let o=-2;o<=2;o++){const pr=[];for(let i=0;i<nA;i++){const j=i+o;if(j>=0&&j<nB)pr.push([A.lines[i],B.lines[j]])}if(pr.length<3||pr.length<Math.min(nA,nB)*.6)continue;
+  for(const k of [.97,.985,1,1.015,1.03])for(let dx=-30;dx<=30;dx+=2){let tot=0;for(const [a,b] of pr){let s=0,n=0;for(let x=0;x<W;x+=2){const z=Math.round((x-W/2)*k+W/2)+dx;if(z<0||z>=W)continue;s+=a[x]*b[z];n++}tot+=n?s/n:0}const r=tot/pr.length;if(r>best)best=r}}return best}
+const CAM_DUP=.8;Cam._flags=new WeakMap();Cam._sigs=[];
+/* después de procesar cada foto del lote: enderezar y comparar con las anteriores */
+async function camPostProcess(pages,kind){for(const p of pages){const f={};try{let c=await renderPage(p,{maxSide:1000,noOverlays:true});
+  if(S.camAutoRot!==false&&kind!=='board'){const o=pageOrient(c);if(o.rot){p.rot=((p.rot||0)+o.rot)%360;f.rot=o.rot;c=await renderPage(p,{maxSide:1000,noOverlays:true});await makeThumb(p)}}
+  const sig=pageSig(c);let bs=0,bp=null;for(const e of Cam._sigs){const s=sigSim(sig,e.sig);if(s>bs){bs=s;bp=e.p}}if(bp&&bs>=CAM_DUP){f.dup=bp;f.dupSim=bs}Cam._sigs.push({p,sig});if(Cam._sigs.length>80)Cam._sigs.shift();c.width=c.height=1}catch(e){console.warn('revisión',e)}
+ if(!p.quad)f.nob=true;Cam._flags.set(p,f);
+ if(f.dup)toast('⚠️ Esta hoja parece repetida: la vas a ver marcada al terminar',3200);else if(f.rot)toast('↻ Hoja enderezada ('+(f.rot===180?'estaba al revés':'estaba de costado')+')',2200)}}
+{const _o=Cam.open;Cam.open=function(){if(!this.replaceId)this._sigs=[];return _o.apply(this,arguments)}}
+
+/* revisión del lote al tocar «Listo» */
+function camReviewSheet(){const pages=Cam.batch,del=new Set();const lbl=p=>{const f=Cam._flags.get(p)||{},t=[];if(f.dup){const k=pages.indexOf(f.dup);t.push('<span class="rv-w">⚠️ Repetida'+(k>=0?' de la '+(k+1):'')+'</span>')}if(f.rot)t.push('<span class="rv-i">↻ Enderezada</span>');if(f.nob)t.push('<span class="rv-w">✂️ Sin bordes</span>');return t.join('')};
+ const nw=()=>pages.filter(p=>{const f=Cam._flags.get(p)||{};return f.dup||f.nob}).length;
+ const draw=()=>{b.innerHTML='<p class="muted" style="margin-top:0">'+(nw()?'<b>'+nw()+' hoja(s) con aviso.</b> ':'')+'Tocá 🗑 en las que no quieras guardar.</p><div class="rv-grid">'+pages.map((p,i)=>'<div class="rv-pg'+(del.has(i)?' off':'')+'" data-i="'+i+'"><img src="'+(p.thumb||'')+'" alt=""><b>'+(i+1)+'</b><div class="rv-f">'+lbl(p)+'</div><div class="rv-a"><button data-rr="'+i+'" title="Girar">↻</button><button data-rd="'+i+'" title="Borrar">🗑</button></div></div>').join('')+'</div>'
+  +'<div class="row" style="margin-top:12px"><button class="btn block" id="rvGoOn">📷 Seguir sacando</button><button class="btn pri block" id="rvSave">✓ Guardar '+(pages.length-del.size)+' página(s)</button></div>'};
+ const b=openSheet('Revisar el lote ('+pages.length+')','');draw();
+ b.onclick=async e=>{const d=e.target.closest('[data-rd]');if(d){const i=+d.dataset.rd;del.has(i)?del.delete(i):del.add(i);return draw()}
+  const r=e.target.closest('[data-rr]');if(r){const p=pages[+r.dataset.rr];p.rot=((p.rot||0)+90)%360;await makeThumb(p);return draw()}
+  if(e.target.closest('#rvGoOn'))return Nav.back();
+  if(e.target.closest('#rvSave')){if(del.size>=pages.length&&!confirm('¿Descartar todas las fotos?'))return;Cam.batch=pages.filter((_,i)=>!del.has(i));await Nav.back();await Nav.back()}}}
+$('#camDone').onclick=async()=>{if(!Cam.batch.length&&!Cam._pend)return toast('Todavía no sacaste fotos');
+ if(S.camReview===false||Cam.mode!=='batch')return Nav.back();
+ if(Cam._pend){busy('Terminando de procesar '+Cam._pend+' foto(s)…');try{await Cam._q}finally{busy(false)}}
+ if(!Cam.batch.length)return toast('No quedó ninguna foto');camReviewSheet()};
+/* opciones en el panel ⚙️ */
+{const _r=camPanelRender;camPanelRender=function(){const r=_r.apply(this,arguments);const P=$('#camPanel');if(!P||P.hidden||P.querySelector('[data-cp3]'))return r;const g=P.querySelector('.cpgrid');if(g)g.insertAdjacentHTML('beforeend','<button class="cptog '+(S.camAutoRot!==false?'on':'')+'" data-cp3="rot"><i data-ico="rotr"></i><span>Enderezar hojas al revés</span><em>'+(S.camAutoRot!==false?'Sí':'No')+'</em></button><button class="cptog '+(S.camReview!==false?'on':'')+'" data-cp3="rev"><i data-ico="check"></i><span>Revisar el lote al terminar</span><em>'+(S.camReview!==false?'Sí':'No')+'</em></button>');iconize&&iconize(P);return r}}
+$('#camPanel').addEventListener('click',e=>{const t=e.target.closest('[data-cp3]');if(!t)return;e.stopImmediatePropagation();if(t.dataset.cp3==='rot')S.camAutoRot=S.camAutoRot===false;else S.camReview=S.camReview===false;saveS();camPanelRender()},true);
+document.head.insertAdjacentHTML('beforeend','<style id="v60Css">.rv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}.rv-pg{position:relative;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:6px;display:flex;flex-direction:column;gap:4px}.rv-pg img{width:100%;aspect-ratio:3/4;object-fit:contain;background:var(--stage,#eee);border-radius:8px}.rv-pg>b{position:absolute;top:10px;left:12px;background:#000a;color:#fff;border-radius:10px;padding:0 7px;font-size:12px}.rv-pg.off{opacity:.35}.rv-pg.off img{filter:grayscale(1)}.rv-f{display:flex;flex-wrap:wrap;gap:3px;min-height:18px}.rv-f span{font-size:10.5px;font-weight:700;border-radius:8px;padding:1px 6px}.rv-w{background:#fef3c7;color:#92400e}.rv-i{background:#e0f2fe;color:#075985}.rv-a{display:flex;gap:4px}.rv-a button{flex:1;padding:6px 0;border-radius:8px;background:var(--bg3,#eee)}</style>');
 </script>
 </body>
 </html>

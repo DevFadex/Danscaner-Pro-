@@ -891,6 +891,31 @@ await test('Cámara: descarta fotos movidas (repite sola una vez), elige la más
   await pg.evaluate(()=>{Cam.batch=[];Cam._jobs=[];Cam._pend=0;Nav.back()});await W(400);
 });
 
+await test('Lote: endereza hojas al revés o de costado, marca hojas repetidas y revisión antes de guardar',async pg=>{
+  await pg.evaluate(()=>{const W='el la de que interno juez penal unidad expediente oficio fecha ley artículo audiencia solicita informe señor Tucumán ejecución dispuesto conforme particular saludo atentamente provincial nominación'.split(' ');
+    let seed=1;const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647};
+    window._page=s=>{seed=s;const c=canvas(1240,1754),x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,1240,1754);x.fillStyle='#111';x.font='bold 34px Arial';x.fillText('JUZGADO DE EJECUCION PENAL',300,120);x.font='26px Times New Roman';for(let y=220;y<1600;y+=46){let t='';while(t.length<70)t+=W[Math.floor(rnd()*W.length)]+' ';x.fillText(t,100,y)}return c};
+    window._rot=(c,d)=>rotateCanvas(c,d);window._shot=(c,dx,dy,k)=>{const r=canvas(1240,1754),x=r.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,1240,1754);x.drawImage(c,dx,dy,1240*k,1754*k);return r}});
+  /* orientación: las cuatro posiciones; en mayúsculas de costado no adivina */
+  const o=await pg.evaluate(()=>[0,90,180,270].map(d=>pageOrient(_rot(_page(5),d)).rot));assert.deepEqual(o,[0,270,180,90]);
+  /* una foto de costado y otra al revés quedan derechas; la repetida se marca, la distinta no */
+  const r=await pg.evaluate(async()=>{Cam._sigs=[];const mk=async c=>await makePage(c.toDataURL('image/jpeg',.9),{auto:false,filter:'original'});
+    const a=await mk(_rot(_page(7),90)),b=await mk(_rot(_page(99),180)),a2=await mk(_shot(_page(7),-20,15,1.02)),c=await mk(_page(1234));
+    await camPostProcess([a],'doc');await camPostProcess([b],'doc');await camPostProcess([a2],'doc');await camPostProcess([c],'doc');
+    const up=async p=>pageOrient(await renderPage(p,{maxSide:1000})).sc>0;window._rv=[a,b,a2,c];
+    return {rotA:Cam._flags.get(a).rot,rotB:Cam._flags.get(b).rot,upA:await up(a),upB:await up(b),dup:Cam._flags.get(a2).dup===a,noDupC:!Cam._flags.get(c).dup,noDupB:!Cam._flags.get(b).dup}});
+  assert.deepEqual(r,{rotA:270,rotB:180,upA:true,upB:true,dup:true,noDupC:true,noDupB:true});
+  /* revisión al tocar «Listo»: avisos, borrar una y guardar el resto */
+  await pg.evaluate(()=>{S.autoCapture=false;Cam.open('batch')});await pg.waitForFunction(()=>Cam.stream&&$('#camVideo').videoWidth>0,null,{timeout:15000});
+  await pg.evaluate(()=>{Cam.batch=_rv.slice();Cam.updUI()});await pg.click('#camDone');await pg.waitForSelector('#sheetBody .rv-grid');
+  assert.equal(await pg.$$eval('#sheetBody .rv-pg',x=>x.length),4);assert.match(await pg.textContent('#sheetBody .rv-pg[data-i="2"]'),/Repetida de la 1/);
+  assert.match(await pg.textContent('#sheetBody .rv-pg[data-i="0"]'),/Enderezada/);
+  await pg.click('#sheetBody [data-rd="2"]');assert.match(await pg.textContent('#rvSave'),/Guardar 3/);
+  await pg.click('#rvSave');await pg.waitForFunction(()=>!Nav.isOpen('camera')&&DOC&&DOC.pages.length===3,null,{timeout:10000});
+  assert.deepEqual(await pg.evaluate(()=>DOC.pages.map(p=>_rv.indexOf(p))),[0,1,3]);
+  await pg.evaluate(()=>{while(Nav.stack.length)Nav._pop()});
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();
