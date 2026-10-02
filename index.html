@@ -3452,7 +3452,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 4.5',APP_VER='58';
+const NEXA_VER='Nexa 4.5',APP_VER='59';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3570,7 +3570,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='58 · 02/10/2026';
+const BUILD='59 · 02/10/2026';
 /* Versión que ven los usuarios: se cambia a mano solo cuando se decide publicar una versión nueva para todos.
    El administrador ve la versión interna (BUILD) con cada cambio. */
 const PUBLIC_VER='1.2';
@@ -5109,7 +5109,7 @@ Cam._q=Promise.resolve();Cam._pend=0;Cam._sid=0;Cam._late=[];Cam._jobs=[];Cam._c
  if(this.mode!=='batch'||this.replaceId||!this.stream)return _sh.apply(this,arguments);
  if(this.busy)return;this.busy=true;const fl=$('#camera .flash');fl.classList.remove('go');void fl.offsetWidth;fl.classList.add('go');$('#camShot').classList.remove('arming');
  const hint=this._shotHint;this._shotHint=null;const kind=this.kind,sid=this._sid;let src;
- try{src=await camGrab()}catch(e){this.busy=false;toast('Error al capturar: '+e.message);return}
+ try{src=await camGrab()}catch(e){this.busy=false;if(e&&e.blur){this._shotQ=null;this._stable=0;navigator.vibrate&&navigator.vibrate([30,60,30]);toast('📸 '+e.message,2800);return}toast('Error al capturar: '+e.message);return}
  this.busy=false;navigator.vibrate&&navigator.vibrate(40);const n=++this._seq;this._jobs.push(n);this._pend++;this.updUI();
  const job=async()=>{let pages=[];try{if(!this._cancel.has(n)){const p=await makePage(src,kind==='board'?{filter:'pizarra',hint}:{hint});if(p){if(kind==='cert'&&(!p.paper||p.paper==='a5'))p.paper='cert';pages=kind==='book'?await splitBook(p):[p]}}}
   catch(e){toast('No se pudo procesar una foto: '+e.message,4000)}
@@ -5156,6 +5156,50 @@ $('#camPanel').addEventListener('click',e=>{if(e.target.closest('[data-cp],[data
 document.head.insertAdjacentHTML('beforeend','<style id="v58Css">.cprof{display:flex;flex-direction:column;gap:6px;margin-bottom:6px}.cprof button{display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:2px;padding:9px 12px;border-radius:12px;background:#ffffff14;color:#fff;border:1.5px solid transparent}.cprof button.on{border-color:#22d3ee;background:#22d3ee22}.cprof small{color:#cbd5e1;font-size:11.5px}'
  +'.cam-focus{position:absolute;width:74px;height:74px;margin:-37px 0 0 -37px;border:2px solid #facc15;border-radius:12px;pointer-events:none;z-index:5}.cam-focus.go{animation:camF .5s ease-out}@keyframes camF{from{transform:scale(1.5);opacity:.3}to{transform:none;opacity:1}}.cam-focus[hidden]{display:none}'
  +'#camDone.working #camCount{animation:camW 1s linear infinite}@keyframes camW{50%{opacity:.45}}</style>');
+
+/* v59 · fotos nítidas y sin reflejos en lote:
+   - nitidez = energía del laplaciano / varianza (no depende del contraste); se compara con la nitidez del video mientras la hoja estaba quieta;
+   - ultrarrápido: ráfaga de 3 cuadros y se queda con el más nítido; HD: si salió movida repite sola una vez, y si sigue movida la descarta;
+   - reflejo de luz sobre la hoja: aviso en vivo antes de disparar. */
+const CAM_BLUR_K=.5;
+function camSharpOf(src,sx,sy,sw,sh){if(!(sw>8&&sh>8))return 0;const W=400,H=Math.max(40,Math.min(600,Math.round(400*sh/sw)));const c=canvas(W,H),x=c.getContext('2d',{willReadFrequently:true});x.drawImage(src,sx,sy,sw,sh,0,0,W,H);
+ const d=x.getImageData(0,0,W,H).data,g=new Float32Array(W*H);let m=0;for(let i=0,j=0;i<g.length;i++,j+=4){g[i]=d[j]*.299+d[j+1]*.587+d[j+2]*.114;m+=g[i]}m/=g.length;
+ let v=0;for(let i=0;i<g.length;i++)v+=(g[i]-m)*(g[i]-m);v/=g.length;let s=0,n=0;for(let y=1;y<H-1;y++)for(let xx=1;xx<W-1;xx++){const i=y*W+xx,l=4*g[i]-g[i-1]-g[i+1]-g[i-W]-g[i+W];s+=l*l;n++}return v>4?(s/n)/v:0}
+/* centro de la imagen que corresponde al centro del video (la foto HD puede tener otra proporción) */
+function camSharpCenter(src,W,H){const v=$('#camVideo'),vw=(v&&v.videoWidth)||W,vh=(v&&v.videoHeight)||H;
+ const r=camMapHint({q:[{x:.2,y:.2},{x:.8,y:.2},{x:.8,y:.8},{x:.2,y:.8}],vw,vh},W,H)||[{x:.2,y:.2},{x:.8,y:.2},{x:.8,y:.8},{x:.2,y:.8}];
+ return camSharpOf(src,r[0].x*W,r[0].y*H,(r[2].x-r[0].x)*W,(r[2].y-r[0].y)*H)}
+function camSharpRef(){const h=(Cam._sharpHist||[]).slice().sort((a,b)=>a-b);return h.length>=3?h[h.length>>1]:null}
+function camBlurErr(){const e=new Error('Salió movida o desenfocada: quedate quieto y volvé a disparar');e.blur=true;return e}
+/* reflejo: zona quemada, más clara que el papel de alrededor, dentro de la hoja */
+function camGlareOf(src,q,SW,SH){const xs=q.map(p=>p.x),ys=q.map(p=>p.y);let x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);const dx=(x1-x0)*.08,dy=(y1-y0)*.08;x0+=dx;x1-=dx;y0+=dy;y1-=dy;
+ if(x1-x0<.05||y1-y0<.05)return {glare:false,frac:0,paper:0};const W=160,H=Math.max(40,Math.min(320,Math.round(160*((y1-y0)*SH)/((x1-x0)*SW))));const c=canvas(W,H),x=c.getContext('2d',{willReadFrequently:true});
+ x.drawImage(src,x0*SW,y0*SH,(x1-x0)*SW,(y1-y0)*SH,0,0,W,H);const d=x.getImageData(0,0,W,H).data,n=W*H,Hs=new Uint32Array(256),L=new Uint8Array(n);
+ for(let i=0,j=0;i<n;i++,j+=4){const l=(d[j]*77+d[j+1]*150+d[j+2]*29)>>8;L[i]=l;Hs[l]++}let paper=0,a=0;for(let v=0;v<256;v++){a+=Hs[v];if(a>=n*.6){paper=v;break}}
+ let hot=0;for(let i=0,j=0;i<n;i++,j+=4){if(L[i]>=246&&L[i]>=paper+16&&Math.max(d[j],d[j+1],d[j+2])-Math.min(d[j],d[j+1],d[j+2])<28)hot++}const frac=hot/n;return {glare:frac>.006&&paper<236,frac,paper}}
+
+/* análisis en vivo: nitidez de referencia mientras la hoja está quieta y aviso de reflejo */
+(function(){const st=$('#camera .cam-stage');if(st&&!$('#camGlare'))st.insertAdjacentHTML('beforeend','<div class="cam-glare" id="camGlare" hidden>✨ Reflejo de luz sobre la hoja: inclinala un poco o mové la luz</div>')})();
+function camAnalyze(){const v=$('#camVideo');if(!v||!v.videoWidth||Cam.busy||!Nav.isOpen('camera'))return;Cam._tick=(Cam._tick||0)+1;const vw=v.videoWidth,vh=v.videoHeight,q=Cam._lastQuad;
+ if(q&&Cam._stable>=1&&Cam._tick%2===0){const s=camSharpOf(v,vw*.2,vh*.2,vw*.6,vh*.6);if(s>0){(Cam._sharpHist=Cam._sharpHist||[]).push(s);if(Cam._sharpHist.length>10)Cam._sharpHist.shift()}}
+ if(S.camFast&&q&&Cam._stable>=1&&Cam._tick%2===0){Cam._buf=Cam._buf||[];Cam._bi=((Cam._bi||0)+1)%2;let b=Cam._buf[Cam._bi];if(!b||b.c.width!==vw||b.c.height!==vh)b=Cam._buf[Cam._bi]={c:canvas(vw,vh)};
+  b.c.getContext('2d').drawImage(v,0,0);b.s=camSharpCenter(b.c,vw,vh);b.t=performance.now()}
+ if(!q)Cam._glare=false;else if(Cam._tick%2===1)Cam._glare=camGlareOf(v,q,vw,vh).glare;const el=$('#camGlare');if(el)el.hidden=!Cam._glare}
+{const _d=Cam.detect;Cam.detect=function(){const r=_d.apply(this,arguments);try{camAnalyze()}catch(e){}return r}}
+{const _o=Cam.open;Cam.open=function(){this._sharpHist=[];this._buf=[];this._glare=false;const g=$('#camGlare');if(g)g.hidden=true;return _o.apply(this,arguments)}}
+
+/* captura: la más nítida de una ráfaga (ultrarrápido) o la foto HD verificada, con una segunda toma automática */
+{const _g=camGrab;camGrab=async function(){const v=$('#camVideo'),ref=camSharpRef();
+ if(S.camFast||!(S.hd&&'ImageCapture' in window&&Cam.track)){if(!v.videoWidth)throw new Error('La cámara no está lista');const fr=[];
+  const c=canvas(v.videoWidth,v.videoHeight);c.getContext('2d').drawImage(v,0,0);fr.push({c,s:camSharpCenter(c,c.width,c.height)});
+  /* ráfaga sin esperas: además del cuadro actual, los dos últimos que se guardaron mientras la hoja estaba quieta */
+  const now=performance.now();for(const b of Cam._buf||[])if(b&&b.c&&now-b.t<900&&b.c.width===c.width&&b.c.height===c.height)fr.push(b);
+  fr.sort((a,b)=>b.s-a.s);Cam._lastSharp={s:fr[0].s,ref};if(ref&&fr[0].s<ref*CAM_BLUR_K)throw camBlurErr();return fr[0].c.toDataURL('image/jpeg',.95)}
+ for(let k=0;k<2;k++){const src=await _g();let s=0;try{const img=await loadImg(src);s=camSharpCenter(img,img.naturalWidth,img.naturalHeight)}catch(e){return src}
+  Cam._lastSharp={s,ref};if(!ref||s>=ref*CAM_BLUR_K)return src;if(typeof src==='string'&&src.startsWith('blob:')){URL.revokeObjectURL(src);_imgCache.delete(src)}
+  if(k===0){toast('📸 Salió movida: repito la foto…',1400);await sleep(120)}}
+ throw camBlurErr()}}
+document.head.insertAdjacentHTML('beforeend','<style id="v59Css">.cam-glare{position:absolute;left:50%;top:64px;transform:translateX(-50%);z-index:4;max-width:88%;padding:7px 12px;border-radius:14px;background:#facc15e6;color:#111;font-size:13px;font-weight:700;text-align:center}.cam-glare[hidden]{display:none}</style>');
 </script>
 </body>
 </html>

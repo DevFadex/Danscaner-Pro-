@@ -54,3 +54,7 @@ En Android, con la app instalada en la pantalla de inicio: en WhatsApp, la galer
 ## Escanear en lote rápido
 
 La cámara viene con el perfil **Lote automático**: apoyá la hoja, esperá el marco verde y la foto sale sola; poné la siguiente hoja y repetí. No hace falta esperar a que se procese: el contador muestra las que se están terminando. Si una salió mal, tocá **Borrar última**. Tocá la imagen para enfocar en un punto. En ⚙️ → **Perfil de escaneo** podés elegir Lote manual (vos disparás), Lote ultrarrápido (instantáneo, un poco menos nítido) o Una sola hoja. Con fotocopias claras usá **Magia Pro**: oscurece el texto tenue sin lavarlo.
+
+## Fotos movidas y reflejos
+
+La cámara revisa cada foto: si salió movida o desenfocada, repite sola una vez y, si sigue mal, la descarta y avisa (vibra) para que la saques de nuevo. Si aparece el aviso amarillo de **reflejo**, inclina un poco la hoja o el teléfono, o alejate de la luz directa: el brillo borra el texto.

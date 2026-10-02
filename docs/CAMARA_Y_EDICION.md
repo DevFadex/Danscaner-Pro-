@@ -456,3 +456,12 @@ En el editor, **Corregir** permite arreglar una palabra mal escrita de la hoja e
   - El punto negro tenía un tope fijo de 150, así que la tinta más clara que eso salía casi blanca. Ahora sigue a la tinta real, medida contra el papel y en el centro de la hoja, para que un borde de mesa no la engañe.
   - En hojas de tinta tenue se descuenta el tinte que el papel amarillento le da al gris, que antes se pintaba de azul como si fuera birome.
   - Las hojas con texto oscuro y birome quedan igual que antes.
+
+## v59 — Fotos nítidas y sin reflejos
+
+- **Nitidez medible:** `camSharpOf` calcula la energía del laplaciano dividida por la varianza. Así no depende del contraste ni del ruido: nítida ≈ 4, apenas movida ≈ 0,14.
+  - Mientras la hoja está quieta se guarda la nitidez del video como referencia.
+  - Una foto vale si mide al menos la mitad de esa referencia (`CAM_BLUR_K`). La comparación se hace sobre la zona central equivalente, aunque la foto HD tenga otra proporción.
+- **Foto HD movida:** se repite sola una vez. Si sigue movida, se descarta, no entra al lote y vibra con el aviso "Salió movida…". En auto-captura la hoja queda lista para dispararse de nuevo.
+- **Ultrarrápido (mejor de varias tomas):** compara el cuadro actual con los dos últimos guardados mientras la hoja estaba quieta y se queda con el más nítido. No espera nada, así que el disparador sigue siendo instantáneo aunque haya fotos procesándose.
+- **Reflejos:** dentro de la hoja se busca una zona quemada (casi blanca, sin color) más clara que el papel. Si ocupa más del 0,6 %, aparece en vivo el aviso "✨ Reflejo de luz sobre la hoja: inclinala un poco o mové la luz".
