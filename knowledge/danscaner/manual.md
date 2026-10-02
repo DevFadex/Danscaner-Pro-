@@ -58,3 +58,7 @@ La cámara viene con el perfil **Lote automático**: apoyá la hoja, esperá el 
 ## Fotos movidas y reflejos
 
 La cámara revisa cada foto: si salió movida o desenfocada, repite sola una vez y, si sigue mal, la descarta y avisa (vibra) para que la saques de nuevo. Si aparece el aviso amarillo de **reflejo**, inclina un poco la hoja o el teléfono, o alejate de la luz directa: el brillo borra el texto.
+
+## Revisión del lote
+
+Al tocar **Listo** en lote se muestra una grilla con todas las hojas antes de guardar. Las hojas que estaban al revés o de costado ya aparecen enderezadas (marcadas "Enderezada"); las que parecen repetidas dicen "Repetida de la N". Tocá 🗑 para descartar una, ↻ para girarla, o **Seguir sacando** si te faltó alguna. Ambas funciones se pueden apagar en ⚙️ de la cámara.
