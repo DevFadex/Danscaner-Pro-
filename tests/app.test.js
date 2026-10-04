@@ -358,14 +358,14 @@ await test('Nexa IA solo para el administrador mientras está en desarrollo',asy
   const tool=await pg.evaluate(()=>{const i=TOOLS.findIndex(t=>t.name==='Asistente IA');const r=document.querySelector('#toolsGrid [data-tool="'+i+'"]');return !r||r.hidden});assert.ok(tool,'un usuario ve el Asistente IA en Herramientas');
   await pg.evaluate(()=>go('nexa'));await W(200);assert.equal(await pg.isVisible('#v-nexa'),false,'un usuario pudo abrir Nexa');
   await pg.click('#navSettings');await W(500);assert.equal(await pg.isVisible('#sAI'),false,'un usuario ve la configuración de Nexa');
-  await pg.evaluate(()=>Nav.back());await W(400);
+  await pg.evaluate(()=>{Nav.back()});await W(400);
   await pg.evaluate(()=>{SB.profile={id:'a',role:'admin',status:'activo'};applyPerms()});await W(200);
   assert.equal(await pg.isVisible('#btnNexa'),true,'el administrador no ve Nexa');await pg.click('#btnNexa');await W(300);assert.equal(await pg.isVisible('#v-nexa'),true);
 });
 
 await test('Editar PDF: entrar a una página, corregir una palabra y zoom para encuadrar',async pg=>{
   const b64=await pg.evaluate(async()=>{await loadLib('pdflib');const d=await PDFLib.PDFDocument.create(),f=await d.embedFont(PDFLib.StandardFonts.Helvetica);for(const t of ['PAGINA UNO','ACTA DE LIVERTAD']){const p=d.addPage([400,300]);p.drawText(t,{x:40,y:200,size:24,font:f})}const u=await d.save();let s='';for(const b of u)s+=String.fromCharCode(b);return btoa(s)});
-  await pg.evaluate(()=>openTool(TOOLS.findIndex(t=>t.name==='Editar PDF')));await W(600);if(await pg.evaluate(()=>$('#sheet').classList.contains('open'))){await pg.evaluate(()=>Nav.back());await W(500)}
+  await pg.evaluate(()=>openTool(TOOLS.findIndex(t=>t.name==='Editar PDF')));await W(600);if(await pg.evaluate(()=>$('#sheet').classList.contains('open'))){await pg.evaluate(()=>{Nav.back()});await W(500)}
   await pg.setInputFiles('#toolBody .fp input[type=file]',{name:'acta.pdf',mimeType:'application/pdf',buffer:Buffer.from(b64,'base64')});await W(800);if(await pg.$('#srcYes'))await pg.click('#srcYes');await W(2500);
   assert.equal(await pg.$$eval('#toolBody .pg [data-s="fix"]',x=>x.length),2,'falta Corregir en cada página');
   await pg.evaluate(()=>{Fix.ocr=async function(){}});await pg.click('#toolBody .pg[data-n="2"] .pgimg');await W(1200);
@@ -386,7 +386,7 @@ await test('Editar PDF: entrar a una página, corregir una palabra y zoom para e
 await test('Corregir con la misma letra (Times negrita 12) y varias palabras a la vez',async pg=>{
   const b64=await pg.evaluate(async()=>{await loadLib('pdflib');const d=await PDFLib.PDFDocument.create(),f=await d.embedFont(PDFLib.StandardFonts.TimesRomanBold),r=await d.embedFont(PDFLib.StandardFonts.Helvetica);const p=d.addPage([595,842]);
     p.drawText('Interno: Frias Alberto Tomas, alojado en la Unidad 5.',{x:60,y:760,size:12,font:f});p.drawText('Se deja constancia de lo actuado.',{x:60,y:730,size:11,font:r});const u=await d.save();let s='';for(const b of u)s+=String.fromCharCode(b);return btoa(s)});
-  await pg.evaluate(()=>openTool(TOOLS.findIndex(t=>t.name==='Editar PDF')));await W(600);if(await pg.evaluate(()=>$('#sheet').classList.contains('open'))){await pg.evaluate(()=>Nav.back());await W(500)}
+  await pg.evaluate(()=>openTool(TOOLS.findIndex(t=>t.name==='Editar PDF')));await W(600);if(await pg.evaluate(()=>$('#sheet').classList.contains('open'))){await pg.evaluate(()=>{Nav.back()});await W(500)}
   await pg.setInputFiles('#toolBody .fp input[type=file]',{name:'acta.pdf',mimeType:'application/pdf',buffer:Buffer.from(b64,'base64')});await W(800);if(await pg.$('#srcYes'))await pg.click('#srcYes');await W(2000);
   await pg.click('#toolBody .pg[data-n="1"] [data-s="fix"]');await W(2000);
   assert.ok(await pg.evaluate(()=>Fix.words.length>8),'no leyó las palabras del PDF');
@@ -511,7 +511,7 @@ await test('Nexa: tres voces con velocidad ajustable, estilos de imagen, leyes c
   await pg.click('#nxTts [data-tts="pause"]');await W(150);assert.match(await pg.textContent('#nxTts'),/En pausa/);const n0=await pg.evaluate(()=>window._utt.length);await W(200);assert.equal(await pg.evaluate(()=>window._utt.length),n0,'siguió hablando en pausa');
   await pg.click('#nxTts [data-tts="pause"]');await pg.waitForFunction(()=>!NxTTS.on,null,{timeout:5000});assert.equal(await pg.isVisible('#nxTts'),false);
   assert.ok(await pg.evaluate(()=>window._utt.map(u=>u.t).includes('Cuarta frase.')));
-  await pg.evaluate(()=>nexaSheet());await W(600);assert.equal(await pg.evaluate(()=>document.querySelectorAll('#nlVoz [name="nlVoz"]').length),3);await pg.evaluate(()=>Nav.back());await W(300);
+  await pg.evaluate(()=>nexaSheet());await W(600);assert.equal(await pg.evaluate(()=>document.querySelectorAll('#nlVoz [name="nlVoz"]').length),3);await pg.evaluate(()=>{Nav.back()});await W(300);
   /* comandos con «/» */
   await pg.fill('#nxIn','/res');await pg.dispatchEvent('#nxIn','input');await W(150);assert.match(await pg.textContent('#nxCmds'),/\/resumir/);
   await pg.fill('#nxIn','');await pg.dispatchEvent('#nxIn','input');
@@ -538,7 +538,7 @@ await test('Nexa: tres voces con velocidad ajustable, estilos de imagen, leyes c
   assert.ok(px>0,'el estilo no cambió la imagen');
   await pg.click('#editor [data-ed="art"]');await W(800);assert.equal(await pg.evaluate(()=>document.querySelectorAll('#sheetBody [data-art]').length),11);
   await pg.click('#sheetBody [data-art="minimal"]');await W(500);assert.equal(await pg.evaluate(()=>Ed.p.art),'minimal');
-  await pg.evaluate(()=>Nav.back());await W(300);
+  await pg.evaluate(()=>{Nav.back()});await W(300);
 });
 
 await test('Base de conocimiento con fuentes (preguntas doradas), permiso antes de enviar documentos y OCR con confianza',async pg=>{
@@ -579,7 +579,7 @@ await test('Base de conocimiento con fuentes (preguntas doradas), permiso antes 
   await pg.evaluate(()=>nexaSheet());await W(600);await pg.click('#nlMicOn');await W(200);
   assert.equal(await pg.evaluate(()=>S.nexaMic+' '+$('#nxMic').hidden),'false true');
   await pg.click('#nlMicOn');await W(200);assert.equal(await pg.evaluate(()=>S.nexaMic+' '+$('#nxMic').hidden),'true false');
-  await pg.evaluate(()=>Nav.back());await W(300);
+  await pg.evaluate(()=>{Nav.back()});await W(300);
 });
 
 await test('Análisis del documento: formato, perspectiva, luz, sombras, nitidez y OCR, sin internet y sin modificar nada',async pg=>{
@@ -605,7 +605,7 @@ await test('Análisis del documento: formato, perspectiva, luz, sombras, nitidez
   await pg.evaluate(async id=>{DOC=await DB.getDoc(id);openDocScreen();Ed.open(0)},ids[0]);await W(800);
   await pg.click('#editor [data-ed="anal"]');await pg.waitForSelector('#sheetBody .an-md',{timeout:15000});
   assert.match(await pg.textContent('#sheetBody'),/Perspectiva: Buena[\s\S]*RECOMENDACIONES/);
-  await pg.evaluate(()=>Nav.back());await W(300);
+  await pg.evaluate(()=>{Nav.back()});await W(300);
 });
 
 await test('Nexa en dos modos (sin internet / con internet), detener siempre corta y enseñarle a Nexa',async pg=>{
@@ -613,7 +613,7 @@ await test('Nexa en dos modos (sin internet / con internet), detener siempre cor
   assert.equal(await pg.evaluate(()=>Nexa.st.prov+'|'+Nexa.provLabel()+'|'+Nexa.prov()),'offline|Nexa sin internet|basic');
   await pg.click('#nxProv');await W(150);assert.equal(await pg.evaluate(()=>[...document.querySelectorAll('#nxMenu [data-p]')].map(b=>b.dataset.p).join(',')),'offline,online');
   await pg.click('#nxMenu [data-p="online"]');await W(500);assert.equal(await pg.evaluate(()=>Nav.isOpen('sheet')),true,'no pidió activar internet');
-  await pg.evaluate(()=>Nav.back());await W(300);assert.match(await pg.textContent('#nxStat'),/Falta activar/);assert.equal(await pg.evaluate(()=>Nexa.prov()),'basic');
+  await pg.evaluate(()=>{Nav.back()});await W(300);assert.match(await pg.textContent('#nxStat'),/Falta activar/);assert.equal(await pg.evaluate(()=>Nexa.prov()),'basic');
   assert.equal(await pg.evaluate(()=>{const a=AI();a.keys.gemini='AIzaTEST_______________________';return Nexa.prov()}),'gemini');
   assert.equal(await pg.evaluate(()=>[nxMode('local'),nxMode('basic'),nxMode('auto'),nxMode('openai')].join()),'offline,offline,online,online');
   await pg.evaluate(()=>{AI().keys.gemini='';Nexa.st.prov='offline';Nexa.save();Nexa.status()});
@@ -643,7 +643,7 @@ await test('Nexa en dos modos (sin internet / con internet), detener siempre cor
   await pg.evaluate(()=>nexaSheet());await W(600);assert.equal(await pg.isVisible('#nlTeach'),true);
   await pg.fill('#ntQ','teléfono de la oficina');await pg.fill('#ntA','381 000-0000');await pg.click('#ntAdd');await W(200);
   assert.ok(await pg.evaluate(()=>NexaKB.all().some(e=>e.q==='teléfono de la oficina'&&e.src==='vos')));
-  await pg.evaluate(()=>Nav.back());await W(300);
+  await pg.evaluate(()=>{Nav.back()});await W(300);
 });
 
 await test('Certificado: sale en su tamaño real, centrado en una hoja A4 blanca',async pg=>{
@@ -657,7 +657,7 @@ await test('Certificado: sale en su tamaño real, centrado en una hoja A4 blanca
   await seedPage(pg);await pg.evaluate(async()=>{DOC=newDoc();DOC.pages.push({...window._pg,id:uid()});openDocScreen();Ed.open(0)});await W(800);
   await pg.click('#editor [data-ed="paper"]');await W(400);await pg.click('#sheetBody [data-pp="cert"]');await W(500);
   assert.equal(await pg.evaluate(()=>Ed.p.paper),'cert');assert.match(await pg.textContent('#editor [data-ed="paper"]'),/Cert/);
-  await pg.evaluate(()=>Nav.back());await W(400);await pg.evaluate(()=>Nav.back());await W(400);
+  await pg.evaluate(()=>{Nav.back()});await W(400);await pg.evaluate(()=>{Nav.back()});await W(400);
 });
 
 await test('Escaneo: detección de la hoja (tablas, otro papel detrás, sombras), tamaño A4/oficio/certificado y borrar la foto en la cámara',async pg=>{
@@ -676,7 +676,7 @@ await test('Escaneo: detección de la hoja (tablas, otro papel detrás, sombras)
   await pg.evaluate(()=>Cam.shoot());await pg.waitForFunction(()=>!$('#camRev').hidden,null,{timeout:20000});await pg.click('#rvMore');await W(200);
   assert.equal(await pg.evaluate(()=>Cam.mode+' '+Cam.batch.length),'batch 1');assert.equal(await pg.isVisible('#camUndo'),true);
   await pg.click('#camUndo');await W(200);assert.equal(await pg.evaluate(()=>Cam.batch.length),0);
-  await pg.evaluate(()=>Nav.back());await W(600);
+  await pg.evaluate(()=>{Nav.back()});await W(600);
   /* editor: elegir el tamaño de la hoja */
   await seedPage(pg);await pg.evaluate(async()=>{DOC=newDoc();DOC.pages.push({...window._pg,id:uid()});openDocScreen();Ed.open(0)});await W(800);
   await pg.click('#editor [data-ed="paper"]');await W(400);await pg.click('#sheetBody [data-pp="oficio"]');await W(500);
@@ -708,14 +708,14 @@ await test('Varias páginas a la vez: borrar con deshacer, girar, extraer, visor
   await pg.click('#zmFit');assert.equal(await pg.evaluate(()=>Zoom.s),1);
   await pg.mouse.click(box.x,box.y);await pg.mouse.click(box.x,box.y);await W(100);assert.equal(await pg.evaluate(()=>Zoom.s),2.5,'el doble toque no acerca');
   await pg.click('#zmNext');await W(600);assert.match(await pg.textContent('#zmT'),/Página 2 de 6/);assert.equal(await pg.evaluate(()=>Zoom.s),1);
-  await pg.evaluate(()=>Nav.back());await W(400);await pg.evaluate(()=>Nav.back());await W(400);
+  await pg.evaluate(()=>{Nav.back()});await W(400);await pg.evaluate(()=>{Nav.back()});await W(400);
   /* Editar PDF: marcar varias páginas para borrar (con 🗑 y con rango) y guardar sin ellas */
   const b64=await pg.evaluate(async()=>{await loadLib('pdflib');const d=await PDFLib.PDFDocument.create(),f=await d.embedFont(PDFLib.StandardFonts.Helvetica);for(let i=1;i<=6;i++){const p=d.addPage([300,400]);p.drawText('HOJA '+i,{x:40,y:300,size:24,font:f})}const u=await d.save();let s='';for(const b of u)s+=String.fromCharCode(b);return btoa(s)});
-  await pg.evaluate(()=>openTool(TOOLS.findIndex(t=>t.name==='Editar PDF')));await W(600);if(await pg.evaluate(()=>$('#sheet').classList.contains('open'))){await pg.evaluate(()=>Nav.back());await W(500)}
+  await pg.evaluate(()=>openTool(TOOLS.findIndex(t=>t.name==='Editar PDF')));await W(600);if(await pg.evaluate(()=>$('#sheet').classList.contains('open'))){await pg.evaluate(()=>{Nav.back()});await W(500)}
   await pg.setInputFiles('#toolBody .fp input[type=file]',{name:'veinte.pdf',mimeType:'application/pdf',buffer:Buffer.from(b64,'base64')});await W(800);if(await pg.$('#srcYes'))await pg.click('#srcYes');await W(2000);
   await pg.click('#toolBody .pg[data-n="2"] [data-del]');await pg.fill('#toolBody .delr','4-5');await pg.click('#toolBody [data-dr="mark"]');await W(100);
   assert.match(await pg.textContent('#toolBody .delc'),/3 página\(s\) para borrar: 2, 4, 5/);assert.equal(await pg.$$eval('#toolBody .pg.deleted',x=>x.length),3);
-  await pg.click('#toolBody .pg[data-n="3"] [data-z]');await pg.waitForFunction(()=>$('#zmImg').naturalWidth>0,null,{timeout:8000});assert.match(await pg.textContent('#zmT'),/Página 3 de 6/);await pg.evaluate(()=>Nav.back());await W(400);
+  await pg.click('#toolBody .pg[data-n="3"] [data-z]');await pg.waitForFunction(()=>$('#zmImg').naturalWidth>0,null,{timeout:8000});assert.match(await pg.textContent('#zmT'),/Página 3 de 6/);await pg.evaluate(()=>{Nav.back()});await W(400);
   await pg.click('#toolBody .run');await W(2500);assert.match(await pg.textContent('#toolBody .result'),/Listo/);
   await pg.evaluate(()=>{window.download=b=>{window._dl=b}});await pg.click('#toolBody .result [data-dl="0"]');await W(200);
   const n=await pg.evaluate(async()=>{const b=await window._dl.arrayBuffer();const d=await PDFLib.PDFDocument.load(b);return d.getPageCount()});assert.equal(n,3,'el PDF guardado no quitó las páginas');
@@ -757,7 +757,7 @@ await test('Administración: mi cuenta (usuario y cambiar contraseña), crear cu
 });
 
 await test('Versión: los usuarios ven la pública (1.2) y el administrador la interna',async pg=>{
-  const foot=async()=>{await pg.evaluate(()=>settingsSheet());await pg.waitForSelector('#sUpd');const t=await pg.textContent('#sheetBody .set-foot');await pg.evaluate(()=>Nav.back());await W(300);return t};
+  const foot=async()=>{await pg.evaluate(()=>settingsSheet());await pg.waitForSelector('#sUpd');const t=await pg.textContent('#sheetBody .set-foot');await pg.evaluate(()=>{Nav.back()});await W(300);return t};
   await pg.evaluate(()=>{SB.ready=true;SB.profile={id:'u',role:'usuario',status:'activo'}});
   const u=await foot();assert.match(u,/versión 1\.2/);assert.ok(!/53|BUILD/.test(u),'el usuario ve la versión interna: '+u);
   await pg.evaluate(()=>{SB.profile={id:'a',role:'admin',status:'activo'}});
@@ -791,7 +791,7 @@ await test('Compartir a Danscanner desde otra app (foto y PDF) y nombre automát
   const n=await pg.evaluate(()=>importShared());assert.equal(n,1);await W(500);
   assert.equal(await pg.evaluate(()=>DOC&&DOC.pages.length),2,'no entraron las 2 páginas del PDF');assert.equal(await pg.evaluate(()=>Nav.isOpen('docScreen')),true);
   assert.equal(await pg.evaluate(async()=>(await (await caches.open('danscaner-share')).keys()).length),0,'quedaron archivos compartidos guardados');
-  await pg.evaluate(()=>Nav.back());await W(300);
+  await pg.evaluate(()=>{Nav.back()});await W(300);
 });
 
 await test('Estilos de imagen profesionales: 10 estilos, intensidad, fotos grandes y documentos legibles',async pg=>{
@@ -809,7 +809,7 @@ await test('Estilos de imagen profesionales: 10 estilos, intensidad, fotos grand
   await seedPage(pg);await pg.evaluate(async()=>{DOC=newDoc();DOC.pages.push({...window._pg,id:uid()});openDocScreen();Ed.open(0)});await W(800);
   await pg.click('#editor [data-ed="art"]');await W(600);await pg.click('#artK [data-k="3"]');await W(300);await pg.click('#sheetBody [data-art="watercolor"]');await W(500);
   assert.deepEqual(await pg.evaluate(()=>[Ed.p.art,Ed.p.artK]),['watercolor',3]);
-  await pg.evaluate(()=>Nav.back());await W(300);
+  await pg.evaluate(()=>{Nav.back()});await W(300);
 });
 
 await test('Nombre unificado Danscanner Pro, aviso de firma y SheetJS actualizado (sin fallas conocidas)',async pg=>{
@@ -819,7 +819,7 @@ await test('Nombre unificado Danscanner Pro, aviso de firma y SheetJS actualizad
   const man=await pg.evaluate(async()=>(await fetch('manifest.webmanifest')).json());assert.equal(man.name,'Danscanner Pro');assert.equal(man.short_name,'Danscanner Pro');
   assert.equal(await pg.evaluate(()=>/Danscanner(?! Pro)/.test(document.body.innerText)),false,'quedó "Danscanner" sin "Pro" en pantalla');
   await pg.evaluate(()=>{signatureSheet()});await W(400);const t=await pg.textContent('#sheetBody .sig-legal');assert.match(t,/no es firma digital/);assert.match(t,/Ley 25\.506/);
-  await pg.evaluate(()=>Nav.back());await W(300);
+  await pg.evaluate(()=>{Nav.back()});await W(300);
 });
 
 await test('Cámara de lote rápida: el disparador queda libre, las fotos se procesan en orden, recorte del marco en vivo y perfil recomendado',async pg=>{
@@ -841,7 +841,7 @@ await test('Cámara de lote rápida: el disparador queda libre, las fotos se pro
   assert.equal(await pg.textContent('#camCount'),'3');assert.ok(await pg.evaluate(()=>Cam._pend)>=2,'no quedó nada en proceso');
   await pg.click('#camUndo');await W(100);assert.equal(await pg.textContent('#camCount'),'2');
   /* terminar con fotos en proceso: espera y entrega todas, en orden */
-  await pg.evaluate(()=>{Cam.batch.forEach((p,i)=>p._n=i)});await pg.evaluate(()=>Nav.back());await W(300);
+  await pg.evaluate(()=>{Cam.batch.forEach((p,i)=>p._n=i)});await pg.evaluate(()=>{Nav.back()});await W(300);
   await pg.waitForFunction(()=>!Cam._pend&&!$('#busy').classList.contains('on')&&DOC&&DOC.pages.length===2,null,{timeout:15000});
   assert.equal(await pg.evaluate(()=>DOC.pages.length),2);
   /* perfiles en el panel y la pantalla de inicio abre en lote */
@@ -851,7 +851,7 @@ await test('Cámara de lote rápida: el disparador queda libre, las fotos se pro
   await pg.click('#camCfg');await W(200);assert.equal(await pg.$$eval('#camPanel [data-prof]',x=>x.length),4);await pg.click('#camPanel [data-prof="lote"]');await W(100);
   assert.deepEqual(await pg.evaluate(()=>[S.camProfile,S.autoCapture]),['lote',true]);
   await pg.click('#camCfg');await W(100);const vb=await pg.$eval('#camVideo',v=>{const r=v.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}});await pg.mouse.click(vb.x,vb.y);await W(200);assert.equal(await pg.evaluate(()=>!$('#camFocus').hidden),true,'no marcó el punto de enfoque');
-  await pg.evaluate(()=>Nav.back());await W(300);
+  await pg.evaluate(()=>{Nav.back()});await W(300);
 });
 
 await test('Magia Pro con fotocopia clara: el texto tenue queda oscuro y gris (no se lava ni se pone azul), aunque quede un borde oscuro',async pg=>{
