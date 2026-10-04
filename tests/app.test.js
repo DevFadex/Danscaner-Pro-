@@ -960,6 +960,40 @@ await test('Cámara profesional: proporción real de la hoja, lente principal, s
   await pg.evaluate(()=>{while(Nav.stack.length)Nav._pop()});
 });
 
+await test('Limpiar y aplanar: borra dedos y manchas, y aplana hojas curvas',async pg=>{
+  await pg.evaluate(()=>{const W='el la de que interno juez penal unidad expediente oficio fecha ley artículo audiencia solicita informe señor Tucumán ejecución dispuesto conforme'.split(' ');let seed=3;const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647};
+    window._pgT=(bg='#fff')=>{const c=canvas(1240,1754),x=c.getContext('2d');x.fillStyle=bg;x.fillRect(0,0,1240,1754);x.fillStyle='#111';x.font='bold 34px Arial';x.fillText('JUZGADO DE EJECUCION PENAL',300,120);x.font='26px Times New Roman';for(let y=220;y<1600;y+=46){let t='';while(t.length<75)t+=W[(rnd()*W.length)|0]+' ';x.fillText(t,100,y)}return c};
+    window._curve=(c,A)=>{const Wd=c.width,H=c.height,s=c.getContext('2d').getImageData(0,0,Wd,H).data,o=canvas(Wd,H),ox=o.getContext('2d'),od=ox.createImageData(Wd,H);for(let y=0;y<H;y++)for(let x=0;x<Wd;x++){const dy=A*Math.sin(Math.PI*x/Wd)*(1-.6*y/H);const Y=Math.max(0,Math.min(H-1,Math.round(y-dy))),i=(y*Wd+x)*4,j=(Y*Wd+x)*4;od.data[i]=s[j];od.data[i+1]=s[j+1];od.data[i+2]=s[j+2];od.data[i+3]=255}ox.putImageData(od,0,0);return o};
+    window._finger=()=>{const c=_pgT(),x=c.getContext('2d');x.fillStyle='rgb(214,160,130)';x.beginPath();x.ellipse(0,880,150,62,.15,0,7);x.fill();return c};
+    window._skin=(c,x0,y0,w,h)=>{const d=c.getContext('2d').getImageData(x0,y0,w,h).data;let n=0;for(let i=0;i<d.length;i+=4)if(d[i]-d[i+1]>25&&d[i]>120)n++;return n}});
+  /* hoja curva: se detecta, se aplana y queda plana; una hoja plana no se toca */
+  const d=await pg.evaluate(()=>{const flat=dewarpAnalyze(_pgT()),cv=_curve(_pgT(),40),a=dewarpAnalyze(cv);const f=canvas(cv.width,cv.height);f.getContext('2d').drawImage(cv,0,0);dewarpApply(f,a.c);const b=dewarpAnalyze(f);
+    return {flat:flat.ok,curved:a.ok,amp:a.amp>.01,after:b.amp<DW_MIN}});
+  assert.deepEqual(d,{flat:false,curved:true,amp:true,after:true});
+  /* dedos: se encuentra el del borde; el papel amarillento no es un dedo */
+  const f=await pg.evaluate(async()=>{const none=fingerDetect(_pgT('rgb(240,222,190)')),clean=fingerDetect(_pgT());
+    const p=await makePage(_finger().toDataURL('image/png'),{auto:false,filter:'original'});const before=_skin(await renderPage(p,{maxSide:1754}),0,780,200,200);
+    const r=await pageAutoClean(p);const after=_skin(await renderPage(p,{maxSide:1754}),0,780,200,200);
+    /* si después se cambia el recorte, el arreglo viejo no se aplica */
+    const q={...p,quad:[{x:0,y:0},{x:.9,y:0},{x:.9,y:1},{x:0,y:1}]};const moved=_skin(await renderPage(q,{maxSide:1754}),0,780,200,200);
+    window._fp=p;return {none,clean,fg:r.fg,before:before>500,after,moved:moved>200}});
+  assert.deepEqual(f,{none:null,clean:null,fg:1,before:true,after:0,moved:true});
+  /* manchas pintadas a mano */
+  const e=await pg.evaluate(async()=>{const c=_pgT(),x=c.getContext('2d');x.fillStyle='#4a3b2a';x.beginPath();x.arc(620,1680,30,0,7);x.fill();const p=await makePage(c.toDataURL('image/png'),{auto:false,filter:'original'});
+    const dark=async()=>{const r=await renderPage(p,{maxSide:1754}),dd=r.getContext('2d').getImageData(590,1650,60,60).data;let n=0;for(let i=0;i<dd.length;i+=4)if(dd[i]<150)n++;return n};
+    const a=await dark();p.erase={k:pageKey(p),s:[{x:620/1240,y:1680/1754,r:.022}]};return {a:a>1000,b:await dark()}});
+  assert.deepEqual(e,{a:true,b:0});
+  /* editor: botón «Limpiar» con las dos opciones y el pincel */
+  await pg.evaluate(()=>{DOC={id:'t62',name:'Prueba',pages:[_fp],created:Date.now()};Ed.open(0)});await pg.waitForSelector('#editor [data-ed="clean"]');
+  await pg.click('#editor [data-ed="clean"]');await pg.waitForSelector('#sheetBody #clOv');
+  assert.match(await pg.textContent('#sheetBody [data-cl="fg"]'),/Sí/);assert.match(await pg.textContent('#sheetBody [data-cl="dw"]'),/No/);
+  await pg.waitForFunction(()=>$('#clOv').width>10);await pg.waitForTimeout(700);await pg.$eval('#clOv',e=>e.scrollIntoView({block:'center'}));const bb=await (await pg.$('#clOv')).boundingBox();
+  await pg.mouse.move(bb.x+bb.width*.5,bb.y+bb.height*.95);await pg.mouse.down();await pg.mouse.move(bb.x+bb.width*.6,bb.y+bb.height*.95,{steps:5});await pg.mouse.up();
+  await pg.click('#clOk');await pg.waitForFunction(()=>!Nav.isOpen('sheet'));
+  const n=await pg.evaluate(()=>_fp.erase&&_fp.erase.s.length);assert.ok(n>=2,'no se guardaron los trazos: '+n);
+  await pg.evaluate(()=>{while(Nav.stack.length)Nav._pop()});
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();
