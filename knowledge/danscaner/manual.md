@@ -68,3 +68,11 @@ Al tocar **Listo** en lote se muestra una grilla con todas las hojas antes de gu
 - **Proporción real:** aunque saques la hoja inclinada, el recorte corrige la perspectiva y la hoja sale con su medida real. Si se parece a **A4, Carta u Oficio**, toma la medida exacta. Se puede apagar en ⚙️ → **Proporción real de la hoja**.
 - **Lente:** si el teléfono abre el gran angular, que enfoca mal de cerca, la app pasa sola a la cámara principal. En ⚙️ → **Lente** podés elegir otra.
 - **Enfoque:** el enfoque y la luz se ajustan sobre la hoja detectada. Con Foto HD, si la imagen todavía no está nítida, enfoca la hoja antes de disparar.
+
+## Limpiar y aplanar
+
+- **Dedos:** si sostenés la hoja con la mano, la cámara borra sola el dedo que entra desde el borde, junto con su sombra.
+- **Hojas curvas:** en libros, expedientes abrochados u hojas dobladas, los renglones ondulados quedan derechos.
+- **Manchas:** en el editor tocá **Limpiar** y pintá con el dedo sobre una mancha, una marca de lápiz o una sombra. Se rellena con el papel de alrededor.
+
+Desde **Limpiar** también podés activar o desactivar "Aplanar hoja curva" y "Borrar dedos del borde" en cada página. Si cambiás el recorte o girás la hoja, volvé a activarlas. Para que la cámara no lo haga sola, apagalas en ⚙️ de la cámara.

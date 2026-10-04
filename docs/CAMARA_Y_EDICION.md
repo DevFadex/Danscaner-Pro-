@@ -498,3 +498,25 @@ En el editor, **Corregir** permite arreglar una palabra mal escrita de la hoja e
   - Si el cuadro está menos nítido que lo habitual, enfoca una vez (`single-shot`) en el centro de la hoja.
   - Espera el pico de nitidez, con un máximo de 0,9 s, y vuelve al enfoque continuo.
   - Si ya estaba nítido, dispara sin esperar.
+
+## v62 — Limpiar y aplanar: dedos, manchas y hojas curvas
+
+Todo se calcula en el teléfono, en `pageClean`, dentro de `renderPage` y antes del filtro. Primero se aplana y después se rellenan los dedos y las manchas.
+
+Cada arreglo guarda la clave del recorte y del giro con que se calculó (`pageKey`). Si después se cambia el recorte o se gira la hoja, ese arreglo se ignora.
+
+- **Aplanar hojas curvas** (`dewarpAnalyze`, `dewarpApply`, se guarda en `p.dw`):
+  1. Detecta la tinta comparándola con el promedio local (ventana de 31 px).
+  2. Une las letras de cada renglón cerrando huecos horizontales de hasta 2,5 % del ancho.
+  3. Se queda con los componentes anchos y bajos y calcula la línea central de cada renglón en franjas de 12 px.
+  4. Por mínimos cuadrados ajusta un desplazamiento vertical suave d(x,y), de grado 3 en x y 2 en y, que lleva cada renglón a su altura media.
+  - Se aplica solo si hay al menos 5 renglones, el modelo explica el 50 % o más de la ondulación y el desplazamiento máximo queda entre 0,4 % y 6 % del alto. Una hoja plana no se toca.
+  - En la prueba, una hoja curvada 40 px queda por debajo del umbral después de aplanarla.
+  - Limitación: corrige la ondulación de los renglones. No corrige la compresión horizontal cerca del lomo.
+- **Borrar dedos** (`fingerDetect`, se guarda en `p.fg` como una grilla de 8 px):
+  1. Busca píxeles color piel en YCbCr, con un umbral relativo al tinte y a la luz del papel. Así el papel amarillento o con luz cálida no cuenta como dedo.
+  2. Se queda con los componentes que tocan el borde, ocupan entre 0,15 % y 8 % de la hoja, entran como mucho un 35 % y están rellenos.
+  3. Incluye la sombra: los píxeles grises más oscuros que el papel, hasta un 4,5 % alrededor.
+- **Borrar manchas a mano:** en el editor, el botón **Limpiar** abre el pincel. Los trazos se guardan normalizados en `p.erase`.
+- **Relleno** (`inpaintMask`): usa una pirámide "push-pull" que promedia el papel de alrededor, solo dentro del recuadro de la máscara más un margen.
+- **Cámara:** `camPostProcess` llama a `pageAutoClean` después de enderezar. La revisión del lote muestra "🧽 Sin dedos" y "📖 Aplanada". Las dos funciones se pueden apagar en ⚙️ (`S.autoFinger`, `S.autoDewarp`).

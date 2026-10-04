@@ -828,7 +828,7 @@ function bgDivide(c,d,gray){const w=c.width,h=c.height;let cur=c,cw=w,ch=h;while
 function clahe(d,w,h,clipLimit=2.5,tiles=8){const tileW=Math.ceil(w/tiles),tileH=Math.ceil(h/tiles);for(let ty=0;ty<tiles;ty++)for(let tx=0;tx<tiles;tx++){const x0=tx*tileW,y0=ty*tileH,x1=Math.min(w,x0+tileW),y1=Math.min(h,y0+tileH);const hist=new Uint32Array(256);for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){const i=(y*w+x)*4;hist[(d[i]*77+d[i+1]*150+d[i+2]*29)>>8]++}const total=(x1-x0)*(y1-y0);const limit=Math.max(1,Math.floor(clipLimit*total/256));let excess=0;for(let i=0;i<256;i++){if(hist[i]>limit){excess+=hist[i]-limit;hist[i]=limit}}const inc=Math.floor(excess/256);for(let i=0;i<256;i++)hist[i]+=inc;const cdf=new Uint32Array(256);let acc=0;for(let i=0;i<256;i++){acc+=hist[i];cdf[i]=acc}if(!acc)continue;for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){const i=(y*w+x)*4;const l=(d[i]*77+d[i+1]*150+d[i+2]*29)>>8;const nl=(cdf[l]*255/acc)|0;const s=(nl-l)/255;d[i]=clamp(d[i]+s*(255-d[i]),0,255);d[i+1]=clamp(d[i+1]+s*(255-d[i+1]),0,255);d[i+2]=clamp(d[i+2]+s*(255-d[i+2]),0,255)}}}
 function unsharp(d,w,h,amount=0.6,radius=1){const copy=new Uint8ClampedArray(d);sepFilter(copy,w,h,radius,false);for(let i=0;i<d.length;i+=4){for(let c=0;c<3;c++){const diff=d[i+c]-copy[i+c];d[i+c]=clamp(d[i+c]+diff*amount,0,255)}}}
 function applyFilter(c,f,bright=0,contrast=0,o){o=o||{};const sat=+o.sat||0,sharp=+o.sharp||0,temp=+o.temp||0,inten=o.intensity==null?100:+o.intensity;if((!f||f==='original')&&!bright&&!contrast&&!sat&&!sharp&&!temp)return;const x=c.getContext('2d',{willReadFrequently:true}),id=x.getImageData(0,0,c.width,c.height),d=id.data;const base=(inten<100&&f&&f!=='original')?new Uint8ClampedArray(d):null;if(typeof applyExtraFilter==='function'&&applyExtraFilter(c,d,f)){}else switch(f){case 'aclarar':lutApply(d,makeLut(v=>255*Math.pow(v/255,.72)+10));break;case 'mejorar':autoLevels(d,.005,.995);lutApply(d,makeLut(v=>sCurve(v,.35)));saturate(d,1.15);unsharp(d,c.width,c.height,.4,1);break;case 'magia':bgDivide(c,d,false);clahe(d,c.width,c.height,2.5,8);lutApply(d,makeLut(v=>sCurve((v-30)*255/220,.5)));saturate(d,1.4);unsharp(d,c.width,c.height,.7,1);break;case 'sinsombra':bgDivide(c,d,false);lutApply(d,makeLut(v=>(v-12)*255/236));break;case 'gris':toGray(d);autoLevels(d);lutApply(d,makeLut(v=>sCurve(v,.3)));break;case 'bn':bgDivide(c,d,true);lutApply(d,makeLut(v=>v<150?0:v>212?255:(v-150)*255/62));break;case 'ahorro':bgDivide(c,d,true);lutApply(d,makeLut(v=>v>215?255:105+v*.62));break}if(base){const k=inten/100;for(let i=0;i<d.length;i+=4){d[i]=base[i]+(d[i]-base[i])*k;d[i+1]=base[i+1]+(d[i+1]-base[i+1])*k;d[i+2]=base[i+2]+(d[i+2]-base[i+2])*k}}if(bright||contrast){const k=(100+contrast)/100;lutApply(d,makeLut(v=>(v-128)*k*k+128+bright*1.3))}if(sat)saturate(d,1+sat/100);if(temp){for(let i=0;i<d.length;i+=4){d[i]=d[i]+temp*.7;d[i+2]=d[i+2]-temp*.7}}if(sharp)unsharp(d,c.width,c.height,sharp/55,1);x.putImageData(id,0,0)}
-async function renderPage(p,{maxSide=0,noOverlays=false}={}){const img=await loadImg(p.orig);let src=img,iw=img.naturalWidth,ih=img.naturalHeight;if(maxSide&&Math.max(iw,ih)>maxSide*1.15){const s=maxSide*1.15/Math.max(iw,ih);const t=canvas(iw*s,ih*s);const tx=t.getContext('2d');tx.imageSmoothingQuality='high';tx.drawImage(img,0,0,t.width,t.height);src=t;iw=t.width;ih=t.height}let c;if(p.quad)c=warp(src,p.quad.map(o=>({x:o.x*iw,y:o.y*ih})),maxSide||5000);else{c=canvas(iw,ih);c.getContext('2d').drawImage(src,0,0)}if(maxSide&&Math.max(c.width,c.height)>maxSide)c=scaleCanvas(c,maxSide/Math.max(c.width,c.height));if(p.rot)c=rotateCanvas(c,p.rot);await applyFilterAsync(c,p.filter,p.bright,p.contrast,{sat:p.sat,sharp:p.sharp,temp:p.temp,intensity:p.intensity,tone:{shadows:p.shadows,highlights:p.highlights,gamma:p.gamma,black:p.black,white:p.white},enh:!!p.enh});if(!noOverlays&&p.overlays&&p.overlays.length){const x=c.getContext('2d');for(const o of p.overlays){const oi=await loadImg(o.src);x.drawImage(oi,o.x*c.width,o.y*c.height,o.w*c.width,o.h*c.height)}}return c}
+async function renderPage(p,{maxSide=0,noOverlays=false,noClean=false}={}){const img=await loadImg(p.orig);let src=img,iw=img.naturalWidth,ih=img.naturalHeight;if(maxSide&&Math.max(iw,ih)>maxSide*1.15){const s=maxSide*1.15/Math.max(iw,ih);const t=canvas(iw*s,ih*s);const tx=t.getContext('2d');tx.imageSmoothingQuality='high';tx.drawImage(img,0,0,t.width,t.height);src=t;iw=t.width;ih=t.height}let c;if(p.quad)c=warp(src,p.quad.map(o=>({x:o.x*iw,y:o.y*ih})),maxSide||5000);else{c=canvas(iw,ih);c.getContext('2d').drawImage(src,0,0)}if(maxSide&&Math.max(c.width,c.height)>maxSide)c=scaleCanvas(c,maxSide/Math.max(c.width,c.height));if(p.rot)c=rotateCanvas(c,p.rot);c=await pageClean(c,p,{noClean});await applyFilterAsync(c,p.filter,p.bright,p.contrast,{sat:p.sat,sharp:p.sharp,temp:p.temp,intensity:p.intensity,tone:{shadows:p.shadows,highlights:p.highlights,gamma:p.gamma,black:p.black,white:p.white},enh:!!p.enh});if(!noOverlays&&p.overlays&&p.overlays.length){const x=c.getContext('2d');for(const o of p.overlays){const oi=await loadImg(o.src);x.drawImage(oi,o.x*c.width,o.y*c.height,o.w*c.width,o.h*c.height)}}return c}
 async function makeThumb(p){const c=await renderPage(p,{maxSide:520});p.thumb=c.toDataURL('image/jpeg',.8)}
 function trimCanvas(c,padding=10){const x=c.getContext('2d'),d=x.getImageData(0,0,c.width,c.height).data;let x0=c.width,y0=c.height,x1=-1,y1=-1;for(let y=0;y<c.height;y++)for(let xx=0;xx<c.width;xx++)if(d[(y*c.width+xx)*4+3]>10){if(xx<x0)x0=xx;if(xx>x1)x1=xx;if(y<y0)y0=y;if(y>y1)y1=y}if(x1<0)return null;x0=Math.max(0,x0-padding);y0=Math.max(0,y0-padding);x1=Math.min(c.width-1,x1+padding);y1=Math.min(c.height-1,y1+padding);const n=canvas(x1-x0+1,y1-y0+1);n.getContext('2d').drawImage(c,x0,y0,n.width,n.height,0,0,n.width,n.height);return n}
 async function imageBytesForPdf(p,quality,allowPng){const Q=QUAL[quality]||QUAL.alta;const c=await renderPage(p,{maxSide:Q.max});const png=!!allowPng&&typeof printBWOn==='function'&&printBWOn(p);const b=await canvasBlob(c,png?'image/png':'image/jpeg',Q.q);const w=c.width,h=c.height;c.width=c.height=1;return {bytes:new Uint8Array(await b.arrayBuffer()),w,h,png}}
@@ -3452,7 +3452,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 4.5',APP_VER='61';
+const NEXA_VER='Nexa 4.5',APP_VER='62';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3570,7 +3570,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='61 · 04/10/2026';
+const BUILD='62 · 04/10/2026';
 /* Versión que ven los usuarios: se cambia a mano solo cuando se decide publicar una versión nueva para todos.
    El administrador ve la versión interna (BUILD) con cada cambio. */
 const PUBLIC_VER='1.2';
@@ -5237,7 +5237,7 @@ async function camPostProcess(pages,kind){for(const p of pages){const f={};try{l
 {const _o=Cam.open;Cam.open=function(){if(!this.replaceId)this._sigs=[];return _o.apply(this,arguments)}}
 
 /* revisión del lote al tocar «Listo» */
-function camReviewSheet(){const pages=Cam.batch,del=new Set();const lbl=p=>{const f=Cam._flags.get(p)||{},t=[];if(f.dup){const k=pages.indexOf(f.dup);t.push('<span class="rv-w">⚠️ Repetida'+(k>=0?' de la '+(k+1):'')+'</span>')}if(f.rot)t.push('<span class="rv-i">↻ Enderezada</span>');if(f.nob)t.push('<span class="rv-w">✂️ Sin bordes</span>');return t.join('')};
+function camReviewSheet(){const pages=Cam.batch,del=new Set();const lbl=p=>{const f=Cam._flags.get(p)||{},t=[];if(f.dup){const k=pages.indexOf(f.dup);t.push('<span class="rv-w">⚠️ Repetida'+(k>=0?' de la '+(k+1):'')+'</span>')}if(f.rot)t.push('<span class="rv-i">↻ Enderezada</span>');if(f.nob)t.push('<span class="rv-w">✂️ Sin bordes</span>');if(f.fg)t.push('<span class="rv-i">🧽 Sin dedos</span>');if(f.dw)t.push('<span class="rv-i">📖 Aplanada</span>');return t.join('')};
  const nw=()=>pages.filter(p=>{const f=Cam._flags.get(p)||{};return f.dup||f.nob}).length;
  const draw=()=>{b.innerHTML='<p class="muted" style="margin-top:0">'+(nw()?'<b>'+nw()+' hoja(s) con aviso.</b> ':'')+'Tocá 🗑 en las que no quieras guardar.</p><div class="rv-grid">'+pages.map((p,i)=>'<div class="rv-pg'+(del.has(i)?' off':'')+'" data-i="'+i+'"><img src="'+(p.thumb||'')+'" alt=""><b>'+(i+1)+'</b><div class="rv-f">'+lbl(p)+'</div><div class="rv-a"><button data-rr="'+i+'" title="Girar">↻</button><button data-rd="'+i+'" title="Borrar">🗑</button></div></div>').join('')+'</div>'
   +'<div class="row" style="margin-top:12px"><button class="btn block" id="rvGoOn">📷 Seguir sacando</button><button class="btn pri block" id="rvSave">✓ Guardar '+(pages.length-del.size)+' página(s)</button></div>'};
@@ -5344,6 +5344,142 @@ $('#camPanel').addEventListener('click',e=>{const t=e.target.closest('[data-cp4]
  if(k==='ar'){S.trueAR=S.trueAR===false;toast(S.trueAR!==false?'La hoja sale con su proporción real (A4, Carta u Oficio)':'Proporción según las esquinas marcadas')}
  else if(k==='focus')S.camFocusLock=S.camFocusLock===false;else if(k==='follow')S.camFollow=S.camFollow===false;
  else if(k==='s43'){S.cam43=S.cam43===false;toast('Se aplica la próxima vez que abras la cámara')}saveS();camPanelRender()},true);
+/* v62 · limpiar y aplanar: borra dedos, sombras y manchas, y aplana hojas curvas (libros, expedientes abrochados), todo en el teléfono */
+/* los arreglos valen para el recorte y el giro con que se calcularon; si después se cambian, se ignoran */
+function pageKey(p){return JSON.stringify(p.quad||null)+'|'+(p.rot||0)}
+function pgGray(c){const x=c.getContext('2d',{willReadFrequently:true}),d=x.getImageData(0,0,c.width,c.height).data,N=c.width*c.height,g=new Float32Array(N);for(let i=0,j=0;i<N;i++,j+=4)g[i]=d[j]*.299+d[j+1]*.587+d[j+2]*.114;return {g,d}}
+/* relleno de agujeros "push-pull": promedia lo conocido en una pirámide y baja suavizando; deja el color y la textura del papel de alrededor */
+function inpaintMask(c,mask){const W=c.width,H=c.height;let x0=W,y0=H,x1=-1,y1=-1;for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(mask[y*W+x]){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}if(x1<0)return false;
+ const m=Math.round(Math.max(x1-x0,y1-y0)*.25)+8;x0=Math.max(0,x0-m);y0=Math.max(0,y0-m);x1=Math.min(W-1,x1+m);y1=Math.min(H-1,y1+m);const w=x1-x0+1,h=y1-y0+1;
+ const ctx=c.getContext('2d',{willReadFrequently:true}),id=ctx.getImageData(x0,y0,w,h),d=id.data;
+ const L=[];let cw=w,ch=h,C=new Float32Array(w*h*3),Wt=new Float32Array(w*h);
+ for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x,k=mask[(y+y0)*W+x+x0]?0:1;Wt[i]=k;C[i*3]=d[i*4]*k;C[i*3+1]=d[i*4+1]*k;C[i*3+2]=d[i*4+2]*k}
+ L.push({w:cw,h:ch,C,Wt});
+ while(cw>1||ch>1){const nw=Math.max(1,Math.ceil(cw/2)),nh=Math.max(1,Math.ceil(ch/2)),nC=new Float32Array(nw*nh*3),nW=new Float32Array(nw*nh),P=L[L.length-1];
+  for(let y=0;y<ch;y++)for(let x=0;x<cw;x++){const i=y*cw+x,j=(y>>1)*nw+(x>>1),q=P.avg?P.Wt[i]:1;nW[j]+=P.Wt[i];nC[j*3]+=P.C[i*3]*q;nC[j*3+1]+=P.C[i*3+1]*q;nC[j*3+2]+=P.C[i*3+2]*q}
+  /* se guarda el color promedio y un peso de confianza entre 0 y 1 */
+  for(let j=0;j<nw*nh;j++){const s=nW[j];if(s>0){nC[j*3]/=s;nC[j*3+1]/=s;nC[j*3+2]/=s}nW[j]=Math.min(1,s)}
+  L.push({w:nw,h:nh,C:nC,Wt:nW,avg:true});cw=nw;ch=nh}
+ /* el nivel 0 tenía color premultiplicado (peso 0 o 1): ya es color directo donde el peso es 1 */
+ for(let l=L.length-2;l>=0;l--){const A=L[l],B=L[l+1];for(let y=0;y<A.h;y++){const fy=Math.min(B.h-1,Math.max(0,(y+.5)/2-.5)),yy=fy|0,ty=fy-yy,yb=Math.min(B.h-1,yy+1);
+   for(let x=0;x<A.w;x++){const i=y*A.w+x,a=A.Wt[i];if(a>=1)continue;const fx=Math.min(B.w-1,Math.max(0,(x+.5)/2-.5)),xx=fx|0,tx=fx-xx,xb=Math.min(B.w-1,xx+1);
+    for(let k=0;k<3;k++){const v=(B.C[(yy*B.w+xx)*3+k]*(1-tx)+B.C[(yy*B.w+xb)*3+k]*tx)*(1-ty)+(B.C[(yb*B.w+xx)*3+k]*(1-tx)+B.C[(yb*B.w+xb)*3+k]*tx)*ty;A.C[i*3+k]=a*A.C[i*3+k]+(1-a)*v}
+    A.Wt[i]=1}}}
+ const R=L[0].C;for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x;if(!mask[(y+y0)*W+x+x0])continue;d[i*4]=R[i*3];d[i*4+1]=R[i*3+1];d[i*4+2]=R[i*3+2]}
+ ctx.putImageData(id,x0,y0);return true}
+/* dedos: manchas color piel (o su sombra) que entran desde el borde de la hoja, bastante más oscuras o más saturadas que el papel */
+const FG_GRID=8;
+function fingerDetect(c){const W=c.width,H=c.height,N=W*H,{g,d}=pgGray(c);
+ /* papel: mediana de luz y de tinte en la franja central (donde no suele haber dedos) */
+ const hy=new Uint32Array(256),hr=new Uint32Array(256),hb=new Uint32Array(256);let n=0;
+ for(let y=Math.round(H*.15);y<H*.85;y+=3)for(let x=Math.round(W*.15);x<W*.85;x+=3){const i=y*W+x,j=i*4,Y=g[i]|0;if(Y<120)continue;hy[Y]++;hr[Math.max(0,Math.min(255,Math.round(128+.5*d[j]-.4187*d[j+1]-.0813*d[j+2])))]++;hb[Math.max(0,Math.min(255,Math.round(128-.1687*d[j]-.3313*d[j+1]+.5*d[j+2])))]++;n++}
+ if(n<50)return null;const med=h=>{let a=0;for(let v=0;v<256;v++){a+=h[v];if(a>=n/2)return v}return 128};const pY=med(hy),pCr=med(hr),pCb=med(hb);
+ const skin=new Uint8Array(N);
+ for(let i=0,j=0;i<N;i++,j+=4){const r=d[j],gg=d[j+1],b=d[j+2],Y=g[i],Cr=128+.5*r-.4187*gg-.0813*b,Cb=128-.1687*r-.3313*gg+.5*b;
+  if(Cr>=135&&Cr<=180&&Cb>=77&&Cb<=127&&r>gg&&r>b&&r-gg>=10&&Y>45&&(Cr-pCr>=9||Y<pY-28)&&(Cr-pCr>=4))skin[i]=1}
+ /* componentes conectados que tocan el borde */
+ const lab=new Int32Array(N),st=new Int32Array(N),out=new Uint8Array(N),bw=Math.max(2,Math.round(Math.min(W,H)*.02));let cur=0,found=0;
+ for(let s=0;s<N;s++){if(!skin[s]||lab[s])continue;cur++;let sp=0,cnt=0,minx=W,maxx=0,miny=H,maxy=0,edge=0;st[sp++]=s;lab[s]=cur;const pts=[];
+  while(sp){const q=st[--sp];cnt++;pts.push(q);const x=q%W,y=(q/W)|0;if(x<minx)minx=x;if(x>maxx)maxx=x;if(y<miny)miny=y;if(y>maxy)maxy=y;if(x<bw||y<bw||x>=W-bw||y>=H-bw)edge++;
+   if(x>0&&skin[q-1]&&!lab[q-1]){lab[q-1]=cur;st[sp++]=q-1}if(x<W-1&&skin[q+1]&&!lab[q+1]){lab[q+1]=cur;st[sp++]=q+1}if(y>0&&skin[q-W]&&!lab[q-W]){lab[q-W]=cur;st[sp++]=q-W}if(y<H-1&&skin[q+W]&&!lab[q+W]){lab[q+W]=cur;st[sp++]=q+W}}
+  const a=cnt/N,deep=Math.min(maxx,W-1-minx,maxy,H-1-miny)/Math.min(W,H),fill=cnt/((maxx-minx+1)*(maxy-miny+1));
+  /* tamaño de dedo: ni una pelusa ni media hoja; entra desde el borde y es una mancha llena (no un renglón de un sello) */
+  if(a<.0015||a>.08||edge<bw*3||fill<.35)continue;const inward=(minx<bw?maxx/W:0)+(maxx>=W-bw?(W-1-minx)/W:0)+(miny<bw?maxy/H:0)+(maxy>=H-bw?(H-1-miny)/H:0);if(inward>.35)continue;void deep;
+  for(const q of pts)out[q]=1;found++}
+ if(!found)return null;
+ /* sombra: se extiende a lo más oscuro que el papel y sin color, hasta un 4,5 % de la hoja alrededor del dedo; y un margen de 3 px */
+ const R=Math.max(3,Math.round(Math.max(W,H)*.045));let fr=[];for(let i=0;i<N;i++)if(out[i])fr.push(i);const dist=new Uint16Array(N);
+ for(let k=1;k<=R&&fr.length;k++){const nf=[];for(const q of fr){const x=q%W,y=(q/W)|0;for(const o of [x>0?q-1:-1,x<W-1?q+1:-1,y>0?q-W:-1,y<H-1?q+W:-1]){if(o<0||out[o])continue;const Y=g[o],j=o*4,ch=Math.max(d[j],d[j+1],d[j+2])-Math.min(d[j],d[j+1],d[j+2]);
+   if(k<=3||(Y<pY-5&&Y>pY*.45&&ch<45)){out[o]=1;dist[o]=k;nf.push(o)}}}fr=nf}
+ /* grilla de celdas de FG_GRID px */
+ const gw=Math.ceil(W/FG_GRID),gh=Math.ceil(H/FG_GRID),bits=new Uint8Array(Math.ceil(gw*gh/8));
+ for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(out[y*W+x]){const k=((y/FG_GRID)|0)*gw+((x/FG_GRID)|0);bits[k>>3]|=1<<(k&7)}
+ let s='';for(const b of bits)s+=String.fromCharCode(b);return {gw,gh,m:btoa(s),n:found}}
+function fgMask(fg,W,H,mask){const raw=atob(fg.m),gw=fg.gw,gh=fg.gh;const on=(cx,cy)=>{if(cx<0||cy<0||cx>=gw||cy>=gh)return 0;const k=cy*gw+cx;return (raw.charCodeAt(k>>3)>>(k&7))&1};
+ for(let y=0;y<H;y++){const cy=Math.floor(y*gh/H);for(let x=0;x<W;x++){const cx=Math.floor(x*gw/W);if(on(cx,cy)||on(cx-1,cy)||on(cx+1,cy)||on(cx,cy-1)||on(cx,cy+1))mask[y*W+x]=1}}}
+function eraseMask(er,W,H,mask){const D=Math.max(W,H);for(const s of er){const cx=s.x*W,cy=s.y*H,r=Math.max(1,s.r*D),r2=r*r;for(let y=Math.max(0,Math.floor(cy-r));y<=Math.min(H-1,Math.ceil(cy+r));y++)for(let x=Math.max(0,Math.floor(cx-r));x<=Math.min(W-1,Math.ceil(cx+r));x++)if((x-cx)**2+(y-cy)**2<=r2)mask[y*W+x]=1}}
+/* hoja curva: se siguen los renglones de texto, se ajusta un desplazamiento vertical suave d(x,y) (polinomio de grado 3 en x y 2 en y) y se "plancha" la página */
+const DW_J=4,DW_K=3,DW_MIN=.004,DW_MAX=.06;
+function dwTerms(u,v,t){let k=0;for(let j=0;j<DW_J;j++){const uj=u**j;for(let m=0;m<DW_K;m++)t[k++]=uj*v**m}return t}
+function solveLS(A,b,n){/* eliminación gaussiana con pivoteo sobre la matriz normal n×n */const M=A.map((r,i)=>[...r,b[i]]);for(let c=0;c<n;c++){let p=c;for(let r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[p][c]))p=r;if(Math.abs(M[p][c])<1e-12)return null;[M[c],M[p]]=[M[p],M[c]];
+  for(let r=0;r<n;r++){if(r===c)continue;const f=M[r][c]/M[c][c];if(!f)continue;for(let k=c;k<=n;k++)M[r][k]-=f*M[c][k]}}return M.map((r,i)=>r[n]/r[i])}
+function dewarpAnalyze(src){const s=Math.min(1,900/Math.max(src.width,src.height)),W=Math.max(40,Math.round(src.width*s)),H=Math.max(40,Math.round(src.height*s));const c=canvas(W,H);c.getContext('2d').drawImage(src,0,0,W,H);const {g}=pgGray(c),N=W*H;
+ /* tinta: más oscuro que el promedio local (ventana de 31 px) */
+ const I=new Float64Array((W+1)*(H+1));for(let y=0;y<H;y++){let a=0;for(let x=0;x<W;x++){a+=g[y*W+x];I[(y+1)*(W+1)+x+1]=I[y*(W+1)+x+1]+a}}
+ const r=15,ink=new Uint8Array(N);for(let y=0;y<H;y++){const y0=Math.max(0,y-r),y1=Math.min(H,y+r+1);for(let x=0;x<W;x++){const x0=Math.max(0,x-r),x1=Math.min(W,x+r+1),m=(I[y1*(W+1)+x1]-I[y0*(W+1)+x1]-I[y1*(W+1)+x0]+I[y0*(W+1)+x0])/((y1-y0)*(x1-x0));if(g[y*W+x]<m-14&&g[y*W+x]<200)ink[y*W+x]=1}}
+ /* se unen las letras de un renglón cerrando huecos horizontales cortos */
+ const G=Math.round(W*.025),sm=new Uint8Array(N);for(let y=0;y<H;y++){let last=-1e9;for(let x=0;x<W;x++){if(ink[y*W+x]){if(x-last<=G)for(let k=last+1;k<x;k++)sm[y*W+k]=1;sm[y*W+x]=1;last=x}}}
+ const lab=new Int32Array(N),st=new Int32Array(N);let cur=0;const lines=[];
+ for(let s0=0;s0<N;s0++){if(!sm[s0]||lab[s0])continue;cur++;let sp=0,minx=W,maxx=0,miny=H,maxy=0;st[sp++]=s0;lab[s0]=cur;const pts=[];
+  while(sp){const q=st[--sp];pts.push(q);const x=q%W,y=(q/W)|0;if(x<minx)minx=x;if(x>maxx)maxx=x;if(y<miny)miny=y;if(y>maxy)maxy=y;
+   if(x>0&&sm[q-1]&&!lab[q-1]){lab[q-1]=cur;st[sp++]=q-1}if(x<W-1&&sm[q+1]&&!lab[q+1]){lab[q+1]=cur;st[sp++]=q+1}if(y>0&&sm[q-W]&&!lab[q-W]){lab[q-W]=cur;st[sp++]=q-W}if(y<H-1&&sm[q+W]&&!lab[q+W]){lab[q+W]=cur;st[sp++]=q+W}}
+  const bw=maxx-minx+1,bh=maxy-miny+1;if(bw<W*.3||bh>H*.07||bh*6>bw)continue;
+  /* línea central: promedio de la tinta por franjas de 12 px */
+  const B=12,nb=Math.ceil(bw/B),sy=new Float64Array(nb),cn=new Uint32Array(nb);for(const q of pts){if(!ink[q])continue;const x=q%W,b=((x-minx)/B)|0;sy[b]+=(q/W)|0;cn[b]++}
+  const P=[];for(let b=0;b<nb;b++)if(cn[b]>=3)P.push({x:minx+(b+.5)*B,y:sy[b]/cn[b]});if(P.length<6)continue;
+  /* se descartan puntos que saltan (mayúsculas sueltas, subrayados) */
+  const my=P.reduce((a,p)=>a+p.y,0)/P.length;lines.push({P,my})}
+ if(lines.length<5)return null;
+ const n=DW_J*DW_K,A=Array.from({length:n},()=>new Float64Array(n)),b=new Float64Array(n),t=new Float64Array(n);let raw=0,cnt=0;
+ for(const L of lines){/* referencia de cada renglón: su altura media; así un renglón recto no se mueve */for(const p of L.P){const u=p.x/W,v=p.y/H,dd=(p.y-L.my)/H;dwTerms(u,v,t);for(let i=0;i<n;i++){b[i]+=t[i]*dd;for(let k=0;k<n;k++)A[i][k]+=t[i]*t[k]}raw+=dd*dd;cnt++}}
+ for(let i=0;i<n;i++)A[i][i]+=1e-6;const co=solveLS(A.map(r=>Array.from(r)),Array.from(b),n);if(!co||co.some(x=>!isFinite(x)))return null;
+ let res=0;for(const L of lines)for(const p of L.P){const dd=(p.y-L.my)/H;const e=dd-dwTerms(p.x/W,p.y/H,t).reduce((a,v,i)=>a+v*co[i],0);res+=e*e}
+ /* cuánto mueve el modelo: si es casi nada, la hoja ya está plana */
+ let mx=0;for(let v=.05;v<=.95;v+=.1)for(let u=0;u<=1;u+=.05){const z=Math.abs(dwTerms(u,v,t).reduce((a,x,i)=>a+x*co[i],0));if(z>mx)mx=z}
+ const expl=raw>0?1-res/raw:0;
+ return {c:co,amp:mx,expl,lines:lines.length,ok:mx>=DW_MIN&&mx<=DW_MAX&&expl>=.5}}
+function dewarpApply(c,co){const W=c.width,H=c.height,x=c.getContext('2d',{willReadFrequently:true}),s=x.getImageData(0,0,W,H),sd=s.data,o=x.createImageData(W,H),od=o.data;
+ const S=16,gw=Math.ceil(W/S)+1,gh=Math.ceil(H/S)+1,D=new Float32Array(gw*gh),t=new Float64Array(DW_J*DW_K);
+ for(let gy=0;gy<gh;gy++)for(let gx=0;gx<gw;gx++){const v=Math.min(1,gy*S/H),u=Math.min(1,gx*S/W);let z=dwTerms(u,v,t).reduce((a,q,i)=>a+q*co[i],0);z=Math.max(-DW_MAX,Math.min(DW_MAX,z));D[gy*gw+gx]=z*H}
+ const mxY=H-1.001;let k=0;
+ for(let y=0;y<H;y++){const fy=y/S,iy=Math.min(gh-2,fy|0),ty=fy-iy;for(let xx=0;xx<W;xx++,k+=4){const fx=xx/S,ix=Math.min(gw-2,fx|0),tx=fx-ix;
+   const dz=(D[iy*gw+ix]*(1-tx)+D[iy*gw+ix+1]*tx)*(1-ty)+(D[(iy+1)*gw+ix]*(1-tx)+D[(iy+1)*gw+ix+1]*tx)*ty;let Y=y+dz;Y=Y<0?0:Y>mxY?mxY:Y;const y0=Y|0,f=Y-y0,i0=(y0*W+xx)*4,i1=i0+W*4;
+   od[k]=sd[i0]+(sd[i1]-sd[i0])*f;od[k+1]=sd[i0+1]+(sd[i1+1]-sd[i0+1])*f;od[k+2]=sd[i0+2]+(sd[i1+2]-sd[i0+2])*f;od[k+3]=255}}
+ x.putImageData(o,0,0);return c}
+/* se aplica dentro de renderPage, antes del filtro: primero se aplana, después se rellenan dedos y manchas */
+async function pageClean(c,p,o){if(!p||(o&&o.noClean))return c;const k=pageKey(p);
+ if(p.dw&&p.dw.k===k&&p.dw.on!==false)try{dewarpApply(c,p.dw.c)}catch(e){console.warn('aplanar',e)}
+ const fg=p.fg&&p.fg.k===k&&p.fg.on!==false,er=p.erase&&p.erase.k===k&&p.erase.s&&p.erase.s.length;
+ if(fg||er){try{const m=new Uint8Array(c.width*c.height);if(fg)fgMask(p.fg,c.width,c.height,m);if(er)eraseMask(p.erase.s,c.width,c.height,m);inpaintMask(c,m)}catch(e){console.warn('limpiar',e)}}
+ return c}
+/* análisis de una página (una sola vez): devuelve qué encontró */
+async function pageAutoClean(p,{dewarp=true,finger=true}={}){const k=pageKey(p),r={};
+ const base=await renderPage({...p,filter:'original',bright:0,contrast:0,sat:0,sharp:0,temp:0,intensity:100,shadows:0,highlights:0,gamma:0,black:0,white:0,enh:false,art:'',fixes:null,overlays:null},{maxSide:1000,noOverlays:true,noClean:true,noFix:true,noArt:true});
+ if(dewarp&&S.autoDewarp!==false){const a=dewarpAnalyze(base);if(a&&a.ok){p.dw={k,c:a.c,amp:a.amp};dewarpApply(base,a.c);r.dw=a.amp}}
+ if(finger&&S.autoFinger!==false){const f=fingerDetect(base);if(f){p.fg={k,...f};r.fg=f.n}}
+ base.width=base.height=1;if(r.dw||r.fg)await makeThumb(p);return r}
+/* en la cámara: después de enderezar y revisar repetidas */
+{const _pp=camPostProcess;camPostProcess=async function(pages,kind){const r=await _pp.apply(this,arguments);for(const p of pages){try{const o=await pageAutoClean(p,{dewarp:kind!=='board'});const f=Cam._flags.get(p)||{};if(o.dw)f.dw=true;if(o.fg)f.fg=true;Cam._flags.set(p,f);
+  if(o.fg)toast('🧽 Se borró un dedo del borde de la hoja',2200);else if(o.dw)toast('📖 Hoja curva aplanada',2000)}catch(e){console.warn('limpiar',e)}}return r}}
+
+/* editor: «Limpiar» — dedos, aplanar y borrar manchas con el dedo */
+async function cleanSheet(){const p=Ed.p;if(!p)return;const k=pageKey(p);const dwOn=!!(p.dw&&p.dw.k===k&&p.dw.on!==false),fgOn=!!(p.fg&&p.fg.k===k&&p.fg.on!==false);
+ const er=(p.erase&&p.erase.k===k&&p.erase.s)?p.erase.s.slice():[];
+ const bd=openSheet('Limpiar y aplanar','<div class="cpgrid"><button class="cptog '+(dwOn?'on':'')+'" data-cl="dw"><i data-ico="layers"></i><span>Aplanar hoja curva</span><em>'+(dwOn?'Sí':'No')+'</em></button><button class="cptog '+(fgOn?'on':'')+'" data-cl="fg"><i data-ico="eraser"></i><span>Borrar dedos del borde</span><em>'+(fgOn?'Sí':'No')+'</em></button></div>'+
+  '<div class="cph" style="margin-top:12px">Borrar manchas</div><p class="muted" style="margin:0 0 6px">Pintá con el dedo sobre la mancha, el lápiz o la sombra: se rellena con el papel de alrededor.</p>'+
+  '<div class="cl-wrap"><canvas id="clCv"></canvas><canvas id="clOv"></canvas></div><div class="row" style="gap:6px;margin-top:8px;align-items:center"><span class="muted">Pincel</span><input type="range" id="clR" min="1" max="8" value="3" style="flex:1"><button class="btn" id="clUndo">↶ Deshacer</button><button class="btn" id="clClr">Borrar todo</button></div><button class="btn pri block" id="clOk" style="margin-top:10px">Aplicar</button>');
+ iconize&&iconize(bd);const cv=$('#clCv',bd),ov=$('#clOv',bd);let img=null;
+ const draw=()=>{const x=ov.getContext('2d');x.clearRect(0,0,ov.width,ov.height);x.fillStyle='rgba(229,50,45,.45)';const D=Math.max(ov.width,ov.height);for(const s of er){x.beginPath();x.arc(s.x*ov.width,s.y*ov.height,s.r*D,0,7);x.fill()}};
+ const load=async()=>{img=await renderPage({...p,erase:null},{maxSide:900,noOverlays:true});cv.width=ov.width=img.width;cv.height=ov.height=img.height;cv.getContext('2d').drawImage(img,0,0);draw()};
+ load().catch(e=>toast(e.message));
+ let painting=false;const at=e=>{const r=ov.getBoundingClientRect();return {x:Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)),y:Math.max(0,Math.min(1,(e.clientY-r.top)/r.height))}};
+ const add=e=>{const q=at(e),r=(+$('#clR',bd).value)*.006;const l=er[er.length-1];if(l&&l.g===painting&&Math.hypot(l.x-q.x,l.y-q.y)<r*.4)return;er.push({x:+q.x.toFixed(4),y:+q.y.toFixed(4),r:+r.toFixed(4),g:painting});draw()};
+ ov.addEventListener('pointerdown',e=>{e.preventDefault();ov.setPointerCapture(e.pointerId);painting=Date.now();add(e)});ov.addEventListener('pointermove',e=>{if(painting)add(e)});['pointerup','pointercancel'].forEach(t=>ov.addEventListener(t,()=>{painting=false}));
+ $('#clUndo',bd).onclick=()=>{const g=er.length?er[er.length-1].g:0;while(er.length&&er[er.length-1].g===g)er.pop();draw()};$('#clClr',bd).onclick=()=>{er.length=0;draw()};
+ bd.addEventListener('click',async e=>{const t=e.target.closest('[data-cl]');if(!t)return;const w=t.dataset.cl;
+  if(w==='dw'){if(p.dw&&p.dw.k===k){p.dw.on=p.dw.on===false}else{busy('Buscando la curva de los renglones…');try{const a=dewarpAnalyze(await renderPage({...p,dw:null,fg:null,erase:null,filter:'original'},{maxSide:1000,noOverlays:true,noClean:true}));if(a&&a.ok)p.dw={k,c:a.c,amp:a.amp};else toast(a&&a.lines>=5?'La hoja ya está plana':'No encontré renglones suficientes para medir la curva')}finally{busy(false)}}}
+  else{if(p.fg&&p.fg.k===k){p.fg.on=p.fg.on===false}else{busy('Buscando dedos…');try{const b=await renderPage({...p,fg:null,erase:null,filter:'original'},{maxSide:1000,noOverlays:true});const f=fingerDetect(b);if(f)p.fg={k,...f};else toast('No encontré dedos en el borde. Si queda una marca, pintala abajo.')}finally{busy(false)}}}
+  const on=w==='dw'?!!(p.dw&&p.dw.k===k&&p.dw.on!==false):!!(p.fg&&p.fg.k===k&&p.fg.on!==false);t.classList.toggle('on',on);t.querySelector('em').textContent=on?'Sí':'No';p._dirty=true;await load()});
+ $('#clOk',bd).onclick=async()=>{if(er.length)p.erase={k,s:er.map(({x,y,r})=>({x,y,r}))};else delete p.erase;p._dirty=true;await Nav.back();Ed.touch(false);toast(er.length?'🧽 Manchas borradas':'Listo')}}
+(function(){const foot=$('#editor .sfoot'),ref=foot&&(foot.querySelector('[data-ed="art"]')||foot.querySelector('[data-ed="adj"]'));if(!foot||!ref||foot.querySelector('[data-ed="clean"]'))return;
+ const b=document.createElement('button');b.className='tb';b.dataset.ed='clean';b.innerHTML='<b data-ico="eraser"></b><span>Limpiar</span>';ref.after(b);iconize&&iconize(b);
+ b.addEventListener('click',e=>{e.stopImmediatePropagation();cleanSheet()},true)})();
+/* opciones en ⚙️ de la cámara */
+{const _r=camPanelRender;camPanelRender=function(){const r=_r.apply(this,arguments);const P=$('#camPanel');if(!P||P.hidden||P.querySelector('[data-cp5]'))return r;const g=P.querySelector('.cpgrid');
+ const tg=(k,on,l,ico)=>'<button class="cptog '+(on?'on':'')+'" data-cp5="'+k+'"><i data-ico="'+ico+'"></i><span>'+l+'</span><em>'+(on?'Sí':'No')+'</em></button>';
+ if(g)g.insertAdjacentHTML('beforeend',tg('fg',S.autoFinger!==false,'Borrar dedos del borde','eraser')+tg('dw',S.autoDewarp!==false,'Aplanar hojas curvas','layers'));iconize&&iconize(P);return r}}
+$('#camPanel').addEventListener('click',e=>{const t=e.target.closest('[data-cp5]');if(!t)return;e.stopImmediatePropagation();if(t.dataset.cp5==='fg')S.autoFinger=S.autoFinger===false;else S.autoDewarp=S.autoDewarp===false;saveS();camPanelRender()},true);
+document.head.insertAdjacentHTML('beforeend','<style id="v62Css">.cl-wrap{position:relative;background:var(--stage,#eee);border-radius:10px;overflow:hidden;max-height:58vh;display:flex;justify-content:center}.cl-wrap canvas{max-width:100%;max-height:58vh;display:block}#clOv{position:absolute;top:0;left:50%;transform:translateX(-50%);touch-action:none;cursor:crosshair}</style>');
 </script>
 </body>
 </html>
