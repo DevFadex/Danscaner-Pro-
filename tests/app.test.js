@@ -848,7 +848,7 @@ await test('Cámara de lote rápida: el disparador queda libre, las fotos se pro
   await pg.evaluate(()=>{Nav.back();camApplyProfile('manual',true)});await W(300);
   assert.deepEqual(await pg.evaluate(()=>[S.autoCapture,S.camPrefMode,S.camProfile]),[false,'batch','manual']);
   await pg.evaluate(()=>doAction('cam-single'));await pg.waitForFunction(()=>Nav.isOpen('camera'),null,{timeout:5000});assert.equal(await pg.evaluate(()=>Cam.mode),'batch','no abrió en lote');
-  await pg.click('#camCfg');await W(200);assert.equal(await pg.$$eval('#camPanel [data-prof]',x=>x.length),4);await pg.click('#camPanel [data-prof="lote"]');await W(100);
+  await pg.click('#camCfg');await W(200);await pg.click('#camPanel [data-cq="more"]');await W(100);assert.equal(await pg.$$eval('#camPanel [data-prof]',x=>x.length),4);await pg.click('#camPanel [data-prof="lote"]');await W(100);
   assert.deepEqual(await pg.evaluate(()=>[S.camProfile,S.autoCapture]),['lote',true]);
   await pg.click('#camCfg');await W(100);const vb=await pg.$eval('#camVideo',v=>{const r=v.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}});await pg.mouse.click(vb.x,vb.y);await W(200);assert.equal(await pg.evaluate(()=>!$('#camFocus').hidden),true,'no marcó el punto de enfoque');
   await pg.evaluate(()=>{Nav.back()});await W(300);
@@ -955,7 +955,7 @@ await test('Cámara profesional: proporción real de la hoja, lente principal, s
   assert.deepEqual(k,{a:true,b:false,dt:true,poi:{x:.5,y:.6},mode:'single-shot',n:1});
   /* opciones en el panel ⚙️ de la cámara */
   await pg.evaluate(()=>{S.autoCapture=false;Cam.open('batch')});await pg.waitForFunction(()=>Cam.stream&&$('#camVideo').videoWidth>0,null,{timeout:15000});
-  await pg.click('#camCfg');for(const k of ['ar','focus','follow','s43','lens'])assert.ok(await pg.$('#camPanel [data-cp4="'+k+'"]'),'falta la opción '+k);
+  await pg.click('#camCfg');await pg.click('#camPanel [data-cq="more"]');for(const k of ['ar','focus','follow','s43','lens'])assert.ok(await pg.$('#camPanel [data-cp4="'+k+'"]'),'falta la opción '+k);
   await pg.click('#camPanel [data-cp4="ar"]');assert.equal(await pg.evaluate(()=>S.trueAR),false);await pg.click('#camPanel [data-cp4="ar"]');assert.equal(await pg.evaluate(()=>S.trueAR),true);
   await pg.evaluate(()=>{while(Nav.stack.length)Nav._pop()});
 });
@@ -1017,7 +1017,7 @@ await test('Mejorar de verdad (sin ruido, hoja blanca, letras negras) y panel �
   assert.equal(r.nan,0);assert.ok(r.photoMean>40&&r.photoMean<230);
   /* panel ⚙️: no se redibuja con cada foto, conserva el desplazamiento y pausa la cámara */
   await pg.evaluate(()=>{S.autoCapture=false;Cam.open('batch')});await pg.waitForFunction(()=>Cam.stream&&$('#camVideo').videoWidth>0,null,{timeout:15000});
-  await pg.click('#camCfg');await pg.waitForSelector('#camPanel [data-cp4]');
+  await pg.click('#camCfg');await pg.click('#camPanel [data-cq="more"]');await pg.waitForSelector('#camPanel [data-cp4]');
   const k=await pg.evaluate(async()=>{const P=$('#camPanel'),first=P.firstElementChild;P.scrollTop=150;const st=P.scrollTop;for(let i=0;i<5;i++)Cam.updUI();await sleep(700);
     return {same:P.firstElementChild===first,keep:P.scrollTop===st,scrolls:st>0,paused:/pausa/.test($('#camHint').textContent)}});
   assert.deepEqual(k,{same:true,keep:true,scrolls:true,paused:true});
@@ -1039,6 +1039,26 @@ await test('Resumen del documento y tarjeta personal a contacto (sin nube)',asyn
   await seedPage(pg);await pg.evaluate(t=>{DOC=newDoc();DOC.pages.push({...window._pg,id:uid()});DOC.text=t;openDocScreen()},OFICIO);await W(500);
   assert.ok(await pg.$('#docScreen #docCard'),'falta el botón A contacto');await pg.click('#docScreen #docSum');await pg.waitForSelector('#sheetBody .sum-l');
   assert.match(await pg.textContent('#sheetBody'),/Datos clave[\s\S]*Lo principal/);
+  await pg.evaluate(()=>{while(Nav.stack.length)Nav._pop()});
+});
+
+await test('Cámara estilo Adobe: barra de modos con guías, marco de cuatro puntos, panel compacto y carga giratoria',async pg=>{
+  await pg.evaluate(()=>{S.autoCapture=false;Cam.open('single')});await pg.waitForFunction(()=>Cam.stream&&$('#camVideo').videoWidth>0,null,{timeout:15000});
+  assert.deepEqual(await pg.$$eval('#camKinds [data-kind]',b=>b.map(x=>x.dataset.kind)),['board','book','doc','cert','id','card']);
+  await pg.click('#camKinds [data-kind="book"]');assert.equal(await pg.evaluate(()=>$('#camGuide').hidden||$('#camGuide').dataset.k),'book');
+  await pg.click('#camBookSwap');assert.equal(await pg.evaluate(()=>S.bookSwap),true);await pg.click('#camBookSwap');
+  await pg.click('#camKinds [data-kind="card"]');assert.deepEqual(await pg.evaluate(()=>[Cam.kind,$('#camGuide').dataset.k,$('#camGuide').hidden]),['card','card',false]);
+  await pg.click('#camKinds [data-kind="doc"]');await pg.evaluate(()=>camKindStep(1));assert.equal(await pg.evaluate(()=>Cam.kind),'cert');
+  /* marco: el polígono detectado se dibuja como cuatro puntos */
+  const f=await pg.evaluate(()=>{clearInterval(Cam.timer);const svg=$('#camSvg');svg.innerHTML='<polygon points="80,150 300,170 320,520 60,500" stroke="#22d3ee"/>';camFrameDraw();return [svg.querySelectorAll('circle.cf-d').length,svg.querySelectorAll('polygon.cf-l').length]});
+  assert.deepEqual(f,[4,1]);
+  /* panel compacto: interruptores y «Más ajustes» */
+  await pg.click('#camCfg');await pg.waitForSelector('#camPanel .cq');assert.equal(await pg.$$eval('#camPanel .cq-row',x=>x.length),7);
+  await pg.click('#camPanel [data-cq="snd"]');assert.equal(await pg.evaluate(()=>S.camSound),true);
+  await pg.click('#camPanel [data-cp="grid"]');assert.equal(await pg.evaluate(()=>!!S.grid),true);assert.ok(await pg.$('#camPanel .cq'),'se fue del panel compacto');
+  await pg.click('#camPanel [data-cq="more"]');await pg.waitForSelector('#camPanel [data-cp4]');await pg.click('#camPanel [data-cq="less"]');await pg.waitForSelector('#camPanel .cq');
+  /* carga giratoria azul */
+  assert.equal(await pg.evaluate(()=>{busy('Procesando…');const c=getComputedStyle($('#busy .spin')).borderTopColor;busy(false);return c}),'rgb(20, 115, 230)');
   await pg.evaluate(()=>{while(Nav.stack.length)Nav._pop()});
 });
 

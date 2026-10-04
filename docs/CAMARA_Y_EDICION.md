@@ -547,3 +547,20 @@ Cada arreglo guarda la clave del recorte y del giro con que se calculó (`pageKe
 - **A contacto** (botón en la pantalla del documento):
   - Hace OCR de la primera página y `cardParse` detecta nombre (con Dr., Dra., Lic. y similares), cargo, empresa u organismo, teléfonos, correo, web y dirección.
   - Los datos se muestran en un formulario editable. `vcardOf` genera un vCard 3.0 (.vcf) que el teléfono agrega a la agenda.
+
+## v65 — Cámara estilo Adobe/CamScanner
+
+- **Barra de modos** (`#camKinds`, en el orden de `CAM_KIND_ORDER`): Pizarra · Libro · Documento · Certificado · DNI · Tarjeta.
+  - Se puede deslizar y el modo elegido queda centrado y subrayado.
+  - También se cambia de modo deslizando el dedo sobre la imagen de la cámara (`camKindStep`).
+- **Guías por modo** (`#camGuide`):
+  - Libro: el lomo marcado al medio y un botón 1⇅2 para invertir el orden de las páginas (`S.bookSwap`, envuelve `splitBook`).
+  - DNI y Tarjeta: esquinas con la proporción de la tarjeta (1,586).
+  - Tarjeta: al terminar la captura se abre "Guardar como contacto" (`cardSheet`).
+- **Marco de cuatro puntos** (`camFrameDraw`): el polígono detectado se dibuja con una línea fina y cuatro puntos azules con borde blanco que se mueven suave. Se ponen verdes cuando la hoja está quieta. En el panel se puede volver a "Líneas".
+- **Indicaciones:** "Buscando documento…" en una píldora al centro, y "Capturando, un momento…" en azul mientras toma la foto.
+- **Sonido de obturador** opcional (WebAudio, `S.camSound`).
+- **Panel ⚙️ compacto** (CamScanner):
+  - 7 interruptores: captura automática, recorte automático, cuadrícula, Foto HD, sonido, nivelador (`S.camLevel`) y marco de cuatro puntos.
+  - "Más ajustes ›" abre el panel completo, y "‹ Ajustes rápidos" vuelve al compacto.
+- **Carga giratoria:** el anillo azul de Adobe en todas las esperas (`.spin`).
