@@ -536,3 +536,14 @@ Cada arreglo guarda la clave del recorte y del giro con que se calculó (`pageKe
   4. El papel pasa a blanco con un umbral que se adapta al ruido que quedó. La tinta se lleva casi a negro desde su percentil 1,5. El color de la birome y de los sellos se conserva y se aviva.
   5. Borra los puntitos grises sueltos (la tinta oscura no se toca) y aplica nitidez sobre la luz, con un umbral según el ruido.
   - Si la imagen no es un documento (es una foto), aplica niveles automáticos suaves y un poco de contraste local.
+
+## v64 — Resumen del documento y tarjeta personal a contacto (ideas de Adobe Scan, sin nube)
+
+- **Resumen** (botón en la pantalla del documento):
+  - Usa el texto guardado o, si no hay, hace OCR de todas las páginas (`docFullText`) y lo guarda.
+  - **Datos clave** (`docSummaryData`): tipo y número, dependencia, expediente, fecha, personas, DNI, otras fechas, montos, teléfonos y correos, con `docAnalyze` y `nbEntities`.
+  - **Lo principal** (`docSummary`): resumen por extracción. Puntúa cada oración por la frecuencia de sus palabras, con un extra para los verbos de lo que se pide, ordena o fija (`SUM_KEY`) y para las primeras oraciones, y le baja el peso a saludos y encabezados. Muestra de 4 a 5 oraciones en el orden original.
+  - No inventa texto: todo sale del documento. Se puede copiar o guardar como .txt.
+- **A contacto** (botón en la pantalla del documento):
+  - Hace OCR de la primera página y `cardParse` detecta nombre (con Dr., Dra., Lic. y similares), cargo, empresa u organismo, teléfonos, correo, web y dirección.
+  - Los datos se muestran en un formulario editable. `vcardOf` genera un vCard 3.0 (.vcf) que el teléfono agrega a la agenda.

@@ -1026,6 +1026,22 @@ await test('Mejorar de verdad (sin ruido, hoja blanca, letras negras) y panel �
   await pg.evaluate(()=>{while(Nav.stack.length)Nav._pop()});
 });
 
+await test('Resumen del documento y tarjeta personal a contacto (sin nube)',async pg=>{
+  const r=await pg.evaluate(t=>{const sum=docSummary(t,3),rows=docSummaryData(t);
+    const card='ESTUDIO JURÍDICO PÉREZ & ASOCIADOS\nDra. María Laura Gómez\nAbogada - Matrícula 1234\nAv. Sarmiento 456, Piso 2 Of. B\nSan Miguel de Tucumán\nTel: (0381) 422-3344\nCel: +54 9 381 555-6677\nmlgomez@estudioperez.com.ar\nwww.estudioperez.com.ar';
+    const c=cardParse(card),v=vcardOf(c);return {sum,rows,c,v}},OFICIO);
+  assert.ok(r.sum.length>=1&&r.sum.length<=3,'resumen vacío');assert.ok(r.sum.some(s=>/solicita audiencia|fij[oó] audiencia/.test(s)),'el resumen no tomó lo principal: '+JSON.stringify(r.sum));
+  const keys=r.rows.map(x=>x[0]);for(const k of ['Tipo','Fecha'])assert.ok(keys.includes(k),'falta '+k+' en '+JSON.stringify(r.rows));
+  assert.equal(r.c.name,'Dra. María Laura Gómez');assert.match(r.c.title,/Abogada/);assert.match(r.c.org,/ESTUDIO JUR/);assert.equal(r.c.tel.length,2);
+  assert.deepEqual(r.c.email,['mlgomez@estudioperez.com.ar']);assert.equal(r.c.url,'www.estudioperez.com.ar');assert.match(r.c.adr,/Sarmiento 456/);
+  assert.match(r.v,/^BEGIN:VCARD\r\nVERSION:3\.0\r\nN:Gómez;María Laura;;;\r\nFN:Dra\. María Laura Gómez/);assert.match(r.v,/TEL;TYPE=CELL:\+5493815556677/);assert.match(r.v,/EMAIL;TYPE=INTERNET:mlgomez@estudioperez\.com\.ar/);
+  /* botones en la pantalla del documento; el resumen usa el texto ya guardado (sin OCR) */
+  await seedPage(pg);await pg.evaluate(t=>{DOC=newDoc();DOC.pages.push({...window._pg,id:uid()});DOC.text=t;openDocScreen()},OFICIO);await W(500);
+  assert.ok(await pg.$('#docScreen #docCard'),'falta el botón A contacto');await pg.click('#docScreen #docSum');await pg.waitForSelector('#sheetBody .sum-l');
+  assert.match(await pg.textContent('#sheetBody'),/Datos clave[\s\S]*Lo principal/);
+  await pg.evaluate(()=>{while(Nav.stack.length)Nav._pop()});
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();
