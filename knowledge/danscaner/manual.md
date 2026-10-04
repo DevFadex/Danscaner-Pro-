@@ -86,3 +86,8 @@ En el editor, **Mejorar**:
 - conserva el color de las firmas en birome y de los sellos.
 
 En una foto común, la limpia y le da detalle sin quemarla. Mientras el panel ⚙️ de la cámara está abierto, la cámara queda en pausa: tocá la imagen para cerrarlo.
+
+## Resumen y contactos
+
+- **Resumen:** en la pantalla del documento, tocá **Resumen**. Muestra los datos clave (tipo y número, dependencia, expediente, fechas, personas, DNI, montos) y las oraciones principales del documento. Se hace en el teléfono, sin internet. Podés copiarlo o guardarlo como texto.
+- **A contacto:** escaneá una tarjeta personal y tocá **A contacto**. La app lee nombre, cargo, teléfonos, correo, web y dirección. Podés corregir los datos antes de guardar, y se genera un contacto (.vcf) que el teléfono agrega a la agenda.

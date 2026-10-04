@@ -3452,7 +3452,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 4.5',APP_VER='63';
+const NEXA_VER='Nexa 4.5',APP_VER='64';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3570,7 +3570,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='63 · 04/10/2026';
+const BUILD='64 · 04/10/2026';
 /* Versión que ven los usuarios: se cambia a mano solo cuando se decide publicar una versión nueva para todos.
    El administrador ve la versión interna (BUILD) con cada cambio. */
 const PUBLIC_VER='1.2';
@@ -5539,6 +5539,68 @@ photoEnhance=function photoEnhance(d,w,h){const n=w*h;if(n<16)return;
  /* 5) nitidez: realce de bordes finos sobre la luz (no sobre el color), con umbral para no volver a marcar el ruido */
  {const bl=box(Y,S),amt=doc?1.1:.7,th=sigma*.8;for(let i=0;i<n;i++){const e=Y[i]-bl[i];if(Math.abs(e)>th)Y[i]+=amt*(e-Math.sign(e)*th)}}
  for(let i=0,j=0;i<n;i++,j+=4){const y=Y[i],cb=Cb[i],cr=Cr[i];d[j]=y+1.402*cr;d[j+1]=y-.34414*cb-.71414*cr;d[j+2]=y+1.772*cb}};
+/* v64 · ideas de Adobe Scan, sin nube: resumen del documento y tarjeta personal a contacto */
+/* texto del documento: el que ya tiene o, si no, OCR de todas las páginas (queda guardado) */
+async function docFullText(d){if((d.text||'').trim().length>40)return d.text;if(!d.pages||!d.pages.length)return '';
+ const tx=await ocrCanvases(async cb=>{for(const p of d.pages)await cb(await renderPage(p,{maxSide:2200}))},S.lang,d.pages.length);d.text=tx.join('\n\n').trim().slice(0,20000);try{saveDoc(true)}catch(e){}return d.text}
+/* resumen por extracción: las oraciones que más pesan (palabras frecuentes, verbos de lo que se pide u ordena, posición) en el orden original */
+const SUM_KEY=/\b(solicit|dispon|ordena|resuelv|resolv|inform|requier|intim|cit[ao]|fij|emplaz|notifiqu|hace saber|se libra|remit|autoriz|deniega|concede|rechaz|plazo|audiencia|dias|horas)/;
+function docSummary(text,max=4){const t=String(text||'').replace(/(\w)-\s*\n\s*(\w)/g,'$1$2').replace(/[ \t]+/g,' ');
+ const sents=t.replace(/\n{2,}/g,'. ').replace(/\n/g,' ').split(/(?<=[.;:!?])\s+(?=[A-ZÁÉÍÓÚÑ0-9"«(])/).map(s=>s.trim()).filter(s=>s.length>=25&&s.length<=420&&/[a-záéíóúñ]{3}/.test(s));
+ if(!sents.length)return [];const tf=new Map();const words=s=>nbNorm(s).match(/[a-z]{4,}/g)||[];
+ for(const s of sents)for(const w of new Set(words(s)))if(!NB_STOP.has(w))tf.set(w,(tf.get(w)||0)+1);
+ const sc=sents.map((s,i)=>{const ws=words(s).filter(w=>!NB_STOP.has(w));let v=0;for(const w of ws)v+=Math.log(1+(tf.get(w)||0));v/=Math.sqrt(ws.length+4);
+  const n=nbNorm(s);if(SUM_KEY.test(n))v*=1.6;if(i<2)v*=1.25;if(/^(san miguel|tucum|sr\.?|sra\.?|senor|de mi mayor|saludo|atentamente)/.test(n))v*=.4;return {s,i,v}});
+ return sc.slice().sort((a,b)=>b.v-a.v).slice(0,max).sort((a,b)=>a.i-b.i).map(x=>x.s)}
+function docSummaryData(text){const a=docAnalyze(text),e=nbEntities(text),rows=[];
+ if(a.type)rows.push(['Tipo',a.type+(a.num?' N° '+a.num:'')]);if(a.from)rows.push(['Dependencia',a.from]);if(a.exp)rows.push(['Expediente',a.exp]);if(a.date)rows.push(['Fecha',a.date.replace(/-/g,'/')]);
+ if(e.personas.length)rows.push(['Personas',e.personas.slice(0,6).join(', ')]);if(e.dni.length)rows.push(['DNI',e.dni.slice(0,4).join(', ')]);
+ if(e.fechas.length>1)rows.push(['Otras fechas',e.fechas.slice(1,5).join(', ')]);if(e.montos.length)rows.push(['Montos',e.montos.slice(0,4).join(', ')]);
+ if(e.telefonos.length)rows.push(['Teléfonos',e.telefonos.slice(0,3).join(', ')]);if(e.emails.length)rows.push(['Correos',e.emails.slice(0,3).join(', ')]);return rows}
+async function docSummarySheet(){if(!DOC||!DOC.pages.length)return toast('No hay páginas');let text='';
+ await withBusy(async()=>{busy('Leyendo el documento…');text=await docFullText(DOC);busy(false)});
+ if(!text||text.trim().length<20)return toast('No encontré texto legible para resumir');
+ const rows=docSummaryData(text),sum=docSummary(text,DOC.pages.length>2?5:4);
+ const plain=(rows.length?rows.map(([k,v])=>k+': '+v).join('\n')+'\n\n':'')+(sum.length?'Resumen:\n'+sum.map(s=>'• '+s).join('\n'):'');
+ openSheet('Resumen del documento',(rows.length?'<div class="cph">Datos clave</div><table class="sum-t">'+rows.map(([k,v])=>'<tr><th>'+esc(k)+'</th><td>'+esc(v)+'</td></tr>').join('')+'</table>':'')+
+  (sum.length?'<div class="cph" style="margin-top:12px">Lo principal</div><ul class="sum-l">'+sum.map(s=>'<li>'+esc(s)+'</li>').join('')+'</ul>':'')+
+  '<p class="muted" style="font-size:12px">Hecho en el teléfono, sin internet, con las oraciones del propio documento. Revisalo antes de usarlo.</p><div class="row" style="gap:8px"><button class="btn block" id="sumCopy">📋 Copiar</button><button class="btn block" id="sumNote">💾 Guardar como texto</button></div>');
+ $('#sumCopy').onclick=()=>navigator.clipboard.writeText(plain).then(()=>toast('Resumen copiado'),()=>toast('No se pudo copiar'));
+ $('#sumNote').onclick=()=>{const b=new Blob([plain],{type:'text/plain;charset=utf-8'}),n=safeName(DOC.name)+' - resumen.txt';download(b,n);savedSheet(b,n)}}
+
+/* tarjeta personal → contacto (vCard), con los datos editables antes de guardar */
+function cardParse(text){const L=String(text||'').split(/\n+/).map(s=>s.replace(/\s+/g,' ').trim()).filter(s=>s.length>1);const all=L.join('\n');
+ const r={name:'',title:'',org:'',tel:[],email:[],url:'',adr:''};
+ r.email=[...new Set((all.match(/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g)||[]).map(s=>s.toLowerCase()))];
+ const web=all.match(/\b(?:https?:\/\/)?(?:www\.)[\w-]+(?:\.[\w-]+)+(?:\/\S*)?|\bhttps?:\/\/\S+/i);if(web)r.url=web[0].replace(/[.,;]+$/,'');
+ for(const l of L){const ms=l.match(/(?:\+?\d[\d\s().\-\/]{6,}\d)/g)||[];for(const m of ms){const dg=m.replace(/\D/g,'');if(dg.length>=7&&dg.length<=15&&!/^\d{2}[\/.-]\d{2}[\/.-]\d{2,4}$/.test(m.trim()))r.tel.push(m.trim())}}
+ r.tel=[...new Set(r.tel)];
+ const TIT=/\b(abogad[oa]|contador[a]?|escriban[oa]|procurador[a]?|gerente|director[a]?|jefe|jefa|secretari[oa]|asesor[a]?|licenciad[oa]|ingenier[oa]|m[eé]dic[oa]|psic[oó]log[oa]|arquitect[oa]|perit[oa]|martiller[oa]|defensor[a]?|fiscal|juez|jueza|comisari[oa]|oficial|t[eé]cnic[oa]|ceo|socio|socia)\b/i;
+ const ORG=/\b(s\.?\s?a\.?|s\.?r\.?l\.?|estudio|consultora|juzgado|fiscal[ií]a|ministerio|direcci[oó]n|servicio|empresa|grupo|asociados|cooperativa|municipalidad|poder judicial|universidad|colegio|banco|cl[ií]nica|hospital|polic[ií]a)\b/i;
+ const ADR=/\b(calle|av\.?|avda\.?|avenida|pasaje|pje\.?|piso|of\.?|oficina|dpto\.?|b[°º]|barrio|n[°º]|esq\.?|c\.?p\.?|cp)\b|\b\d{3,5}\b.*\b(tucum[aá]n|san miguel|yerba buena|tafí|concepci[oó]n|banda)\b/i;
+ const used=s=>r.email.some(e=>s.toLowerCase().includes(e))||(r.url&&s.includes(r.url))||/(?:\+?\d[\d\s().\-]{6,}\d)/.test(s);
+ for(const l of L){if(used(l))continue;if(!r.title&&TIT.test(l)&&l.length<60){r.title=l;continue}if(!r.org&&ORG.test(l)){r.org=l;continue}if(!r.adr&&ADR.test(l)&&/\d/.test(l)){r.adr=l;continue}}
+ /* nombre: 2 a 5 palabras con mayúscula inicial (o todo en mayúsculas), sin números, que no sea el cargo ni la empresa; puede llevar Dr., Dra., Lic., etc. */
+ const NM=/^(?:(?:dr|dra|lic|ing|cr|cra|abog|esc|prof|arq|sr|sra)\.?\s+)?(?:[A-ZÁÉÍÓÚÑ][a-záéíóúñ'’]+|[A-ZÁÉÍÓÚÑ]{2,}|[A-ZÁÉÍÓÚÑ]\.)(?:\s+(?:de|del|la|y)?\s*(?:[A-ZÁÉÍÓÚÑ][a-záéíóúñ'’]+|[A-ZÁÉÍÓÚÑ]{2,}|[A-ZÁÉÍÓÚÑ]\.)){1,4}$/i;
+ for(const l of L){if(l===r.title||l===r.org||l===r.adr||used(l)||/\d/.test(l)||l.length>48)continue;if(NM.test(l)&&!ORG.test(l)){const t=l.match(TIT);if(t&&!r.title)r.title=t[0];r.name=l.replace(/\s*[-–,|]\s*(abogad|contador|escriban).*$/i,'');break}}
+ if(r.name&&r.name===r.name.toUpperCase())r.name=r.name.toLowerCase().replace(/(^|\s|-)([a-záéíóúñ])/g,(m,a,b)=>a+b.toUpperCase()).replace(/\b(De|Del|La|Y)\b/g,w=>w.toLowerCase()).replace(/^(dr|dra|lic|ing|cr|cra|abog|esc|prof|arq|sr|sra)\b/i,w=>w.charAt(0).toUpperCase()+w.slice(1).toLowerCase());
+ return r}
+function vcardOf(c){const e=s=>String(s||'').replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replace(/([,;])/g,'\\$1');const nm=String(c.name||'').replace(/^(dr|dra|lic|ing|cr|cra|abog|esc|prof|arq|sr|sra)\.?\s+/i,'').trim().split(/\s+/);
+ const last=nm.length>1?nm[nm.length-1]:'',first=nm.length>1?nm.slice(0,-1).join(' '):nm[0]||'';const out=['BEGIN:VCARD','VERSION:3.0','N:'+e(last)+';'+e(first)+';;;','FN:'+e(c.name||c.org||'Contacto')];
+ if(c.org)out.push('ORG:'+e(c.org));if(c.title)out.push('TITLE:'+e(c.title));for(const t of c.tel||[])if(t)out.push('TEL;TYPE='+(/^\+?54\s?9|\b15\b|^9\s/.test(t)?'CELL':'WORK')+':'+t.replace(/[^\d+]/g,''));
+ for(const m of c.email||[])if(m)out.push('EMAIL;TYPE=INTERNET:'+m);if(c.url)out.push('URL:'+e(c.url));if(c.adr)out.push('ADR;TYPE=WORK:;;'+e(c.adr)+';;;;');out.push('NOTE:'+e('Creado con Danscanner Pro'));out.push('END:VCARD');return out.join('\r\n')+'\r\n'}
+async function cardSheet(){if(!DOC||!DOC.pages.length)return toast('No hay páginas');let text='';
+ await withBusy(async()=>{busy('Leyendo la tarjeta…');const c=await renderPage(DOC.pages[0],{maxSide:2200});text=(await ocrCanvases(async cb=>{await cb(c)},S.lang,1)).join('\n');busy(false)});
+ const c=cardParse(text);const f=(id,l,v,t)=>'<label class="fld"><span>'+l+'</span><input id="'+id+'" type="'+(t||'text')+'" value="'+esc(v||'')+'"></label>';
+ openSheet('Guardar como contacto','<p class="muted">Leí la primera página como tarjeta personal. Corregí lo que haga falta.</p>'+f('vcN','Nombre',c.name)+f('vcT','Cargo',c.title)+f('vcO','Empresa / organismo',c.org)+f('vcP','Teléfonos (separados por coma)',c.tel.join(', '),'tel')+f('vcE','Correo',c.email.join(', '),'email')+f('vcW','Web',c.url)+f('vcA','Dirección',c.adr)+
+  '<button class="btn pri block" id="vcSave" style="margin-top:10px">👤 Guardar contacto</button><p class="muted" style="font-size:12px">Se genera un archivo .vcf: al abrirlo, el teléfono lo agrega a la agenda.</p>');
+ $('#vcSave').onclick=()=>{const v=id=>$('#'+id).value.trim(),sp=s=>s.split(/\s*[,;]\s*/).filter(Boolean);const card={name:v('vcN'),title:v('vcT'),org:v('vcO'),tel:sp(v('vcP')),email:sp(v('vcE')),url:v('vcW'),adr:v('vcA')};
+  if(!card.name&&!card.org&&!card.tel.length&&!card.email.length)return toast('Completá al menos el nombre o un teléfono');
+  const b=new Blob([vcardOf(card)],{type:'text/vcard;charset=utf-8'}),n=safeName(card.name||card.org||'contacto')+'.vcf';download(b,n);savedSheet(b,n)}}
+(function(){const ref=$('#docOcr');if(!ref||$('#docSum'))return;
+ ref.insertAdjacentHTML('afterend','<button class="tb" id="docSum"><b data-ico="ocr"></b>Resumen</button><button class="tb" id="docCard"><b data-ico="idcard"></b>A contacto</button>');iconize&&iconize(ref.parentNode);
+ $('#docSum').onclick=()=>docSummarySheet();$('#docCard').onclick=()=>cardSheet()})();
+document.head.insertAdjacentHTML('beforeend','<style id="v64Css">.sum-t{width:100%;border-collapse:collapse;font-size:14px}.sum-t th{text-align:left;color:var(--mut,#6b7280);font-weight:600;padding:5px 8px 5px 0;vertical-align:top;white-space:nowrap}.sum-t td{padding:5px 0;border-bottom:1px solid var(--line)}.sum-l{margin:0;padding-left:18px;line-height:1.5}.sum-l li{margin-bottom:6px}.fld{display:block;margin:8px 0}.fld span{display:block;font-size:12px;color:var(--mut,#6b7280);margin-bottom:3px}.fld input{width:100%;box-sizing:border-box}</style>');
 </script>
 </body>
 </html>
