@@ -476,3 +476,25 @@ En el editor, **Corregir** permite arreglar una palabra mal escrita de la hoja e
   - La misma hoja con otro recorte da ≈ 0,88; otra hoja del mismo formato ≈ 0,67. Desde 0,80 se marca como repetida.
 - **Revisión al tocar "Listo"** (en lote): grilla con avisos (Repetida de la N, Enderezada, Sin bordes), girar o borrar cada hoja, "Seguir sacando" o "Guardar N páginas".
 - Las opciones "Enderezar hojas al revés" y "Revisar el lote al terminar" se pueden apagar en ⚙️.
+
+## v61 — Cámara profesional: proporción real, lente, sensor 4:3 y enfoque
+
+- **Proporción real de la hoja** (`pageAspect`, envuelve `warp`):
+  - Antes, el ancho y el alto del recorte salían del lado más largo de cada par. Con la hoja en perspectiva eso estira la página hasta un 14 %.
+  - Ahora, con las cuatro esquinas, se estima la distancia focal de la cámara y la proporción real del rectángulo (método de Zhang y He, "Whiteboard scanning and image enhancement"). Si el foco estimado no es razonable para un teléfono (entre 0,5 y 1,6 veces el lado mayor), se usa 0,75.
+  - En simulación con 200 tomas inclinadas y 3 px de error en las esquinas, el error máximo baja del 14 % al 2 %.
+  - Si queda a menos del 3 % de **A4, Carta u Oficio (216×356)**, se usa la medida exacta. La cantidad de píxeles es la misma que antes.
+  - Una hoja fotografiada de frente no cambia.
+  - Se puede apagar con **⚙️ → Proporción real de la hoja**. Vale también para las páginas ya guardadas.
+- **Recorte sin serrucho** (`warpTo`): si la hoja sale más chica que la foto, cada píxel promedia 2×2 muestras.
+- **Lente** (`camPickLens`, `camNextLens`):
+  - Si el navegador abre el ultra gran angular, el teleobjetivo o el macro, la cámara pasa sola al principal.
+  - **⚙️ → Lente** recorre las cámaras traseras y recuerda la elegida (`S.camDev`).
+- **Sensor completo 4:3** (`camFullSensor`):
+  - Si la cámara lo permite, el video pasa a 4:3: lo que se ve es lo que sale en la foto HD.
+  - Solo se aplica si una hoja A4 que llena el cuadro queda con al menos un 5 % más de píxeles. Si el teléfono no lo respeta, vuelve a la resolución anterior.
+- **Enfoque y luz siguen a la hoja** (`camFollowFocus`): cada 1,2 s, si el documento se movió, el punto de enfoque y medición (`pointsOfInterest`) se pone en el centro de la hoja. Durante 4 s no lo hace después de tocar la pantalla.
+- **Enfocar antes de la foto HD** (`camFocusLock`):
+  - Si el cuadro está menos nítido que lo habitual, enfoca una vez (`single-shot`) en el centro de la hoja.
+  - Espera el pico de nitidez, con un máximo de 0,9 s, y vuelve al enfoque continuo.
+  - Si ya estaba nítido, dispara sin esperar.

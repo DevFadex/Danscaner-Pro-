@@ -62,3 +62,9 @@ La cámara revisa cada foto: si salió movida o desenfocada, repite sola una vez
 ## Revisión del lote
 
 Al tocar **Listo** en lote se muestra una grilla con todas las hojas antes de guardar. Las hojas que estaban al revés o de costado ya aparecen enderezadas (marcadas "Enderezada"); las que parecen repetidas dicen "Repetida de la N". Tocá 🗑 para descartar una, ↻ para girarla, o **Seguir sacando** si te faltó alguna. Ambas funciones se pueden apagar en ⚙️ de la cámara.
+
+## Cámara profesional (proporción, lente y enfoque)
+
+- **Proporción real:** aunque saques la hoja inclinada, el recorte corrige la perspectiva y la hoja sale con su medida real. Si se parece a **A4, Carta u Oficio**, toma la medida exacta. Se puede apagar en ⚙️ → **Proporción real de la hoja**.
+- **Lente:** si el teléfono abre el gran angular, que enfoca mal de cerca, la app pasa sola a la cámara principal. En ⚙️ → **Lente** podés elegir otra.
+- **Enfoque:** el enfoque y la luz se ajustan sobre la hoja detectada. Con Foto HD, si la imagen todavía no está nítida, enfoca la hoja antes de disparar.
