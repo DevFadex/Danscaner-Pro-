@@ -994,6 +994,38 @@ await test('Limpiar y aplanar: borra dedos y manchas, y aplana hojas curvas',asy
   await pg.evaluate(()=>{while(Nav.stack.length)Nav._pop()});
 });
 
+await test('Mejorar de verdad (sin ruido, hoja blanca, letras negras) y panel ⚙️ de la cámara sin trabas',async pg=>{
+  const r=await pg.evaluate(async()=>{const W=900,H=1200,c=canvas(W,H),x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,W,H);x.fillStyle='#222';x.font='bold 30px Arial';x.fillText('OFICIO N° 77/2026',250,90);x.font='19px Times New Roman';
+    const words='el la de que juez penal unidad expediente oficio fecha ley artículo audiencia solicita informe señor ejecución'.split(' ');let sd=5;const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647};
+    for(let y=160;y<1100;y+=34){let t='';while(t.length<78)t+=words[(rnd()*words.length)|0]+' ';x.fillText(t,60,y)}x.strokeStyle='#1d4ed8';x.lineWidth=3;x.beginPath();x.arc(700,1050,60,0,7);x.stroke();
+    const s1=canvas(W,H);s1.getContext('2d').filter='blur(1.1px)';s1.getContext('2d').drawImage(c,0,0);const id=s1.getContext('2d').getImageData(0,0,W,H),d=id.data;let g=7;const gr=()=>{let s=0;for(let k=0;k<6;k++){g=(g*16807)%2147483647;s+=g/2147483647}return (s-3)*1.41};
+    for(let y=0;y<H;y++)for(let xx=0;xx<W;xx++){const i=(y*W+xx)*4,sh=.55+.45*Math.min(1,Math.hypot(xx-W,y-H)/900),tint=[1,.95,.82],nz=gr()*11;for(let k=0;k<3;k++)d[i+k]=d[i+k]*sh*tint[k]*.92+nz+gr()*6}
+    s1.getContext('2d').putImageData(id,0,0);
+    const stats=t=>{const q=t.getContext('2d').getImageData(0,0,W,H).data;const reg=(x0,y0,x1,y1)=>{let s=0,s2=0,k=0;for(let y=y0;y<y1;y++)for(let xx=x0;xx<x1;xx++){const i=(y*W+xx)*4,l=q[i]*.299+q[i+1]*.587+q[i+2]*.114;s+=l;s2+=l*l;k++}const m=s/k;return [m,Math.sqrt(s2/k-m*m)]};
+      let ink=0,ik=0,blue=0;for(let y=160;y<1100;y+=2)for(let xx=60;xx<800;xx+=2){const i=(y*W+xx)*4,l=q[i]*.299+q[i+1]*.587+q[i+2]*.114;if(l<128){ink+=l;ik++}}for(let y=980;y<1120;y++)for(let xx=630;xx<770;xx++){const i=(y*W+xx)*4;if(q[i+2]-q[i]>40)blue++}
+      return {light:reg(820,150,890,500),shadow:reg(820,900,890,1150),ink:ink/ik,blue}};
+    /* con el pipeline real (filtro Original + Mejorar), en el hilo de trabajo */
+    const p=await makePage(s1.toDataURL('image/png'),{auto:false,filter:'original'});p.enh=1;const out=await renderPage(p,{maxSide:1200});
+    const a=stats(s1),b=stats(out);
+    /* una foto que no es documento no se rompe */
+    const ph=canvas(400,300),px=ph.getContext('2d'),gg=px.createLinearGradient(0,0,400,300);gg.addColorStop(0,'#d9a066');gg.addColorStop(1,'#3b5b8c');px.fillStyle=gg;px.fillRect(0,0,400,300);
+    const pd=px.getImageData(0,0,400,300);photoEnhance(pd.data,400,300);let nan=0,m=0;for(let i=0;i<pd.data.length;i+=4){if(Number.isNaN(pd.data[i]))nan++;m+=pd.data[i]}
+    return {a,b,nan,photoMean:m/(pd.data.length/4)}});
+  assert.ok(r.b.light[0]>245&&r.b.light[1]<6,'el papel claro no quedó blanco y liso '+JSON.stringify(r.b.light));
+  assert.ok(r.b.shadow[0]>240&&r.b.shadow[1]<10,'la sombra no se fue '+JSON.stringify(r.b.shadow));
+  assert.ok(r.b.ink<r.a.ink-30,'las letras no se oscurecieron: '+r.a.ink+' → '+r.b.ink);assert.ok(r.b.blue>300,'el sello azul perdió el color: '+r.b.blue);
+  assert.equal(r.nan,0);assert.ok(r.photoMean>40&&r.photoMean<230);
+  /* panel ⚙️: no se redibuja con cada foto, conserva el desplazamiento y pausa la cámara */
+  await pg.evaluate(()=>{S.autoCapture=false;Cam.open('batch')});await pg.waitForFunction(()=>Cam.stream&&$('#camVideo').videoWidth>0,null,{timeout:15000});
+  await pg.click('#camCfg');await pg.waitForSelector('#camPanel [data-cp4]');
+  const k=await pg.evaluate(async()=>{const P=$('#camPanel'),first=P.firstElementChild;P.scrollTop=150;const st=P.scrollTop;for(let i=0;i<5;i++)Cam.updUI();await sleep(700);
+    return {same:P.firstElementChild===first,keep:P.scrollTop===st,scrolls:st>0,paused:/pausa/.test($('#camHint').textContent)}});
+  assert.deepEqual(k,{same:true,keep:true,scrolls:true,paused:true});
+  /* tocar la imagen de la cámara cierra el panel */
+  await pg.evaluate(()=>$('#camVideo').click());assert.equal(await pg.evaluate(()=>$('#camPanel').hidden),true);
+  await pg.evaluate(()=>{while(Nav.stack.length)Nav._pop()});
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();
