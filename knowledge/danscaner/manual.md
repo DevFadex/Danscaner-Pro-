@@ -76,3 +76,13 @@ Al tocar **Listo** en lote se muestra una grilla con todas las hojas antes de gu
 - **Manchas:** en el editor tocá **Limpiar** y pintá con el dedo sobre una mancha, una marca de lápiz o una sombra. Se rellena con el papel de alrededor.
 
 Desde **Limpiar** también podés activar o desactivar "Aplanar hoja curva" y "Borrar dedos del borde" en cada página. Si cambiás el recorte o girás la hoja, volvé a activarlas. Para que la cámara no lo haga sola, apagalas en ⚙️ de la cámara.
+
+## Mejorar imagen
+
+En el editor, **Mejorar**:
+- quita el ruido de la cámara;
+- deja la hoja blanca y pareja, aunque la foto tenga sombra o luz amarillenta;
+- oscurece y define las letras;
+- conserva el color de las firmas en birome y de los sellos.
+
+En una foto común, la limpia y le da detalle sin quemarla. Mientras el panel ⚙️ de la cámara está abierto, la cámara queda en pausa: tocá la imagen para cerrarlo.

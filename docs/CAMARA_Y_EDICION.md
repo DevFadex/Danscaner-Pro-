@@ -520,3 +520,19 @@ Cada arreglo guarda la clave del recorte y del giro con que se calculó (`pageKe
 - **Borrar manchas a mano:** en el editor, el botón **Limpiar** abre el pincel. Los trazos se guardan normalizados en `p.erase`.
 - **Relleno** (`inpaintMask`): usa una pirámide "push-pull" que promedia el papel de alrededor, solo dentro del recuadro de la máscara más un margen.
 - **Cámara:** `camPostProcess` llama a `pageAutoClean` después de enderezar. La revisión del lote muestra "🧽 Sin dedos" y "📖 Aplanada". Las dos funciones se pueden apagar en ⚙️ (`S.autoFinger`, `S.autoDewarp`).
+
+## v63 — Panel ⚙️ de la cámara sin trabas y «Mejorar» rehecho
+
+- **Panel ⚙️:**
+  - Antes se redibujaba entero con cada `Cam.updUI()`, que se llama, por ejemplo, cada vez que termina de procesarse una foto del lote. Por eso volvía arriba y perdía los toques.
+  - Ahora solo se redibuja si cambió alguna opción, y conserva el desplazamiento.
+  - Mientras está abierto, la detección y la auto-captura se pausan ("⏸ Cámara en pausa mientras configurás").
+  - Tocar la imagen de la cámara o el disparador lo cierra.
+  - El panel se desplaza dentro de sí mismo (`overscroll-behavior:contain`, `touch-action:pan-y`).
+- **«Mejorar»** (`photoEnhance`, autocontenido para que también corra en el hilo de trabajo de los filtros). El anterior agrandaba el ruido y no blanqueaba el papel. El nuevo:
+  1. Mide el ruido y lo quita en la luz con un filtro guiado que respeta los bordes de las letras. Suaviza el ruido de color.
+  2. Si la imagen es un documento, estima el papel por bloques (percentil 90), lo suaviza y divide. Así se van las sombras y la luz despareja.
+  3. Aplica un balance de blancos con el tinte del papel.
+  4. El papel pasa a blanco con un umbral que se adapta al ruido que quedó. La tinta se lleva casi a negro desde su percentil 1,5. El color de la birome y de los sellos se conserva y se aviva.
+  5. Borra los puntitos grises sueltos (la tinta oscura no se toca) y aplica nitidez sobre la luz, con un umbral según el ruido.
+  - Si la imagen no es un documento (es una foto), aplica niveles automáticos suaves y un poco de contraste local.
