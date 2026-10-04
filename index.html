@@ -5527,8 +5527,8 @@ photoEnhance=function photoEnhance(d,w,h){const n=w*h;if(n<16)return;
   const hy=new Uint32Array(256);let nk=0;for(let i=0;i<n;i+=3){const v=Math.max(0,Math.min(255,Y[i]))|0;if(v<215){hy[v]++;nk++}}let ink=60;if(nk>50){let a=0;for(let v=0;v<256;v++){a+=hy[v];if(a>=nk*.015){ink=v;break}}}
   /* umbral del papel según el ruido que quedó (fotos JPEG, sombras fuertes): el papel con grano también pasa a blanco */
   const hp=new Uint32Array(256);let np=0;for(let i=0;i<n;i+=3){const v=Math.max(0,Math.min(255,Y[i]))|0;if(v>=170){hp[v]++;np++}}let pk=255,a2=0;for(let v=255;v>=170;v--){a2+=hp[v];if(a2>=np*.5){pk=v;break}}
-  let dev=0,dn=0;for(let v=170;v<=pk;v++){dev+=hp[v]*(pk-v);dn+=hp[v]}const spread=dn?dev/dn:4,wc=Math.max(.84,Math.min(.88,(pk-Math.max(18,spread*3.2))/255));
-  const i0=Math.min(150,ink+6)/255,lut=new Float32Array(256);for(let v=0;v<256;v++){const t=v/255;lut[v]=t>=wc?255:t<=i0?12:12+243*Math.pow((t-i0)/(wc-i0),1.6)}
+  let dev=0,dn=0;for(let v=170;v<=pk;v++){dev+=hp[v]*(pk-v);dn+=hp[v]}const spread=dn?dev/dn:4,wc=Math.max(.8,Math.min(.88,(pk-Math.max(18,spread*3.2))/255));
+  const i0=Math.min(150,ink+6)/255,lut=new Float32Array(256);for(let v=0;v<256;v++){const t=v/255;lut[v]=t>=wc?255:t<=i0?12:12+243*Math.pow((t-i0)/(wc-i0),2.1)}
   for(let i=0;i<n;i++){const v=Math.max(0,Math.min(255,Y[i]))|0,o=lut[v];/* el color se conserva y se aviva en tinta, firmas y sellos (birome azul), y se apaga en el papel */const sat=o>=254?0:Math.min(2.2,1.9*(1-o/320));Y[i]=o;Cb[i]*=sat;Cr[i]*=sat}
  }else{
   /* foto: niveles automáticos suaves y contraste local moderado */
