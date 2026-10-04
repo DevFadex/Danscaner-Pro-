@@ -916,6 +916,50 @@ await test('Lote: endereza hojas al revés o de costado, marca hojas repetidas y
   await pg.evaluate(()=>{while(Nav.stack.length)Nav._pop()});
 });
 
+await test('Cámara profesional: proporción real de la hoja, lente principal, sensor 4:3 y enfoque sobre la hoja',async pg=>{
+  /* proporción real: una hoja A4 y una Oficio fotografiadas en perspectiva salen con su medida exacta */
+  const a=await pg.evaluate(()=>{const proj=(w,h,ax,ay,iw,ih)=>{const F=.78*Math.max(iw,ih),Z=480,ca=Math.cos(ax),sa=Math.sin(ax),cb=Math.cos(ay),sb=Math.sin(ay);
+      return [[-w/2,-h/2],[w/2,-h/2],[w/2,h/2],[-w/2,h/2]].map(([x,y])=>{const y1=y*ca,z1=y*sa,x2=x*cb+z1*sb,z2=-x*sb+z1*cb;return {x:iw/2+F*x2/(z2+Z),y:ih/2+F*y1/(z2+Z)}})};
+    const qa=proj(210,297,.35,-.25,3000,4000),qo=proj(216,356,-.3,.2,3000,4000),d=(p,o)=>Math.hypot(p.x-o.x,p.y-o.y);
+    const naive=Math.max(d(qa[0],qa[1]),d(qa[3],qa[2]))/Math.max(d(qa[0],qa[3]),d(qa[1],qa[2]));
+    const src=canvas(3000,4000);src.getContext('2d').fillStyle='#fff';src.getContext('2d').fillRect(0,0,3000,4000);
+    const c=warp(src,qa,1200);S.trueAR=false;const c0=warp(src,qa,1200);S.trueAR=true;
+    return {a4:pageAspect(qa,3000,4000).size,of:pageAspect(qo,3000,4000).size,naiveErr:Math.abs(naive/(210/297)-1),r:c.width/c.height,r0:c0.width/c0.height,
+      flat:pageAspect([{x:0,y:0},{x:800,y:0},{x:800,y:600},{x:0,y:600}],800,600).r}});
+  assert.equal(a.a4,'A4');assert.equal(a.of,'Oficio');assert.ok(a.naiveErr>.05,'la prueba necesita perspectiva fuerte');
+  assert.ok(Math.abs(a.r/(210/297)-1)<.01,'la hoja no salió A4: '+a.r);assert.ok(Math.abs(a.r0/(210/297)-1)>.04,'sin la opción debería quedar como antes');
+  assert.ok(Math.abs(a.flat-4/3)<.001,'una hoja de frente no cambia');
+  /* nombres de lentes */
+  assert.deepEqual(await pg.evaluate(()=>['camera2 0, facing back','camera2 2, facing back','Back Ultra Wide Camera','Cámara teleobjetivo trasera','Back Camera',''].map(camLensName)),['Principal','Cámara 2','Ultra gran angular','Teleobjetivo','Principal','Automática']);
+  /* si el navegador abre el ultra gran angular, se pasa al principal */
+  const l=await pg.evaluate(async()=>{const md=navigator.mediaDevices,ed=md.enumerateDevices,gu=md.getUserMedia;let asked=null,stopped=0;
+    md.enumerateDevices=async()=>[{kind:'videoinput',label:'Back Ultra Wide Camera',deviceId:'u'},{kind:'videoinput',label:'Back Camera',deviceId:'m'},{kind:'videoinput',label:'Front Camera',deviceId:'f'}];
+    md.getUserMedia=async c=>{asked=c.video.deviceId.exact;return {tag:'nuevo',getVideoTracks:()=>[]}};
+    const old={getVideoTracks:()=>[{label:'Back Ultra Wide Camera'}],getTracks:()=>[{stop:()=>stopped++}]};
+    const r=await camPickLens(old,()=>null);const r2=await camPickLens({getVideoTracks:()=>[{label:'Back Camera'}],getTracks:()=>[]},()=>null);
+    md.enumerateDevices=ed;md.getUserMedia=gu;return {asked,stopped,tag:r.tag,same:r2.tag===undefined}});
+  assert.deepEqual(l,{asked:'m',stopped:1,tag:'nuevo',same:true});
+  /* sensor 4:3: solo si no se pierde resolución */
+  const f=await pg.evaluate(async()=>{const mk=(set,caps)=>{let cur={...set};const tr={getSettings:()=>cur,getCapabilities:()=>caps,applyConstraints:async c=>{const w=c.width.ideal,h=c.height.ideal;cur=(w<=caps.width.max&&h<=caps.height.max)?{width:w,height:h}:cur}};return tr};
+    const t1=mk({width:3840,height:2160},{width:{max:4000},height:{max:3000}}),r1=await camFullSensor(t1);
+    const t2=mk({width:3840,height:2160},{width:{max:3840},height:{max:2160}}),r2=await camFullSensor(t2);
+    const t3=mk({width:1920,height:1080},{width:{max:1920},height:{max:1440}}),r3=await camFullSensor(t3);
+    return [r1,t1.getSettings(),r2,r3,t3.getSettings()]});
+  assert.deepEqual(f,[true,{width:4000,height:3000},false,true,{width:1920,height:1440}]);
+  /* enfoque: si el cuadro está movido, enfoca una vez en el centro de la hoja; si ya está nítido, no espera */
+  const k=await pg.evaluate(async()=>{const calls=[];Cam.track={getCapabilities:()=>({focusMode:['continuous','single-shot'],pointsOfInterest:{}}),applyConstraints:async c=>calls.push(c)};Cam._caps=null;
+    Cam._lastQuad=[{x:.2,y:.3},{x:.8,y:.3},{x:.8,y:.9},{x:.2,y:.9}];const v=$('#camVideo');Object.defineProperty(v,'videoWidth',{value:640,configurable:true});Object.defineProperty(v,'videoHeight',{value:480,configurable:true});
+    Cam._sharpHist=[1e9,1e9,1e9];const t0=performance.now(),a=await camFocusLock(),dt=performance.now()-t0;
+    const cs=camSharpCenter;camSharpCenter=()=>5;Cam._sharpHist=[1,1,1];const b=await camFocusLock();camSharpCenter=cs;Cam.track=null;Cam._lastQuad=null;Cam._locking=false;
+    return {a,b,dt:dt<1500,poi:calls[0].advanced[0].pointsOfInterest[0],mode:calls[0].advanced[0].focusMode,n:calls.length}});
+  assert.deepEqual(k,{a:true,b:false,dt:true,poi:{x:.5,y:.6},mode:'single-shot',n:1});
+  /* opciones en el panel ⚙️ de la cámara */
+  await pg.evaluate(()=>{S.autoCapture=false;Cam.open('batch')});await pg.waitForFunction(()=>Cam.stream&&$('#camVideo').videoWidth>0,null,{timeout:15000});
+  await pg.click('#camCfg');for(const k of ['ar','focus','follow','s43','lens'])assert.ok(await pg.$('#camPanel [data-cp4="'+k+'"]'),'falta la opción '+k);
+  await pg.click('#camPanel [data-cp4="ar"]');assert.equal(await pg.evaluate(()=>S.trueAR),false);await pg.click('#camPanel [data-cp4="ar"]');assert.equal(await pg.evaluate(()=>S.trueAR),true);
+  await pg.evaluate(()=>{while(Nav.stack.length)Nav._pop()});
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();

@@ -3452,7 +3452,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 4.5',APP_VER='60';
+const NEXA_VER='Nexa 4.5',APP_VER='61';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3570,7 +3570,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='60 · 02/10/2026';
+const BUILD='61 · 04/10/2026';
 /* Versión que ven los usuarios: se cambia a mano solo cuando se decide publicar una versión nueva para todos.
    El administrador ve la versión interna (BUILD) con cada cambio. */
 const PUBLIC_VER='1.2';
@@ -5254,6 +5254,96 @@ $('#camDone').onclick=async()=>{if(!Cam.batch.length&&!Cam._pend)return toast('T
 {const _r=camPanelRender;camPanelRender=function(){const r=_r.apply(this,arguments);const P=$('#camPanel');if(!P||P.hidden||P.querySelector('[data-cp3]'))return r;const g=P.querySelector('.cpgrid');if(g)g.insertAdjacentHTML('beforeend','<button class="cptog '+(S.camAutoRot!==false?'on':'')+'" data-cp3="rot"><i data-ico="rotr"></i><span>Enderezar hojas al revés</span><em>'+(S.camAutoRot!==false?'Sí':'No')+'</em></button><button class="cptog '+(S.camReview!==false?'on':'')+'" data-cp3="rev"><i data-ico="check"></i><span>Revisar el lote al terminar</span><em>'+(S.camReview!==false?'Sí':'No')+'</em></button>');iconize&&iconize(P);return r}}
 $('#camPanel').addEventListener('click',e=>{const t=e.target.closest('[data-cp3]');if(!t)return;e.stopImmediatePropagation();if(t.dataset.cp3==='rot')S.camAutoRot=S.camAutoRot===false;else S.camReview=S.camReview===false;saveS();camPanelRender()},true);
 document.head.insertAdjacentHTML('beforeend','<style id="v60Css">.rv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}.rv-pg{position:relative;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:6px;display:flex;flex-direction:column;gap:4px}.rv-pg img{width:100%;aspect-ratio:3/4;object-fit:contain;background:var(--stage,#eee);border-radius:8px}.rv-pg>b{position:absolute;top:10px;left:12px;background:#000a;color:#fff;border-radius:10px;padding:0 7px;font-size:12px}.rv-pg.off{opacity:.35}.rv-pg.off img{filter:grayscale(1)}.rv-f{display:flex;flex-wrap:wrap;gap:3px;min-height:18px}.rv-f span{font-size:10.5px;font-weight:700;border-radius:8px;padding:1px 6px}.rv-w{background:#fef3c7;color:#92400e}.rv-i{background:#e0f2fe;color:#075985}.rv-a{display:flex;gap:4px}.rv-a button{flex:1;padding:6px 0;border-radius:8px;background:var(--bg3,#eee)}</style>');
+/* v61 · cámara profesional: proporción real de la hoja, lente principal con sensor 4:3, enfoque sobre la hoja antes de disparar */
+/* proporción real: estima la distancia focal con las cuatro esquinas (Zhang y He) y deshace la perspectiva; si queda cerca de A4, Carta u Oficio, usa la medida exacta */
+const AR_SIZES=[[210/297,'A4'],[216/279,'Carta'],[216/356,'Oficio']],AR_SNAP=.03;
+function pageAspect(q,iw,ih){if(!q||q.length!==4||!iw||!ih)return null;const u0=iw/2,v0=ih/2,D=Math.max(iw,ih);
+ const [m1,m2,m4,m3]=q.map(p=>[p.x-u0,p.y-v0,1]);
+ const cr=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],dt=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+ const k2=dt(cr(m1,m4),m3)/dt(cr(m2,m4),m3),k3=dt(cr(m1,m4),m2)/dt(cr(m3,m4),m2);if(!(k2>0&&k3>0&&isFinite(k2)&&isFinite(k3)))return null;
+ const n2=m2.map((v,i)=>k2*v-m1[i]),n3=m3.map((v,i)=>k3*v-m1[i]);
+ let f=0;const den=n2[2]*n3[2];if(Math.abs(den)>1e-6){const f2=-(n2[0]*n3[0]+n2[1]*n3[1])/den;if(f2>0)f=Math.sqrt(f2)}
+ /* foco fuera de lo posible para un teléfono (ruido o imagen recortada): se usa el de una cámara principal típica */
+ if(!(f>=.5*D&&f<=1.6*D))f=.75*D;
+ const nn=n=>Math.sqrt((n[0]*n[0]+n[1]*n[1])/(f*f)+n[2]*n[2]),r=nn(n2)/nn(n3);
+ const d=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),naive=Math.max(d(q[0],q[1]),d(q[3],q[2]))/Math.max(d(q[0],q[3]),d(q[1],q[2]));
+ if(!isFinite(r)||r<.15||r>7||r/naive>1.6||naive/r>1.6)return null;
+ for(const [s,name] of AR_SIZES){if(Math.abs(r/s-1)<AR_SNAP)return {r:s,size:name};if(Math.abs(r*s-1)<AR_SNAP)return {r:1/s,size:name}}
+ return {r,size:null}}
+{const _w=warp;warp=function(src,q,maxSide){if(S.trueAR===false)return _w.apply(this,arguments);
+ const iw=src.naturalWidth||src.width,ih=src.naturalHeight||src.height;let a=null;try{a=pageAspect(q,iw,ih)}catch(e){}if(!a)return _w.apply(this,arguments);
+ const dist=(p,o)=>Math.hypot(p.x-o.x,p.y-o.y);const W0=Math.max(dist(q[0],q[1]),dist(q[3],q[2])),H0=Math.max(dist(q[0],q[3]),dist(q[1],q[2]));
+ if(W0<4||H0<4)return _w.apply(this,arguments);
+ /* misma cantidad de píxeles que antes, repartidos con la proporción real */
+ let H=Math.sqrt(W0*H0/a.r),W=H*a.r;const cap=Math.min(1,(maxSide||5000)/Math.max(W,H));W=Math.max(4,Math.round(W*cap));H=Math.max(4,Math.round(H*cap));
+ return warpTo(src,q,W,H)}}
+/* recorte con la medida pedida; si la hoja sale más chica que la foto, promedia 2×2 muestras por píxel para que el texto no quede serruchado */
+function warpTo(src,q,W,H){const iw=src.naturalWidth||src.width,ih=src.naturalHeight||src.height;const sc=canvas(iw,ih),sx=sc.getContext('2d',{willReadFrequently:true});sx.drawImage(src,0,0);const sd=sx.getImageData(0,0,iw,ih).data;
+ const hm=homography([{x:0,y:0},{x:W,y:0},{x:W,y:H},{x:0,y:H}],q);const oc=canvas(W,H),ox=oc.getContext('2d'),od=ox.createImageData(W,H),o=od.data;const mxX=iw-1.001,mxY=ih-1.001;
+ const qa=Math.abs(q.reduce((s,p,i)=>{const n=q[(i+1)%4];return s+p.x*n.y-n.x*p.y},0))/2,ss=Math.sqrt(qa/(W*H))>1.5?2:1,offs=ss===2?[.25,.75]:[.5],nS=offs.length*offs.length;
+ const acc=[0,0,0];let k=0;
+ for(let v=0;v<H;v++){for(let u=0;u<W;u++,k+=4){acc[0]=acc[1]=acc[2]=0;
+  for(const dy of offs)for(const dx of offs){const uu=u+dx-.5,vv=v+dy-.5,den=hm[6]*uu+hm[7]*vv+1;let X=(hm[0]*uu+hm[1]*vv+hm[2])/den,Y=(hm[3]*uu+hm[4]*vv+hm[5])/den;X=X<0?0:X>mxX?mxX:X;Y=Y<0?0:Y>mxY?mxY:Y;
+   const x0=X|0,y0=Y|0,fx=X-x0,fy=Y-y0,i00=(y0*iw+x0)*4,i10=i00+4,i01=i00+iw*4,i11=i01+4;
+   for(let ch=0;ch<3;ch++){const t=sd[i00+ch]+(sd[i10+ch]-sd[i00+ch])*fx,b=sd[i01+ch]+(sd[i11+ch]-sd[i01+ch])*fx;acc[ch]+=t+(b-t)*fy}}
+  o[k]=acc[0]/nS;o[k+1]=acc[1]/nS;o[k+2]=acc[2]/nS;o[k+3]=255}}
+ ox.putImageData(od,0,0);sc.width=sc.height=1;return oc}
+
+/* lente: el navegador a veces elige el ultra gran angular o el teleobjetivo, que enfocan mal de cerca; se pasa al principal o al que eligió el usuario */
+const CAM_BADLENS=/ultra|tele|macro|depth|profundidad/i,CAM_FRONT=/front|frontal|user|selfie/i;
+function camLensName(l){if(!l)return 'Automática';if(/ultra/i.test(l))return 'Ultra gran angular';if(/tele/i.test(l))return 'Teleobjetivo';if(/macro/i.test(l))return 'Macro';if(CAM_FRONT.test(l))return 'Frontal';
+ const m=l.match(/camera2?\s*(\d+)/i);if(m)return m[1]==='0'?'Principal':'Cámara '+m[1];return /back|trasera|rear|environment/i.test(l)?'Principal':l.slice(0,24)}
+async function camLensList(){try{const l=await navigator.mediaDevices.enumerateDevices();return l.filter(d=>d.kind==='videoinput'&&d.label&&!CAM_FRONT.test(d.label))}catch(e){return []}}
+async function camPickLens(st,fallback){if((Cam.facing||'environment')!=='environment')return st;const tr=st.getVideoTracks()[0];if(!tr)return st;const cur=tr.label||'';
+ const list=await camLensList();if(list.length<2)return st;let want=S.camDev?list.find(d=>d.label===S.camDev):null;
+ if(!want&&CAM_BADLENS.test(cur))want=list.find(d=>!CAM_BADLENS.test(d.label));if(!want||want.label===cur)return st;
+ /* muchos Android no abren dos cámaras a la vez: primero se cierra la actual */
+ st.getTracks().forEach(t=>t.stop());
+ try{return await navigator.mediaDevices.getUserMedia({audio:false,video:{deviceId:{exact:want.deviceId},width:{ideal:3840},height:{ideal:2160}}})}catch(e){return fallback()}}
+/* sensor completo 4:3: lo que se ve es lo que sale en la foto; solo si una hoja A4 que llena el cuadro queda con más píxeles que antes */
+async function camFullSensor(tr){if(!tr||S.cam43===false||!tr.getCapabilities||!tr.getSettings)return false;let caps={},s={};try{caps=tr.getCapabilities()||{};s=tr.getSettings()||{}}catch(e){return false}
+ const W=s.width,H=s.height;if(!W||!H)return false;const lo=Math.max(W,H),sh=Math.min(W,H);if(Math.abs(lo/sh-4/3)<.03)return false;
+ const cw=caps.width&&caps.width.max,ch=caps.height&&caps.height.max;if(!cw||!ch)return false;const cl=Math.max(cw,ch),cs=Math.min(cw,ch);
+ const t=Math.min(cs,Math.round(cl*3/4),3024),tl=Math.round(t*4/3),pg=(l,c)=>Math.min(c,l/1.414);if(pg(tl,t)<pg(lo,sh)*1.05)return false;
+ const land=W>=H;try{await tr.applyConstraints({width:{ideal:land?tl:t},height:{ideal:land?t:tl}})}catch(e){return false}
+ let n={};try{n=tr.getSettings()||{}}catch(e){}const nl=Math.max(n.width||0,n.height||0),ns=Math.min(n.width||0,n.height||0);
+ if(ns&&Math.abs(nl/ns-4/3)<.03&&pg(nl,ns)>=pg(lo,sh)*1.05)return true;
+ try{await tr.applyConstraints({width:{ideal:W},height:{ideal:H}})}catch(e){}return false}
+{const _gs=Cam.getStream;Cam.getStream=async function(){const fb=()=>_gs.apply(this,arguments);let st=await fb();try{st=await camPickLens(st,fb)}catch(e){}try{Cam._43=await camFullSensor(st.getVideoTracks()[0])}catch(e){}Cam._caps=null;return st}}
+async function camNextLens(){if(!Cam.stream)return;const list=await camLensList();if(list.length<2)return toast('El navegador muestra una sola cámara trasera en este teléfono');
+ const cur=Cam.track&&Cam.track.label,i=list.findIndex(d=>d.label===cur),nx=list[(i+1)%list.length];S.camDev=nx.label;saveS();
+ await withBusy(async()=>{busy('Cambiando de lente…');try{Cam.stream.getTracks().forEach(t=>t.stop());Cam.stream=await Cam.getStream();Cam.track=Cam.stream.getVideoTracks()[0];const v=$('#camVideo');v.srcObject=Cam.stream;await v.play().catch(()=>{});
+  Cam._sharpHist=[];Cam._buf=[];Cam._poi=null;try{CamPro.setup()}catch(e){}busy(false);toast('Lente: '+camLensName(Cam.track.label))}catch(e){busy(false);toast('No se pudo cambiar de lente')}});camPanelRender()}
+
+/* enfoque y exposición sobre la hoja: el punto de enfoque sigue al centro del documento detectado */
+function camQuadCenter(){const q=Cam._lastQuad;if(!q)return null;return {x:(q[0].x+q[1].x+q[2].x+q[3].x)/4,y:(q[0].y+q[1].y+q[2].y+q[3].y)/4}}
+function camCaps(){const tr=Cam.track;if(!tr)return {};if(Cam._caps&&Cam._capsTr===tr)return Cam._caps;let c={};try{c=tr.getCapabilities?tr.getCapabilities()||{}:{}}catch(e){}Cam._caps=c;Cam._capsTr=tr;return c}
+function camFollowFocus(){const tr=Cam.track;if(!tr||S.camFollow===false)return;const c=camQuadCenter();if(!c)return;const t=performance.now();
+ if(t-(Cam._tapT||0)<4000||t-(Cam._poiT||0)<1200||Cam._locking)return;const p=Cam._poi;if(p&&Math.hypot(p.x-c.x,p.y-c.y)<.08)return;
+ if(!('pointsOfInterest' in camCaps()))return;Cam._poi=c;Cam._poiT=t;tr.applyConstraints({advanced:[{pointsOfInterest:[c]}]}).catch(()=>{})}
+{const _d=Cam.detect;Cam.detect=function(){const r=_d.apply(this,arguments);try{camFollowFocus()}catch(e){}return r}}
+(function(){const st=$('#camera .cam-stage');if(st)st.addEventListener('click',e=>{if(e.target.id==='camVideo'||e.target.closest('#camSvg'))Cam._tapT=performance.now()},true)})();
+/* antes de la foto HD: si el cuadro no está nítido, enfoca una vez sobre la hoja y espera el punto de máxima nitidez (sin demora si ya estaba enfocado) */
+const CAM_FOCUS_MS=900;
+async function camFocusLock(){const tr=Cam.track,v=$('#camVideo');if(!tr||!v||!v.videoWidth)return false;const fm=camCaps().focusMode||[];if(!fm.includes('single-shot'))return false;
+ const sharp=()=>camSharpCenter(v,v.videoWidth,v.videoHeight),ref=camSharpRef(),s0=sharp();if(ref&&s0>=ref*.9)return false;
+ const adv={focusMode:'single-shot'},c=camQuadCenter();if(c&&'pointsOfInterest' in camCaps())adv.pointsOfInterest=[c];
+ Cam._locking=true;try{await tr.applyConstraints({advanced:[adv]})}catch(e){Cam._locking=false;return false}
+ let best=s0,still=0;const t0=performance.now();while(performance.now()-t0<CAM_FOCUS_MS){await sleep(90);const s=sharp();if(s>best*1.03){best=s;still=0}else if(++still>=2&&(!ref||best>=ref*.8))break}
+ return true}
+{const _g=camGrab;camGrab=async function(){let lk=false;if(S.hd&&!S.camFast&&S.camFocusLock!==false){try{lk=await camFocusLock()}catch(e){}}
+ try{return await _g.apply(this,arguments)}finally{if(lk){const tr=Cam.track;Cam._locking=false;setTimeout(()=>{if(tr&&Cam.track===tr&&camCaps().focusMode&&camCaps().focusMode.includes('continuous'))tr.applyConstraints({advanced:[{focusMode:'continuous'}]}).catch(()=>{})},300)}}}}
+
+/* opciones en el panel ⚙️ */
+{const _r=camPanelRender;camPanelRender=function(){const r=_r.apply(this,arguments);const P=$('#camPanel');if(!P||P.hidden||P.querySelector('[data-cp4]'))return r;const g=P.querySelector('.cpgrid');
+ const tg=(k,on,l,ico)=>'<button class="cptog '+(on?'on':'')+'" data-cp4="'+k+'"><i data-ico="'+ico+'"></i><span>'+l+'</span><em>'+(on?'Sí':'No')+'</em></button>';
+ if(g)g.insertAdjacentHTML('beforeend',tg('ar',S.trueAR!==false,'Proporción real de la hoja','crop')+tg('focus',S.camFocusLock!==false,'Enfocar la hoja antes de la foto','camera')+tg('follow',S.camFollow!==false,'Enfoque y luz siguen a la hoja','wand')+tg('s43',S.cam43!==false,'Sensor completo 4:3','image')+
+  '<button class="cptog on" data-cp4="lens"><i data-ico="camera"></i><span>Lente</span><em>'+esc(camLensName(Cam.track&&Cam.track.label))+'</em></button>');iconize&&iconize(P);return r}}
+$('#camPanel').addEventListener('click',e=>{const t=e.target.closest('[data-cp4]');if(!t)return;e.stopImmediatePropagation();const k=t.dataset.cp4;
+ if(k==='lens')return camNextLens();
+ if(k==='ar'){S.trueAR=S.trueAR===false;toast(S.trueAR!==false?'La hoja sale con su proporción real (A4, Carta u Oficio)':'Proporción según las esquinas marcadas')}
+ else if(k==='focus')S.camFocusLock=S.camFocusLock===false;else if(k==='follow')S.camFollow=S.camFollow===false;
+ else if(k==='s43'){S.cam43=S.cam43===false;toast('Se aplica la próxima vez que abras la cámara')}saveS();camPanelRender()},true);
 </script>
 </body>
 </html>
