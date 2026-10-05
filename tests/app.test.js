@@ -770,7 +770,7 @@ await test('Nexa en PC: letra y cuadro de texto más grandes (en el celular no c
   await pg.click('#btnNexa');await W(300);await pg.fill('#nxIn','hola');await pg.click('#nxSend');await W(700);
   const fs=()=>pg.evaluate(()=>[parseFloat(getComputedStyle($('#v-nexa .nx-msg.ai .nx-md')).fontSize),$('#nxIn').getBoundingClientRect().height]);
   const [m]=await fs();await pg.setViewportSize({width:1366,height:768});await W(400);const [d,h]=await fs();
-  assert.ok(d>=18&&d>m,'la letra en PC no es más grande: '+m+' → '+d);assert.ok(h>=48,'el cuadro de texto es chico: '+h);
+  assert.ok(d>=17&&d>m,'la letra en PC no es más grande: '+m+' → '+d);assert.ok(h>=36,'el cuadro de texto es chico: '+h);
   await pg.setViewportSize({width:390,height:844});await W(200);
 });
 

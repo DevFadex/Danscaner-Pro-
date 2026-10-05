@@ -632,7 +632,7 @@ Todo va dentro de `@media (min-width:1024px)`; el celular no cambia.
 
 - **Nexa:**
   - Encabezado compacto, sin el subtítulo, y botones más chicos.
-  - Letra de 16 px (15 px en ventanas de menos de 760 px de alto), burbujas y acciones más compactas.
+  - Letra de 17 px, todavía más grande que en el celular (15 px en ventanas de menos de 760 px de alto), burbujas y acciones más compactas.
   - Cuadro de texto más bajo. La conversación y la entrada quedan centradas, con un ancho máximo de 1100 px.
   - Con 620 px de alto, el área de la conversación pasa de 334 a 391 px.
 - **Inicio:** los cuatro botones grandes llenan el ancho, y las herramientas se reparten a lo ancho y centradas (flex con `justify-content:center`).
