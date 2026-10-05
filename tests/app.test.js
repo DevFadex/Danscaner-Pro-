@@ -1166,6 +1166,22 @@ await test('PC: Nexa con más lugar para la conversación e íconos centrados a 
   await pg.setViewportSize({width:390,height:844});await pg.evaluate(()=>go('home'));
 });
 
+await test('Nexa: entiende «llamame Dani y no Flores» y avisa si «con internet» no está activada',async pg=>{
+  const r=await pg.evaluate(async()=>{go('nexa');NexaMem.clear();Nexa.st.msgs=[];Nexa.st.prov='online';Nexa.save();Nexa.render();
+    const say=async t=>{$('#nxIn').value=t;await Nexa.send();const m=Nexa.st.msgs.filter(x=>x.role==='assistant');return m[m.length-1].text};
+    const a=await say('quiero que me llames dani y no flores');const nm=NexaMem.get().name,no=NexaMem.get().notName;
+    const b=await say('me gusta que me digas Dani');
+    const pre=NexaMem.get().name;NexaMem.learn('decime qué dice el documento');const keep=NexaMem.get().name;
+    const ctx=NexaMem.context();const first=nxFirstName();
+    const c=await say('explicame la diferencia entre una apelación y un recurso de casación');
+    return {a,nm,no,b,pre,keep,ctx,first,c}});
+  assert.equal(r.nm,'Dani');assert.equal(r.no,'Flores');assert.ok(/Listo, \*\*Dani\*\*/.test(r.a),r.a);assert.ok(/y no Flores/.test(r.a),r.a);
+  assert.ok(/Listo, \*\*Dani\*\*/.test(r.b),r.b);assert.equal(r.keep,'Dani','«decime qué…» no es un apodo');
+  assert.ok(/«Dani», nunca «Flores»/.test(r.ctx));assert.equal(r.first,'Dani');
+  if(!(await pg.evaluate(()=>isCloud(Nexa.prov()))))assert.ok(/no está activada en este equipo/.test(r.c),r.c.slice(0,200));
+  await pg.evaluate(()=>{NexaMem.clear();Nexa.st.msgs=[];Nexa.save()});
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();

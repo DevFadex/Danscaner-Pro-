@@ -637,3 +637,7 @@ Todo va dentro de `@media (min-width:1024px)`; el celular no cambia.
   - Con 620 px de alto, el área de la conversación pasa de 334 a 391 px.
 - **Inicio:** los cuatro botones grandes llenan el ancho, y las herramientas se reparten a lo ancho y centradas (flex con `justify-content:center`).
 - **Herramientas:** cada herramienta es una tarjeta con el ícono arriba, repartidas a lo ancho y centradas en cada sección.
+
+## v71 · Nexa: apodo y aviso de «con internet»
+- Nexa entiende cómo querés que te llame: «llamame Dani», «quiero que me llames Dani y no Flores», «me gusta que me digas Dani», «decime Dani», «mi nombre es Dani». Lo guarda en el equipo, lo usa en el saludo y se lo indica a la IA con internet («Dani, nunca Flores»). Frases como «decime qué dice…» ya no se toman como nombre.
+- Si elegís **Nexa con internet** pero no está activada (falta la clave gratis de Gemini) o no hay conexión, la respuesta lo dice al principio con un botón **Activar Nexa con internet**, en vez de presentarse como «sin internet» sin explicación.

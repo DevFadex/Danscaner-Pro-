@@ -123,3 +123,6 @@ En una foto común, la limpia y le da detalle sin quemarla. Mientras el panel �
 ## Nexa: cómo empezar
 
 Al abrir Nexa te saluda por tu nombre y te ofrece tres grupos de sugerencias: **Comprender** (simplificar, resumir, describir secciones), **Analizar** (datos importantes, plazos, calidad del escaneo) y **Generar** (nota de respuesta, corregir el OCR, correo). Si volvés con una conversación empezada, te pregunta si seguís con esa o empezás una consulta nueva. La anterior queda guardada en 🕒 Conversaciones.
+
+### Nexa: cómo querés que te llame (v71)
+Decile a Nexa «llamame Dani» o «quiero que me llames Dani y no Flores» y lo recuerda en este equipo, con o sin internet. Si elegiste «Nexa con internet» y todavía no la activaste, Nexa te avisa y te ofrece el botón para activarla gratis con una clave de Google Gemini.
