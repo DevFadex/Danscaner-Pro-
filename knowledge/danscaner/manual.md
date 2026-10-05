@@ -99,3 +99,12 @@ En una foto común, la limpia y le da detalle sin quemarla. Mientras el panel �
 - En **Tarjeta**, al sacar la foto, la app ofrece guardarla como contacto.
 - La hoja detectada se marca con **cuatro puntos azules**, que se ponen verdes cuando está quieta.
 - **⚙️** abre los ajustes rápidos: captura automática, recorte automático, cuadrícula, Foto HD, sonido, nivelador y estilo del marco. Desde **Más ajustes** llegás a todas las opciones.
+
+## Borrado inteligente y marcación
+
+- **Limpiar** (en el editor) tiene tres modos:
+  - **Pincel:** pintás la mancha con el dedo. Con dos dedos hacés zoom para ser más preciso.
+  - **Manuscrito:** encuentra sola la birome de color (azul, roja, verde) y te la muestra antes de borrarla. Ojo: también encuentra firmas y sellos de color.
+  - **Texto:** tocás un renglón y se borra.
+  - **Comparar** (mantener apretado) muestra cómo era la foto original.
+- **Marcar:** dibujá con el dedo o agregá flechas, líneas, rectángulos y círculos, eligiendo color, grosor y opacidad. Se quita con "Quitar firmas".

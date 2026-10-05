@@ -3452,7 +3452,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 4.5',APP_VER='65';
+const NEXA_VER='Nexa 4.5',APP_VER='66';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3570,7 +3570,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='65 · 04/10/2026';
+const BUILD='66 · 05/10/2026';
 /* Versión que ven los usuarios: se cambia a mano solo cuando se decide publicar una versión nueva para todos.
    El administrador ve la versión interna (BUILD) con cada cambio. */
 const PUBLIC_VER='1.2';
@@ -5671,6 +5671,115 @@ document.head.insertAdjacentHTML('beforeend','<style id="v65Css">'+
  '.cq-sw{flex:none;width:40px;height:22px;border-radius:11px;background:#4b5563;position:relative;transition:background .2s}.cq-sw::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .2s}.cq-row.on .cq-sw{background:#1473e6}.cq-row.on .cq-sw::after{left:21px}'+
  '.cq-more{margin-top:10px;padding:10px;color:#4ea1ff;font-weight:700;font-size:14px}.cq-back{color:#4ea1ff;font-weight:700;padding:2px 0 8px;font-size:14px}'+
  '</style>');
+/* v66 · borrado inteligente (pincel, birome detectada sola y renglón de texto, con zoom y comparar) y marcación a mano */
+/* el borrado también acepta rectángulos (renglones) además de círculos (pincel) */
+eraseMask=function(er,W,H,mask){const D=Math.max(W,H);for(const s of er){if(s.w){const x0=Math.max(0,Math.floor(s.x*W)),y0=Math.max(0,Math.floor(s.y*H)),x1=Math.min(W,Math.ceil((s.x+s.w)*W)),y1=Math.min(H,Math.ceil((s.y+s.h)*H));for(let y=y0;y<y1;y++)mask.fill(1,y*W+x0,y*W+x1);continue}
+ const cx=s.x*W,cy=s.y*H,r=Math.max(1,s.r*D),r2=r*r;for(let y=Math.max(0,Math.floor(cy-r));y<=Math.min(H-1,Math.ceil(cy+r));y++)for(let x=Math.max(0,Math.floor(cx-r));x<=Math.min(W-1,Math.ceil(cx+r));x++)if((x-cx)**2+(y-cy)**2<=r2)mask[y*W+x]=1}};
+/* birome de color (azul, roja, verde) y marcas a mano en color: tinta con color y más oscura que el papel */
+function penDetect(c){const W=c.width,H=c.height,N=W*H,d=c.getContext('2d',{willReadFrequently:true}).getImageData(0,0,W,H).data,m=new Uint8Array(N);let n=0;
+ for(let i=0,j=0;i<N;i++,j+=4){const r=d[j],g=d[j+1],b=d[j+2],mx=Math.max(r,g,b),mn=Math.min(r,g,b),Y=.299*r+.587*g+.114*b;
+  /* color fuerte y no amarillento (el papel viejo y las manchas de luz son amarillos) */
+  if(mx-mn>42&&Y<205&&!(r>g&&g>b&&b<mx*.6&&r-b>40&&g>r*.75)){m[i]=1;n++}}
+ if(n<30)return null;
+ /* se descartan puntitos sueltos y se engrosa un poco para tapar el borde de los trazos */
+ const lab=new Int32Array(N),st=new Int32Array(N),keep=new Uint8Array(N);let cur=0,found=0;
+ for(let s=0;s<N;s++){if(!m[s]||lab[s])continue;cur++;let sp=0;const pts=[];st[sp++]=s;lab[s]=cur;while(sp){const q=st[--sp];pts.push(q);const x=q%W;for(const o of [x>0?q-1:-1,x<W-1?q+1:-1,q-W,q+W]){if(o<0||o>=N||!m[o]||lab[o])continue;lab[o]=cur;st[sp++]=o}}
+  if(pts.length>=12){for(const q of pts)keep[q]=1;found++}}
+ if(!found)return null;const R=2;const out=new Uint8Array(N);for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(!keep[y*W+x])continue;for(let dy=-R;dy<=R;dy++)for(let dx=-R;dx<=R;dx++){const yy=y+dy,xx=x+dx;if(yy>=0&&xx>=0&&yy<H&&xx<W)out[yy*W+xx]=1}}
+ const G=4,gw=Math.ceil(W/G),gh=Math.ceil(H/G),bits=new Uint8Array(Math.ceil(gw*gh/8));let cells=0;for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(out[y*W+x]){const k=((y/G)|0)*gw+((x/G)|0);if(!((bits[k>>3]>>(k&7))&1)){bits[k>>3]|=1<<(k&7);cells++}}
+ let s='';for(const b of bits)s+=String.fromCharCode(b);return {gw,gh,m:btoa(s),n:found,cells}}
+/* renglón tocado: banda de tinta alrededor del toque, que se extiende por las palabras vecinas */
+function lineAt(c,px,py){const W=c.width,H=c.height,d=c.getContext('2d',{willReadFrequently:true}).getImageData(0,0,W,H).data,ink=(x,y)=>{const j=(y*W+x)*4;return d[j]*.299+d[j+1]*.587+d[j+2]*.114<150};
+ const X=Math.round(px*W),Y=Math.round(py*H),span=Math.round(W*.2),rowInk=y=>{let n=0;for(let x=Math.max(0,X-span);x<Math.min(W,X+span);x++)if(ink(x,y))n++;return n};
+ if(Y<0||Y>=H)return null;let y0=Y,y1=Y;const lim=Math.round(H*.04);
+ if(rowInk(Y)===0){let f=0;for(let k=1;k<=lim&&!f;k++){if(Y-k>=0&&rowInk(Y-k)){y0=y1=Y-k;f=1}else if(Y+k<H&&rowInk(Y+k)){y0=y1=Y+k;f=1}}if(!f)return null}
+ while(y0>0&&Y-y0<lim&&rowInk(y0-1))y0--;while(y1<H-1&&y1-Y<lim&&rowInk(y1+1))y1++;
+ const lh=Math.max(6,y1-y0+1),gap=Math.round(lh*1.6),colInk=x=>{for(let y=y0;y<=y1;y++)if(ink(x,y))return true;return false};
+ let x0=X,x1=X,g=0;for(let x=X;x>=0;x--){if(colInk(x)){x0=x;g=0}else if(++g>gap)break}g=0;for(let x=X;x<W;x++){if(colInk(x)){x1=x;g=0}else if(++g>gap)break}
+ const pad=Math.round(lh*.25);return {x:Math.max(0,x0-pad)/W,y:Math.max(0,y0-pad)/H,w:(Math.min(W-1,x1+pad)-Math.max(0,x0-pad)+1)/W,h:(Math.min(H-1,y1+pad)-Math.max(0,y0-pad)+1)/H}}
+/* la máscara de birome se aplica igual que la de dedos */
+{const _pc=pageClean;pageClean=async function(c,p,o){c=await _pc.apply(this,arguments);if(!p||(o&&o.noClean))return c;const k=pageKey(p);
+ if(p.pen&&p.pen.k===k&&p.pen.on!==false){try{const m=new Uint8Array(c.width*c.height);fgMask(p.pen,c.width,c.height,m);inpaintMask(c,m)}catch(e){console.warn('birome',e)}}return c}}
+
+/* pantalla de borrado inteligente: reemplaza la anterior */
+cleanSheet=async function(){const p=Ed.p;if(!p)return;const k=pageKey(p);const er=(p.erase&&p.erase.k===k&&p.erase.s)?p.erase.s.slice():[];let mode='brush',pen=p.pen&&p.pen.k===k?p.pen:null,penPrev=null;
+ const tg=(id,on,l,ico)=>'<button class="cptog '+(on?'on':'')+'" data-cl="'+id+'"><i data-ico="'+ico+'"></i><span>'+l+'</span><em>'+(on?'Sí':'No')+'</em></button>';
+ const bd=openSheet('Borrado inteligente','<div class="bi-tabs"><button data-bm="brush" class="on">🖌️ Pincel</button><button data-bm="pen">✒️ Manuscrito</button><button data-bm="text">🔤 Texto</button></div>'+
+  '<p class="muted bi-hint" id="biHint"></p><div class="bi-pen" id="biPen" hidden><span id="biPenTx"></span><button class="btn pri" id="biPenGo">Borrar</button></div>'+
+  '<div class="cl-wrap" id="clWrap"><div class="bi-z" id="clZ"><canvas id="clCv"></canvas><canvas id="clOv"></canvas></div></div>'+
+  '<div class="row bi-tools"><span class="muted">Trazo</span><input type="range" id="clR" min="1" max="8" value="3" style="flex:1"><button class="btn" id="clUndo" title="Deshacer">↶</button><button class="btn" id="clCmp" title="Mantener apretado para ver el original">◐ Comparar</button><button class="btn" id="clClr">Limpiar</button></div>'+
+  '<div class="cpgrid" style="margin-top:8px">'+tg('dw',!!(p.dw&&p.dw.k===k&&p.dw.on!==false),'Aplanar hoja curva','layers')+tg('fg',!!(p.fg&&p.fg.k===k&&p.fg.on!==false),'Borrar dedos del borde','eraser')+'</div>'+
+  '<button class="btn pri block" id="clOk" style="margin-top:10px">Aplicar</button>');
+ iconize&&iconize(bd);const cv=$('#clCv',bd),ov=$('#clOv',bd),wrap=$('#clWrap',bd),zc=$('#clZ',bd);let img=null,orig=null;
+ const HINT={brush:'Pintá con el dedo sobre la mancha, el lápiz o la sombra. Con dos dedos hacés zoom para ser más preciso.',pen:'Busca birome de color (azul, roja, verde) y marcas a mano en color. Revisá lo marcado antes de borrar: también encuentra firmas y sellos de color.',text:'Tocá un renglón para borrarlo. Tocá de nuevo para sumar otros.'};
+ const draw=()=>{const x=ov.getContext('2d');x.clearRect(0,0,ov.width,ov.height);x.fillStyle='rgba(229,50,45,.45)';const D=Math.max(ov.width,ov.height);
+  for(const s of er){if(s.w){x.fillRect(s.x*ov.width,s.y*ov.height,s.w*ov.width,s.h*ov.height);continue}x.beginPath();x.arc(s.x*ov.width,s.y*ov.height,s.r*D,0,7);x.fill()}
+  if(penPrev){const m=new Uint8Array(ov.width*ov.height);fgMask(penPrev,ov.width,ov.height,m);const id=x.getImageData(0,0,ov.width,ov.height);for(let i=0;i<m.length;i++)if(m[i]){id.data[i*4]=147;id.data[i*4+1]=51;id.data[i*4+2]=234;id.data[i*4+3]=150}x.putImageData(id,0,0)}};
+ const load=async()=>{img=await renderPage({...p,erase:null},{maxSide:900,noOverlays:true});orig=null;cv.width=ov.width=img.width;cv.height=ov.height=img.height;cv.getContext('2d').drawImage(img,0,0);draw()};
+ const setMode=m=>{mode=m;$$('[data-bm]',bd).forEach(b=>b.classList.toggle('on',b.dataset.bm===m));$('#biHint',bd).textContent=HINT[m];$('#biPen',bd).hidden=m!=='pen';if(m==='pen')scanPen();else{penPrev=null;draw()}};
+ const scanPen=async()=>{const base=await renderPage({...p,erase:null,pen:null,filter:'original'},{maxSide:900,noOverlays:true,noClean:false});const r=penDetect(base);penPrev=r;draw();
+  $('#biPenTx',bd).textContent=r?'Marcas detectadas: '+r.n:(pen?'La birome ya está borrada':'No encontré birome de color');$('#biPenGo',bd).disabled=!r};
+ await load().catch(e=>toast(e.message));setMode('brush');
+ /* zoom con dos dedos (y doble toque para volver) */
+ let zs=1,zx=0,zy=0,pinch=null;const zApply=()=>{zc.style.transform='translate('+zx+'px,'+zy+'px) scale('+zs+')'};
+ wrap.addEventListener('touchstart',e=>{if(e.touches.length===2){const [a,b]=e.touches;pinch={d:Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY),s:zs,cx:(a.clientX+b.clientX)/2,cy:(a.clientY+b.clientY)/2,zx,zy};painting=false}},{passive:true});
+ wrap.addEventListener('touchmove',e=>{if(pinch&&e.touches.length===2){e.preventDefault();const [a,b]=e.touches;zs=Math.max(1,Math.min(5,pinch.s*Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY)/pinch.d));const cx=(a.clientX+b.clientX)/2,cy=(a.clientY+b.clientY)/2;zx=pinch.zx+(cx-pinch.cx);zy=pinch.zy+(cy-pinch.cy);if(zs===1){zx=zy=0}zApply()}},{passive:false});
+ wrap.addEventListener('touchend',e=>{if(e.touches.length<2)pinch=null});wrap.addEventListener('dblclick',()=>{zs=1;zx=zy=0;zApply()});
+ let painting=false;const at=e=>{const r=ov.getBoundingClientRect();return {x:Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)),y:Math.max(0,Math.min(1,(e.clientY-r.top)/r.height))}};
+ const add=e=>{const q=at(e),r=(+$('#clR',bd).value)*.006/zs;const l=er[er.length-1];if(l&&l.g===painting&&!l.w&&Math.hypot(l.x-q.x,l.y-q.y)<r*.4)return;er.push({x:+q.x.toFixed(4),y:+q.y.toFixed(4),r:+r.toFixed(4),g:painting});draw()};
+ ov.addEventListener('pointerdown',e=>{if(pinch)return;e.preventDefault();if(mode==='text'){const q=at(e),b=lineAt(img,q.x,q.y);if(b){er.push({...b,g:Date.now()});draw()}else toast('No encontré texto ahí');return}if(mode!=='brush')return;ov.setPointerCapture(e.pointerId);painting=Date.now();add(e)});
+ ov.addEventListener('pointermove',e=>{if(painting&&!pinch&&mode==='brush')add(e)});['pointerup','pointercancel'].forEach(t=>ov.addEventListener(t,()=>{painting=false}));
+ $('#clUndo',bd).onclick=()=>{const g=er.length?er[er.length-1].g:0;while(er.length&&er[er.length-1].g===g)er.pop();draw()};$('#clClr',bd).onclick=()=>{er.length=0;draw()};
+ /* comparar: mientras se mantiene apretado se ve la foto sin ningún arreglo */
+ const cmp=$('#clCmp',bd),show=async on=>{if(on){if(!orig)orig=await renderPage({...p,erase:null,pen:null,fg:null,dw:null},{maxSide:900,noOverlays:true});cv.getContext('2d').drawImage(orig,0,0,cv.width,cv.height);ov.style.opacity=0}else{cv.getContext('2d').drawImage(img,0,0);ov.style.opacity=1}};
+ cmp.addEventListener('pointerdown',e=>{e.preventDefault();show(true)});['pointerup','pointerleave','pointercancel'].forEach(t=>cmp.addEventListener(t,()=>show(false)));
+ $('#biPenGo',bd).onclick=async()=>{if(!penPrev)return;p.pen={k,...penPrev};pen=p.pen;penPrev=null;p._dirty=true;await load();$('#biPenTx',bd).textContent='Listo: birome borrada';$('#biPenGo',bd).disabled=true;toast('✒️ Marcas de birome borradas')};
+ bd.addEventListener('click',async e=>{const b=e.target.closest('[data-bm]');if(b){setMode(b.dataset.bm);return}const t=e.target.closest('[data-cl]');if(!t)return;const w=t.dataset.cl;
+  if(w==='dw'){if(p.dw&&p.dw.k===k){p.dw.on=p.dw.on===false}else{busy('Buscando la curva de los renglones…');try{const a=dewarpAnalyze(await renderPage({...p,dw:null,fg:null,erase:null,pen:null,filter:'original'},{maxSide:1000,noOverlays:true,noClean:true}));if(a&&a.ok)p.dw={k,c:a.c,amp:a.amp};else toast(a&&a.lines>=5?'La hoja ya está plana':'No encontré renglones suficientes para medir la curva')}finally{busy(false)}}}
+  else{if(p.fg&&p.fg.k===k){p.fg.on=p.fg.on===false}else{busy('Buscando dedos…');try{const b2=await renderPage({...p,fg:null,erase:null,filter:'original'},{maxSide:1000,noOverlays:true});const f=fingerDetect(b2);if(f)p.fg={k,...f};else toast('No encontré dedos en el borde. Si queda una marca, pintala.')}finally{busy(false)}}}
+  const on=w==='dw'?!!(p.dw&&p.dw.k===k&&p.dw.on!==false):!!(p.fg&&p.fg.k===k&&p.fg.on!==false);t.classList.toggle('on',on);t.querySelector('em').textContent=on?'Sí':'No';p._dirty=true;await load()});
+ $('#clOk',bd).onclick=async()=>{if(er.length)p.erase={k,s:er.map(({x,y,r,w,h})=>w?{x,y,w,h}:{x,y,r})};else delete p.erase;p._dirty=true;await Nav.back();Ed.touch(false);toast(er.length?'🧽 Borrado aplicado':'Listo')}};
+
+/* ---- marcación a mano: dibujo libre y formas, con color, grosor y opacidad ---- */
+const MK_COLORS=['#e5322d','#1d4ed8','#111111','#16a34a','#f59e0b','#ffffff'];
+async function markSheet(){const p=Ed.p;if(!p)return;const items=[],redo=[];let tab='draw',shape='arrow',col=S.mkCol||'#e5322d',wid=S.mkW||12,op=S.mkOp==null?100:S.mkOp,cur=null;
+ const bd=openSheet('Marcación','<div class="mk-wrap"><canvas id="mkCv"></canvas><canvas id="mkOv"></canvas></div>'+
+  '<div class="bi-tabs"><button data-mt="draw" class="on">✏️ Dibujo</button><button data-mt="shape">⬜ Formas</button></div>'+
+  '<div class="mk-shapes" id="mkShapes" hidden>'+[['arrow','➜ Flecha'],['line','／ Línea'],['rect','▭ Rectángulo'],['ellipse','◯ Círculo']].map(([k,l])=>'<button data-ms="'+k+'"'+(k===shape?' class="on"':'')+'>'+l+'</button>').join('')+'</div>'+
+  '<div class="mk-row"><span>Color</span>'+MK_COLORS.map(c=>'<button class="mk-c'+(c===col?' on':'')+'" data-mc="'+c+'" style="background:'+c+'"></button>').join('')+'<input type="color" id="mkPick" value="'+col+'" title="Otro color"></div>'+
+  '<div class="mk-row"><span>Ancho de trazo</span><input type="range" id="mkW" min="2" max="40" value="'+wid+'"><b id="mkWv">'+wid+'</b></div>'+
+  '<div class="mk-row"><span>Opacidad</span><input type="range" id="mkO" min="10" max="100" value="'+op+'"><b id="mkOv2">'+op+'%</b></div>'+
+  '<div class="row" style="gap:8px;margin-top:6px"><button class="btn" id="mkUndo">↶</button><button class="btn" id="mkRedo">↷</button><button class="btn pri block" id="mkOk">Aplicar</button></div>');
+ const cv=$('#mkCv',bd),ov=$('#mkOv',bd);const base=await renderPage(p,{maxSide:1400});cv.width=ov.width=base.width;cv.height=ov.height=base.height;cv.getContext('2d').drawImage(base,0,0);
+ const paint=(x,it)=>{x.save();x.globalAlpha=it.op/100;x.strokeStyle=x.fillStyle=it.col;x.lineWidth=it.w;x.lineCap='round';x.lineJoin='round';const W=ov.width,H=ov.height;
+  if(it.t==='draw'){x.beginPath();it.pts.forEach((q,i)=>i?x.lineTo(q.x*W,q.y*H):x.moveTo(q.x*W,q.y*H));if(it.pts.length===1)x.lineTo(it.pts[0].x*W+.1,it.pts[0].y*H);x.stroke()}
+  else{const a={x:it.a.x*W,y:it.a.y*H},b={x:it.b.x*W,y:it.b.y*H};x.beginPath();
+   if(it.t==='rect')x.strokeRect(Math.min(a.x,b.x),Math.min(a.y,b.y),Math.abs(b.x-a.x),Math.abs(b.y-a.y));
+   else if(it.t==='ellipse'){x.ellipse((a.x+b.x)/2,(a.y+b.y)/2,Math.abs(b.x-a.x)/2,Math.abs(b.y-a.y)/2,0,0,Math.PI*2);x.stroke()}
+   else{x.moveTo(a.x,a.y);x.lineTo(b.x,b.y);x.stroke();if(it.t==='arrow'){const an=Math.atan2(b.y-a.y,b.x-a.x),L=Math.max(14,it.w*3.2);x.beginPath();x.moveTo(b.x,b.y);x.lineTo(b.x-L*Math.cos(an-.45),b.y-L*Math.sin(an-.45));x.lineTo(b.x-L*Math.cos(an+.45),b.y-L*Math.sin(an+.45));x.closePath();x.fill()}}}x.restore()};
+ const redraw=()=>{const x=ov.getContext('2d');x.clearRect(0,0,ov.width,ov.height);for(const it of items)paint(x,it);if(cur)paint(x,cur)};
+ const at=e=>{const r=ov.getBoundingClientRect();return {x:Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)),y:Math.max(0,Math.min(1,(e.clientY-r.top)/r.height))}};
+ const sc=()=>ov.width/ov.getBoundingClientRect().width;
+ ov.addEventListener('pointerdown',e=>{e.preventDefault();ov.setPointerCapture(e.pointerId);const q=at(e),w=wid*sc();cur=tab==='draw'?{t:'draw',pts:[q],col,w,op}:{t:shape,a:q,b:q,col,w,op};redraw()});
+ ov.addEventListener('pointermove',e=>{if(!cur)return;const q=at(e);if(cur.t==='draw')cur.pts.push(q);else cur.b=q;redraw()});
+ ['pointerup','pointercancel'].forEach(t=>ov.addEventListener(t,()=>{if(!cur)return;if(cur.t==='draw'||Math.hypot(cur.b.x-cur.a.x,cur.b.y-cur.a.y)>.01){items.push(cur);redo.length=0}cur=null;redraw()}));
+ bd.addEventListener('click',e=>{const t=e.target;const mt=t.closest('[data-mt]');if(mt){tab=mt.dataset.mt;$$('[data-mt]',bd).forEach(b=>b.classList.toggle('on',b===mt));$('#mkShapes',bd).hidden=tab!=='shape';return}
+  const ms=t.closest('[data-ms]');if(ms){shape=ms.dataset.ms;$$('[data-ms]',bd).forEach(b=>b.classList.toggle('on',b===ms));return}
+  const mc=t.closest('[data-mc]');if(mc){col=mc.dataset.mc;S.mkCol=col;saveS();$$('[data-mc]',bd).forEach(b=>b.classList.toggle('on',b===mc));$('#mkPick',bd).value=col}});
+ $('#mkPick',bd).oninput=e=>{col=e.target.value;S.mkCol=col;$$('[data-mc]',bd).forEach(b=>b.classList.remove('on'))};
+ $('#mkW',bd).oninput=e=>{wid=+e.target.value;$('#mkWv',bd).textContent=wid;S.mkW=wid};$('#mkO',bd).oninput=e=>{op=+e.target.value;$('#mkOv2',bd).textContent=op+'%';S.mkOp=op};
+ $('#mkUndo',bd).onclick=()=>{if(items.length){redo.push(items.pop());redraw()}};$('#mkRedo',bd).onclick=()=>{if(redo.length){items.push(redo.pop());redraw()}};
+ $('#mkOk',bd).onclick=async()=>{saveS();if(!items.length)return Nav.back();const png=ov.toDataURL('image/png');p.overlays=p.overlays||[];p.overlays.push({src:png,x:0,y:0,w:1,h:1});p._dirty=true;await Nav.back();Ed.touch(false);toast('✏️ Marcación agregada (se quita con «Quitar firmas»)')}}
+(function(){const foot=$('#editor .sfoot'),ref=foot&&(foot.querySelector('[data-ed="clean"]')||foot.querySelector('[data-ed="adj"]'));if(!foot||!ref||foot.querySelector('[data-ed="mark"]'))return;
+ const b=document.createElement('button');b.className='tb';b.dataset.ed='mark';b.innerHTML='<b data-ico="pencil"></b><span>Marcar</span>';ref.after(b);iconize&&iconize(b);
+ b.addEventListener('click',e=>{e.stopImmediatePropagation();markSheet()},true)})();
+document.head.insertAdjacentHTML('beforeend','<style id="v66Css">.bi-tabs{display:flex;gap:6px;margin:4px 0 8px}.bi-tabs button{flex:1;padding:8px 4px;border-radius:12px;background:var(--bg3,#eee);font-weight:600;font-size:13px}.bi-tabs button.on{background:var(--ac);color:#fff}'+
+ '.bi-hint{font-size:12.5px;margin:0 0 6px}.bi-pen{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#f3e8ff;color:#6b21a8;border-radius:12px;padding:6px 6px 6px 12px;margin-bottom:8px;font-weight:600;font-size:13px}.bi-pen[hidden]{display:none}'+
+ '.cl-wrap{overflow:hidden;touch-action:none}.bi-z{position:relative;transform-origin:0 0;display:flex;justify-content:center}.bi-z canvas{max-width:100%;max-height:52vh;display:block}#clOv{position:absolute;top:0;left:50%;transform:translateX(-50%);touch-action:none}'+
+ '.bi-tools{gap:6px;margin-top:8px;align-items:center;flex-wrap:wrap}'+
+ '.mk-wrap{position:relative;display:flex;justify-content:center;background:var(--stage,#eee);border-radius:10px;overflow:hidden}.mk-wrap canvas{max-width:100%;max-height:46vh;display:block}#mkOv{position:absolute;top:0;left:50%;transform:translateX(-50%);touch-action:none}'+
+ '.mk-row{display:flex;align-items:center;gap:8px;margin:8px 0;font-size:13px}.mk-row span{min-width:96px;color:var(--mut,#6b7280)}.mk-row input[type=range]{flex:1}.mk-c{width:26px;height:26px;border-radius:50%;border:2px solid var(--line)}.mk-c.on{outline:3px solid var(--ac);outline-offset:1px}#mkPick{width:30px;height:28px;border:0;background:none;padding:0}'+
+ '.mk-shapes{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px}.mk-shapes[hidden]{display:none}.mk-shapes button{padding:6px 10px;border-radius:10px;background:var(--bg3,#eee);font-size:13px}.mk-shapes button.on{background:var(--ac);color:#fff}</style>');
 </script>
 </body>
 </html>
