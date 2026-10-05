@@ -1108,6 +1108,33 @@ await test('Editar texto por palabra o renglón, ajustes con perfil y secciones,
   await pg.evaluate(()=>{S.fxUnit='w';while(Nav.stack.length)Nav._pop()});
 });
 
+await test('Libro que saca sola al pasar la página, carpetas protegidas con PIN y espacio por tipo',async pg=>{
+  /* libro automático: movimiento de la hoja y luego quieta → una foto; sin volver a moverse no repite */
+  await pg.evaluate(()=>{S.autoCapture=false;Cam.open('batch')});await pg.waitForFunction(()=>Cam.stream&&$('#camVideo').videoWidth>0,null,{timeout:15000});
+  await pg.click('#camKinds [data-kind="book"]');await pg.waitForTimeout(50);
+  const b=await pg.evaluate(()=>{clearInterval(Cam.timer);let n=0;Cam.shoot=()=>{n++};const seq=[25,1,1,1,1,1,1,1,1,30,1,1,1,1];let i=0;const _cm=camMotion;camMotion=()=>seq[i++];
+    for(let k=0;k<seq.length;k++)Cam.detect();camMotion=_cm;return {n,mode:Cam.mode,auto:/Automático/.test($('#camBookAuto').textContent)}});
+  assert.deepEqual(b,{n:2,mode:'batch',auto:true});
+  await pg.evaluate(()=>{while(Nav.stack.length)Nav._pop()});
+  /* carpetas protegidas */
+  await pg.evaluate(async()=>{for(const [id,f] of [['r1','Reservado'],['r2','Reservado'],['p1','']])await DB.putDoc({id,name:'Doc '+id,created:1,updated:Date.now(),folder:f,pages:[]});await FolderLock.set('Reservado','4321');await refreshLists();go&&go('docs')});
+  const v=await pg.evaluate(async()=>({metas:(await DB.metas()).map(m=>m.id).sort(),list:_metas.map(m=>m.id).sort()}));
+  assert.deepEqual(v,{metas:['p1'],list:['p1']});
+  await pg.evaluate(()=>{docFilter={k:'all',v:''};renderDocList()});await pg.waitForSelector('#docFolders [data-fv="Reservado"]');
+  assert.ok(await pg.$('#docFolders [data-fv="Reservado"].f-lock'),'la carpeta no aparece bloqueada');
+  await pg.click('#docFolders [data-fv="Reservado"]');await pg.waitForSelector('#fpP1');await pg.fill('#fpP1','1111');await pg.click('#fpOk');await pg.waitForTimeout(200);
+  assert.equal(await pg.evaluate(()=>FolderLock.open.has('Reservado')),false,'abrió con PIN incorrecto');
+  await pg.fill('#fpP1','4321');await pg.click('#fpOk');await pg.waitForFunction(()=>FolderLock.open.has('Reservado'));await pg.waitForTimeout(300);
+  assert.deepEqual(await pg.evaluate(()=>_metas.map(m=>m.id).sort()),['p1','r1','r2']);
+  await pg.evaluate(()=>{FolderLock.lockAll()});await pg.waitForTimeout(300);assert.deepEqual(await pg.evaluate(()=>_metas.map(m=>m.id)),['p1']);
+  /* el respaldo sigue viendo todo */
+  assert.equal(await pg.evaluate(async()=>{_metaAll=true;try{return (await DB.metas()).length}finally{_metaAll=false}}),3);
+  /* espacio: gráfico circular por tipo */
+  await pg.evaluate(()=>{while(Nav.stack.length)Nav._pop();storageSheet()});await pg.waitForSelector('#sheetBody .dn-wrap svg');
+  assert.ok(await pg.$$eval('#sheetBody .dn-row',x=>x.length)>=4);assert.match(await pg.textContent('#sheetBody .dn-leg'),/Documentos[\s\S]*App y librerías[\s\S]*IA local/);
+  await pg.evaluate(()=>{while(Nav.stack.length)Nav._pop();S.folderLocks={}});
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();

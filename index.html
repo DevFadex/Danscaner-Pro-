@@ -3452,7 +3452,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 4.5',APP_VER='67';
+const NEXA_VER='Nexa 4.5',APP_VER='68';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3570,7 +3570,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='67 · 05/10/2026';
+const BUILD='68 · 05/10/2026';
 /* Versión que ven los usuarios: se cambia a mano solo cuando se decide publicar una versión nueva para todos.
    El administrador ve la versión interna (BUILD) con cada cambio. */
 const PUBLIC_VER='1.2';
@@ -5825,6 +5825,89 @@ async function helpSheet(){let md='';try{md=await (await fetch('knowledge/dansca
  $('#hpQ',bd).oninput=e=>{const q=nbNorm(e.target.value.trim());const secs=[];let cur=null;for(const el of $('#hpBody',bd).children){if(el.tagName==='H3'){cur={h:el,els:[]};secs.push(cur)}else if(cur)cur.els.push(el)}
   for(const s of secs){const hit=!q||nbNorm(s.h.textContent+' '+s.els.map(x=>x.textContent).join(' ')).includes(q);s.h.hidden=!hit;s.els.forEach(x=>x.hidden=!hit)}}}
 document.head.insertAdjacentHTML('beforeend','<style id="v67bCss">.hp h3{font-size:16px;margin:16px 0 6px}.hp h4{font-size:14px;margin:12px 0 4px}.hp p,.hp li{font-size:14px;line-height:1.5}.hp ul{padding-left:18px;margin:4px 0}.hp [hidden]{display:none}</style>');
+/* v68 · libro: pasá la página y saca sola · carpetas protegidas con PIN · liberar espacio con gráfico por tipo */
+/* ---- libro automático: detecta el movimiento de la hoja al pasar la página y dispara cuando queda quieta ---- */
+const BK_MOVE=10,BK_STILL=2.6,BK_TICKS=4;
+function camMotion(v){const W=64,H=48;const c=Cam._mc||(Cam._mc=canvas(W,H)),x=c.getContext('2d',{willReadFrequently:true});x.drawImage(v,0,0,W,H);const d=x.getImageData(0,0,W,H).data,g=new Uint8Array(W*H);for(let i=0,j=0;i<g.length;i++,j+=4)g[i]=(d[j]*77+d[j+1]*150+d[j+2]*29)>>8;
+ const p=Cam._mprev;Cam._mprev=g;if(!p)return null;let s=0;for(let i=0;i<g.length;i++)s+=Math.abs(g[i]-p[i]);return s/g.length}
+function bookAutoOn(){return Cam.kind==='book'&&Cam.mode==='batch'&&S.bookAuto!==false&&!Cam.replaceId&&!(typeof camPanelOpen==='function'&&camPanelOpen())}
+{const _d=Cam.detect;Cam.detect=function(){if(!bookAutoOn())return _d.apply(this,arguments);
+ /* en libro automático manda el movimiento de la página, no la captura automática común */
+ const ac=S.autoCapture;S.autoCapture=false;let r;try{r=_d.apply(this,arguments)}finally{S.autoCapture=ac}
+ try{const v=$('#camVideo');if(!v||!v.videoWidth||this.busy)return r;const m=camMotion(v);if(m==null)return r;
+  if(m>BK_MOVE){this._bkArmed=true;this._bkStill=0}else if(m<BK_STILL)this._bkStill=(this._bkStill||0)+1;else this._bkStill=0;
+  const h=$('#camHint');if(h&&!h.classList.contains('cap'))h.textContent=this._bkArmed?(this._bkStill?'📖 Quieto… ':'📖 Pasá la página')+' · '+(this.batch.length+(this._pend||0))+' foto(s)':'📖 Pasá la página para la siguiente foto';
+  if(this._bkArmed&&this._bkStill>=BK_TICKS){this._bkArmed=false;this._bkStill=0;navigator.vibrate&&navigator.vibrate(30);this.shoot()}}catch(e){}
+ return r}}
+{const _o=Cam.open;Cam.open=function(){this._bkArmed=true;this._bkStill=0;this._mprev=null;return _o.apply(this,arguments)}}
+(function(){const g=$('#camGuide');if(!g||$('#camBookAuto'))return;g.insertAdjacentHTML('beforeend','<button class="cg-auto" id="camBookAuto"></button>');
+ const upd=()=>{const b=$('#camBookAuto');b.classList.toggle('on',S.bookAuto!==false);b.textContent=S.bookAuto!==false?'⚡ Automático':'✋ Manual'};upd();
+ $('#camBookAuto').onclick=e=>{e.stopPropagation();S.bookAuto=S.bookAuto===false;saveS();upd();if(S.bookAuto!==false&&Cam.mode!=='batch'){Cam.mode='batch';Cam.updUI()}Cam._bkArmed=true;toast(S.bookAuto!==false?'📖 Pasá las páginas: saco cada foto sola cuando la hoja queda quieta':'Libro manual: tocá el disparador en cada página',3000)}})();
+/* el modo libro arranca en lote para poder ir pasando páginas */
+(function(){const k=$('#camKinds');if(k)k.addEventListener('click',e=>{const b=e.target.closest('[data-kind="book"]');if(b&&S.bookAuto!==false&&Cam.mode!=='batch'&&!Cam.replaceId){setTimeout(()=>{Cam.mode='batch';Cam._bkArmed=true;Cam.updUI()},0)}})})();
+
+/* ---- carpetas protegidas con PIN: sus documentos no aparecen en ninguna lista hasta desbloquear ---- */
+const FolderLock={open:new Set(),
+ locked(f){return !!(f&&S.folderLocks&&S.folderLocks[f])},
+ hidden(m){return !!(m&&this.locked(m.folder)&&!this.open.has(m.folder))},
+ async set(f,pin){const salt=uid()+uid();S.folderLocks=S.folderLocks||{};S.folderLocks[f]={salt,hash:await pinHash(pin,salt)};this.open.delete(f);saveS()},
+ async check(f,pin){const L=S.folderLocks&&S.folderLocks[f];return !!L&&(await pinHash(pin,L.salt))===L.hash},
+ clear(f){if(S.folderLocks){delete S.folderLocks[f];saveS()}this.open.delete(f)},
+ lockAll(){if(this.open.size){this.open.clear();if(typeof refreshLists==='function')refreshLists()}}};
+/* las listas, la búsqueda y Nexa no ven lo protegido; el respaldo y la copia de seguridad sí (con todos los documentos) */
+let _metaAll=false;
+{const _m=DB.metas.bind(DB);DB.metas=async function(){const r=await _m();return _metaAll?r:r.filter(m=>!FolderLock.hidden(m))}}
+for(const k of ['create']){if(typeof Backup!=='undefined'&&Backup[k]){const _f=Backup[k];Backup[k]=async function(){_metaAll=true;try{return await _f.apply(this,arguments)}finally{_metaAll=false}}}}
+{const _b=backupSheet;backupSheet=async function(){_metaAll=true;try{return await _b.apply(this,arguments)}finally{_metaAll=false}}}
+/* al salir de la app, las carpetas se vuelven a bloquear (después de 2 minutos fuera) */
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')FolderLock._t=Date.now();else if(FolderLock._t&&Date.now()-FolderLock._t>120000)FolderLock.lockAll()});
+async function folderPinAsk(f,{title,setNew}={}){return new Promise(res=>{let done=false;const fin=v=>{if(done)return;done=true;res(v)};
+ const b=openSheet(title||('🔒 '+f),(setNew?'<p class="muted">Elegí un PIN para la carpeta <b>'+esc(f)+'</b>. Sus documentos no se van a ver en las listas, la búsqueda ni Nexa hasta que pongas el PIN.</p>'+opt('PIN (4 a 12 números)','<input id="fpP1" type="password" inputmode="numeric" maxlength="12">')+opt('Repetir PIN','<input id="fpP2" type="password" inputmode="numeric" maxlength="12">')
+  :'<p class="muted">La carpeta <b>'+esc(f)+'</b> está protegida.</p><input id="fpP1" type="password" inputmode="numeric" maxlength="12" placeholder="PIN" style="width:100%;box-sizing:border-box">')+'<button class="btn pri block" id="fpOk" style="margin-top:10px">'+(setNew?'Proteger':'Abrir')+'</button><p class="muted" style="font-size:12px">Protege de miradas ajenas. No cifra los archivos: no guardes documentación reservada más tiempo del necesario.</p>',()=>fin(null));
+ const go=async()=>{const a=$('#fpP1',b).value;if(setNew){const c=$('#fpP2',b).value;if(!/^\d{4,12}$/.test(a))return toast('El PIN debe tener entre 4 y 12 números');if(a!==c)return toast('Los PIN no coinciden');fin(a);Nav.back();return}
+  if(await FolderLock.check(f,a)){fin(true);Nav.back()}else{toast('PIN incorrecto');$('#fpP1',b).value=''}};
+ $('#fpOk',b).onclick=go;$('#fpP1',b).onkeydown=e=>{if(e.key==='Enter'&&!setNew)go()};setTimeout(()=>{try{$('#fpP1',b).focus()}catch(e){}},250)})}
+/* chips de carpeta: las protegidas aparecen con candado aunque estén vacías a la vista; se abren con PIN */
+{const _rf=renderDocFilters;renderDocFilters=function(){_rf.apply(this,arguments);const el=$('#docFolders');if(!el)return;
+ for(const f of Object.keys(S.folderLocks||{})){let c=el.querySelector('[data-fk="folder"][data-fv="'+CSS.escape(f)+'"]');const op=FolderLock.open.has(f);
+  if(!c){el.insertAdjacentHTML('beforeend','<button class="chip" data-fk="folder" data-fv="'+esc(f)+'">📁 '+esc(f)+' <small>🔒</small></button>');c=el.lastElementChild}
+  else if(!op)c.innerHTML='📁 '+esc(f)+' <small>🔒</small>';c.classList.add(op?'f-open':'f-lock')}
+ /* acciones de la carpeta elegida */
+ let a=$('#docFolderAct');if(docFilter.k==='folder'&&docFilter.v){const f=docFilter.v,L=FolderLock.locked(f);const h=(L?(FolderLock.open.has(f)?'<button class="chip" data-fa="close">🔒 Bloquear ahora</button>':'')+'<button class="chip" data-fa="off">🔓 Quitar PIN</button>':'<button class="chip" data-fa="on">🔒 Proteger con PIN</button>');
+  if(!a){el.insertAdjacentHTML('afterend','<div class="chips" id="docFolderAct"></div>');a=$('#docFolderAct')}a.innerHTML=h;a.hidden=false}else if(a)a.hidden=true}}
+(function(){const el=$('#docFolders');if(!el)return;
+ el.addEventListener('click',async e=>{const c=e.target.closest('[data-fk="folder"]');if(!c)return;const f=c.dataset.fv;if(!FolderLock.locked(f)||FolderLock.open.has(f))return;e.stopImmediatePropagation();
+  const ok=await folderPinAsk(f);if(ok!==true)return;FolderLock.open.add(f);docFilter={k:'folder',v:f};await refreshLists();renderDocList();toast('🔓 Carpeta abierta: se vuelve a bloquear al salir de la app')},true);
+ document.addEventListener('click',async e=>{const b=e.target.closest('#docFolderAct [data-fa]');if(!b)return;const f=docFilter.v,k=b.dataset.fa;
+  if(k==='on'){const pin=await folderPinAsk(f,{setNew:true,title:'🔒 Proteger carpeta'});if(!pin)return;await FolderLock.set(f,pin);FolderLock.open.add(f);toast('🔒 Carpeta protegida')}
+  else if(k==='off'){if(!FolderLock.open.has(f)){const ok=await folderPinAsk(f);if(ok!==true)return}if(!confirm('¿Quitar el PIN de «'+f+'»?'))return;FolderLock.clear(f);toast('Protección quitada')}
+  else if(k==='close'){FolderLock.open.delete(f);docFilter={k:'all',v:''};toast('🔒 Carpeta bloqueada')}
+  await refreshLists();renderDocList()})})();
+
+/* ---- liberar espacio: gráfico circular por tipo y limpieza por partes ---- */
+async function cacheGroups(){const g={app:0,ia:0,otros:0},names={app:[],ia:[],otros:[]};if(!('caches' in window))return {g,names};
+ for(const n of await caches.keys()){let t=0;try{const c=await caches.open(n);for(const r of await c.keys()){try{const res=await c.match(r);if(res)t+=(await res.clone().blob()).size}catch(e){}}}catch(e){}
+  const k=/^danscaner-/.test(n)?'app':/webllm|wllama|mlc|tvmjs|transformers|onnx|gguf|model/i.test(n)?'ia':'otros';g[k]+=t;names[k].push(n)}return {g,names}}
+function donutSvg(parts,size){const R=42,C=2*Math.PI*R,tot=parts.reduce((a,p)=>a+p.v,0)||1;let off=0;
+ return '<svg viewBox="0 0 100 100" width="'+size+'" height="'+size+'" class="dn"><circle cx="50" cy="50" r="'+R+'" fill="none" stroke="var(--line,#e5e7eb)" stroke-width="12"/>'+parts.filter(p=>p.v>0).map(p=>{const l=p.v/tot*C,s='<circle cx="50" cy="50" r="'+R+'" fill="none" stroke="'+p.c+'" stroke-width="12" stroke-dasharray="'+Math.max(.5,l-.6)+' '+(C-l+.6)+'" stroke-dashoffset="'+(-off)+'" transform="rotate(-90 50 50)"/>';off+=l;return s}).join('')+'</svg>'}
+{const _st=storageSheet;storageSheet=async function(){const r=await _st.apply(this,arguments);try{await storageDecorate()}catch(e){console.warn('espacio',e)}return r}}
+async function storageDecorate(){const box=$('#sheetBody .stbox');if(!box)return;const card=box.querySelector('.stcard');if(!card)return;
+ let est={};try{est=await navigator.storage.estimate()}catch(e){}const {g,names}=await cacheGroups();const docs=(await (async()=>{_metaAll=true;try{return (await DB.metas()).reduce((a,m)=>a+(m.bytes||0),0)}finally{_metaAll=false}})());
+ const used=Math.max(est.usage||0,docs+g.app+g.ia+g.otros),quota=est.quota||0,libre=Math.max(0,quota-used),otros=Math.max(0,used-docs-g.app-g.ia);
+ const parts=[{k:'docs',l:'Documentos',v:docs,c:'#0ea5e9'},{k:'app',l:'App y librerías',v:g.app,c:'#22c55e'},{k:'ia',l:'IA local (modelos)',v:g.ia,c:'#a855f7'},{k:'otros',l:'Otros datos de la app',v:otros,c:'#f59e0b'}];
+ const pct=quota?Math.min(100,used/quota*100):0;
+ card.innerHTML='<div class="dn-wrap">'+donutSvg(parts,132)+'<div class="dn-c"><b>'+fmtSize(used)+'</b><small>'+(quota?pct.toFixed(pct<1?2:1)+' % del espacio':'usado')+'</small></div></div>'+
+  '<div class="dn-leg">'+parts.map(p=>'<div class="dn-row"><i style="background:'+p.c+'"></i><span>'+p.l+'</span><b>'+fmtSize(p.v)+'</b>'+((p.k==='app'&&p.v>50000)?'<button class="btn sm" data-dc="app">Limpiar</button>':(p.k==='ia'&&p.v>0)?'<button class="btn sm" data-dc="ia">Borrar</button>':'')+'</div>').join('')+
+  (quota?'<div class="dn-row"><i style="background:#cbd5e1"></i><span>Libre en el teléfono para la app</span><b>'+fmtSize(libre)+'</b></div>':'')+'</div>'+
+  '<p class="muted" style="font-size:12px">«Limpiar» borra copias que se vuelven a descargar solas. «Borrar» los modelos de IA libera mucho lugar; se descargan otra vez si volvés a usar la IA sin internet. Tus documentos nunca se tocan.</p>';
+ card.onclick=async e=>{const b=e.target.closest('[data-dc]');if(!b)return;e.stopPropagation();const k=b.dataset.dc;if(!confirm(k==='ia'?'¿Borrar los modelos de IA guardados ('+fmtSize(g.ia)+')?':'¿Limpiar la caché de la app ('+fmtSize(g.app)+')?'))return;
+  await withBusy(async()=>{busy('Liberando espacio…');for(const n of names[k])try{await caches.delete(n)}catch(e){}});toast('✅ Espacio liberado');await Nav.back();storageSheet()}}
+document.head.insertAdjacentHTML('beforeend','<style id="v68Css">'+
+ '.cam-guide[data-k="book"] .cg-auto{display:block;position:absolute;right:10px;top:12px;pointer-events:auto;background:rgba(30,30,30,.85);color:#fff;border-radius:14px;padding:6px 10px;font-size:12px;font-weight:700}.cg-auto{display:none}.cg-auto.on{background:#1473e6}'+
+ '.chip.f-lock small{color:#f59e0b}.chip.f-open{outline:1px dashed #22c55e}#docFolderAct{margin:-2px 0 6px}#docFolderAct[hidden]{display:none}'+
+ '.dn-wrap{position:relative;display:flex;justify-content:center;margin:4px 0 10px}.dn-c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}.dn-c b{font-size:18px}.dn-c small{font-size:11px;color:var(--mut,#6b7280)}'+
+ '.dn-leg{display:flex;flex-direction:column;gap:6px}.dn-row{display:flex;align-items:center;gap:8px;font-size:13.5px}.dn-row i{width:12px;height:12px;border-radius:3px;flex:none}.dn-row span{flex:1}.dn-row .btn{padding:4px 10px}'+
+ '</style>');
 </script>
 </body>
 </html>
