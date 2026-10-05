@@ -1,5 +1,5 @@
 {
- "version": "2026-09-29",
+ "version": "2026-10-05",
  "leyes": [
   {
    "id": "cp",
@@ -113,6 +113,31 @@
    ],
    "archivo": "rd905.json",
    "total": 44
+  },
+  {
+   "id": "d396",
+   "nombre": "Reglamento de las Modalidades Básicas de la Ejecución",
+   "norma": "Decreto 396/99 (reglamenta la progresividad y el programa de prelibertad de la Ley 24.660), Anexo I, texto actualizado",
+   "abrev": "Dto. 396/99",
+   "fuente": "",
+   "descargado": "2026-10-05",
+   "origen": "Decreto 396/99, Anexo I, texto actualizado de InfoLeg (incluye el Decreto 1139/2000 y la fe de erratas), PDF provisto por el usuario. Verificar la vigencia en InfoLeg ante cualquier duda.",
+   "alias": [
+    "396/99",
+    "396 99",
+    "decreto 396",
+    "dto 396",
+    "dec 396",
+    "decreto 396/99",
+    "modalidades basicas",
+    "modalidades básicas",
+    "reglamento de modalidades basicas",
+    "reglamento de las modalidades basicas de la ejecucion",
+    "reglamento de la progresividad",
+    "reglamentacion de la 24660"
+   ],
+   "archivo": "d396.json",
+   "total": 115
   }
  ]
 }

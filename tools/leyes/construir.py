@@ -125,7 +125,7 @@ def encabezados(texto):
         res.setdefault(n, " › ".join(cur[x] for x in ("LIBRO", "TITULO", "CAPITULO") if x in cur))
     return res
 
-RX_OTRA = re.compile(r"^\s*[º°]?\s*(?:,?\s*(?:inc(?:iso)?s?\.?|ap(?:artado)?\.?)\s*[\w°º)]+\s*,?)*\s*(?:de\s+la|del|de)\s+(?:Ley|ley|Decreto|decreto|C[oó]digo|Convenci[oó]n|Constituci[oó]n|Reglamento|r[ée]gimen|Estatuto)", re.I)
+RX_OTRA = re.compile(r"^\s*[º°]?\s*(?:,?\s*(?:(?:inc(?:iso)?s?\.?|ap(?:artado)?\.?)\s*[\w°º)]+|[IVX]+\b)\s*,?)*\s*(?:de\s+la|del|de)\s+(?:Ley|ley|Decreto|decreto|C[oó]digo|Convenci[oó]n|Constituci[oó]n|Reglamento|r[ée]gimen|Estatuto)", re.I)
 
 def referencias(t):
     """Artículos de la MISMA norma que el texto menciona. Se descartan las notas de InfoLeg entre paréntesis
@@ -192,7 +192,15 @@ def main():
         else:
             crudo = CRUDO / f"{f['id']}.htm"
         if not f.get("transcripcion") and not crudo.exists():
-            print(f"{f['id']}: falta {crudo.name} (correr descargar.py)")
+            previo = SALIDA / f"{f['id']}.json"
+            if not previo.exists():
+                print(f"{f['id']}: falta {crudo.name} (correr descargar.py)")
+                continue
+            # sin acceso a InfoLeg: se conserva el texto ya armado, para no perder la norma al agregar otras
+            doc = json.loads(previo.read_text(encoding="utf-8"))
+            indice.append({k: doc[k] for k in ("id", "nombre", "norma", "abrev", "fuente", "descargado") if k in doc} | {"alias": f["alias"], "archivo": f"{f['id']}.json", "total": len(doc["articulos"])})
+            leyes.append(doc)
+            print(f"{f['id']}: {len(doc['articulos'])} artículos (texto ya armado, falta {crudo.name})")
             continue
         if not f.get("transcripcion"):
             meta = json.loads((CRUDO / f"{f['id']}.meta.json").read_text(encoding="utf-8"))

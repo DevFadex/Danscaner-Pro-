@@ -485,8 +485,9 @@ await test('Revisión: OCR sin internet (incluido en la app) y Firmar PDF usa el
 await test('Leyes oficiales cargadas (InfoLeg): artículo exacto, búsqueda por tema y relacionados',async pg=>{
   await pg.click('#btnNexa');await W(300);await pg.evaluate(()=>{Nexa.st.prov='offline';Nexa.st.msgs=[]});
   const ask=async q=>{const n=await pg.evaluate(()=>Nexa.st.msgs.length);await pg.fill('#nxIn',q);await pg.press('#nxIn','Enter');await pg.waitForFunction(n=>Nexa.st.msgs.length>=n+2&&!Nexa.sending,n,{timeout:20000});return pg.evaluate(()=>Nexa.st.msgs.at(-1).text)};
-  const idx=await pg.evaluate(async()=>(await Leyes.index()).leyes.map(l=>l.id+':'+l.total).join());assert.match(idx,/cp:\d{3},cppf:\d{3},cppn:\d{3},ep:\d{3},sppt:193,rd905:44/);
-  let t=await ask('artículo 79 del código penal');assert.ok(/Código Penal de la Nación — art\. 79/.test(t)&&/ocho a veinticinco años/.test(t)&&/fuente: InfoLeg/.test(t),t);
+  const idx=await pg.evaluate(async()=>(await Leyes.index()).leyes.map(l=>l.id+':'+l.total).join());assert.match(idx,/cp:\d{3},cppf:\d{3},cppn:\d{3},ep:\d{3},sppt:193,rd905:44,d396:115/);
+  let t=await ask('artículo 28 del decreto 396');assert.ok(/Reglamento de las Modalidades Básicas de la Ejecución — art\. 28/.test(t)&&/para solicitar su libertad condicional/.test(t)&&/Decreto 396\/99/.test(t),t.slice(0,400));
+  t=await ask('artículo 79 del código penal');assert.ok(/Código Penal de la Nación — art\. 79/.test(t)&&/ocho a veinticinco años/.test(t)&&/fuente: InfoLeg/.test(t),t);
   t=await ask('art 80 cp');assert.ok(/reclusión perpetua/.test(t)&&/CP art\. 52/.test(t),'relacionados del art. 80: '+t.slice(-300));
   t=await ask('¿Qué dice la ley 24.660 sobre las salidas transitorias?');assert.ok(/Ley de Ejecución de la Pena Privativa de la Libertad — art\. 1[67]/.test(t),t.slice(0,400));
   t=await ask('¿Qué dice el código procesal penal federal sobre la prisión preventiva?');assert.ok(/Código Procesal Penal Federal — art\./.test(t)&&/prisión preventiva/i.test(t),t.slice(0,300));
