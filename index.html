@@ -3452,7 +3452,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 4.5',APP_VER='64';
+const NEXA_VER='Nexa 4.5',APP_VER='65';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3570,7 +3570,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='64 · 04/10/2026';
+const BUILD='65 · 04/10/2026';
 /* Versión que ven los usuarios: se cambia a mano solo cuando se decide publicar una versión nueva para todos.
    El administrador ve la versión interna (BUILD) con cada cambio. */
 const PUBLIC_VER='1.2';
@@ -5601,6 +5601,76 @@ async function cardSheet(){if(!DOC||!DOC.pages.length)return toast('No hay pági
  ref.insertAdjacentHTML('afterend','<button class="tb" id="docSum"><b data-ico="ocr"></b>Resumen</button><button class="tb" id="docCard"><b data-ico="idcard"></b>A contacto</button>');iconize&&iconize(ref.parentNode);
  $('#docSum').onclick=()=>docSummarySheet();$('#docCard').onclick=()=>cardSheet()})();
 document.head.insertAdjacentHTML('beforeend','<style id="v64Css">.sum-t{width:100%;border-collapse:collapse;font-size:14px}.sum-t th{text-align:left;color:var(--mut,#6b7280);font-weight:600;padding:5px 8px 5px 0;vertical-align:top;white-space:nowrap}.sum-t td{padding:5px 0;border-bottom:1px solid var(--line)}.sum-l{margin:0;padding-left:18px;line-height:1.5}.sum-l li{margin-bottom:6px}.fld{display:block;margin:8px 0}.fld span{display:block;font-size:12px;color:var(--mut,#6b7280);margin-bottom:3px}.fld input{width:100%;box-sizing:border-box}</style>');
+/* v65 · cámara estilo Adobe/CamScanner: barra de modos deslizable con guías, panel ⚙️ compacto, marco de cuatro puntos y carga giratoria */
+/* ---- barra de modos: Pizarra · Libro · Documento · Certificado · DNI · Tarjeta, deslizable, con el modo elegido centrado ---- */
+const CAM_KIND_ORDER=['board','book','doc','cert','id','card'];
+(function(){const k=$('#camKinds');if(!k||k.querySelector('[data-kind="card"]'))return;
+ k.insertAdjacentHTML('beforeend','<button data-kind="card">Tarjeta</button>');
+ for(const id of CAM_KIND_ORDER){const b=k.querySelector('[data-kind="'+id+'"]');if(b)k.appendChild(b)}
+ const lbl={doc:'Documento',book:'Libro',cert:'Certificado',id:'DNI',board:'Pizarra',card:'Tarjeta'};k.querySelectorAll('[data-kind]').forEach(b=>{if(lbl[b.dataset.kind])b.textContent=lbl[b.dataset.kind]});
+ k.addEventListener('click',e=>{const x=e.target.closest('[data-kind="card"]');if(!x)return;e.stopImmediatePropagation();Cam.kind='card';if(Cam.mode!=='single'){Cam.mode='single'}Cam.updUI();toast('🪪 Tarjeta personal: encuadrala dentro de las esquinas; después la podés guardar como contacto',3000)},true);
+ /* deslizar sobre la imagen de la cámara cambia de modo, como en Adobe Scan */
+ const st=$('#camera .cam-stage');let x0=null,y0=0,t0=0;
+ if(st){st.addEventListener('touchstart',e=>{if(e.touches.length!==1){x0=null;return}x0=e.touches[0].clientX;y0=e.touches[0].clientY;t0=Date.now()},{passive:true});
+  st.addEventListener('touchend',e=>{if(x0==null)return;const t=e.changedTouches[0],dx=t.clientX-x0,dy=t.clientY-y0;x0=null;if(Date.now()-t0>600||Math.abs(dx)<60||Math.abs(dy)>Math.abs(dx)*.6)return;if(typeof camPanelOpen==='function'&&camPanelOpen())return;camKindStep(dx<0?1:-1)},{passive:true})}})();
+function camKindStep(d){const bs=[...$$('#camKinds [data-kind]')].filter(b=>!b.hidden);const i=bs.findIndex(b=>b.dataset.kind===Cam.kind);const n=bs[Math.max(0,Math.min(bs.length-1,(i<0?2:i)+d))];if(n&&n.dataset.kind!==Cam.kind)n.click()}
+/* guías por modo: libro (lomo al medio y orden de páginas), DNI y tarjeta (esquinas con la proporción de la tarjeta) */
+(function(){const st=$('#camera .cam-stage');if(!st||$('#camGuide'))return;
+ st.insertAdjacentHTML('beforeend','<div class="cam-guide" id="camGuide" hidden><div class="cg-spine"></div><button class="cg-swap" id="camBookSwap" title="Orden de las páginas"></button><div class="cg-card"><i></i><i></i><i></i><i></i></div></div>');
+ $('#camBookSwap').onclick=e=>{e.stopPropagation();S.bookSwap=!S.bookSwap;saveS();camGuideUpd();toast(S.bookSwap?'Libro: primero la página derecha (2 → 1)':'Libro: primero la página izquierda (1 → 2)')}})();
+function camGuideUpd(){const g=$('#camGuide');if(!g)return;const k=Cam.kind;g.hidden=!(k==='book'||k==='card'||k==='id');g.dataset.k=k;const sw=$('#camBookSwap');if(sw)sw.innerHTML='<b>'+(S.bookSwap?'2':'1')+'</b><span>⇅</span><b>'+(S.bookSwap?'1':'2')+'</b>'}
+{const _u=Cam.updUI;Cam.updUI=function(){const r=_u.apply(this,arguments);try{camGuideUpd();const a=$('#camKinds .on');if(a&&a.scrollIntoView)a.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'})}catch(e){}return r}}
+{const _sb=splitBook;splitBook=async function(){const r=await _sb.apply(this,arguments);return S.bookSwap&&Array.isArray(r)?r.slice().reverse():r}}
+/* tarjeta: al terminar, ofrece guardarla como contacto */
+{const _ap=addPages;addPages=async function(pages,open){const card=typeof Cam!=='undefined'&&Cam.kind==='card';const r=await _ap.apply(this,arguments);if(card&&open!==false){Cam.kind='doc';setTimeout(()=>{if(DOC&&DOC.pages.length)cardSheet()},450)}return r}}
+
+/* ---- marco de cuatro puntos (Adobe Scan) ---- */
+{const _d=Cam.detect;Cam.detect=function(){const r=_d.apply(this,arguments);try{camFrameDraw()}catch(e){}return r}}
+function camFrameDraw(){if(S.camFrame==='lineas')return;const svg=$('#camSvg');if(!svg)return;const pg=svg.querySelector('polygon');
+ if(!pg){if(svg.querySelector('.cf'))svg.innerHTML='';return}
+ const pts=(pg.getAttribute('points')||'').trim().split(/\s+/).map(s=>s.split(',').map(Number));if(pts.length!==4||pts.some(p=>p.length!==2||!isFinite(p[0])))return;
+ const steady=(pg.getAttribute('stroke')||'').includes('22c55e');
+ svg.innerHTML='<polygon class="cf cf-l'+(steady?' ok':'')+'" points="'+pts.map(p=>p.join(',')).join(' ')+'"/>'+pts.map(p=>'<circle class="cf cf-d'+(steady?' ok':'')+'" cx="'+p[0]+'" cy="'+p[1]+'" r="11"/>').join('')}
+/* píldora "Capturando, un momento…" y sonido de obturador opcional */
+let _camAC=null;function camClick(){if(S.camSound!==true)return;try{_camAC=_camAC||new (window.AudioContext||window.webkitAudioContext)();const a=_camAC,n=a.createBuffer(1,a.sampleRate*.06,a.sampleRate),d=n.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,3);const s=a.createBufferSource(),g=a.createGain();g.gain.value=.35;s.buffer=n;s.connect(g).connect(a.destination);s.start()}catch(e){}}
+{const _g=camGrab;camGrab=async function(){const h=$('#camHint');if(h){h.textContent='Capturando, un momento…';h.classList.add('cap')}camClick();try{return await _g.apply(this,arguments)}finally{if(h)h.classList.remove('cap')}}}
+
+/* ---- panel ⚙️ compacto (CamScanner) con «Más ajustes» para el panel completo ---- */
+{const _r=camPanelRender;camPanelRender=function(){const P=$('#camPanel');if(!P||P.hidden||P._full){const r=_r.apply(this,arguments);if(P&&!P.hidden&&P._full&&!P.querySelector('[data-cq="less"]'))P.insertAdjacentHTML('afterbegin','<button class="cq-back" data-cq="less">‹ Ajustes rápidos</button>');return r}
+ let key='';try{key=JSON.stringify(S)+'|'+Cam.mode+'|'+Cam.kind}catch(e){}if(Cam._inUpd&&P._ck===key&&P.querySelector('.cq'))return;P._ck=key;
+ const row=(attr,on,l,sub)=>'<button class="cq-row'+(on?' on':'')+'" '+attr+'><span><b>'+l+'</b><small>'+(sub||(on?'Activado':'Desactivado'))+'</small></span><i class="cq-sw"></i></button>';
+ P.innerHTML='<div class="cq"><div class="cq-h"><span>⚙️ Ajustes</span><button data-cq="close" aria-label="Cerrar">✕</button></div>'+
+  row('data-cp="autocap"',S.autoCapture,'Captura automática')+row('data-cp="auto"',S.autoCrop,'Recorte automático')+row('data-cp="grid"',S.grid,'Cuadrícula')+row('data-cp="hd"',S.hd,'Foto HD')+row('data-cq="snd"',S.camSound===true,'Sonido')+row('data-cq="lvl"',S.camLevel!==false,'Nivelador')+
+  row('data-cq="frm"',S.camFrame!=='lineas','Marco de cuatro puntos',S.camFrame!=='lineas'?'Estilo Adobe':'Líneas')+
+  '<button class="cq-more" data-cq="more">Más ajustes ›</button></div>'}}
+$('#camPanel').addEventListener('click',e=>{const t=e.target.closest('[data-cq]');if(!t)return;e.stopImmediatePropagation();const P=$('#camPanel'),k=t.dataset.cq;
+ if(k==='close'){if(typeof camPanelClose==='function')camPanelClose();return}
+ if(k==='more'){P._full=true;P._key='';P.scrollTop=0}else if(k==='less'){P._full=false;P._ck=''}
+ else if(k==='snd'){S.camSound=S.camSound!==true;if(S.camSound)camClick()}else if(k==='lvl'){S.camLevel=S.camLevel===false;camLevelUpd()}else if(k==='frm'){S.camFrame=S.camFrame==='lineas'?'':'lineas'}
+ saveS();P._ck='';camPanelRender()},true);
+function camLevelUpd(){const c=$('#camera');if(c)c.classList.toggle('nolevel',S.camLevel===false)}
+camLevelUpd();
+{const _o=Cam.open;Cam.open=function(){const P=$('#camPanel');if(P){P._full=false;P._ck=''}camLevelUpd();return _o.apply(this,arguments)}}
+
+/* ---- carga giratoria (anillo azul, como Adobe Scan) ---- */
+document.head.insertAdjacentHTML('beforeend','<style id="v65Css">'+
+ '.spin{width:40px;height:40px;border:3.5px solid rgba(20,115,230,.18);border-top-color:#1473e6;border-right-color:#1473e6;border-radius:50%;animation:sp .9s cubic-bezier(.5,.15,.5,.85) infinite}'+
+ '#busy .bx .spin{width:46px;height:46px}'+
+ '.cam-kinds{scroll-snap-type:x mandatory;justify-content:flex-start;padding:8px 40vw 2px;gap:2px}.cam-kinds button{scroll-snap-align:center;background:none!important;color:#e5e7eb;font-size:13px;padding:6px 12px;transition:color .2s,transform .2s}.cam-kinds button.on{color:#4ea1ff;transform:scale(1.08)}.cam-kinds button.on::after{content:"";display:block;width:18px;height:3px;border-radius:2px;background:#4ea1ff;margin:4px auto 0}'+
+ '.cam-hint{bottom:auto;top:46%;transform:translate(-50%,-50%);background:rgba(30,30,30,.82);padding:8px 16px;border-radius:20px;font-size:13px;pointer-events:none;transition:opacity .2s}.cam-hint.cap{background:rgba(20,115,230,.9)}'+
+ '#camSvg .cf-l{fill:none;stroke:#4ea1ff;stroke-width:2;stroke-opacity:.55;stroke-linejoin:round}#camSvg .cf-l.ok{stroke:#22c55e;stroke-opacity:.8}'+
+ '#camSvg .cf-d{fill:#1473e6;stroke:#fff;stroke-width:3.5;filter:drop-shadow(0 1px 3px rgba(0,0,0,.45));transition:cx .22s ease-out,cy .22s ease-out}#camSvg .cf-d.ok{fill:#22c55e}'+
+ '.cam-guide{position:absolute;inset:0;pointer-events:none;z-index:2}.cam-guide[hidden]{display:none}.cg-spine,.cg-swap,.cg-card{display:none}'+
+ '.cam-guide[data-k="book"] .cg-spine{display:block;position:absolute;top:8%;bottom:8%;left:50%;border-left:2.5px dashed rgba(190,90,255,.9)}'+
+ '.cam-guide[data-k="book"] .cg-swap{display:flex;flex-direction:column;align-items:center;gap:1px;position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:auto;background:rgba(30,30,30,.85);color:#fff;border-radius:10px;padding:6px 7px;font-size:12px;line-height:1.1}'+
+ '.cam-guide[data-k="card"] .cg-card,.cam-guide[data-k="id"] .cg-card{display:block;position:absolute;left:8%;right:8%;top:50%;aspect-ratio:1.586;transform:translateY(-50%)}'+
+ '.cg-card i{position:absolute;width:30px;height:30px;border:0 solid #fff}.cg-card i:nth-child(1){left:0;top:0;border-width:4px 0 0 4px}.cg-card i:nth-child(2){right:0;top:0;border-width:4px 4px 0 0}.cg-card i:nth-child(3){left:0;bottom:0;border-width:0 0 4px 4px}.cg-card i:nth-child(4){right:0;bottom:0;border-width:0 4px 4px 0}'+
+ '#camera.nolevel #camLevel{display:none!important}'+
+ '.cq{display:flex;flex-direction:column}.cq-h{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:15px;padding:2px 2px 8px}.cq-h button{color:#fff;font-size:16px;padding:2px 6px}'+
+ '.cq-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 2px;color:#fff;text-align:left;border-bottom:1px solid #ffffff10}.cq-row span{display:flex;flex-direction:column}.cq-row b{font-size:14px;font-weight:600}.cq-row small{font-size:12px;color:#9ca3af}.cq-row.on small{color:#4ea1ff}'+
+ '.cq-sw{flex:none;width:40px;height:22px;border-radius:11px;background:#4b5563;position:relative;transition:background .2s}.cq-sw::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .2s}.cq-row.on .cq-sw{background:#1473e6}.cq-row.on .cq-sw::after{left:21px}'+
+ '.cq-more{margin-top:10px;padding:10px;color:#4ea1ff;font-weight:700;font-size:14px}.cq-back{color:#4ea1ff;font-weight:700;padding:2px 0 8px;font-size:14px}'+
+ '</style>');
 </script>
 </body>
 </html>

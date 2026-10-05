@@ -91,3 +91,11 @@ En una foto común, la limpia y le da detalle sin quemarla. Mientras el panel �
 
 - **Resumen:** en la pantalla del documento, tocá **Resumen**. Muestra los datos clave (tipo y número, dependencia, expediente, fechas, personas, DNI, montos) y las oraciones principales del documento. Se hace en el teléfono, sin internet. Podés copiarlo o guardarlo como texto.
 - **A contacto:** escaneá una tarjeta personal y tocá **A contacto**. La app lee nombre, cargo, teléfonos, correo, web y dirección. Podés corregir los datos antes de guardar, y se genera un contacto (.vcf) que el teléfono agrega a la agenda.
+
+## Modos de la cámara y ajustes rápidos
+
+- Abajo de la cámara está la **barra de modos**: Pizarra, Libro, Documento, Certificado, DNI y Tarjeta. Tocá un modo o deslizá el dedo sobre la imagen para cambiarlo.
+- En **Libro** se marca el lomo al medio, y con el botón **1⇅2** cambiás el orden de las páginas.
+- En **Tarjeta**, al sacar la foto, la app ofrece guardarla como contacto.
+- La hoja detectada se marca con **cuatro puntos azules**, que se ponen verdes cuando está quieta.
+- **⚙️** abre los ajustes rápidos: captura automática, recorte automático, cuadrícula, Foto HD, sonido, nivelador y estilo del marco. Desde **Más ajustes** llegás a todas las opciones.
