@@ -593,3 +593,20 @@ Cada arreglo guarda la clave del recorte y del giro con que se calculó (`pageKe
   - Secciones con título: **General** y **Preferencias**.
   - Nueva sección **Ayuda y soporte**: Ayuda y Compartir la aplicación, más **Cerrar sesión** al final si hay cuenta.
 - **Ayuda sin internet** (`helpSheet`): muestra el manual (`knowledge/danscaner/manual.md`, guardado por el service worker) con un buscador que filtra por sección.
+
+## v68 — Libro automático, carpetas protegidas y espacio por tipo
+
+- **Libro: pasá la página y saca sola** (`bookAutoOn`, `camMotion`):
+  - En modo Libro y en lote, se mide el movimiento de la imagen (diferencia media en 64×48).
+  - Cuando el movimiento supera `BK_MOVE` (se está pasando la página), queda armado. Después de `BK_TICKS` cuadros quietos (diferencia menor que `BK_STILL`) dispara solo.
+  - No vuelve a disparar hasta el próximo movimiento. La primera doble página sale apenas queda quieta.
+  - Mientras tanto, la captura automática común queda en pausa para no duplicar fotos.
+  - Hay un botón ⚡ Automático / ✋ Manual en la guía del libro (`S.bookAuto`), y al elegir Libro se pasa a lote.
+- **Carpetas protegidas con PIN** (`FolderLock`):
+  - Desde el filtro de una carpeta: "Proteger con PIN", "Quitar PIN" y "Bloquear ahora".
+  - El PIN se guarda con sal y hash (`pinHash`) en `S.folderLocks`.
+  - `DB.metas()` oculta los documentos de las carpetas cerradas. Por eso no aparecen en las listas, la búsqueda, los recientes, el espacio ni Nexa.
+  - El respaldo (`Backup.create`, `backupSheet`) sí los incluye (`_metaAll`).
+  - La carpeta aparece con candado. Se abre con el PIN y se vuelve a bloquear después de 2 minutos fuera de la app.
+  - No cifra los archivos, igual que el PIN de la app, y así se avisa en pantalla.
+- **Liberar espacio** (`storageDecorate`): gráfico circular con Documentos, App y librerías, IA local (modelos) y Otros, más lo libre. Se puede limpiar la caché de la app y borrar los modelos de IA por separado.

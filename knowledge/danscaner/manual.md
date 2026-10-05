@@ -113,3 +113,9 @@ En una foto común, la limpia y le da detalle sin quemarla. Mientras el panel �
 
 - **Editar texto** (en el editor) marca todas las palabras con línea punteada. Elegí **Palabra** para cambiar una sola, o **Renglón** para cambiar la línea entera. Se mantienen la letra, el tamaño y el color.
 - En **Ajustes**, arriba aparece tu cuenta; tocala para cambiar la contraseña o cerrar sesión. Abajo, en **Ayuda y soporte**, está esta ayuda con buscador, y funciona sin internet.
+
+## Libro automático, carpetas con PIN y espacio
+
+- **Libro automático:** elegí **Libro** en la cámara y empezá a pasar las páginas. Cada vez que la hoja queda quieta, la foto sale sola. Con el botón **⚡ Automático / ✋ Manual** lo apagás.
+- **Carpetas con PIN:** en Documentos, tocá una carpeta y elegí **Proteger con PIN**. Sus documentos dejan de verse en las listas, la búsqueda y Nexa hasta que pongas el PIN, y se vuelve a bloquear sola al salir de la app. El respaldo los incluye igual.
+- **Espacio:** en Ajustes → Espacio usado y limpieza hay un gráfico de lo que ocupa cada parte. Podés limpiar la caché o borrar los modelos de IA sin tocar tus documentos.
