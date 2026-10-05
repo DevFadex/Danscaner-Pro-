@@ -582,3 +582,14 @@ Cada arreglo guarda la clave del recorte y del giro con que se calculó (`pageKe
   - Pestañas Dibujo (trazo libre) y Formas (flecha, línea, rectángulo, círculo).
   - Color con 6 tonos más un selector libre, ancho de trazo de 2 a 40 y opacidad de 10 % a 100 %. Hay deshacer y rehacer, y se recuerda la última elección (`S.mkCol`, `S.mkW`, `S.mkOp`).
   - Se guarda como una capa PNG del tamaño de la página en `p.overlays`, y se quita con "Quitar firmas".
+
+## v67 — Editar texto en el lugar y ajustes estilo Adobe
+
+- **Editar texto** (antes "Corregir"; mismo editor `Fix`, que conserva fuente, negrita, cursiva, tinta y tamaño):
+  - Todas las palabras leídas se marcan con línea punteada azul, como Adobe Scan.
+  - Nuevo selector **Palabra | Renglón** (`S.fxUnit`): en Renglón, un toque toma todas las palabras de la línea (`fixSameLine`) y las reemplaza juntas.
+- **Ajustes** (`setDecorate`, envuelve `settingsSheet`):
+  - Arriba, una tarjeta de perfil con iniciales, nombre, correo y tipo de cuenta (Administrador, Usuario o Sin sesión). Al tocarla abre Seguridad y accesos (contraseña, cerrar sesión).
+  - Secciones con título: **General** y **Preferencias**.
+  - Nueva sección **Ayuda y soporte**: Ayuda y Compartir la aplicación, más **Cerrar sesión** al final si hay cuenta.
+- **Ayuda sin internet** (`helpSheet`): muestra el manual (`knowledge/danscaner/manual.md`, guardado por el service worker) con un buscador que filtra por sección.
