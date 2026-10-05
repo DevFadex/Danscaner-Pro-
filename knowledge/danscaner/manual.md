@@ -119,3 +119,7 @@ En una foto común, la limpia y le da detalle sin quemarla. Mientras el panel �
 - **Libro automático:** elegí **Libro** en la cámara y empezá a pasar las páginas. Cada vez que la hoja queda quieta, la foto sale sola. Con el botón **⚡ Automático / ✋ Manual** lo apagás.
 - **Carpetas con PIN:** en Documentos, tocá una carpeta y elegí **Proteger con PIN**. Sus documentos dejan de verse en las listas, la búsqueda y Nexa hasta que pongas el PIN, y se vuelve a bloquear sola al salir de la app. El respaldo los incluye igual.
 - **Espacio:** en Ajustes → Espacio usado y limpieza hay un gráfico de lo que ocupa cada parte. Podés limpiar la caché o borrar los modelos de IA sin tocar tus documentos.
+
+## Nexa: cómo empezar
+
+Al abrir Nexa te saluda por tu nombre y te ofrece tres grupos de sugerencias: **Comprender** (simplificar, resumir, describir secciones), **Analizar** (datos importantes, plazos, calidad del escaneo) y **Generar** (nota de respuesta, corregir el OCR, correo). Si volvés con una conversación empezada, te pregunta si seguís con esa o empezás una consulta nueva. La anterior queda guardada en 🕒 Conversaciones.

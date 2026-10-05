@@ -3452,7 +3452,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 4.5',APP_VER='68';
+const NEXA_VER='Nexa 4.5',APP_VER='69';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3570,7 +3570,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='68 · 05/10/2026';
+const BUILD='69 · 05/10/2026';
 /* Versión que ven los usuarios: se cambia a mano solo cuando se decide publicar una versión nueva para todos.
    El administrador ve la versión interna (BUILD) con cada cambio. */
 const PUBLIC_VER='1.2';
@@ -5907,6 +5907,47 @@ document.head.insertAdjacentHTML('beforeend','<style id="v68Css">'+
  '.chip.f-lock small{color:#f59e0b}.chip.f-open{outline:1px dashed #22c55e}#docFolderAct{margin:-2px 0 6px}#docFolderAct[hidden]{display:none}'+
  '.dn-wrap{position:relative;display:flex;justify-content:center;margin:4px 0 10px}.dn-c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}.dn-c b{font-size:18px}.dn-c small{font-size:11px;color:var(--mut,#6b7280)}'+
  '.dn-leg{display:flex;flex-direction:column;gap:6px}.dn-row{display:flex;align-items:center;gap:8px;font-size:13.5px}.dn-row i{width:12px;height:12px;border-radius:3px;flex:none}.dn-row span{flex:1}.dn-row .btn{padding:4px 10px}'+
+ '</style>');
+/* v69 · perfil de escaneo con la marca correcta, flash apagado al revisar la foto y entrada de Nexa estilo asistente de Adobe */
+/* ---- 1) perfiles: la estrella de «recomendado» se veía como tilde; ahora es una etiqueta y el tilde marca el elegido ---- */
+{const _r=camPanelRender;camPanelRender=function(){const r=_r.apply(this,arguments);try{camProfMarks()}catch(e){}return r}}
+function camProfMarks(){$$('#camPanel [data-prof]').forEach(b=>{const t=b.querySelector('b');if(!t||b.dataset.mk)return;b.dataset.mk=1;
+ const rec=b.dataset.prof==='lote';t.querySelectorAll('.emo-ic,i').forEach(x=>x.remove());t.textContent=t.textContent.replace(/[⭐✓]/g,'').trim();
+ if(rec)t.insertAdjacentHTML('beforeend',' <span class="pf-rec">Recomendado</span>');b.insertAdjacentHTML('beforeend','<span class="pf-ck">✓</span>')})}
+
+/* ---- 2) flash: al mostrar «¿Quedó bien la foto?» se apaga, y vuelve si seguís sacando ---- */
+{const _t=CamPro.torch;CamPro.torch=function(on,force){if(on&&!force&&Cam.review)return Promise.resolve();return _t.call(this,on)}}
+{const _sh=Cam.shoot;Cam.shoot=async function(){const r=await _sh.apply(this,arguments);try{if(this.review){this._torchBack=!!this.torch||CamPro.flash==='on';if(this.torch)await CamPro.torch(false,true);$('#camera .cam-stage').classList.add('reviewing')}}catch(e){}return r}}
+(function(){const back=()=>{$('#camera .cam-stage')&&$('#camera .cam-stage').classList.remove('reviewing');if(Cam._torchBack&&CamPro.flash==='on')CamPro.torch(true,true);Cam._torchBack=false};
+ for(const id of ['rvAgain','rvMore','rvOk']){const b=$('#'+id);if(b)b.addEventListener('click',()=>{if(id==='rvOk'){$('#camera .cam-stage')&&$('#camera .cam-stage').classList.remove('reviewing');Cam._torchBack=false;CamPro.torch(false,true)}else back()},true)}})();
+
+/* ---- 3) Nexa: bienvenida como el asistente de Adobe y pregunta al volver ---- */
+const NX_CATS=[['comp','Comprender','💡',[['Simplificame este documento.','Explicá el contenido de los documentos adjuntos en lenguaje simple y claro.'],['Hacé un resumen breve de este documento.','Resumí los documentos adjuntos en pocas viñetas con lo más importante y una conclusión de una línea.'],['Describí las secciones generales del documento.','Describí las secciones generales del documento adjunto (encabezado, vistos, considerandos, parte resolutiva, firmas) y qué dice cada una.']]],
+ ['anal','Analizar','🔍',[['Extraé los datos importantes.','Extraé los datos importantes (personas, DNI, fechas, números de expediente, plazos, montos) en una lista ordenada. Si falta un dato, indicá "no figura".'],['¿Qué plazos o fechas hay que cumplir?','Indicá las fechas, plazos y audiencias que figuran en el documento adjunto, qué hay que hacer en cada una y quién.'],['Analizá la calidad del escaneo.','Analizá la calidad del documento adjunto (perspectiva, luz, sombras, nitidez y OCR).']]],
+ ['gen','Generar','📝',[['Redactá una nota de respuesta formal.','Con la información de los documentos adjuntos, redactá una nota formal de respuesta con encabezado, cuerpo y cierre protocolar.'],['Corregí los errores de OCR.','Corregí los errores de OCR, ortografía y redacción del texto de los documentos adjuntos. Devolvé solo el texto corregido.'],['Prepará un correo para enviar este documento.','Prepará un correo breve y formal para enviar el documento adjunto, con asunto y saludo.']]]];
+function nxFirstName(){const p=SB&&SB.profile,u=SB&&SB.user;const n=(p&&(p.nombre||p.full_name))||'';return (n.trim().split(/\s+/)[0])||''}
+{const _r=Nexa.render;Nexa.render=function(){const r=_r.apply(this,arguments);try{nxWelcome()}catch(e){console.warn('nexa',e)}return r}}
+function nxWelcome(){const e=$('#nxLog .nx-empty');if(!e||e.dataset.ad)return;e.dataset.ad=1;const nm=nxFirstName(),hasDoc=Nexa.st.docs&&Nexa.st.docs.length;let cat=S.nxCat||'comp';
+ e.classList.add('nx-ad');e.innerHTML='<div class="nxa-hi"><b>Hola'+(nm?', <span>'+esc(nm)+'</span>':'')+':</b><br>'+(hasDoc?'¿Cómo puedo ayudarte con este documento?':'¿Cómo puedo ayudarte hoy?')+'</div>'+
+  (hasDoc?'':'<p class="nxa-sub">Adjuntá un documento con 📎 para preguntarle lo que necesites, o escribime directamente.</p>')+
+  '<div class="nxa-cats">'+NX_CATS.map(([k,l,ic])=>'<button data-nc="'+k+'"><span>'+ic+'</span><b>'+l+'</b></button>').join('')+'</div><div class="nxa-pills" id="nxaPills"></div>';
+ const draw=()=>{$$('[data-nc]',e).forEach(b=>b.classList.toggle('on',b.dataset.nc===cat));const c=NX_CATS.find(x=>x[0]===cat)||NX_CATS[0];$('#nxaPills').innerHTML=c[3].map(([t,q],i)=>'<button data-np="'+i+'"><span>↪</span>'+esc(t)+'</button>').join('')};draw();
+ e.onclick=ev=>{const b=ev.target.closest('[data-nc]');if(b){cat=b.dataset.nc;S.nxCat=cat;saveS();draw();return}const p=ev.target.closest('[data-np]');if(!p)return;ev.stopPropagation();const c=NX_CATS.find(x=>x[0]===cat);const inp=$('#nxIn');if(!inp||!c)return;inp.value=c[3][+p.dataset.np][1];Nexa.send()};
+ const inp=$('#nxIn');if(inp)inp.placeholder=hasDoc?'Hacé preguntas sobre este documento':'Preguntale a Nexa…'}
+/* al entrar a Nexa con una conversación en curso, pregunta si seguimos o empezamos otra */
+let _nxLastView='';
+{const _g=go;go=function(v){const prev=_nxLastView;_nxLastView=v;const r=_g.apply(this,arguments);
+ try{if(v==='nexa'&&prev&&prev!=='nexa'&&!Nexa.sending&&Nexa.st.msgs.some(m=>m.role==='user')&&S.nxAsk!==false&&!Nav.isOpen('sheet'))setTimeout(nxAskContinue,250)}catch(e){}return r}}
+function nxAskContinue(){const last=[...Nexa.st.msgs].reverse().find(m=>m.role==='user');const b=openSheet('Nexa','<div class="nxc"><div class="nxc-ic">✨</div><b>¿Seguimos con la conversación anterior?</b><p class="muted">Lo último que preguntaste: «'+esc((last&&last.text||'').slice(0,120))+((last&&last.text||'').length>120?'…':'')+'»</p>'+
+  '<button class="btn pri block" id="nxcGo">Continuar la conversación</button><button class="btn block" id="nxcNew" style="margin-top:8px">Nueva consulta</button><label class="chk" style="margin-top:10px"><input type="checkbox" id="nxcNo"> No volver a preguntar</label><p class="muted" style="font-size:12px">La conversación anterior queda guardada en 🕒 Conversaciones.</p></div>');
+ const no=()=>{if($('#nxcNo',b).checked){S.nxAsk=false;saveS()}};$('#nxcGo',b).onclick=async()=>{no();await Nav.back()};$('#nxcNew',b).onclick=async()=>{no();await Nav.back();NxHist.newChat()}}
+document.head.insertAdjacentHTML('beforeend','<style id="v69Css">'+
+ '.cprof button{position:relative;padding-right:40px}.pf-ck{display:none;position:absolute;right:12px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;background:#1473e6;color:#fff;font-size:13px;font-weight:800;align-items:center;justify-content:center}.cprof button.on .pf-ck{display:flex}.cprof button.on{border-color:#1473e6!important;background:#1473e622!important}.pf-rec{font-size:10.5px;font-weight:700;color:#4ea1ff;border:1px solid #4ea1ff88;border-radius:8px;padding:0 6px;margin-left:4px;vertical-align:middle}'+
+ '.cam-stage.reviewing #camWarn,.cam-stage.reviewing #camGlare,.cam-stage.reviewing #camSvg,.cam-stage.reviewing .cam-hint{display:none!important}'+
+ '.nx-ad{text-align:left!important;align-items:stretch!important;padding:24px 6px!important}.nxa-hi{font-size:21px;line-height:1.35;font-weight:600;margin-bottom:6px}.nxa-hi b{font-weight:800}.nxa-hi span{color:#7c83f7}.nxa-sub{color:var(--mut,#6b7280);font-size:14px;margin:0 0 6px}'+
+ '.nxa-cats{display:flex;justify-content:space-around;margin:22px 0 18px}.nxa-cats button{display:flex;flex-direction:column;align-items:center;gap:8px;background:none}.nxa-cats span{width:62px;height:62px;border-radius:50%;display:grid;place-items:center;font-size:26px;background:var(--bg2,#fff);border:1px solid var(--line);box-shadow:0 2px 8px #0001}.nxa-cats b{font-size:14.5px;color:var(--mut,#6b7280)}.nxa-cats .on span{background:#a5a8f7;border-color:#a5a8f7}.nxa-cats .on b{color:#6366f1}'+
+ '.nxa-pills{display:flex;flex-direction:column;align-items:flex-start;gap:10px}.nxa-pills button{display:flex;gap:10px;align-items:center;text-align:left;background:#2b2f8f;color:#fff;border-radius:22px;padding:12px 18px;font-size:15px;font-weight:600;max-width:100%}.nxa-pills button span{opacity:.85}'+
+ '.nxc{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px}.nxc-ic{font-size:34px}.nxc b{font-size:17px}.nxc .btn,.nxc label{align-self:stretch}'+
  '</style>');
 </script>
 </body>
