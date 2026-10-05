@@ -3452,7 +3452,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 4.5',APP_VER='71';
+const NEXA_VER='Nexa 4.5',APP_VER='72';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3570,7 +3570,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='71 · 05/10/2026';
+const BUILD='72 · 05/10/2026';
 /* Versión que ven los usuarios: se cambia a mano solo cuando se decide publicar una versión nueva para todos.
    El administrador ve la versión interna (BUILD) con cada cambio. */
 const PUBLIC_VER='1.2';
@@ -5449,6 +5449,11 @@ async function pageAutoClean(p,{dewarp=true,finger=true}={}){const k=pageKey(p),
  if(finger&&S.autoFinger!==false){const f=fingerDetect(base);if(f){p.fg={k,...f};r.fg=f.n}}
  base.width=base.height=1;if(r.dw||r.fg)await makeThumb(p);return r}
 /* en la cámara: después de enderezar y revisar repetidas */
+/* v72: orientación de las hojas de la cámara: horizontal (por defecto), vertical o automática. Se gira acá, antes de limpiar, para que la limpieza use la hoja ya girada */
+const camOrient=()=>S.camOrient||'land';
+{const _pp=camPostProcess;camPostProcess=async function(pages,kind){const r=await _pp.apply(this,arguments);const o=camOrient();if(o==='auto')return r;
+ for(const p of pages){try{const c=await renderPage(p,{maxSide:400,noOverlays:true});const port=c.height>c.width*1.02,land=c.width>c.height*1.02;c.width=c.height=1;
+  if((o==='land'&&port)||(o==='port'&&land)){p.rot=((p.rot||0)+(o==='land'?270:90))%360;await makeThumb(p);const f=Cam._flags.get(p);if(f)f.orient=o}}catch(e){console.warn('orientación',e)}}return r}}
 {const _pp=camPostProcess;camPostProcess=async function(pages,kind){const r=await _pp.apply(this,arguments);for(const p of pages){try{const o=await pageAutoClean(p,{dewarp:kind!=='board'});const f=Cam._flags.get(p)||{};if(o.dw)f.dw=true;if(o.fg)f.fg=true;Cam._flags.set(p,f);
   if(o.fg)toast('🧽 Se borró un dedo del borde de la hoja',2200);else if(o.dw)toast('📖 Hoja curva aplanada',2000)}catch(e){console.warn('limpiar',e)}}return r}}
 
@@ -5994,6 +5999,14 @@ function nxOnlineWhy(){if(Nexa.st.prov!=='online')return '';if(isCloud(Nexa.prov
 {const _run=Nexa.run;Nexa.run=async function(prov){const out=await _run.apply(this,arguments);try{const w=nxOnlineWhy();if(w&&out&&typeof out==='string'&&!this._nxWhyShown){this._nxWhyShown=1;return w+'\n\n'+out.replace(/^👋 Soy \*\*Nexa sin internet\*\*: funciono sin conexión y sin costo\.\n\n/,'')}}catch(e){}return out}}
 {const _st=Nexa.status;Nexa.status=function(){const r=_st.apply(this,arguments);if(this.st.prov==='online'&&isCloud(this.prov()))this._nxWhyShown=0;return r}}
 {const _nc=NxHist.newChat;NxHist.newChat=function(){Nexa._nxWhyShown=0;return _nc.apply(this,arguments)}}
+
+/* v72: fila «Orientación de las hojas» en los ajustes rápidos de la cámara (Horizontal → Vertical → Automática) */
+const CAM_ORIENT_L={land:'Horizontal',port:'Vertical',auto:'Automática (como está la hoja)'};
+{const _r=camPanelRender;camPanelRender=function(){const r=_r.apply(this,arguments);const P=$('#camPanel');if(!P||P.hidden)return r;const m=P.querySelector('.cq .cq-more');
+ if(m&&!P.querySelector('[data-co]'))m.insertAdjacentHTML('beforebegin','<button class="cq-row on" data-co="1"><span><b>Orientación de las hojas</b><small>'+CAM_ORIENT_L[camOrient()]+'</small></span><i class="cq-or">'+(camOrient()==='land'?'▭':camOrient()==='port'?'▯':'A')+'</i></button>');return r}}
+$('#camPanel').addEventListener('click',e=>{const t=e.target.closest('[data-co]');if(!t)return;e.stopImmediatePropagation();const n={land:'port',port:'auto',auto:'land'}[camOrient()];S.camOrient=n;saveS();
+ toast('Hojas: '+CAM_ORIENT_L[n].replace(/ \(.*/,'').toLowerCase());const P=$('#camPanel');P._ck='';camPanelRender()},true);
+document.head.insertAdjacentHTML('beforeend','<style id="v72Css">.cq-or{font-style:normal;font-size:20px;line-height:1;min-width:28px;text-align:center;color:var(--pri,#2563eb)}</style>');
 </script>
 </body>
 </html>

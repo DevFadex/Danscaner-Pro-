@@ -899,7 +899,7 @@ await test('Lote: endereza hojas al revés o de costado, marca hojas repetidas y
   /* orientación: las cuatro posiciones; en mayúsculas de costado no adivina */
   const o=await pg.evaluate(()=>[0,90,180,270].map(d=>pageOrient(_rot(_page(5),d)).rot));assert.deepEqual(o,[0,270,180,90]);
   /* una foto de costado y otra al revés quedan derechas; la repetida se marca, la distinta no */
-  const r=await pg.evaluate(async()=>{Cam._sigs=[];const mk=async c=>await makePage(c.toDataURL('image/jpeg',.9),{auto:false,filter:'original'});
+  const r=await pg.evaluate(async()=>{S.camOrient='auto';Cam._sigs=[];const mk=async c=>await makePage(c.toDataURL('image/jpeg',.9),{auto:false,filter:'original'});
     const a=await mk(_rot(_page(7),90)),b=await mk(_rot(_page(99),180)),a2=await mk(_shot(_page(7),-20,15,1.02)),c=await mk(_page(1234));
     await camPostProcess([a],'doc');await camPostProcess([b],'doc');await camPostProcess([a2],'doc');await camPostProcess([c],'doc');
     const up=async p=>pageOrient(await renderPage(p,{maxSide:1000})).sc>0;window._rv=[a,b,a2,c];
@@ -1053,7 +1053,7 @@ await test('Cámara estilo Adobe: barra de modos con guías, marco de cuatro pun
   const f=await pg.evaluate(()=>{clearInterval(Cam.timer);const svg=$('#camSvg');svg.innerHTML='<polygon points="80,150 300,170 320,520 60,500" stroke="#22d3ee"/>';camFrameDraw();return [svg.querySelectorAll('circle.cf-d').length,svg.querySelectorAll('polygon.cf-l').length]});
   assert.deepEqual(f,[4,1]);
   /* panel compacto: interruptores y «Más ajustes» */
-  await pg.click('#camCfg');await pg.waitForSelector('#camPanel .cq');assert.equal(await pg.$$eval('#camPanel .cq-row',x=>x.length),7);
+  await pg.click('#camCfg');await pg.waitForSelector('#camPanel .cq');assert.equal(await pg.$$eval('#camPanel .cq-row',x=>x.length),8);
   await pg.click('#camPanel [data-cq="snd"]');assert.equal(await pg.evaluate(()=>S.camSound),true);
   await pg.click('#camPanel [data-cp="grid"]');assert.equal(await pg.evaluate(()=>!!S.grid),true);assert.ok(await pg.$('#camPanel .cq'),'se fue del panel compacto');
   await pg.click('#camPanel [data-cq="more"]');await pg.waitForSelector('#camPanel [data-cp4]');await pg.click('#camPanel [data-cq="less"]');await pg.waitForSelector('#camPanel .cq');
@@ -1180,6 +1180,22 @@ await test('Nexa: entiende «llamame Dani y no Flores» y avisa si «con interne
   assert.ok(/«Dani», nunca «Flores»/.test(r.ctx));assert.equal(r.first,'Dani');
   if(!(await pg.evaluate(()=>isCloud(Nexa.prov()))))assert.ok(/no está activada en este equipo/.test(r.c),r.c.slice(0,200));
   await pg.evaluate(()=>{NexaMem.clear();Nexa.st.msgs=[];Nexa.save()});
+});
+
+await test('Cámara: todas las hojas salen horizontales (por defecto), o verticales o automáticas desde los ajustes',async pg=>{
+  const r=await pg.evaluate(async()=>{delete S.camOrient;Cam._sigs=[];const mk=async(w,h)=>{const c=canvas(w,h),x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,w,h);x.fillStyle='#111';x.font='28px Arial';for(let y=80;y<h-40;y+=44)x.fillText('Oficio judicial número '+y,60,y);return makePage(c.toDataURL('image/jpeg',.9),{auto:false,filter:'original'})};
+    const dims=async p=>{const c=await renderPage(p,{maxSide:600});return c.width>c.height?'h':'v'};
+    const a=await mk(1240,1754);await camPostProcess([a],'doc');const b=await mk(1754,1240);await camPostProcess([b],'doc');
+    S.camOrient='port';const c=await mk(1754,1240);await camPostProcess([c],'doc');
+    S.camOrient='auto';const d=await mk(1240,1754);await camPostProcess([d],'doc');delete S.camOrient;
+    return [await dims(a),await dims(b),await dims(c),await dims(d)]});
+  assert.deepEqual(r,['h','h','v','v']);
+  await pg.evaluate(()=>{S.autoCapture=false;Cam.open('batch')});await pg.waitForFunction(()=>Cam.stream&&$('#camVideo').videoWidth>0,null,{timeout:15000});
+  await pg.click('#camCfg');await pg.waitForSelector('#camPanel [data-co]');
+  assert.match(await pg.textContent('#camPanel [data-co]'),/Orientación de las hojas\s*Horizontal/);
+  await pg.click('#camPanel [data-co]');assert.equal(await pg.evaluate(()=>S.camOrient),'port');assert.match(await pg.textContent('#camPanel [data-co]'),/Vertical/);
+  await pg.click('#camPanel [data-co]');await pg.click('#camPanel [data-co]');assert.equal(await pg.evaluate(()=>S.camOrient),'land');
+  await pg.evaluate(()=>{camPanelClose();Nav.back()});await W(300);
 });
 
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
