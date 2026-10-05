@@ -7,7 +7,7 @@
    "norma": "Ley 11.179 (texto actualizado)",
    "abrev": "CP",
    "fuente": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/15000-19999/16546/texact.htm",
-   "descargado": "2026-09-29",
+   "descargado": "2026-10-05",
    "alias": [
     "cp",
     "codigo penal",
@@ -23,7 +23,7 @@
    "norma": "Ley 27.063, texto ordenado por Decreto 118/2019 (Anexo I)",
    "abrev": "CPPF",
    "fuente": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/315000-319999/319681/norma.htm",
-   "descargado": "2026-09-29",
+   "descargado": "2026-10-05",
    "alias": [
     "cppf",
     "cpp",
@@ -40,7 +40,7 @@
    "norma": "Ley 23.984",
    "abrev": "CPPN",
    "fuente": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/383/texact.htm",
-   "descargado": "2026-09-29",
+   "descargado": "2026-10-05",
    "alias": [
     "cppn",
     "codigo procesal penal de la nacion",
@@ -57,7 +57,7 @@
    "norma": "Ley 24.660 (texto actualizado)",
    "abrev": "Ley 24.660",
    "fuente": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/35000-39999/37872/texact.htm",
-   "descargado": "2026-09-29",
+   "descargado": "2026-10-05",
    "alias": [
     "24660",
     "24.660",
@@ -68,6 +68,45 @@
    ],
    "archivo": "ep.json",
    "total": 242
+  },
+  {
+   "id": "est",
+   "nombre": "Ley de Estupefacientes",
+   "norma": "Ley 23.737 (texto actualizado)",
+   "abrev": "Ley 23.737",
+   "fuente": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/138/texact.htm",
+   "descargado": "2026-10-05",
+   "alias": [
+    "23737",
+    "23.737",
+    "ley 23737",
+    "ley 23.737",
+    "ley de estupefacientes",
+    "ley de drogas",
+    "estupefacientes"
+   ],
+   "archivo": "est.json",
+   "total": 48
+  },
+  {
+   "id": "cn",
+   "nombre": "Constitución de la Nación Argentina",
+   "norma": "Texto oficial ordenado por la Ley 24.430 (reforma de 1994)",
+   "abrev": "CN",
+   "fuente": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm",
+   "descargado": "2026-10-05",
+   "alias": [
+    "constitucion",
+    "constitución",
+    "constitucion nacional",
+    "constitución nacional",
+    "constitucion argentina",
+    "constitucion de la nacion",
+    "cn",
+    "c.n."
+   ],
+   "archivo": "cn.json",
+   "total": 147
   },
   {
    "id": "sppt",

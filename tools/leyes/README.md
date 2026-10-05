@@ -8,12 +8,14 @@ python3 tools/leyes/descargar.py # baja de InfoLeg los textos listados en fuente
 python3 tools/leyes/construir.py # separa por artículo y genera indice.json, <ley>.json, relaciones.json y graphify-out/graph.json
 ```
 
-- `fuentes.json`: qué normas se cargan (Código Penal, Código Procesal Penal Federal, Código Procesal Penal de la Nación y Ley 24.660), con su URL oficial y los nombres con que se las puede pedir.
+- `fuentes.json`: qué normas se cargan (Constitución Nacional, Código Penal, Código Procesal Penal Federal, Código Procesal Penal de la Nación, Ley 24.660 y Ley 23.737), con su URL oficial y los nombres con que se las puede pedir.
 - Cada artículo guarda su texto, el libro / título / capítulo, la URL de InfoLeg y la fecha de descarga; Nexa los muestra como **texto oficial** con esa fuente.
 - `relaciones.json` sale del grafo de graphify (`knowledge/leyes/graphify-out/graph.json`): para cada artículo, a qué artículos remite y cuáles lo citan. Se puede explorar con `graphify explain "CP art. 80" --graph knowledge/leyes/graphify-out/graph.json`.
 - Normas que no se bajan de InfoLeg (PDF o copias escaneadas que provee el usuario: Ley 9.914, Res. 905/19, Decreto 396/99)
   van como texto en `transcripcion/` (un párrafo por renglón; los renglones sin punto final son títulos de sección) y en
   `fuentes.json` con `"transcripcion"`. Si falta la descarga de InfoLeg de una norma, `construir.py` conserva su `.json` ya armado.
+- InfoLeg rechaza los pedidos sin identificación de navegador: `descargar.py` manda un User-Agent de navegador. La Constitución
+  (`"estructura": "constitucion"`) se arma aparte: preámbulo, Parte › Título › Sección › Capítulo y disposiciones transitorias.
 - Para actualizar los textos, volver a correr los dos scripts y subir los archivos. Son normas públicas: no contienen datos de personas.
 
 ## graphify en Claude Code

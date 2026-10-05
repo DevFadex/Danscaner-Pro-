@@ -56,6 +56,40 @@
       "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/35000-39999/37872/texact.htm"
     },
     {
+      "id": "est",
+      "nombre": "Ley de Estupefacientes",
+      "norma": "Ley 23.737 (texto actualizado)",
+      "abrev": "Ley 23.737",
+      "alias": [
+        "23737",
+        "23.737",
+        "ley 23737",
+        "ley 23.737",
+        "ley de estupefacientes",
+        "ley de drogas",
+        "estupefacientes"
+      ],
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/138/texact.htm"
+    },
+    {
+      "id": "cn",
+      "nombre": "Constitución de la Nación Argentina",
+      "norma": "Texto oficial ordenado por la Ley 24.430 (reforma de 1994)",
+      "abrev": "CN",
+      "alias": [
+        "constitucion",
+        "constitución",
+        "constitucion nacional",
+        "constitución nacional",
+        "constitucion argentina",
+        "constitucion de la nacion",
+        "cn",
+        "c.n."
+      ],
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm",
+      "estructura": "constitucion"
+    },
+    {
       "id": "sppt",
       "nombre": "Régimen del Servicio Penitenciario de Tucumán",
       "norma": "Ley 9.914 (ratifica el Decreto Acuerdo 7/7 (MS) del 26/08/2025; deroga la Ley 4.611)",

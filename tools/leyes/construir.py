@@ -143,6 +143,55 @@ def referencias(t):
             refs.append(norm_num(x))
     return refs
 
+ORDINALES = ["Primera", "Segunda", "Tercera", "Cuarta", "Quinta", "Sexta", "Séptima", "Octava", "Novena", "Décima",
+             "Undécima", "Duodécima", "Decimotercera", "Decimocuarta", "Decimoquinta", "Decimosexta", "Decimoséptima"]
+RX_ENC_CN = re.compile(r"^\s*(PRIMERA PARTE|SEGUNDA PARTE|T[IÍ]TULO\s+\w+|SECCI[OÓ]N\s+\w+|CAP[IÍ]TULO\s+\w+)\s*$", re.I | re.M)
+
+NOMBRES_CN = ["Nación", "Gobierno Federal", "Poder Legislativo", "Poder Ejecutivo", "Poder Judicial", "Ministerio Público",
+              "Cámara de Diputados", "Senado", "Congreso", "Auditoría General de la Nación", "Defensor del Pueblo",
+              "Jefe de Gabinete", "Gobiernos de Provincia", "Autoridades de la Nación"]
+
+def nombre_cn(s):
+    """Nombre de un encabezado de la Constitución en minúscula, con mayúscula inicial y en los nombres propios."""
+    s = s.lower()
+    for n in sorted(NOMBRES_CN, key=len, reverse=True):
+        s = re.sub("(?i)" + re.escape(n.lower()).replace("ó", "[oó]").replace("á", "[aá]").replace("í", "[ií]"), n, s)
+    return s[0].upper() + s[1:]
+
+def constitucion(texto):
+    """Constitución Nacional (Ley 24.430): preámbulo, artículos con Parte › Título › Sección › Capítulo (y su nombre)
+    y disposiciones transitorias. Se dejan afuera los artículos de la Ley 24.430 que ordena su publicación."""
+    texto = texto[texto.index("PREÁMBULO"):]
+    texto = re.split(r"\n\s*DADA EN LA SALA DE SESIONES DE LA CONVENCI", texto, 1)[0]
+    cuerpo, trans = re.split(r"\n\s*DISPOSICIONES TRANSITORIAS\s*\n", texto, 1)
+    pre = re.split(r"\n\s*PRIMERA PARTE", cuerpo, 1)[0].replace("PREÁMBULO", "", 1)
+    arts = articulos(cuerpo)
+    # estructura: cada encabezado con el nombre del renglón siguiente («SECCIÓN SEGUNDA › Del Poder Ejecutivo»)
+    niveles = ["PARTE", "TITULO", "SECCION", "CAPITULO"]
+    cur, encs = {}, []
+    for m in RX_ENC_CN.finditer(cuerpo):
+        sig = cuerpo[m.end():].lstrip("\n").split("\n", 1)[0].strip()
+        nombre = sig if sig and not RX_ENC_CN.match(sig) and not re.match(r"Art[ií]culo\s", sig) else ""
+        nivel = "PARTE" if "PARTE" in m.group(1).upper() else m.group(1).split()[0].upper().replace("Í", "I").replace("Ó", "O")
+        etiqueta = re.sub(r"\s+", " ", m.group(1).strip()).lower()
+        etiqueta = re.sub(r"^titulo", "título", re.sub(r"^seccion", "sección", re.sub(r"^capitulo", "capítulo", etiqueta))).replace("septimo", "séptimo")
+        encs.append((m.start(), nivel, etiqueta[0].upper() + etiqueta[1:] + (" — " + nombre_cn(nombre) if nombre else "")))
+    j = 0
+    for (m, n), a in zip(marcas(cuerpo), arts):
+        while j < len(encs) and encs[j][0] < m.start():
+            _, nivel, e = encs[j]
+            cur[nivel] = e
+            for x in niveles[niveles.index(nivel) + 1:]:
+                cur.pop(x, None)
+            j += 1
+        a["u"] = " › ".join(cur[x] for x in niveles if x in cur)
+    out = [{"n": "preámbulo", "t": unir_renglones(pre.strip()), "u": "Preámbulo"}] + arts
+    partes = re.split(r"\n\s*(" + "|".join(ORDINALES) + r")\s*\.\s*", "\n" + trans)
+    for i in range(1, len(partes) - 1, 2):
+        out.append({"n": f"transitoria {ORDINALES.index(partes[i]) + 1}", "t": unir_renglones(partes[i + 1].strip()),
+                    "u": f"Disposiciones transitorias › {partes[i]}"})
+    return out
+
 def grafo(leyes):
     """Remisiones entre artículos con graphify: nodos = artículos, aristas = «references» EXTRACTED."""
     from graphify.build import build_from_json
@@ -211,11 +260,11 @@ def main():
                 texto = texto[m0.start():]
         if f.get("transcripcion"):
             texto = marcar_titulos(texto)
-        arts = articulos(texto)
+        arts = constitucion(texto) if f.get("estructura") == "constitucion" else articulos(texto)
         if f.get("transcripcion"):
             m0 = RX_ART.search(texto)
             aplicar_titulos(arts, texto[:m0.start()] if m0 else "")
-        enc = encabezados(texto)
+        enc = {} if f.get("estructura") else encabezados(texto)
         for a in arts:
             if enc.get(a["n"]):
                 a["u"] = enc[a["n"]]
