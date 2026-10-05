@@ -1154,6 +1154,18 @@ await test('Perfil de escaneo marcado bien, flash apagado al revisar la foto y e
   await pg.evaluate(()=>{while(Nav.stack.length)Nav._pop();go('home')});
 });
 
+await test('PC: Nexa con más lugar para la conversación e íconos centrados a lo ancho; el celular no cambia',async pg=>{
+  const mob=await pg.evaluate(()=>({qt:getComputedStyle($('#quickTools')).display,kick:getComputedStyle($('#v-nexa .nx-kicker')||document.body).display}));
+  assert.equal(mob.qt,'grid','en el celular cambió la grilla de herramientas');
+  await pg.setViewportSize({width:1366,height:700});await W(300);
+  const pc=await pg.evaluate(()=>{go('home');const hb=$('#v-home .hero-btns'),hero=$('#v-home .hero');return {qt:getComputedStyle($('#quickTools')).display,jc:getComputedStyle($('#quickTools')).justifyContent,
+    wide:hb.getBoundingClientRect().width>hero.getBoundingClientRect().width*.9,ml:getComputedStyle($('#toolsGrid .mlist')).display}});
+  assert.deepEqual(pc,{qt:'flex',jc:'center',wide:true,ml:'flex'});
+  const nx=await pg.evaluate(()=>{go('nexa');Nexa.render();const k=$('#v-nexa .nx-kicker');return {kick:k?getComputedStyle(k).display:'none',log:$('#nxLog').getBoundingClientRect().height}});
+  assert.equal(nx.kick,'none');assert.ok(nx.log>380,'la conversación tiene poco lugar: '+nx.log);
+  await pg.setViewportSize({width:390,height:844});await pg.evaluate(()=>go('home'));
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();

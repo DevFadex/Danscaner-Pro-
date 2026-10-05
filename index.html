@@ -3452,7 +3452,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 4.5',APP_VER='69';
+const NEXA_VER='Nexa 4.5',APP_VER='70';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3570,7 +3570,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='69 · 05/10/2026';
+const BUILD='70 · 05/10/2026';
 /* Versión que ven los usuarios: se cambia a mano solo cuando se decide publicar una versión nueva para todos.
    El administrador ve la versión interna (BUILD) con cada cambio. */
 const PUBLIC_VER='1.2';
@@ -5948,6 +5948,29 @@ document.head.insertAdjacentHTML('beforeend','<style id="v69Css">'+
  '.nxa-cats{display:flex;justify-content:space-around;margin:22px 0 18px}.nxa-cats button{display:flex;flex-direction:column;align-items:center;gap:8px;background:none}.nxa-cats span{width:62px;height:62px;border-radius:50%;display:grid;place-items:center;font-size:26px;background:var(--bg2,#fff);border:1px solid var(--line);box-shadow:0 2px 8px #0001}.nxa-cats b{font-size:14.5px;color:var(--mut,#6b7280)}.nxa-cats .on span{background:#a5a8f7;border-color:#a5a8f7}.nxa-cats .on b{color:#6366f1}'+
  '.nxa-pills{display:flex;flex-direction:column;align-items:flex-start;gap:10px}.nxa-pills button{display:flex;gap:10px;align-items:center;text-align:left;background:#2b2f8f;color:#fff;border-radius:22px;padding:12px 18px;font-size:15px;font-weight:600;max-width:100%}.nxa-pills button span{opacity:.85}'+
  '.nxc{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px}.nxc-ic{font-size:34px}.nxc b{font-size:17px}.nxc .btn,.nxc label{align-self:stretch}'+
+ '</style>');
+/* v70 · PC: Nexa con más lugar para la conversación y los íconos de inicio y herramientas ocupando todo el ancho, centrados. En el celular no cambia nada */
+document.head.insertAdjacentHTML('beforeend','<style id="v70Css">@media (min-width:1024px){'+
+ /* Nexa: encabezado y entrada compactos, letra un poco menor y la conversación centrada a lo ancho */
+ '#v-nexa .nx-head{margin:0!important;padding:6px 2px 4px!important;min-height:0!important}#v-nexa .nx-kicker{display:none!important}'+
+ '#v-nexa .nx-hb{width:34px!important;height:34px!important}#v-nexa .nx-prov{padding:4px 10px!important}'+
+ '#v-nexa .nx-card{max-width:1100px;width:100%;margin:0 auto!important}'+
+ '#v-nexa .nx-md,#v-nexa .nx-md p,#v-nexa .nx-md li{font-size:16px!important;line-height:1.55!important}#v-nexa .nx-md h1,#v-nexa .nx-md h2,#v-nexa .nx-md h3{font-size:18px!important}'+
+ '#v-nexa .nx-msg.ai{padding:12px 16px!important;border-radius:16px!important}#v-nexa .nx-bub{font-size:16px!important;padding:9px 14px!important}#v-nexa .nx-log{gap:12px!important;padding-bottom:12px!important}'+
+ '#v-nexa .nx-input{min-height:0!important;margin:6px auto 8px!important;max-width:1100px;width:calc(100% - 24px);padding:4px 6px!important}#v-nexa .nx-input textarea,#v-nexa #nxIn{font-size:15.5px!important;min-height:22px!important;max-height:30vh}'+
+ '#v-nexa .nx-acts{margin-top:6px!important}#v-nexa .nx-acts button{height:28px!important;font-size:12.5px!important}'+
+ '.nx-ad{max-width:820px;margin:0 auto!important}'+
+ /* inicio: los cuatro botones grandes llenan el ancho; las herramientas se reparten centradas */
+ '#v-home .hero-btns{max-width:none!important;grid-template-columns:repeat(4,minmax(0,1fr))!important}'+
+ '#quickTools.grid4{display:flex!important;flex-wrap:wrap;justify-content:center;gap:14px!important}#quickTools .tool{flex:1 1 150px;max-width:240px}'+
+ /* herramientas: tarjetas con el ícono arriba, repartidas a lo ancho y centradas */
+ '#toolsGrid .mlist{display:flex!important;flex-wrap:wrap;justify-content:center;gap:12px!important;margin-bottom:6px}'+
+ '#toolsGrid .mitem{flex:1 1 190px;max-width:260px;flex-direction:column!important;align-items:center!important;justify-content:center;text-align:center;gap:10px!important;padding:18px 10px!important;background:var(--bg2);border:1px solid var(--line);border-radius:16px;min-height:110px}'+
+ '#toolsGrid .mitem .ic{width:46px!important;height:46px!important;border-radius:14px!important}#toolsGrid .mitem .ic svg{width:24px!important;height:24px!important}#toolsGrid .mitem:hover{border-color:var(--ac);transform:translateY(-1px)}'+
+ '#toolsGrid .catt{text-align:center}'+
+ '}'+
+ /* PC con poca altura (ventana chica o zoom del navegador): todavía más compacto */
+ '@media (min-width:1024px) and (max-height:760px){#v-nexa .nx-head{padding:2px!important}#v-nexa .nx-md,#v-nexa .nx-md p,#v-nexa .nx-md li{font-size:15px!important}.top{min-height:0!important}}'+
  '</style>');
 </script>
 </body>
