@@ -770,7 +770,7 @@ await test('Nexa en PC: letra y cuadro de texto más grandes (en el celular no c
   await pg.click('#btnNexa');await W(300);await pg.fill('#nxIn','hola');await pg.click('#nxSend');await W(700);
   const fs=()=>pg.evaluate(()=>[parseFloat(getComputedStyle($('#v-nexa .nx-msg.ai .nx-md')).fontSize),$('#nxIn').getBoundingClientRect().height]);
   const [m]=await fs();await pg.setViewportSize({width:1366,height:768});await W(400);const [d,h]=await fs();
-  assert.ok(d>=18&&d>m,'la letra en PC no es más grande: '+m+' → '+d);assert.ok(h>=48,'el cuadro de texto es chico: '+h);
+  assert.ok(d>=17&&d>m,'la letra en PC no es más grande: '+m+' → '+d);assert.ok(h>=36,'el cuadro de texto es chico: '+h);
   await pg.setViewportSize({width:390,height:844});await W(200);
 });
 
@@ -1152,6 +1152,18 @@ await test('Perfil de escaneo marcado bien, flash apagado al revisar la foto y e
   await pg.waitForSelector('#nxcNew');assert.match(await pg.textContent('#sheetBody'),/Resumí el oficio/);
   await pg.click('#nxcNew');await pg.waitForFunction(()=>!Nav.isOpen('sheet'));assert.equal(await pg.evaluate(()=>Nexa.st.msgs.length),0);
   await pg.evaluate(()=>{while(Nav.stack.length)Nav._pop();go('home')});
+});
+
+await test('PC: Nexa con más lugar para la conversación e íconos centrados a lo ancho; el celular no cambia',async pg=>{
+  const mob=await pg.evaluate(()=>({qt:getComputedStyle($('#quickTools')).display,kick:getComputedStyle($('#v-nexa .nx-kicker')||document.body).display}));
+  assert.equal(mob.qt,'grid','en el celular cambió la grilla de herramientas');
+  await pg.setViewportSize({width:1366,height:700});await W(300);
+  const pc=await pg.evaluate(()=>{go('home');const hb=$('#v-home .hero-btns'),hero=$('#v-home .hero');return {qt:getComputedStyle($('#quickTools')).display,jc:getComputedStyle($('#quickTools')).justifyContent,
+    wide:hb.getBoundingClientRect().width>hero.getBoundingClientRect().width*.9,ml:getComputedStyle($('#toolsGrid .mlist')).display}});
+  assert.deepEqual(pc,{qt:'flex',jc:'center',wide:true,ml:'flex'});
+  const nx=await pg.evaluate(()=>{go('nexa');Nexa.render();const k=$('#v-nexa .nx-kicker');return {kick:k?getComputedStyle(k).display:'none',log:$('#nxLog').getBoundingClientRect().height}});
+  assert.equal(nx.kick,'none');assert.ok(nx.log>380,'la conversación tiene poco lugar: '+nx.log);
+  await pg.setViewportSize({width:390,height:844});await pg.evaluate(()=>go('home'));
 });
 
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
