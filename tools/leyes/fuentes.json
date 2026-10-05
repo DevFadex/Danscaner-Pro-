@@ -56,6 +56,128 @@
       "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/35000-39999/37872/texact.htm"
     },
     {
+      "id": "l27375",
+      "nombre": "Ley 27.375 (reforma de la Ley de Ejecución)",
+      "norma": "Ley 27.375 (B.O. 28/07/2017): modifica la Ley 24.660 y el artículo 14 del Código Penal",
+      "abrev": "Ley 27.375",
+      "alias": [
+        "27375",
+        "27.375",
+        "ley 27375",
+        "ley 27.375",
+        "reforma de la 24660",
+        "reforma de la ley de ejecucion"
+      ],
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/275000-279999/277449/norma.htm",
+      "estructura": "modificatoria"
+    },
+    {
+      "id": "d18",
+      "nombre": "Reglamento de Disciplina para los Internos",
+      "norma": "Decreto 18/97, Anexo I (reglamenta el Capítulo IV, Disciplina, de la Ley 24.660). Texto original: puede tener modificaciones posteriores",
+      "abrev": "Dto. 18/97",
+      "alias": [
+        "decreto 18",
+        "dto 18",
+        "dec 18",
+        "18/97",
+        "18 97",
+        "decreto 18/97",
+        "reglamento de disciplina para los internos",
+        "reglamento de disciplina federal",
+        "disciplina federal"
+      ],
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/40000-44999/41366/norma.htm",
+      "desde": "ANEXO I\\s*\\n\\s*REGLAMENTO DE DISCIPLINA"
+    },
+    {
+      "id": "d1136",
+      "nombre": "Reglamento de Comunicaciones de los Internos",
+      "norma": "Decreto 1136/97, Anexo I (reglamenta el Capítulo XI, Relaciones familiares y sociales, arts. 158 a 167 de la Ley 24.660). Texto original: puede tener modificaciones posteriores",
+      "abrev": "Dto. 1136/97",
+      "alias": [
+        "1136",
+        "decreto 1136",
+        "dto 1136",
+        "1136/97",
+        "1136 97",
+        "reglamento de comunicaciones",
+        "reglamento de visitas",
+        "comunicaciones de los internos"
+      ],
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/45000-49999/47102/norma.htm",
+      "desde": "ANEXO I\\s*\\n\\s*EJECUCION DE LA PENA",
+      "hasta": "\\n\\s*ANEXO \\\"A\\\"",
+      "arreglos": [
+        [
+          "Artículo 1 16.",
+          "Artículo 116."
+        ]
+      ]
+    },
+    {
+      "id": "d303",
+      "nombre": "Reglamento General de Procesados",
+      "norma": "Decreto 303/96, Anexo I (procesados alojados en el Servicio Penitenciario Federal). Texto original: tiene modificaciones posteriores (t.o. 1997)",
+      "abrev": "Dto. 303/96",
+      "alias": [
+        "decreto 303",
+        "dto 303",
+        "303/96",
+        "303 96",
+        "reglamento general de procesados",
+        "reglamento de procesados"
+      ],
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/35000-39999/35551/norma.htm",
+      "desde": "ANEXO I\\s*\\n\\s*REGLAMENTO GENERAL DE PROCESADOS",
+      "arreglos": [
+        [
+          "ARTICULO. 18.",
+          "ARTICULO 18."
+        ],
+        [
+          "ARTICULOS 164.",
+          "ARTICULO 164."
+        ]
+      ]
+    },
+    {
+      "id": "d140",
+      "nombre": "Reglamentación de Educación de la Ley 24.660",
+      "norma": "Decreto 140/2015, Anexo I (reglamenta el Capítulo VIII, Educación, arts. 133 a 142 de la Ley 24.660, según la Ley 26.695)",
+      "abrev": "Dto. 140/15",
+      "alias": [
+        "decreto 140",
+        "dto 140",
+        "140/2015",
+        "140/15",
+        "140 2015",
+        "reglamento de educacion",
+        "reglamentacion de educacion",
+        "reglamento del estimulo educativo"
+      ],
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/240000-244999/241914/norma.htm",
+      "desde": "ANEXO I\\s*\\n\\s*REGLAMENTACI"
+    },
+    {
+      "id": "d1139",
+      "nombre": "Reglamento de Recompensas",
+      "norma": "Decreto 1139/2000, Anexo II (reglamenta el Capítulo VI, Recompensas, de la Ley 24.660)",
+      "abrev": "Dto. 1139/00",
+      "alias": [
+        "1139",
+        "decreto 1139",
+        "dto 1139",
+        "1139/2000",
+        "1139/00",
+        "1139 2000",
+        "reglamento de recompensas"
+      ],
+      "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/65000-69999/65267/norma.htm",
+      "desde": "ANEXO II\\s*\\n\\s*REGLAMENTO DE RECOMPENSAS",
+      "hasta": "\\n\\s*DEFINICIONES DEL ANEXO II"
+    },
+    {
       "id": "est",
       "nombre": "Ley de Estupefacientes",
       "norma": "Ley 23.737 (texto actualizado)",

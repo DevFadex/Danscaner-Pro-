@@ -80,14 +80,49 @@ def marcas(texto):
             last = base
     return out
 
-def articulos(texto):
+RX_FIN = re.compile(r"[.;:)»]\s*$")
+
+def separar_titulos(cuerpo):
+    """Los títulos de sección que siguen a un artículo («TITULO II DE LAS PENAS», «Visitas») quedan al final de su texto:
+    son los renglones posteriores al último que cierra con puntuación, si son cortos y no son incisos."""
+    lineas = cuerpo.split("\n")
+    k = len(lineas) - 1
+    while k >= 0 and (not RX_FIN.search(lineas[k]) or RX_ENC.match(lineas[k])):
+        k -= 1
+    # un título con nombre terminado en punto («CAPITULO II bis: / Excepciones … ejecución.») también es título
+    for j in range(max(0, len(lineas) - 4), len(lineas)):
+        if RX_ENC.match(lineas[j].strip()):
+            k = min(k, j - 1)
+            break
+    cola = [l.strip() for l in lineas[k + 1:] if l.strip()]
+    sigue = lambda i: i > 0 and not RX_FIN.search(cola[i - 1])  # renglón que continúa el anterior («de la / ejecución.»)
+    # renglones unidos (un título que ocupa dos renglones); si un «título» pasa de 100 letras, es texto sin punto final
+    segmentos = []
+    for i, l in enumerate(cola):
+        if sigue(i) and segmentos:
+            segmentos[-1] += " " + l
+        else:
+            segmentos.append(l)
+    rotulo = lambda x: re.match(r"(?:LIBRO|T[IÍ]TULO|CAP[IÍ]TULO|SECCI[OÓ]N|(?:PRIMERA|SEGUNDA|TERCERA) PARTE)\b", x, re.I)
+    if any(len(x) > 100 and not rotulo(x) for x in segmentos):
+        return cuerpo, []
+    if k < 0 or not cola or len(" ".join(cola)) > 300 or any((len(l) > 110 and not rotulo(l)) or (l[0].islower() and not sigue(i)) or re.match(r"(?:\d+|[a-zñ]{1,2})\s*[).º°\-]", l) for i, l in enumerate(cola)):
+        return cuerpo, []
+    return "\n".join(lineas[:k + 1]).strip(), cola
+
+def articulos(texto, titulos=False):
     """Separa el texto en artículos, en orden. Si un artículo aparece como título («Artículo 109: Defensor común») y
-    enseguida su cuerpo («Art. 109. - …»), los une; si un número se repite más adelante, se queda con el primero."""
+    enseguida su cuerpo («Art. 109. - …»), los une; si un número se repite más adelante, se queda con el primero.
+    Con titulos=True (textos de InfoLeg), saca los títulos de sección del final de cada artículo y los guarda en «_tit»."""
     ms = marcas(texto)
     out, vistos = [], {}
     for i, (m, n) in enumerate(ms):
         fin = ms[i + 1][0].start() if i + 1 < len(ms) else len(texto)
-        cuerpo = texto[m.end():fin].strip()
+        cuerpo = re.sub(r"[ \t]+\n", "\n", texto[m.end():fin]).strip()
+        tit = []
+        if titulos:
+            # primero los títulos (van después de las notas de InfoLeg) y después se sacan las notas
+            cuerpo, tit = separar_titulos(cuerpo)
         cuerpo = re.split(r"\n\s*\(?\s*(?:Art[íi]culo sustituido|Art[íi]culo incorporado|Nota Infoleg|Expresi[óo]n sustituida)", cuerpo, 1)[0].strip()
         if n in vistos:
             prev = out[vistos[n]]
@@ -96,7 +131,7 @@ def articulos(texto):
                 prev["t"] = cuerpo[:6000]
             continue
         vistos[n] = len(out)
-        out.append({"n": n, "t": cuerpo[:6000]})
+        out.append({"n": n, "t": cuerpo[:6000]} | ({"_tit": tit} if tit else {}))
     for a in out:
         a["t"] = re.sub(r"^[\s\-–—.:]+", "", a["t"])
         # algunos textos repiten el encabezado adentro («Artículo 16: …»)
@@ -106,11 +141,34 @@ def articulos(texto):
             a["ti"] = re.sub(r"^[\s\-–—.:]+", "", a["ti"])
     return out
 
+def nombre_encabezado(texto, m):
+    """«TITULO I» seguido de «DELITOS CONTRA LAS PERSONAS» → « — Delitos contra las personas» (solo si el título no trae ya su nombre)."""
+    if not re.fullmatch(r"\S+\s+\S+(?:\s+(?:bis|ter|qu[aá]ter))?\s*:?", m.group(0).strip()):
+        return ""
+    sig = ""
+    # el nombre puede ocupar dos renglones («Excepciones a las modalidades básicas de la / ejecución.»)
+    for l in texto[m.end():].lstrip(" \t\n").split("\n")[:2]:
+        l = l.strip()
+        if not l or RX_ENC.match(l) or re.match(r"(?:ART[IÍ]CULO|Art[ií]culo|Art\.)\s", l):
+            break
+        if sig and not re.search(r"\b(?:de|del|la|las|los|el|y|e|en|a|al|para|por|con|sin|sobre)$", sig, re.I) and not l[0].islower():
+            break
+        sig = (sig + " " + l).strip()
+        if RX_FIN.search(l):
+            if not l.endswith("."):
+                return ""
+            break
+    # si en el mismo renglón empieza otro título («… PROCESALES TÍTULO I …»), el nombre termina ahí
+    sig = re.split(r"\s+(?=(?:LIBRO|T[IÍ]TULO|CAP[IÍ]TULO|SECCI[OÓ]N)\s+[IVXLC\d])", sig)[0].rstrip(" .")
+    if not sig or len(sig) > 150:
+        return ""
+    return " — " + (sig[0].upper() + sig[1:].lower() if sig.isupper() else sig)
+
 def encabezados(texto):
     """Para cada artículo, el último LIBRO / TÍTULO / CAPÍTULO que aparece antes."""
     res, cur = {}, {}
     pos_arts = [(m.start(), n) for m, n in marcas(texto)]
-    encs = [(m.start(), m.group(0).strip()) for m in RX_ENC.finditer(texto)]
+    encs = [(m.start(), m.group(0).strip() + nombre_encabezado(texto, m)) for m in RX_ENC.finditer(texto)]
     j = 0
     for pos, n in pos_arts:
         while j < len(encs) and encs[j][0] < pos:
@@ -157,6 +215,19 @@ def nombre_cn(s):
     for n in sorted(NOMBRES_CN, key=len, reverse=True):
         s = re.sub("(?i)" + re.escape(n.lower()).replace("ó", "[oó]").replace("á", "[aá]").replace("í", "[ií]"), n, s)
     return s[0].upper() + s[1:]
+
+RX_MOD = re.compile(r"(?m)^\s*(?:ART[IÍ]CULO|Art[ií]culo)\s+(\d+)\s*[°º]?\s*(?:\.\s*[-–—]|[-–—])\s*")
+
+def modificatoria(texto):
+    """Leyes que reforman otras (Ley 27.375): cada artículo trae adentro el texto nuevo («Artículo 14: …»), así que
+    solo cuentan como inicio los encabezados con guion («Artículo 38.- Modifícase…»), no los que llevan dos puntos."""
+    ms = list(RX_MOD.finditer(texto))
+    out = []
+    for i, m in enumerate(ms):
+        fin = ms[i + 1].start() if i + 1 < len(ms) else len(texto)
+        cuerpo = re.split(r"\n\s*DADA EN LA SALA DE SESIONES", texto[m.end():fin], 1)[0]
+        out.append({"n": m.group(1), "t": unir_renglones(cuerpo.strip())[:6000]})
+    return out
 
 def constitucion(texto):
     """Constitución Nacional (Ley 24.430): preámbulo, artículos con Parte › Título › Sección › Capítulo (y su nombre)
@@ -254,20 +325,38 @@ def main():
         if not f.get("transcripcion"):
             meta = json.loads((CRUDO / f"{f['id']}.meta.json").read_text(encoding="utf-8"))
             texto = limpiar(crudo.read_text(encoding="utf-8"))
+        # erratas de tipeo del original que impiden reconocer un artículo («Artículo 1 16», «ARTICULO. 18»)
+        for mal, bien in f.get("arreglos", []):
+            texto = texto.replace(mal, bien)
         if f.get("desde"):
             m0 = re.search(f["desde"], texto)
             if m0:
                 texto = texto[m0.start():]
+        if f.get("hasta"):
+            texto = re.split(f["hasta"], texto, 1)[0]
         if f.get("transcripcion"):
             texto = marcar_titulos(texto)
-        arts = constitucion(texto) if f.get("estructura") == "constitucion" else articulos(texto)
+        if f.get("estructura"):
+            arts = {"constitucion": constitucion, "modificatoria": modificatoria}[f["estructura"]](texto)
+        else:
+            arts = articulos(texto, titulos=not f.get("transcripcion"))
         if f.get("transcripcion"):
             m0 = RX_ART.search(texto)
             aplicar_titulos(arts, texto[:m0.start()] if m0 else "")
         enc = {} if f.get("estructura") else encabezados(texto)
+        sub = ""
         for a in arts:
-            if enc.get(a["n"]):
-                a["u"] = enc[a["n"]]
+            u = " › ".join(x for x in (enc.get(a["n"], ""), sub) if x)
+            if u:
+                a["u"] = u
+            # los subtítulos que cierran este artículo («Salidas transitorias») valen para los siguientes; los LIBRO /
+            # TÍTULO / CAPÍTULO y su nombre (el renglón siguiente) ya están en enc
+            if "_tit" in a:
+                # se descartan los títulos, sus nombres (ya en enc) y las notas entre paréntesis
+                nombres = " ".join(enc.values()).lower()
+                sueltos = [t for t in a.pop("_tit") if not RX_ENC.match(t) and not t.startswith("(")
+                           and t.rstrip(" .").lower() not in nombres and not re.search(r"(?:\bPARTE$|\b(?:LIBRO|T[IÍ]TULO|CAP[IÍ]TULO|SECCI[OÓ]N)\s+[IVXLC\d])", t)]
+                sub = " › ".join(sueltos)
         abrev = f.get("abrev") or {"cp": "CP", "cppf": "CPPF", "cppn": "CPPN", "ep": "Ley 24.660"}.get(f["id"], f["id"].upper())
         doc = {"id": f["id"], "nombre": f["nombre"], "norma": f["norma"], "abrev": abrev, "fuente": meta["url"],
                "descargado": meta["descargado"], "articulos": arts}
