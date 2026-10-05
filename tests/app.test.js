@@ -1062,6 +1062,35 @@ await test('Cámara estilo Adobe: barra de modos con guías, marco de cuatro pun
   await pg.evaluate(()=>{while(Nav.stack.length)Nav._pop()});
 });
 
+await test('Borrado inteligente (pincel, birome y renglón) y marcación a mano',async pg=>{
+  await pg.evaluate(()=>{window._txtPage=(pen)=>{const c=canvas(1000,1300),x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,1000,1300);x.fillStyle='#111';x.font='28px Times New Roman';for(let y=150;y<1150;y+=60)x.fillText('el juez dispuso que el interno solicita audiencia conforme',80,y);
+    if(pen){x.strokeStyle='#1d4ed8';x.lineWidth=5;x.beginPath();x.moveTo(600,1200);x.bezierCurveTo(700,1120,800,1280,900,1180);x.stroke();x.fillStyle='#1d4ed8';x.font='bold 40px Arial';x.fillText('VISTO',150,1240)}return c}});
+  const r=await pg.evaluate(async()=>{const plain=penDetect(_txtPage(false)),pen=penDetect(_txtPage(true));
+    const ln=lineAt(_txtPage(false),.5,330/1300);
+    const p=await makePage(_txtPage(true).toDataURL('image/png'),{auto:false,filter:'original'});const blue=async()=>{const c=await renderPage(p,{maxSide:1300}),d=c.getContext('2d').getImageData(0,1100,1000,200).data;let n=0;for(let i=0;i<d.length;i+=4)if(d[i+2]-d[i]>60)n++;return n};
+    const b0=await blue();p.pen={k:pageKey(p),...pen};const b1=await blue();
+    p.erase={k:pageKey(p),s:[{...ln}]};const c=await renderPage(p,{maxSide:1300}),dd=c.getContext('2d').getImageData(80,Math.round(ln.y*1300),800,Math.round(ln.h*1300)).data;let dark=0;for(let i=0;i<dd.length;i+=4)if(dd[i]<120)dark++;
+    window._bp=p;return {plain,penN:pen&&pen.n>0,ln:{h:ln.h*1300,w:ln.w*1000,y:ln.y*1300},b0,b1,dark}});
+  assert.equal(r.plain,null,'confundió texto negro con birome');assert.ok(r.penN,'no encontró la birome');assert.ok(r.b0>500&&r.b1<20,'la birome no se borró '+r.b0+' → '+r.b1);
+  assert.ok(r.ln.h>20&&r.ln.h<60&&r.ln.w>600&&r.ln.y>280&&r.ln.y<320,'renglón mal ubicado '+JSON.stringify(r.ln));assert.equal(r.dark,0,'el renglón no se borró');
+  /* pantalla: pestañas, modo texto y aplicar */
+  await pg.evaluate(()=>{const p={..._bp,erase:null,pen:null};DOC={id:'t66',name:'Prueba',pages:[p],created:Date.now()};window._bp2=p;Ed.open(0)});await pg.waitForSelector('#editor [data-ed="clean"]');
+  assert.ok(await pg.$('#editor [data-ed="mark"]'),'falta Marcar');
+  await pg.click('#editor [data-ed="clean"]');await pg.waitForSelector('#sheetBody [data-bm="text"]');await pg.waitForFunction(()=>$('#clOv').width>10);await pg.waitForTimeout(700);
+  await pg.click('#sheetBody [data-bm="pen"]');await pg.waitForFunction(()=>/Marcas detectadas/.test($('#biPenTx').textContent),null,{timeout:8000});
+  await pg.click('#sheetBody [data-bm="text"]');await pg.$eval('#clOv',e=>e.scrollIntoView({block:'center'}));const bb=await (await pg.$('#clOv')).boundingBox();
+  await pg.mouse.click(bb.x+bb.width*.5,bb.y+bb.height*(330/1300));await pg.click('#clOk');await pg.waitForFunction(()=>!Nav.isOpen('sheet'));
+  assert.ok(await pg.evaluate(()=>_bp2.erase&&_bp2.erase.s.some(s=>s.w>.5)),'no guardó el renglón');
+  /* marcación */
+  await pg.click('#editor [data-ed="mark"]');await pg.waitForSelector('#mkOv');await pg.waitForTimeout(700);await pg.$eval('#mkOv',e=>e.scrollIntoView({block:'center'}));const mb=await (await pg.$('#mkOv')).boundingBox();
+  await pg.mouse.move(mb.x+mb.width*.2,mb.y+mb.height*.2);await pg.mouse.down();await pg.mouse.move(mb.x+mb.width*.6,mb.y+mb.height*.3,{steps:6});await pg.mouse.up();
+  await pg.click('#sheetBody [data-mt="shape"]');await pg.click('#sheetBody [data-ms="rect"]');await pg.mouse.move(mb.x+mb.width*.3,mb.y+mb.height*.5);await pg.mouse.down();await pg.mouse.move(mb.x+mb.width*.7,mb.y+mb.height*.7,{steps:4});await pg.mouse.up();
+  await pg.click('#mkOk');await pg.waitForFunction(()=>!Nav.isOpen('sheet'));
+  const red=await pg.evaluate(async()=>{const c=await renderPage(_bp2,{maxSide:1000}),d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let n=0;for(let i=0;i<d.length;i+=4)if(d[i]>180&&d[i+1]<90&&d[i+2]<90)n++;return [_bp2.overlays.length,n]});
+  assert.equal(red[0],1);assert.ok(red[1]>500,'no se ve la marcación: '+red[1]);
+  await pg.evaluate(()=>{while(Nav.stack.length)Nav._pop()});
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();

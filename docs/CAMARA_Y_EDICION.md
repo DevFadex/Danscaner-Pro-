@@ -564,3 +564,21 @@ Cada arreglo guarda la clave del recorte y del giro con que se calculó (`pageKe
   - 7 interruptores: captura automática, recorte automático, cuadrícula, Foto HD, sonido, nivelador (`S.camLevel`) y marco de cuatro puntos.
   - "Más ajustes ›" abre el panel completo, y "‹ Ajustes rápidos" vuelve al compacto.
 - **Carga giratoria:** el anillo azul de Adobe en todas las esperas (`.spin`).
+
+## v66 — Borrado inteligente y marcación a mano
+
+- **Borrado inteligente** (botón **Limpiar** del editor; `cleanSheet` rehecho) tiene 3 modos en pestañas:
+  - **Pincel:** se pinta sobre manchas, lápiz o sombras. Con dos dedos se hace zoom (hasta 5×) y con doble toque se vuelve; el trazo se ajusta al zoom.
+  - **Manuscrito** (`penDetect`):
+    - Detecta tinta de color (azul, roja, verde) más oscura que el papel. No toma el texto negro ni los tonos amarillentos del papel.
+    - Descarta puntitos de menos de 12 px, engrosa 2 px y guarda una grilla de 4 px en `p.pen`.
+    - Antes de borrar muestra en violeta lo detectado ("Marcas detectadas: N → Borrar"), porque también puede tomar firmas y sellos de color.
+  - **Texto** (`lineAt`): al tocar un renglón se calcula la banda de tinta alrededor del toque y se extiende por las palabras vecinas (huecos de hasta 1,6 veces el alto de línea). Se guarda como rectángulo `{x,y,w,h}` en `p.erase.s`; `eraseMask` acepta círculos y rectángulos.
+  - **Comparar:** mientras se mantiene apretado se ve la foto sin arreglos.
+  - **Deshacer:** quita el último trazo o renglón.
+  - **Limpiar:** borra todo lo pintado.
+  - "Aplanar hoja curva" y "Borrar dedos del borde" siguen en la misma pantalla.
+- **Marcación** (botón **Marcar**, `markSheet`):
+  - Pestañas Dibujo (trazo libre) y Formas (flecha, línea, rectángulo, círculo).
+  - Color con 6 tonos más un selector libre, ancho de trazo de 2 a 40 y opacidad de 10 % a 100 %. Hay deshacer y rehacer, y se recuerda la última elección (`S.mkCol`, `S.mkW`, `S.mkOp`).
+  - Se guarda como una capa PNG del tamaño de la página en `p.overlays`, y se quita con "Quitar firmas".
