@@ -108,3 +108,8 @@ En una foto común, la limpia y le da detalle sin quemarla. Mientras el panel �
   - **Texto:** tocás un renglón y se borra.
   - **Comparar** (mantener apretado) muestra cómo era la foto original.
 - **Marcar:** dibujá con el dedo o agregá flechas, líneas, rectángulos y círculos, eligiendo color, grosor y opacidad. Se quita con "Quitar firmas".
+
+## Editar texto y ajustes
+
+- **Editar texto** (en el editor) marca todas las palabras con línea punteada. Elegí **Palabra** para cambiar una sola, o **Renglón** para cambiar la línea entera. Se mantienen la letra, el tamaño y el color.
+- En **Ajustes**, arriba aparece tu cuenta; tocala para cambiar la contraseña o cerrar sesión. Abajo, en **Ayuda y soporte**, está esta ayuda con buscador, y funciona sin internet.

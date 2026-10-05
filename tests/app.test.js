@@ -1091,6 +1091,23 @@ await test('Borrado inteligente (pincel, birome y renglón) y marcación a mano'
   await pg.evaluate(()=>{while(Nav.stack.length)Nav._pop()});
 });
 
+await test('Editar texto por palabra o renglón, ajustes con perfil y secciones, y ayuda sin internet',async pg=>{
+  await pg.evaluate(()=>settingsSheet());await pg.waitForSelector('#sheetBody #sProf');
+  assert.deepEqual(await pg.$$eval('#sheetBody .set-sec',x=>x.map(e=>e.textContent)),['General','Preferencias','Ayuda y soporte']);
+  assert.match(await pg.textContent('#sProf'),/Administrador/);
+  await pg.click('#sHelp');await pg.waitForSelector('#sheetBody .hp h3');assert.ok(await pg.$$eval('#sheetBody .hp h3',x=>x.length)>5,'la ayuda vino vacía');
+  await pg.fill('#hpQ','marcación');const vis=await pg.$$eval('#sheetBody .hp h3',x=>x.filter(e=>!e.hidden).map(e=>e.textContent));assert.ok(vis.length>=1&&vis.every(t=>/marcaci|borrado/i.test(t)),'la búsqueda no filtra: '+JSON.stringify(vis));
+  await pg.evaluate(()=>{while(Nav.stack.length)Nav._pop()});
+  /* editar texto: modo renglón toma la línea entera */
+  await seedPage(pg);await pg.evaluate(async()=>{DOC=newDoc();DOC.pages.push({...window._pg,id:uid()});openDocScreen();Ed.open(0)});await W(600);
+  assert.match(await pg.textContent('#editor [data-ed="fix"]'),/Editar texto/);
+  await pg.evaluate(()=>{Fix.ocr=async()=>{};Fix.open()});await pg.waitForFunction(()=>Nav.isOpen('fixer')&&Fix.c);assert.equal(await pg.textContent('#fixer .shead .t'),'Editar texto');
+  await pg.evaluate(()=>Fix.setWords([{t:'OFICIO',x:.08,y:.1,w:.2,h:.04},{t:'N°',x:.3,y:.1,w:.06,h:.04},{t:'55',x:.38,y:.1,w:.06,h:.04},{t:'otra',x:.08,y:.3,w:.15,h:.04}]));
+  await pg.click('#fxUnit [data-u="l"]');await pg.click('#fxBoxes>b[data-w="1"]');assert.equal(await pg.$$eval('#fxBoxes>b.sel',x=>x.length),3);
+  await pg.click('#fxUnit [data-u="w"]');await pg.click('#fxBoxes>b[data-w="3"]');assert.equal(await pg.$$eval('#fxBoxes>b.sel',x=>x.length),1);
+  await pg.evaluate(()=>{S.fxUnit='w';while(Nav.stack.length)Nav._pop()});
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();

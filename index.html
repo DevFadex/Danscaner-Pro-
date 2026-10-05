@@ -3452,7 +3452,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 4.5',APP_VER='66';
+const NEXA_VER='Nexa 4.5',APP_VER='67';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3570,7 +3570,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='66 · 05/10/2026';
+const BUILD='67 · 05/10/2026';
 /* Versión que ven los usuarios: se cambia a mano solo cuando se decide publicar una versión nueva para todos.
    El administrador ve la versión interna (BUILD) con cada cambio. */
 const PUBLIC_VER='1.2';
@@ -5780,6 +5780,51 @@ document.head.insertAdjacentHTML('beforeend','<style id="v66Css">.bi-tabs{displa
  '.mk-wrap{position:relative;display:flex;justify-content:center;background:var(--stage,#eee);border-radius:10px;overflow:hidden}.mk-wrap canvas{max-width:100%;max-height:46vh;display:block}#mkOv{position:absolute;top:0;left:50%;transform:translateX(-50%);touch-action:none}'+
  '.mk-row{display:flex;align-items:center;gap:8px;margin:8px 0;font-size:13px}.mk-row span{min-width:96px;color:var(--mut,#6b7280)}.mk-row input[type=range]{flex:1}.mk-c{width:26px;height:26px;border-radius:50%;border:2px solid var(--line)}.mk-c.on{outline:3px solid var(--ac);outline-offset:1px}#mkPick{width:30px;height:28px;border:0;background:none;padding:0}'+
  '.mk-shapes{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px}.mk-shapes[hidden]{display:none}.mk-shapes button{padding:6px 10px;border-radius:10px;background:var(--bg3,#eee);font-size:13px}.mk-shapes button.on{background:var(--ac);color:#fff}</style>');
+/* v67 · editar texto en el lugar (estilo Adobe) y ajustes con perfil y secciones */
+/* ---- editar texto: todos los renglones marcados con línea punteada y modo Palabra / Renglón ---- */
+(function(){const t=$('#fixer .shead .t');if(t&&t.textContent==='Corregir texto')t.textContent='Editar texto';
+ const fb=$('#editor [data-ed="fix"]');if(fb){const n=[...fb.childNodes].find(x=>x.nodeType===3&&/Corregir/.test(x.textContent));if(n)n.textContent='Editar texto'}
+ const bar=$('#fixer .fx-bar');if(bar&&!$('#fxUnit'))bar.insertAdjacentHTML('afterbegin','<span class="fx-seg" id="fxUnit"><button data-u="w">Palabra</button><button data-u="l">Renglón</button></span>');
+ const upd=()=>$$('#fxUnit [data-u]').forEach(b=>b.classList.toggle('on',b.dataset.u===(S.fxUnit||'w')));upd();
+ $('#fxUnit').onclick=e=>{const b=e.target.closest('[data-u]');if(!b)return;S.fxUnit=b.dataset.u;saveS();upd();toast(S.fxUnit==='l'?'Tocá un renglón para cambiarlo entero':'Tocá una palabra para corregirla')};
+ {const ttl=()=>{const t=$('#fixer .shead .t');if(t&&t.textContent==='Corregir texto')t.textContent='Editar texto'};for(const m of ['open','openCanvas']){const _f=Fix[m];Fix[m]=function(){const r=_f.apply(this,arguments);ttl();return r}}}
+ /* en modo Renglón, un toque toma todas las palabras de esa línea */
+ $('#fxBoxes').addEventListener('click',e=>{if(S.fxUnit!=='l'||Fix.mark)return;const b=e.target.closest('[data-w]');if(!b)return;e.stopImmediatePropagation();const i=+b.dataset.w,W=Fix.words;
+  const idx=[];for(let k=0;k<W.length;k++)if(W[k]&&W[k].t&&fixSameLine(W[k],W[i]))idx.push(k);
+  $$('#fxBoxes>b.sel').forEach(x=>x.classList.remove('sel'));idx.forEach(k=>{const el=$('#fxBoxes>b[data-w="'+k+'"]');if(el)el.classList.add('sel')});const g=Fix.group(idx);Fix.pick(g.box,g.orig,g.meta,idx)},true)})();
+
+/* ---- ajustes estilo Adobe: tarjeta de perfil arriba, secciones con título, ayuda y cerrar sesión ---- */
+function setInitials(s){const w=String(s||'').replace(/@.*/,'').split(/[\s._-]+/).filter(Boolean);return ((w[0]||'?')[0]+(w[1]?w[1][0]:'')).toUpperCase()}
+{const _ss=settingsSheet;settingsSheet=async function(){const r=await _ss.apply(this,arguments);try{setDecorate()}catch(e){console.warn('ajustes',e)}return r}}
+function setDecorate(){const b=$('#sheetBody');if(!b||b.querySelector('.set-prof'))return;const list=b.querySelector('.set-list');if(!list)return;
+ const pr=SB&&SB.profile,u=SB&&SB.user,name=(pr&&(pr.nombre||pr.full_name))||(u&&u.email?u.email.replace(/@.*/,''):'')||'Uso local',mail=(u&&u.email)||'Sin cuenta: los documentos quedan en este teléfono';
+ const role=pr&&pr.status==='activo'?(pr.role==='admin'?'Administrador':'Usuario'):(u?'Cuenta pendiente':'Sin sesión');
+ list.insertAdjacentHTML('beforebegin','<button class="set-prof" id="sProf"><span class="sp-av">'+esc(setInitials(name))+'</span><span class="sp-t"><b>'+esc(name)+'</b><small>'+esc(mail)+'</small><em>'+esc(role)+'</em></span><span class="set-chev">›</span></button><div class="set-sec">General</div>');
+ const acc=b.querySelector('.acc');if(acc)acc.insertAdjacentHTML('beforebegin','<div class="set-sec">Preferencias</div>');
+ const foot=b.querySelector('.set-foot');const help='<div class="set-sec">Ayuda y soporte</div><div class="set-list"><button class="set-row" id="sHelp"><span class="set-ic"><i data-ico="info"></i></span><span class="set-t"><b>Ayuda</b><small>Cómo usar la cámara, los filtros y los PDF</small></span><span class="set-chev">›</span></button><button class="set-row" id="sShareApp"><span class="set-ic"><i data-ico="share"></i></span><span class="set-t"><b>Compartir la aplicación</b><small>Enviá el enlace a un compañero</small></span><span class="set-chev">›</span></button></div>'+
+  (u?'<button class="set-out" id="sOut">Cerrar sesión</button>':'');
+ if(foot)foot.insertAdjacentHTML('beforebegin',help);else b.insertAdjacentHTML('beforeend',help);iconize&&iconize(b);
+ $('#sProf').onclick=async()=>{await Nav.back();securitySheet()};
+ $('#sShareApp').onclick=()=>{const url=location.origin+location.pathname;if(navigator.share)navigator.share({title:'Danscanner Pro',text:'Escáner de documentos',url}).catch(()=>{});else navigator.clipboard.writeText(url).then(()=>toast('Enlace copiado'))};
+ $('#sHelp').onclick=async()=>{await Nav.back();if(typeof helpSheet==='function')helpSheet();else if(typeof manualSheet==='function')manualSheet();else aboutSheet()};
+ const so=$('#sOut');if(so)so.onclick=async()=>{if(!confirm('¿Cerrar la sesión en este teléfono?'))return;try{await sbSignOut()}catch(e){}location.reload()}}
+document.head.insertAdjacentHTML('beforeend','<style id="v67Css">'+
+ '.set-prof{display:flex;align-items:center;gap:12px;width:100%;padding:12px;border-radius:16px;background:var(--bg3,#f1f5f9);text-align:left;margin-bottom:6px}.sp-av{flex:none;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,var(--ac),#0ea5e9);color:#fff;font-weight:800;font-size:18px}'+
+ '.sp-t{flex:1;display:flex;flex-direction:column;min-width:0}.sp-t b{font-size:16px}.sp-t small{color:var(--mut,#6b7280);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sp-t em{font-style:normal;font-size:11px;font-weight:700;align-self:flex-start;margin-top:4px;padding:1px 8px;border-radius:8px;border:1px solid var(--line);color:var(--mut,#6b7280)}'+
+ '.set-sec{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mut,#6b7280);margin:16px 4px 6px}'+
+ '.set-out{display:block;width:100%;text-align:left;font-weight:700;padding:14px 6px;margin-top:8px;color:var(--tx)}'+
+ '#fxUnit{flex:none}#fxUnit button.on{background:var(--ac);color:#fff}'+
+ '#fxBoxes>b{background:transparent;outline:1px dashed #1473e699}#fxBoxes>b.sel{outline:2px solid #1473e6;background:#1473e614}'+
+ '</style>');
+/* ayuda sin internet: el manual de la app (queda guardado por el service worker) */
+function mdLite(md){const inl=s=>esc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/`(.+?)`/g,'<code>$1</code>');let out='',ul=false;
+ for(const raw of String(md||'').split('\n')){const l=raw.trimEnd();const li=/^\s*[-*]\s+(.*)$/.exec(l);if(li){if(!ul){out+='<ul>';ul=true}out+='<li>'+inl(li[1])+'</li>';continue}if(ul){out+='</ul>';ul=false}
+  let m;if(m=/^#{1,2}\s+(.*)$/.exec(l))out+='<h3>'+inl(m[1])+'</h3>';else if(m=/^#{3,}\s+(.*)$/.exec(l))out+='<h4>'+inl(m[1])+'</h4>';else if(l.trim())out+='<p>'+inl(l)+'</p>'}if(ul)out+='</ul>';return out}
+async function helpSheet(){let md='';try{md=await (await fetch('knowledge/danscaner/manual.md')).text()}catch(e){}
+ const bd=openSheet('Ayuda','<input type="search" id="hpQ" placeholder="Buscar en la ayuda (ej.: lote, firma, OCR)" style="width:100%;box-sizing:border-box;margin-bottom:8px"><div class="hp" id="hpBody">'+(md?mdLite(md):'<p class="muted">No se pudo abrir la ayuda.</p>')+'</div>');
+ $('#hpQ',bd).oninput=e=>{const q=nbNorm(e.target.value.trim());const secs=[];let cur=null;for(const el of $('#hpBody',bd).children){if(el.tagName==='H3'){cur={h:el,els:[]};secs.push(cur)}else if(cur)cur.els.push(el)}
+  for(const s of secs){const hit=!q||nbNorm(s.h.textContent+' '+s.els.map(x=>x.textContent).join(' ')).includes(q);s.h.hidden=!hit;s.els.forEach(x=>x.hidden=!hit)}}}
+document.head.insertAdjacentHTML('beforeend','<style id="v67bCss">.hp h3{font-size:16px;margin:16px 0 6px}.hp h4{font-size:14px;margin:12px 0 4px}.hp p,.hp li{font-size:14px;line-height:1.5}.hp ul{padding-left:18px;margin:4px 0}.hp [hidden]{display:none}</style>');
 </script>
 </body>
 </html>
