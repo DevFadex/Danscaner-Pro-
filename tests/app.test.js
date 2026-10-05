@@ -253,7 +253,7 @@ await test('Nexa local por procesador (sin placa gráfica compatible) y saludo s
   const s=await pg.evaluate(()=>NexaLocal.support());assert.equal(s.cpu,true,'no ofrece el modo procesador');
   const r=await pg.evaluate(async()=>{const c=NexaLocal.cfg();c.url=location.origin+'/tests/tiny.gguf';const t=await NexaLocal.chat([{role:'user',content:'hola'}]);return {t,dl:c.downloaded,eng:c.engine}});
   assert.ok(r.t.length>0&&r.dl&&r.eng==='cpu','no respondió con el procesador: '+JSON.stringify(r));
-  await pg.click('#btnNexa');await W(300);const h=await pg.textContent('#nxLog h3');assert.ok(/^(Buen día|Buenas tardes|Buenas noches), soy Nexa$/.test(h),h);
+  await pg.click('#btnNexa');await W(300);const h=await pg.textContent('#nxLog .nxa-hi');assert.ok(/^Hola/.test(h)&&/ayudarte/.test(h),h);
   await pg.fill('#nxIn','hola');await pg.click('#nxSend');await W(600);const log=await pg.textContent('#nxLog');
   assert.ok(/(buen día|buenas tardes|buenas noches)!/i.test(log)&&/(ayudo hoy|trabajamos hoy)/.test(log),log.slice(0,300));
   assert.ok(await pg.$('#btnNexa'));
@@ -1133,6 +1133,25 @@ await test('Libro que saca sola al pasar la página, carpetas protegidas con PIN
   await pg.evaluate(()=>{while(Nav.stack.length)Nav._pop();storageSheet()});await pg.waitForSelector('#sheetBody .dn-wrap svg');
   assert.ok(await pg.$$eval('#sheetBody .dn-row',x=>x.length)>=4);assert.match(await pg.textContent('#sheetBody .dn-leg'),/Documentos[\s\S]*App y librerías[\s\S]*IA local/);
   await pg.evaluate(()=>{while(Nav.stack.length)Nav._pop();S.folderLocks={}});
+});
+
+await test('Perfil de escaneo marcado bien, flash apagado al revisar la foto y entrada de Nexa estilo asistente',async pg=>{
+  await pg.evaluate(()=>{S.autoCapture=false;Cam.open('batch')});await pg.waitForFunction(()=>Cam.stream&&$('#camVideo').videoWidth>0,null,{timeout:15000});
+  await pg.click('#camCfg');await pg.click('#camPanel [data-cq="more"]');await pg.click('#camPanel [data-prof="manual"]');await pg.waitForTimeout(200);
+  const pf=await pg.evaluate(()=>[...$$('#camPanel [data-prof]')].map(b=>b.dataset.prof+':'+(b.classList.contains('on')&&getComputedStyle(b.querySelector('.pf-ck')).display!=='none'?'✓':'')));
+  assert.deepEqual(pf,['lote:','manual:✓','rapido:','individual:']);assert.ok(await pg.$('#camPanel [data-prof="lote"] .pf-rec'),'falta la etiqueta Recomendado');
+  /* flash: durante la revisión no se prende */
+  const fl=await pg.evaluate(async()=>{const calls=[];const _t=CamPro.torch;Cam.review=[{}];await CamPro.torch(true);Cam.review=null;return Cam.torch===true});
+  assert.equal(fl,false,'el flash se prendió con la foto en revisión');
+  await pg.evaluate(()=>{while(Nav.stack.length)Nav._pop()});
+  /* Nexa: bienvenida con categorías y pregunta al volver */
+  await pg.evaluate(()=>{SB.profile={...SB.profile,nombre:'Daniel Flores'};Nexa.st.msgs=[];Nexa.save();go('nexa');Nexa.render()});await pg.waitForSelector('#nxLog .nxa-hi');
+  assert.match(await pg.textContent('#nxLog .nxa-hi'),/Hola, Daniel/);assert.equal(await pg.$$eval('#nxLog [data-nc]',x=>x.length),3);
+  await pg.click('#nxLog [data-nc="gen"]');assert.match(await pg.textContent('#nxaPills'),/Redactá una nota/);
+  await pg.evaluate(()=>{Nexa.st.msgs=[{role:'user',text:'Resumí el oficio'},{role:'assistant',text:'Listo'}];go('home')});await pg.evaluate(()=>go('nexa'));
+  await pg.waitForSelector('#nxcNew');assert.match(await pg.textContent('#sheetBody'),/Resumí el oficio/);
+  await pg.click('#nxcNew');await pg.waitForFunction(()=>!Nav.isOpen('sheet'));assert.equal(await pg.evaluate(()=>Nexa.st.msgs.length),0);
+  await pg.evaluate(()=>{while(Nav.stack.length)Nav._pop();go('home')});
 });
 
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));

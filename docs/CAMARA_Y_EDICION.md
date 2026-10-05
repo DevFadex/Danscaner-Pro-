@@ -610,3 +610,18 @@ Cada arreglo guarda la clave del recorte y del giro con que se calculó (`pageKe
   - La carpeta aparece con candado. Se abre con el PIN y se vuelve a bloquear después de 2 minutos fuera de la app.
   - No cifra los archivos, igual que el PIN de la app, y así se avisa en pantalla.
 - **Liberar espacio** (`storageDecorate`): gráfico circular con Documentos, App y librerías, IA local (modelos) y Otros, más lo libre. Se puede limpiar la caché de la app y borrar los modelos de IA por separado.
+
+## v69 — Perfil marcado, flash en la revisión y entrada de Nexa
+
+- **Perfiles de escaneo** (`camProfMarks`):
+  - En "Lote automático", la estrella de "recomendado" se dibujaba como un tilde y parecía que seguía elegido aunque se tocara otro. Ahora es una etiqueta **Recomendado**.
+  - El perfil elegido lleva un tilde azul propio y el borde azul.
+- **Flash en "¿Quedó bien la foto?":**
+  - `CamPro.torch` no se prende mientras hay una foto en revisión, aunque la detección de poca luz lo pida.
+  - Al mostrar la revisión, el flash se apaga. Con "Repetir" o "Agregar más" vuelve si estaba en modo encendido; con "Listo" queda apagado.
+  - Durante la revisión se ocultan los avisos de sombra, reflejo y marco.
+- **Nexa, entrada estilo asistente de Adobe** (`nxWelcome`):
+  - Saludo "Hola, *nombre*:" con "¿Cómo puedo ayudarte con este documento?" (o "hoy?" si no hay documento adjunto).
+  - Tres categorías redondas (Comprender, Analizar, Generar) con 3 sugerencias cada una, en píldoras que envían la consulta.
+  - El cuadro de texto dice "Hacé preguntas sobre este documento".
+- **Al volver a Nexa con una conversación en curso** (`nxAskContinue`): pregunta "¿Seguimos con la conversación anterior?" y muestra la última consulta, con las opciones Continuar o Nueva consulta. La nueva guarda la anterior en Conversaciones. Se puede marcar "No volver a preguntar" (`S.nxAsk`).
