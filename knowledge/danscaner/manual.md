@@ -135,3 +135,5 @@ La app estrena un diseño más claro y sobrio: color tinta de sello, letra más 
 
 ### PDF, Word o foto a Excel (v75)
 Herramientas → **PDF a EXCEL**, **WORD a EXCEL** o **Foto a Excel** (también en el inicio). Pasá el archivo o tocá **Escanear la planilla con la cámara**. Las tablas salen con sus columnas, celdas combinadas, negritas y bordes; los números y fechas quedan como números y fechas, y los DNI como texto. Si el PDF es escaneado o es una foto, se lee solo con OCR (para un PDF escaneado podés elegir «Leer con OCR: Siempre»). Antes de descargar ves una vista previa.
+
+Desde la versión 76 también salen ordenadas las planillas con líneas grises muy finas, las que no tienen líneas, las de columnas apretadas y las que tienen nombres u observaciones en dos renglones.

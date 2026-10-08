@@ -16,12 +16,15 @@ const med=a=>{if(!a.length)return 0;const s=a.slice().sort((x,y)=>x-y);return s[
 const clusterVals=(vals,tol)=>{const s=vals.slice().sort((a,b)=>a-b),out=[];for(const v of s){const L=out[out.length-1];if(L&&v-L.max<=tol){L.max=v;L.sum+=v;L.n++}else out.push({min:v,max:v,sum:v,n:1})}return out.map(c=>c.sum/c.n)};
 
 /* ---------- 1. líneas de tabla en una imagen ---------- */
-TX.findRules=function(c){
+/* words (opcional, PDF digital): se conocen las letras, así que se borran de la máscara y el umbral puede ser mucho más fino:
+ * aparecen las líneas grises claras y finas (0,25 pt) que antes se perdían y dejaban la planilla sin grilla (v76). */
+TX.findRules=function(c,words){
   const W=c.width,H=c.height,d=c.getContext('2d',{willReadFrequently:true}).getImageData(0,0,W,H).data,N=W*H;
   const g=new Uint8Array(N);for(let i=0,j=0;i<N;i++,j+=4)g[i]=(d[j]*77+d[j+1]*150+d[j+2]*29)>>8;
   // umbral: más oscuro que el papel (mediana) por un margen
   const H2=new Uint32Array(256);for(let i=0;i<N;i+=7)H2[g[i]]++;let a=0,paper=255;const tot=Math.ceil(N/7);for(let v=255;v>=0;v--){a+=H2[v];if(a>=tot*.5){paper=v;break}}
-  const th=Math.min(170,paper-60),dark=new Uint8Array(N);for(let i=0;i<N;i++)dark[i]=g[i]<th?1:0;
+  const th=words?Math.max(paper-110,paper-16):Math.min(170,paper-60),dark=new Uint8Array(N);for(let i=0;i<N;i++)dark[i]=g[i]<th?1:0;
+  if(words)for(const w of words){const a=Math.max(0,Math.floor(w.x0)),b=Math.min(W-1,Math.ceil(w.x1)),t=Math.max(0,Math.floor(w.y0)),u=Math.min(H-1,Math.ceil(w.y1));for(let y=t;y<=u;y++)dark.fill(0,y*W+a,y*W+b+1)}
   const minH=Math.max(40,W*.05),minV=Math.max(24,H*.018),maxThick=Math.max(5,Math.round(Math.min(W,H)*.006));
   const runs=(len,cnt,at,minLen)=>{const out=[];for(let k=0;k<cnt;k++){let i=0;while(i<len){if(!at(k,i)){i++;continue}let j=i,holes=0,last=i;while(j<len){if(at(k,j)){last=j;j++}else if(j-last<=2){holes++;j++}else break}const L=last-i+1;if(L>=minLen&&holes<=L*.06)out.push({k,a:i,b:last});i=j+1}}return out};
   const join=(rs)=>{rs.sort((p,q)=>p.k-q.k||p.a-q.a);const segs=[];for(const r of rs){let s=null;for(let t=segs.length-1;t>=0;t--){const S=segs[t];if(r.k-S.k1>1)break;if(r.k-S.k1<=1&&Math.min(S.b,r.b)-Math.max(S.a,r.a)>Math.min(S.b-S.a,r.b-r.a)*.6){s=S;break}}if(s){s.k1=r.k;s.a=Math.min(s.a,r.a);s.b=Math.max(s.b,r.b)}else segs.push({k0:r.k,k1:r.k,a:r.a,b:r.b})}
@@ -56,7 +59,7 @@ const idx=(arr,v)=>{for(let i=0;i<arr.length-1;i++)if(v>=arr[i]&&v<arr[i+1])retu
 function textOf(words){if(!words.length)return '';const hh=med(words.map(w=>w.y1-w.y0))||10;const ws=words.slice().sort((a,b)=>((a.y0+a.y1)/2)-((b.y0+b.y1)/2));const lines=[];for(const w of ws){const cy=(w.y0+w.y1)/2;let L=lines.find(l=>Math.abs(l.cy-cy)<hh*.55);if(!L){L={cy,ws:[]};lines.push(L)}L.ws.push(w)}
   lines.sort((a,b)=>a.cy-b.cy);return lines.map(l=>l.ws.sort((a,b)=>a.x0-b.x0).map(w=>w.t).join(' ')).join('\n')}
 /* una página → bloques en orden de arriba hacia abajo: {kind:'grid'|'rows'|'text', rows:[[cell]], merges, widths(pt)} */
-TX.layoutPage=function(words,grids,scale){
+TX.layoutPage=function(words,grids,scale,hrules){
   const used=new Set(),blocks=[];
   for(const G of grids){const bucket=new Map();
     words.forEach((w,i)=>{const cx=(w.x0+w.x1)/2,cy=(w.y0+w.y1)/2;if(cx<G.x0-2||cx>G.x1+2||cy<G.y0-2||cy>G.y1+2)return;const c=idx(G.Xs,cx),r=idx(G.Ys,cy);if(r<0||c<0)return;used.add(i);const k=G.root(r,c);(bucket.get(k)||bucket.set(k,[]).get(k)).push(w)});
@@ -68,34 +71,79 @@ TX.layoutPage=function(words,grids,scale){
     const keep=rows.map(r=>r.some(c=>c&&c.v));const rmap=[];let nr=0;keep.forEach((k,i)=>{rmap[i]=k?nr++:-1});
     const rows2=rows.filter((r,i)=>keep[i]),mg=merges.map(m=>({...m,r1:rmap[m.r1],r2:Math.max(...Array.from({length:m.r2-m.r1+1},(_,j)=>rmap[m.r1+j]))})).filter(m=>m.r1>=0&&m.r2>=m.r1&&(m.r2>m.r1||m.c2>m.c1));
     blocks.push({kind:'grid',y:G.y0,rows:rows2,merges:mg,widths:G.Xs.slice(1).map((x,i)=>(x-G.Xs[i])/scale)})}
-  // palabras fuera de las grillas: renglones
-  const free=words.filter((w,i)=>!used.has(i));if(free.length){
-    const hh=med(free.map(w=>w.y1-w.y0))||10,cw=med(free.map(w=>(w.x1-w.x0)/Math.max(1,w.t.length)))||hh*.5;
-    const lines=[];for(const w of free.slice().sort((a,b)=>(a.y0+a.y1)-(b.y0+b.y1))){const cy=(w.y0+w.y1)/2;let L=lines.find(l=>Math.abs(l.cy-cy)<hh*.5);if(!L){L={cy,ws:[],y0:w.y0,y1:w.y1};lines.push(L)}L.ws.push(w);L.y0=Math.min(L.y0,w.y0);L.y1=Math.max(L.y1,w.y1)}
-    lines.sort((a,b)=>a.cy-b.cy);
-    // frases: palabras de un renglón separadas por menos de ~2,5 letras
-    const gapT=Math.max(cw*2.4,hh*.9);
-    for(const L of lines){L.ws.sort((a,b)=>a.x0-b.x0);L.ph=[];for(const w of L.ws){const P=L.ph[L.ph.length-1];if(P&&w.x0-P.x1<gapT){P.t+=' '+w.t;P.x1=Math.max(P.x1,w.x1);P.b=P.b&&w.b}else L.ph.push({t:w.t,x0:w.x0,x1:w.x1,b:!!w.b})}}
-    // bloques de tabla: renglones seguidos con 2 o más frases (se permiten renglones de una frase en el medio: continuación de celda)
-    const pitch=med(lines.slice(1).map((l,i)=>l.cy-lines[i].cy))||hh*1.4;
-    let i=0;while(i<lines.length){const L=lines[i];
-      if(L.ph.length<2){blocks.push({kind:'text',y:L.y0,rows:[[{v:L.ph.map(p=>p.t).join('   '),b:L.ph.every(p=>p.b),x:L.ph[0].x0}]],merges:[],widths:[]});i++;continue}
-      let j=i;const blk=[];while(j<lines.length){const M=lines[j];if(blk.length&&M.cy-blk[blk.length-1].cy>pitch*2.6)break;if(M.ph.length<2){const nx=lines[j+1];if(!(nx&&nx.ph.length>=2&&nx.cy-M.cy<pitch*2.6))break}blk.push(M);j++}
-      // columnas: unión de los intervalos de las frases de los renglones con 2+ frases
-      const iv=[];for(const M of blk)if(M.ph.length>=2)for(const p of M.ph)iv.push([p.x0-cw*.4,p.x1+cw*.4]);iv.sort((a,b)=>a[0]-b[0]);const cols=[];for(const [a,b] of iv){const C=cols[cols.length-1];if(C&&a<=C[1])C[1]=Math.max(C[1],b);else cols.push([a,b])}
-      const colOf=p=>{let best=-1,bo=-1;cols.forEach((C,k)=>{const o=Math.min(C[1],p.x1)-Math.max(C[0],p.x0);if(o>bo){bo=o;best=k}});return best};
-      const rows=[],gaps=[];let prev=null;const keyCount=Array(cols.length).fill(0);
-      for(const M of blk){const r=Array(cols.length).fill(null);for(const p of M.ph){const k=colOf(p);if(k<0)continue;r[k]=r[k]?{v:r[k].v+' '+p.t,b:r[k].b&&p.b}:{v:p.t,b:p.b}}r.forEach((c,k)=>{if(c)keyCount[k]++});rows.push({r,cy:M.cy,n:M.ph.length});if(prev)gaps.push(M.cy-prev.cy);prev=M}
-      // continuación: renglón sin la columna «clave» (la más llena) y muy pegado al anterior → se suma a la fila de arriba
-      const key=keyCount.indexOf(Math.max(...keyCount)),rowPitch=med(gaps)||pitch;const out=[];
-      rows.forEach((R,q)=>{const P=out[out.length-1];const tight=q>0&&R.cy-rows[q-1].cy<rowPitch*.8;if(P&&!R.r[key]&&tight&&R.n<cols.length){R.r.forEach((c,k)=>{if(!c)return;P.r[k]=P.r[k]?{v:P.r[k].v+' '+c.v,b:P.r[k].b&&c.b}:c});return}out.push(R)});
-      blocks.push({kind:'rows',y:blk[0].y0,rows:out.map(R=>R.r),merges:[],widths:cols.map((C,k)=>((cols[k+1]?cols[k+1][0]:C[1])-C[0])/scale)});
-      i=j}}
+  // palabras fuera de las grillas: renglones → bloques de texto o tablas sin líneas
+  const free=words.filter((w,i)=>!used.has(i));if(free.length)blocks.push(...TX.freeBlocks(free,scale,hrules||[]));
   return blocks.sort((a,b)=>a.y-b.y);
 };
+/* Tablas sin líneas (v76). Antes las columnas salían de juntar frases separadas por ~2,5 letras: con columnas apretadas
+ * o celdas de dos renglones todo se corría. Ahora:
+ *  · las frases se cortan con el espacio real del documento (≈1,8 espacios), no con un ancho fijo;
+ *  · las columnas son las «calles» verticales vacías en todos los renglones del bloque (se tolera un título que cruce);
+ *  · una celda de varios renglones se junta con su fila: por las líneas horizontales si las hay o, si no,
+ *    por la columna «ancla» (la que nunca ocupa dos renglones seguidos, como N° o DNI). */
+TX.freeBlocks=function(free,scale,hrules){const out=[];
+  const hh=med(free.map(w=>w.y1-w.y0))||10,cw=med(free.map(w=>(w.x1-w.x0)/Math.max(1,w.t.length)))||hh*.5;
+  const lines=[];for(const w of free.slice().sort((a,b)=>(a.y0+a.y1)-(b.y0+b.y1))){const cy=(w.y0+w.y1)/2;let L=lines.find(l=>Math.abs(l.cy-cy)<hh*.5);if(!L){L={cy,ws:[],y0:w.y0,y1:w.y1};lines.push(L)}L.ws.push(w);L.y0=Math.min(L.y0,w.y0);L.y1=Math.max(L.y1,w.y1)}
+  lines.sort((a,b)=>a.cy-b.cy);
+  // espacio entre palabras típico del documento
+  const gs=[];for(const L of lines){L.ws.sort((a,b)=>a.x0-b.x0);for(let k=1;k<L.ws.length;k++){const g=L.ws[k].x0-L.ws[k-1].x1;if(g>0)gs.push(g)}}gs.sort((a,b)=>a-b);
+  const sp=gs.length?gs[Math.floor(gs.length*.3)]:cw*.5,gapS=Math.max(sp*1.8,cw*.75),gapT=Math.max(cw*2.4,hh*.9);
+  const phr=(L,gap)=>{const ph=[];for(const w of L.ws){const P=ph[ph.length-1];if(P&&w.x0-P.x1<gap*Math.max(1,(w.y1-w.y0)/hh)){P.t+=' '+w.t;P.x1=Math.max(P.x1,w.x1);P.b=P.b&&!!w.b;P.ws.push(w)}else ph.push({t:w.t,x0:w.x0,x1:w.x1,b:!!w.b,ws:[w]})}return ph};
+  for(const L of lines){L.ph=phr(L,gapS);L.big=phr(L,gapT).length}
+  const textLine=L=>out.push({kind:'text',y:L.y0,rows:[[{v:phr(L,gapT).map(p=>p.t).join('   '),b:L.ws.every(w=>w.b),x:L.ws[0].x0}]],merges:[],widths:[]});
+  const pitch=med(lines.slice(1).map((l,i)=>l.cy-lines[i].cy))||hh*1.4;
+  let i=0;while(i<lines.length){const L=lines[i];
+    if(L.ph.length<2){textLine(L);i++;continue}
+    let j=i;const blk=[];while(j<lines.length){const M=lines[j],P=blk[blk.length-1];if(P&&M.cy-P.cy>pitch*2.6)break;
+      if(M.ph.length<2){const nx=lines[j+1],near=P&&M.cy-P.cy<hh*1.9,nextT=nx&&nx.ph.length>=2&&nx.cy-M.cy<pitch*2.6;if(!(nextT||near))break}
+      blk.push(M);j++}
+    const rows=TX.gutterRows(blk,{hh,cw,gapS,hrules});
+    if(!rows){blk.forEach(textLine);i=j;continue}
+    out.push({kind:'rows',y:blk[0].y0,rows:rows.rows,merges:[],widths:rows.widths.map(w=>w/scale)});i=j}
+  return out};
+/* columnas por calles vacías y filas (con celdas de varios renglones) */
+TX.gutterRows=function(blk,{hh,cw,gapS,hrules}){const n=blk.length;if(n<2)return null;
+  let x0=Infinity,x1=-Infinity;for(const L of blk)for(const p of L.ph){x0=Math.min(x0,p.x0);x1=Math.max(x1,p.x1)}x0=Math.floor(x0);x1=Math.ceil(x1);const Wd=x1-x0+1;
+  const cov=new Uint16Array(Wd);for(const L of blk)for(const p of L.ph)for(let x=Math.max(0,Math.floor(p.x0)-x0);x<=Math.min(Wd-1,Math.ceil(p.x1)-x0);x++)cov[x]++;
+  const tol=n>=8?Math.floor(n*.1):n>=4?1:0,minW=n>=3?1:cw*1.5,gut=[];
+  for(let x=0;x<Wd;){if(cov[x]>tol){x++;continue}let e=x;while(e<Wd&&cov[e]<=tol)e++;const a=x+x0,b=e-1+x0;x=e;if(b-a+1<minW)continue;
+    // con tolerancia: solo vale si lo que cruza la calle la atraviesa entera (un título), no si es una columna casi vacía
+    let strict=true;for(let q=a-x0;q<=b-x0;q++)if(cov[q]){strict=false;break}
+    if(!strict){let ok=true;for(const L of blk)for(const p of L.ph)if(p.x1>=a&&p.x0<=b&&!(p.x0<a-cw&&p.x1>b+cw)){ok=false;break}
+      if(!ok){// adentro hay una columna rala: las partes sin nada a los costados siguen siendo calles
+        for(let q=a-x0;q<=b-x0;){if(cov[q]){q++;continue}let e2=q;while(e2<=b-x0&&!cov[e2])e2++;if(e2-q>=Math.max(minW,cw*.6))gut.push([q+x0,e2-1+x0]);q=e2}continue}}
+    gut.push([a,b])}
+  if(!gut.length)return null;
+  // el corte va en el tramo de la calle que no pisa ninguna palabra (si un encabezado pegado cruza, se corta entre sus palabras)
+  const cutOf=([a,b])=>{const busy=new Uint8Array(b-a+1);for(const L of blk)for(const p of L.ph)if(p.x1>=a&&p.x0<=b)for(const w of p.ws)for(let x=Math.max(a,Math.floor(w.x0));x<=Math.min(b,Math.ceil(w.x1));x++)busy[x-a]=1;
+    let best=null;for(let x=0;x<busy.length;){if(busy[x]){x++;continue}let e=x;while(e<busy.length&&!busy[e])e++;if(!best||e-x>best[1]-best[0])best=[x,e];x=e}return best?a+(best[0]+best[1]-1)/2:(a+b)/2};
+  const cuts=gut.map(cutOf),nc=cuts.length+1,colAt=x=>{let k=0;while(k<cuts.length&&x>cuts[k])k++;return k};
+  const lineCells=blk.map((L,li)=>{const r=Array(nc).fill(null);const add=(k,t,b)=>{r[k]=r[k]?{v:r[k].v+' '+t,b:r[k].b&&b}:{v:t,b}};
+    for(const p of L.ph){const k0=colAt(p.x0),k1=colAt(p.x1);if(k0===k1){add(k0,p.t,p.b);continue}
+      // cruza una calle: si el corte cae entre dos palabras se reparte palabra por palabra (dos celdas que quedaron pegadas);
+      // si corta una palabra al medio es un título que abarca varias columnas: queda donde más ocupa
+      const splits=cuts.slice(k0,k1).every(x=>p.ws.some((w,q)=>q&&p.ws[q-1].x1<=x&&w.x0>=x));
+      if(!splits&&(p.b||li<2)){let best=k0,bo=-1;for(let k=k0;k<=k1;k++){const lo=k?cuts[k-1]:-Infinity,hi=k<cuts.length?cuts[k]:Infinity,o=Math.min(hi,p.x1)-Math.max(lo,p.x0);if(o>bo){bo=o;best=k}}add(best,p.t,p.b)}
+      else for(const w of p.ws)add(colAt((w.x0+w.x1)/2),w.t,!!w.b)}
+    return {r,cy:L.cy,y0:L.y0}});
+  // filas: con líneas horizontales que crucen el bloque, todo lo que queda entre dos líneas es una fila
+  const bx0=x0,bx1=x1,hs=(hrules||[]).filter(s=>s.x0<=bx0+(bx1-bx0)*.25&&s.x1>=bx1-(bx1-bx0)*.25).map(s=>s.y).sort((a,b)=>a-b);
+  const rows=[];const join=(P,R)=>R.r.forEach((c,k)=>{if(!c)return;P.r[k]=P.r[k]?{v:P.r[k].v+' '+c.v,b:P.r[k].b&&c.b}:c});
+  const inside=hs.filter(y=>y>blk[0].y0-hh&&y<blk[n-1].y1+hh);
+  if(inside.length>=3){const band=cy=>{let k=0;while(k<inside.length&&inside[k]<cy)k++;return k};let pb=null;
+    for(const R of lineCells){const bd=band(R.cy);const P=rows[rows.length-1];if(P&&bd===pb)join(P,R);else rows.push({r:R.r.slice(),cy:R.cy});pb=bd}}
+  else{// columna ancla: llena en muchos renglones y casi nunca en dos renglones pegados
+    const tight=(a,b)=>b.cy-a.cy<hh*1.9;let key=-1,bs=null;
+    for(let k=0;k<nc;k++){const cnt=lineCells.filter(R=>R.r[k]).length;if(cnt<n*.35)continue;let wr=0;for(let q=1;q<n;q++)if(lineCells[q].r[k]&&lineCells[q-1].r[k]&&tight(lineCells[q-1],lineCells[q]))wr++;
+      const s=[wr,-cnt,k];if(!bs||s[0]<bs[0]||(s[0]===bs[0]&&s[1]<bs[1]))(bs=s,key=k)}
+    const kc=lineCells.filter(R=>key>=0&&R.r[key]),gaps=kc.slice(1).map((R,q)=>R.cy-kc[q].cy),P0=med(gaps)||hh*2;
+    lineCells.forEach((R,q)=>{const P=rows[rows.length-1];const prev=lineCells[q-1];
+      if(P&&key>=0&&!R.r[key]&&R.cy-prev.cy<Math.min(P0*.85,hh*2)){join(P,R);return}rows.push({r:R.r.slice(),cy:R.cy})})}
+  // anchos: de calle a calle
+  const edges=[x0,...cuts,x1];return {rows:rows.map(R=>R.r),widths:edges.slice(1).map((e,k)=>e-edges[k])}};
 
 /* ---------- 4. palabras de un PDF digital ---------- */
-TX.pdfWords=async function(page,vp){
+TX.pdfWords=async function(page,vp,c){const G=c?TX.grayOf(c):null;
   const tc=await page.getTextContent(),words=[];
   for(const it of tc.items){if(!it.str||!it.str.trim())continue;const t=it.transform,fs=Math.hypot(t[2],t[3])||Math.hypot(t[0],t[1])||10;
     const [bx,by]=vp.convertToViewportPoint(t[4],t[5]);const s=vp.scale,w=(it.width||0)*s,hgt=fs*s;let bold=false;
@@ -103,9 +151,23 @@ TX.pdfWords=async function(page,vp){
     if(!bold){const st=tc.styles&&tc.styles[it.fontName];if(st&&/bold/i.test(st.fontFamily||''))bold=true}
     // un ítem puede traer varias palabras: se reparten por cantidad de letras
     const str=it.str,parts=str.split(/(\s+)/),L=str.length||1;let pos=0;
-    for(const p of parts){if(p&&!/^\s+$/.test(p)){const x0=bx+w*pos/L,x1=bx+w*(pos+p.length)/L;words.push({t:p,x0,x1,y0:by-hgt*.82,y1:by+hgt*.2,b:bold})}pos+=p.length}}
+    const toks=[];for(const p of parts){if(p&&!/^\s+$/.test(p)){const x0=bx+w*pos/L,x1=bx+w*(pos+p.length)/L;toks.push({t:p,x0,x1,y0:by-hgt*.82,y1:by+hgt*.2,b:bold})}pos+=p.length}
+    if(G&&toks.length&&Math.abs(t[1])<Math.abs(t[0])*.1)TX.inkWords(G,toks,bx,bx+w,by-hgt*.82,by+hgt*.2);words.push(...toks)}
   return words;
 };
+/* pdf.js junta en un solo ítem textos cercanos del mismo renglón (por ejemplo dos celdas vecinas) y deja un solo espacio entre ellos:
+ * repartir por cantidad de letras corría las palabras de columna. Se miran los píxeles de la página dibujada: los huecos más anchos
+ * entre tinta son los cortes reales entre palabras (v76). Las rayas verticales de la tabla (tinta de punta a punta) no cuentan. */
+TX.grayOf=function(c){const W=c.width,H=c.height,d=c.getContext('2d',{willReadFrequently:true}).getImageData(0,0,W,H).data,g=new Uint8Array(W*H);for(let i=0,j=0;i<g.length;i++,j+=4)g[i]=(d[j]*77+d[j+1]*150+d[j+2]*29)>>8;return {g,W,H}};
+TX.inkWords=function(G,toks,X0,X1,Y0,Y1){const {g,W,H}=G,a=Math.max(0,Math.floor(X0)-1),b=Math.min(W-1,Math.ceil(X1)+1),t=Math.max(0,Math.floor(Y0)),u=Math.min(H-1,Math.ceil(Y1)),hgt=u-t+1;if(b-a<2||hgt<3)return;
+  const ink=new Uint8Array(b-a+1);for(let x=a;x<=b;x++){let n=0;for(let y=t;y<=u;y++)if(g[y*W+x]<200)n++;ink[x-a]=n>0&&n<hgt*.92?1:0}
+  let f=0,l=ink.length-1;while(f<=l&&!ink[f])f++;while(l>=f&&!ink[l])l--;if(f>l)return;
+  const gaps=[];for(let x=f;x<=l;){if(ink[x]){x++;continue}let e=x;while(e<=l&&!ink[e])e++;gaps.push({a:x,b:e-1,len:e-x});x=e}
+  const k=toks.length;if(gaps.length<k-1)return;
+  const cut=gaps.slice().sort((p,q)=>q.len-p.len||p.a-q.a).slice(0,k-1).sort((p,q)=>p.a-q.a);
+  // los cortes elegidos tienen que ser más anchos que los huecos entre letras; si no, se deja el reparto por letras
+  if(k>1){const rest=gaps.length>k-1?gaps.slice().sort((p,q)=>q.len-p.len)[k-1].len:0;if(cut.some(c=>c.len<=rest))return}
+  const st=[f,...cut.map(c=>c.b+1)],en=[...cut.map(c=>c.a-1),l];toks.forEach((w,i)=>{w.x0=a+st[i];w.x1=a+en[i]+1})};
 
 /* ---------- 5. OCR de una imagen (con las líneas de tabla borradas) ---------- */
 let _w=null,_wLang='';
@@ -146,17 +208,17 @@ TX.ocrGridCells=async function(c,G,onProg){const w=await TX.ocrWorker(),words=[]
 
 /* ---------- 6. páginas → hojas ---------- */
 TX.analyzeCanvas=async function(c,{words=null,ocr=false,scale=1,onProg}={}){
-  const R=TX.findRules(c),grids=TX.findGrids(R);let ws=words;
+  const R=TX.findRules(c,words&&!ocr?words:null),grids=TX.findGrids(R);let ws=words;
   if(!ws||ocr){onProg&&onProg('Leyendo con OCR…');const o=await TX.ocrWords(c,R);
     // el texto suelto sale de la lectura de la página; las tablas con líneas se leen celda por celda
     const inGrid=q=>grids.some(G=>{const cx=(q.x0+q.x1)/2,cy=(q.y0+q.y1)/2;return cx>G.x0&&cx<G.x1&&cy>G.y0&&cy<G.y1});
     ws=o.words.filter(q=>!inGrid(q)).map(q=>({...q,t:TX.fixOcr(q.t)})).filter(q=>q.t);for(const G of grids)ws.push(...await TX.ocrGridCells(c,G,onProg))}
-  return TX.layoutPage(ws,grids,scale)};
+  return TX.layoutPage(ws,grids,scale,R.h)};
 TX.fromPdf=async function(ab,{ocr='auto',onProg}={}){
   const pdf=await openPdfjs(ab),pages=[];
   for(let i=1;i<=pdf.numPages;i++){onProg&&onProg('Página '+i+'/'+pdf.numPages);const page=await pdf.getPage(i);const base=page.getViewport({scale:1});const sc=Math.min(3,Math.max(1.5,2200/Math.max(base.width,base.height)));const vp=page.getViewport({scale:sc});
     const c=document.createElement('canvas');c.width=Math.round(vp.width);c.height=Math.round(vp.height);const x=c.getContext('2d',{willReadFrequently:true});x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);await page.render({canvasContext:x,viewport:vp}).promise;
-    let words=await TX.pdfWords(page,vp);const chars=words.reduce((s,w)=>s+w.t.length,0);const needOcr=ocr==='si'||(ocr==='auto'&&chars<25);
+    let words=await TX.pdfWords(page,vp,c);const chars=words.reduce((s,w)=>s+w.t.length,0);const needOcr=ocr==='si'||(ocr==='auto'&&chars<25);
     pages.push({blocks:await TX.analyzeCanvas(c,{words:needOcr?null:words,ocr:needOcr,scale:sc,onProg}),ocr:needOcr,scale:sc});c.width=c.height=1}
   return pages};
 TX.fromImages=async function(srcs,{onProg}={}){const pages=[];let n=0;for(const s of srcs){n++;onProg&&onProg('Imagen '+n+'/'+srcs.length);const img=s instanceof HTMLCanvasElement?s:await loadImg(s);
