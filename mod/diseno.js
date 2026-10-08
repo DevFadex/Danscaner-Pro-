@@ -21,7 +21,7 @@ const b=openSheet('🎨 Diseño y visualización',
 +'<div class="cph">Accesos rápidos del inicio <small class="muted">(hasta 8)</small></div><div class="chips" id="dsQuick"></div>'
 +'<div class="row" style="margin-top:14px"><button class="btn block" id="dsReset"><i data-ico="rotl">↺</i> Restablecer</button><button class="btn pri block" data-back><i data-ico="check">✓</i> Listo</button></div>');
 const drawEd=()=>{$('#dsEd',b).innerHTML=d.edTools.map((t,i)=>{const n=(ED_TOOLS.find(x=>x[0]===t.k)||[])[1];return '<div class="frow dsrow"><label class="chk" style="flex:1;margin:0"><input type="checkbox" data-eon="'+i+'" '+(t.on?'checked':'')+'> '+n+'</label><button class="ib" data-eup="'+i+'" '+(i?'':'disabled')+'>▲</button><button class="ib" data-edn="'+i+'" '+(i<d.edTools.length-1?'':'disabled')+'>▼</button></div>'}).join('')};
-const QDEF=['Escanea a PDF','Unir PDF','PDF a WORD','Firmar PDF','Comprimir PDF','OCR PDF','JPG a PDF','Editar PDF'];
+const QDEF=['Escanea a PDF','Unir PDF','PDF a WORD','PDF a EXCEL','WORD a EXCEL','Firmar PDF','Comprimir PDF','OCR PDF'];
 const drawQuick=()=>{const q=d.quick.length?d.quick:QDEF;$('#dsQuick',b).innerHTML=TOOLS.map(t=>'<button class="chip '+(q.includes(t.name)?'on':'')+'" data-q="'+esc(t.name)+'">'+esc(t.name)+'</button>').join('')};
 const refresh=()=>{$$('.seg[data-k]',b).forEach(sg=>{const k=sg.dataset.k;$$('button',sg).forEach(x=>x.classList.toggle('on',String(x.dataset.v)===String(d[k])))});$$('.sw',b).forEach(x=>x.classList.toggle('on',x.dataset.col===d.color));const c=$('#dsCon',b),a=$('#dsAnim',b);if(c)c.checked=!!d.contrast;if(a)a.checked=!!d.anim};
 drawEd();drawQuick();

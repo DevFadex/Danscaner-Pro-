@@ -1279,6 +1279,64 @@ await test('Diseño Expediente: tinta de sello, letra Atkinson, inicio como hoja
   assert.equal(await pg.evaluate(()=>document.documentElement.classList.contains('look-exp')),true);
 });
 
+await test('A Excel tal cual: PDF con bordes y combinadas, PDF sin bordes, Word con combinadas y colores, foto con OCR celda por celda',async pg=>{
+  const r=await pg.evaluate(async()=>{await lazyMod('tabla');await loadLib('pdflib');await loadLib('jszip');const TX=TablaX;const {PDFDocument,StandardFonts,rgb}=PDFLib;const out={};
+    const flat=sh=>sh.rows.map(r=>r.map(c=>c?c.v:''));
+    /* datos ficticios */
+    const NAMES=[['1','GOMEZ PEDRO ALBERTO','30.111.222','12/03/2024','15.250,50'],['2','LOPEZ MARIA DE LOS ANGELES','28.555.666','05/11/2023','8.000,00']];
+    const mk=async border=>{const pdf=await PDFDocument.create(),p=pdf.addPage([595,842]),F=await pdf.embedFont(StandardFonts.Helvetica),FB=await pdf.embedFont(StandardFonts.HelveticaBold);
+      p.drawText('PLANILLA DE PRUEBA',{x:40,y:790,size:14,font:FB});const xs=[40,70,300,390,470,555],y0=740,rh=22,rows=[['N°','Apellido y nombre','DNI','Fecha','Monto'],...NAMES];
+      rows.forEach((row,r)=>row.forEach((t,c)=>p.drawText(t,{x:xs[c]+4,y:y0-(r+1)*rh+7,size:9,font:r===0?FB:F})));
+      if(border){for(let r=0;r<=rows.length;r++)p.drawLine({start:{x:xs[0],y:y0-r*rh},end:{x:xs[5],y:y0-r*rh},thickness:.8,color:rgb(0,0,0)});xs.forEach(x=>p.drawLine({start:{x,y:y0},end:{x,y:y0-rows.length*rh},thickness:.8,color:rgb(0,0,0)}))}
+      return (await pdf.save()).buffer};
+    for(const [k,bd] of [['bordes',true],['sinBordes',false]]){const sh=TX.toSheets(await TX.fromPdf(await mk(bd)),'una')[0];out[k]={rows:flat(sh),boldHead:sh.rows[2].every(c=>c&&c.b),border:!!(sh.rows[2][0]||{}).border}}
+    /* celdas combinadas y nombre en dos renglones */
+    {const pdf=await PDFDocument.create(),p=pdf.addPage([595,842]),F=await pdf.embedFont(StandardFonts.Helvetica);const L=(a,b,c,d)=>p.drawLine({start:{x:a,y:b},end:{x:c,y:d},thickness:.8,color:rgb(0,0,0)});
+      L(40,760,555,760);L(70,738,555,738);L(40,716,555,716);L(40,680,555,680);L(40,760,40,680);L(70,760,70,680);L(320,738,320,680);L(555,760,555,680);
+      const T=(t,x,y)=>p.drawText(t,{x,y,size:9,font:F});T('N°',44,742);T('Datos del interno',74,746);T('Apellido y nombre',74,724);T('DNI',324,724);T('1',44,700);T('RODRIGUEZ DE LA FUENTE',74,704);T('JUAN MANUEL',74,692);T('31.222.333',324,700);
+      const sh=TX.toSheets(await TX.fromPdf((await pdf.save()).buffer),'una')[0];out.comb={rows:flat(sh),merges:sh.merges}}
+    /* Word */
+    {const W='xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"',tc=(t,pr='',b=false)=>'<w:tc><w:tcPr>'+pr+'</w:tcPr><w:p><w:r>'+(b?'<w:rPr><w:b/></w:rPr>':'')+'<w:t xml:space="preserve">'+t+'</w:t></w:r></w:p></w:tc>';
+      const xml='<?xml version="1.0" encoding="UTF-8"?><w:document '+W+'><w:body><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>LISTADO DE PRUEBA</w:t></w:r></w:p><w:tbl><w:tblGrid><w:gridCol w:w="1500"/><w:gridCol w:w="3500"/><w:gridCol w:w="2000"/></w:tblGrid>'
+        +'<w:tr>'+tc('Interno','',true)+tc('Visitante y vínculo','<w:gridSpan w:val="2"/>',true)+'</w:tr><w:tr>'+tc('GOMEZ PEDRO','<w:vMerge w:val="restart"/>')+tc('PEREZ ANA')+tc('Madre')+'</w:tr>'
+        +'<w:tr>'+tc('','<w:vMerge/>')+tc('PEREZ LUIS')+tc('Hermano')+'</w:tr><w:tr>'+tc('SOSA RAMON','<w:shd w:fill="FFF2CC"/>')+tc('DIAZ EVA')+tc('Esposa')+'</w:tr></w:tbl></w:body></w:document>';
+      const z=new JSZip();z.file('word/document.xml',xml);const sheets=TX.toSheets(await TX.fromDocx(await z.generateAsync({type:'arraybuffer'})),'una');
+      const blob=await TX.buildXlsx(sheets);await loadLib('exceljs');const wb=new ExcelJS.Workbook();await wb.xlsx.load(await blob.arrayBuffer());const ws=wb.worksheets[0];
+      out.word={rows:flat(sheets[0]),merges:ws.model.merges.slice().sort(),bold:!!(ws.getCell('A3').font||{}).bold,border:!!(ws.getCell('B4').border||{}).top,fill:((ws.getCell('A6').fill||{}).fgColor||{}).argb}}
+    /* Excel desde el PDF: números y fechas de verdad, DNI como texto */
+    {const sheets=TX.toSheets(await TX.fromPdf(await mk(true)),'una');const blob=await TX.buildXlsx(sheets);const wb=new ExcelJS.Workbook();await wb.xlsx.load(await blob.arrayBuffer());const ws=wb.worksheets[0];
+      out.tipos={dni:ws.getCell('C4').value,fecha:ws.getCell('D4').value instanceof Date,monto:ws.getCell('E4').value,fmt:ws.getCell('E4').numFmt}}
+    /* foto de una planilla con bordes → OCR */
+    {const c=document.createElement('canvas');c.width=1400;c.height=560;const x=c.getContext('2d');x.fillStyle='#f4f1ea';x.fillRect(0,0,1400,560);x.strokeStyle='#222';x.lineWidth=2;
+      const xs=[60,160,720,1000,1340],ys=[80,150,220,290];for(const y of ys){x.beginPath();x.moveTo(60,y);x.lineTo(1340,y);x.stroke()}for(const xx of xs){x.beginPath();x.moveTo(xx,80);x.lineTo(xx,290);x.stroke()}
+      x.fillStyle='#111';x.font='bold 30px Arial';['Nro.','Apellido y nombre','DNI','Pabellón'].forEach((t,i)=>x.fillText(t,xs[i]+12,125));x.font='30px Arial';
+      [['1','GOMEZ PEDRO ALBERTO','30.111.222','3'],['2','LOPEZ MARIA ROSA','28.555.666','1']].forEach((r,k)=>r.forEach((t,i)=>x.fillText(t,xs[i]+12,195+k*70)));
+      const pages=await TX.fromImages([c]);await TX.endOcr();out.foto={rows:flat(TX.toSheets(pages,'una')[0]),ocr:pages[0].ocr}}
+    return out});
+  const exp=[['N°','Apellido y nombre','DNI','Fecha','Monto'],['1','GOMEZ PEDRO ALBERTO','30.111.222','12/03/2024','15.250,50'],['2','LOPEZ MARIA DE LOS ANGELES','28.555.666','05/11/2023','8.000,00']];
+  for(const k of ['bordes','sinBordes']){assert.deepEqual(r[k].rows[0],['PLANILLA DE PRUEBA']);assert.deepEqual(r[k].rows.slice(2),exp,k+': la tabla no salió igual');assert.ok(r[k].boldHead,k+': el encabezado debe ser negrita')}
+  assert.ok(r.bordes.border,'con bordes, las celdas llevan borde');assert.ok(!r.sinBordes.border,'sin bordes, no se inventan bordes');
+  assert.deepEqual(r.comb.rows,[['N°','Datos del interno',''],['','Apellido y nombre','DNI'],['1','RODRIGUEZ DE LA FUENTE\nJUAN MANUEL','31.222.333']]);
+  assert.deepEqual(r.comb.merges,[{r1:0,c1:0,r2:1,c2:0},{r1:0,c1:1,r2:0,c2:2}]);
+  assert.deepEqual(r.word.rows.slice(2),[['Interno','Visitante y vínculo',''],['GOMEZ PEDRO','PEREZ ANA','Madre'],['','PEREZ LUIS','Hermano'],['SOSA RAMON','DIAZ EVA','Esposa']]);
+  assert.deepEqual(r.word.merges,['A1:C1','A4:A5','B3:C3']);assert.ok(r.word.bold&&r.word.border);assert.equal(r.word.fill,'FFFFF2CC');
+  assert.deepEqual(r.tipos,{dni:'30.111.222',fecha:true,monto:15250.5,fmt:'#,##0.00'});
+  assert.ok(r.foto.ocr);assert.deepEqual(r.foto.rows,[['Nro.','Apellido y nombre','DNI','Pabellón'],['1','GOMEZ PEDRO ALBERTO','30.111.222','3'],['2','LOPEZ MARIA ROSA','28.555.666','1']]);
+});
+
+await test('Herramientas: PDF a EXCEL, WORD a EXCEL y Foto a Excel con vista previa; accesos en el inicio',async pg=>{
+  const r=await pg.evaluate(()=>({names:TOOLS.map(t=>t.name).filter(n=>/EXCEL|Excel/.test(n)),quick:[...document.querySelectorAll('#quickTools .tool')].map(b=>b.textContent.trim())}));
+  assert.deepEqual(r.names.filter(n=>n!=='EXCEL a PDF'),['PDF a EXCEL','WORD a EXCEL','Foto a Excel']);assert.ok(r.quick.includes('PDF a EXCEL')&&r.quick.includes('WORD a EXCEL'),'faltan en el inicio: '+r.quick);
+  await pg.evaluate(()=>openTool(TOOLS.findIndex(t=>t.name==='WORD a EXCEL')));await pg.waitForSelector('#txRun');assert.ok(await pg.$('#txCam'),'falta escanear con la cámara');
+  /* un Word de prueba por el selector de archivos */
+  const b64=await pg.evaluate(async()=>{await loadLib('jszip');const W='xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"';const z=new JSZip();
+    z.file('word/document.xml','<?xml version="1.0"?><w:document '+W+'><w:body><w:tbl><w:tr><w:tc><w:p><w:r><w:t>Nombre</w:t></w:r></w:p></w:tc><w:tc><w:p><w:r><w:t>DNI</w:t></w:r></w:p></w:tc></w:tr><w:tr><w:tc><w:p><w:r><w:t>PRUEBA UNO</w:t></w:r></w:p></w:tc><w:tc><w:p><w:r><w:t>11.111.111</w:t></w:r></w:p></w:tc></w:tr></w:tbl></w:body></w:document>');
+    return await z.generateAsync({type:'base64'})});
+  await pg.setInputFiles('#tMain input[type=file]',{name:'lista.docx',mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',buffer:Buffer.from(b64,'base64')});
+  await pg.click('#txRun');await pg.waitForSelector('#tMain .tx-prev',{timeout:20000});
+  assert.match(await pg.textContent('#tMain .tx-prev'),/PRUEBA UNO\s*11\.111\.111/);assert.match(await pg.$eval('#tMain .result input',e=>e.value),/^lista/);assert.match(await pg.textContent('#tMain .result'),/\.xlsx[\s\S]*2 filas/);
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();
