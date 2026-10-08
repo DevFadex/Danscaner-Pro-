@@ -53,7 +53,7 @@ def aplicar_titulos(arts, previo=""):
             cap, sec = p.strip(), ""
         elif re.match(r"CAP[IÍ]TULO\b", cap) and not sec and cap.count(" ") < 2:
             cap = cap + " " + p.strip()
-        elif cap:
+        else:
             sec = p.strip()
     for a in arts:
         if cap or sec:

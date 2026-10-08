@@ -11,7 +11,7 @@ python3 tools/leyes/construir.py # separa por artículo y genera indice.json, <l
 - `fuentes.json`: qué normas se cargan (Constitución Nacional, Código Penal, Código Procesal Penal Federal, Código Procesal Penal de la Nación, Ley 24.660, Ley 27.375, sus reglamentos —Decretos 18/97, 1136/97, 303/96, 140/2015 y 1139/2000— y Ley 23.737), con su URL oficial y los nombres con que se las puede pedir.
 - Cada artículo guarda su texto, el libro / título / capítulo, la URL de InfoLeg y la fecha de descarga; Nexa los muestra como **texto oficial** con esa fuente.
 - `relaciones.json` sale del grafo de graphify (`knowledge/leyes/graphify-out/graph.json`): para cada artículo, a qué artículos remite y cuáles lo citan. Se puede explorar con `graphify explain "CP art. 80" --graph knowledge/leyes/graphify-out/graph.json`.
-- Normas que no se bajan de InfoLeg (PDF o copias escaneadas que provee el usuario: Ley 9.914, Res. 905/19, Decreto 396/99)
+- Normas que no se bajan de InfoLeg (PDF o copias escaneadas que provee el usuario: Ley 9.914, Res. 905/19, Res. 972/21 —protocolo de conflictos—, Decreto 396/99)
   van como texto en `transcripcion/` (un párrafo por renglón; los renglones sin punto final son títulos de sección) y en
   `fuentes.json` con `"transcripcion"`. Si falta la descarga de InfoLeg de una norma, `construir.py` conserva su `.json` ya armado.
 - InfoLeg rechaza los pedidos sin identificación de navegador: `descargar.py` manda un User-Agent de navegador. La Constitución
