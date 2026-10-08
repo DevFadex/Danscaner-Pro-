@@ -824,6 +824,8 @@ await test('Nombre unificado Danscanner Pro, aviso de firma y SheetJS actualizad
 });
 
 await test('Cámara de lote rápida: el disparador queda libre, las fotos se procesan en orden, recorte del marco en vivo y perfil recomendado',async pg=>{
+  /* v77: la primera foto del lote se muestra grande y frena el disparador; acá se prueba la cola del lote, así que se apaga */
+  await pg.evaluate(()=>{S.camRevMode='no'});
   /* perfil recomendado aplicado la primera vez */
   const prof=await pg.evaluate(()=>[S.camProfile,S.camPrefMode,S.autoCapture,S.autoCrop,S.hd,S.v58cam]);assert.deepEqual(prof,['lote','batch',true,true,true,true]);
   /* el marco del video se lleva a la foto aunque tengan otra proporción */
@@ -866,6 +868,8 @@ await test('Magia Pro con fotocopia clara: el texto tenue queda oscuro y gris (n
 });
 
 await test('Cámara: descarta fotos movidas (repite sola una vez), elige la más nítida de una ráfaga y avisa de reflejos',async pg=>{
+  /* v77: la primera foto del lote se muestra grande y frena el disparador; acá se prueba la cola del lote, así que se apaga */
+  await pg.evaluate(()=>{S.camRevMode='no'});
   /* nitidez: una foto movida mide mucho menos que la nítida, aunque cambie el contraste o la resolución */
   const m=await pg.evaluate(()=>{const doc=(W,H,blur,ink)=>{const c=canvas(W,H),x=c.getContext('2d');x.fillStyle='#f4f1ea';x.fillRect(0,0,W,H);x.fillStyle=ink||'#222';x.font=Math.round(W/34)+'px serif';x.filter=blur?'blur('+blur+'px)':'none';for(let y=H*.15;y<H*.9;y+=H/24)x.fillText('Por la presente se informa al señor juez lo solicitado',W*.08,y);return c};
     const S=c=>camSharpCenter(c,c.width,c.height);return {nit:S(doc(1080,1920)),hd:S(doc(3000,4000)),mov:S(doc(1080,1920,4)),movHd:S(doc(3000,4000,11)),gris:S(doc(1080,1920,0,'#888'))}});
@@ -1054,7 +1058,7 @@ await test('Cámara estilo Adobe: barra de modos con guías, marco de cuatro pun
   const f=await pg.evaluate(()=>{clearInterval(Cam.timer);const svg=$('#camSvg');svg.innerHTML='<polygon points="80,150 300,170 320,520 60,500" stroke="#22d3ee"/>';camFrameDraw();return [svg.querySelectorAll('circle.cf-d').length,svg.querySelectorAll('polygon.cf-l').length]});
   assert.deepEqual(f,[4,1]);
   /* panel compacto: interruptores y «Más ajustes» */
-  await pg.click('#camCfg');await pg.waitForSelector('#camPanel .cq');assert.equal(await pg.$$eval('#camPanel .cq-row',x=>x.length),9);
+  await pg.click('#camCfg');await pg.waitForSelector('#camPanel .cq');assert.equal(await pg.$$eval('#camPanel .cq-row',x=>x.length),10);/* v77: + «Ver la foto al sacarla» */
   await pg.click('#camPanel [data-cq="snd"]');assert.equal(await pg.evaluate(()=>S.camSound),true);
   await pg.click('#camPanel [data-cp="grid"]');assert.equal(await pg.evaluate(()=>!!S.grid),true);assert.ok(await pg.$('#camPanel .cq'),'se fue del panel compacto');
   await pg.click('#camPanel [data-cq="more"]');await pg.waitForSelector('#camPanel [data-cp4]');await pg.click('#camPanel [data-cq="less"]');await pg.waitForSelector('#camPanel .cq');
@@ -1183,8 +1187,9 @@ await test('Nexa: entiende «llamame Dani y no Flores» y avisa si «con interne
   await pg.evaluate(()=>{NexaMem.clear();Nexa.st.msgs=[];Nexa.save()});
 });
 
-await test('Cámara: todas las hojas salen horizontales (por defecto), o verticales o automáticas desde los ajustes',async pg=>{
-  const r=await pg.evaluate(async()=>{delete S.camOrient;Cam._sigs=[];const mk=async(w,h)=>{const c=canvas(w,h),x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,w,h);x.fillStyle='#111';x.font='28px Arial';for(let y=80;y<h-40;y+=44)x.fillText('Oficio judicial número '+y,60,y);return makePage(c.toDataURL('image/jpeg',.9),{auto:false,filter:'original'})};
+await test('Cámara: hojas como el teléfono (por defecto, v77), u horizontales, verticales o automáticas desde los ajustes',async pg=>{
+  /* v77: el dueño pidió que las hojas sigan la posición del teléfono; «Horizontal» (v72) queda como opción */
+  const r=await pg.evaluate(async()=>{S.camOrient='land';Cam._sigs=[];const mk=async(w,h)=>{const c=canvas(w,h),x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,w,h);x.fillStyle='#111';x.font='28px Arial';for(let y=80;y<h-40;y+=44)x.fillText('Oficio judicial número '+y,60,y);return makePage(c.toDataURL('image/jpeg',.9),{auto:false,filter:'original'})};
     const dims=async p=>{const c=await renderPage(p,{maxSide:600});return c.width>c.height?'h':'v'};
     const a=await mk(1240,1754);await camPostProcess([a],'doc');const b=await mk(1754,1240);await camPostProcess([b],'doc');
     S.camOrient='port';const c=await mk(1754,1240);await camPostProcess([c],'doc');
@@ -1193,9 +1198,10 @@ await test('Cámara: todas las hojas salen horizontales (por defecto), o vertica
   assert.deepEqual(r,['h','h','v','v']);
   await pg.evaluate(()=>{S.autoCapture=false;Cam.open('batch')});await pg.waitForFunction(()=>Cam.stream&&$('#camVideo').videoWidth>0,null,{timeout:15000});
   await pg.click('#camCfg');await pg.waitForSelector('#camPanel [data-co]');
-  assert.match(await pg.textContent('#camPanel [data-co]'),/Orientación de las hojas\s*Horizontal/);
-  await pg.click('#camPanel [data-co]');assert.equal(await pg.evaluate(()=>S.camOrient),'port');assert.match(await pg.textContent('#camPanel [data-co]'),/Vertical/);
-  await pg.click('#camPanel [data-co]');await pg.click('#camPanel [data-co]');assert.equal(await pg.evaluate(()=>S.camOrient),'land');
+  assert.match(await pg.textContent('#camPanel [data-co]'),/Orientación de las hojas\s*Como está el teléfono/);
+  await pg.click('#camPanel [data-co]');assert.equal(await pg.evaluate(()=>S.camOrient),'land');assert.match(await pg.textContent('#camPanel [data-co]'),/Horizontal/);
+  await pg.click('#camPanel [data-co]');assert.equal(await pg.evaluate(()=>S.camOrient),'port');
+  await pg.click('#camPanel [data-co]');await pg.click('#camPanel [data-co]');assert.equal(await pg.evaluate(()=>S.camOrient),'phone');
   await pg.evaluate(()=>{camPanelClose();Nav.back()});await W(300);
 });
 
@@ -1358,6 +1364,46 @@ await test('A Excel ordenado (v76): líneas grises finas, columnas apretadas, ce
     return out});
   for(const [k,v] of Object.entries(r))assert.deepEqual(v.bad,[],k+' salió desordenado ('+v.kinds+')');
   assert.match(r.grisFino.kinds,/grid/,'las líneas grises finas tienen que formar la grilla');assert.match(r.grisDosRenglones.kinds,/grid/);
+});
+
+await test('Cámara v77: la hoja sigue al teléfono, el recorte desparejo se empareja, la primera foto se ve grande y «Documento listo» estima rápido',async pg=>{
+  const r=await pg.evaluate(async()=>{const out={};
+    /* sensor de gravedad → giro de la foto (en iPhone los signos van al revés); acostado sobre la mesa no se adivina */
+    out.grav=[CamTilt.fromGravity(0,9.6,false),CamTilt.fromGravity(9.5,.5,false),CamTilt.fromGravity(-9.5,1,false),CamTilt.fromGravity(0,-9,false),CamTilt.fromGravity(.5,1,false),CamTilt.fromGravity(9.5,0,true)];
+    CamTilt.start();window.dispatchEvent(new DeviceMotionEvent('devicemotion',{accelerationIncludingGravity:{x:-9.4,y:.8,z:1}}));out.live=CamTilt.rot;
+    window.dispatchEvent(new DeviceMotionEvent('devicemotion',{accelerationIncludingGravity:{x:.3,y:.2,z:9.8}}));out.flat=CamTilt.rot;CamTilt.stop();
+    /* una foto sacada con el teléfono de costado sale derecha */
+    const mkImg=(w,h)=>{const c=canvas(w,h),x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,w,h);x.fillStyle='#111';x.font='26px Arial';for(let y=70;y<h-30;y+=40)x.fillText('Renglón de prueba '+y,40,y);return c.toDataURL('image/jpeg',.9)};
+    delete S.camOrient;const src=mkImg(800,600);Cam._tiltOf.set(src,90);const p0=await makePage(src,{auto:false,filter:'original'});out.rot=p0.rot;out.camRot=p0.camRot;
+    /* foto: mesa oscura y hoja inclinada; el recorte quedó corrido hacia afuera */
+    const W=1600,H=2100,c=canvas(W,H),x=c.getContext('2d');x.fillStyle='#5a4632';x.fillRect(0,0,W,H);
+    const Q=[{x:230,y:190},{x:1390,y:240},{x:1340,y:1900},{x:170,y:1850}];x.fillStyle='#f2f0ea';x.beginPath();Q.forEach((q,i)=>i?x.lineTo(q.x,q.y):x.moveTo(q.x,q.y));x.closePath();x.fill();
+    x.fillStyle='#222';x.font='28px Arial';for(let i=0;i<30;i++)x.fillText('Texto de prueba renglón '+i,330,330+i*48);
+    const orig=c.toDataURL('image/jpeg',.92),truth=Q.map(q=>({x:q.x/W,y:q.y/H})),off=[[-.025,-.02],[.03,-.012],[.012,.028],[-.02,.01]];
+    const err=p=>Math.max(...p.quad.map((q,i)=>Math.hypot((q.x-truth[i].x)*W,(q.y-truth[i].y)*H)));
+    const p={id:'t1',orig,quad:truth.map((q,i)=>({x:q.x+off[i][0],y:q.y+off[i][1]})),rot:0,filter:'original',bright:0,contrast:0,overlays:[]};out.before=err(p);await camEdgeTrim(p);out.after=err(p);
+    const p2={id:'t2',orig,quad:truth.map(q=>({...q})),rot:0,filter:'original',bright:0,contrast:0,overlays:[]};out.goodTouched=await camEdgeTrim(p2);
+    /* «Documento listo»: estima sin armar el PDF */
+    await makeThumb(p);DOC={id:'dtest',name:'Prueba',pages:[p,p2,p]};let builds=0;const _b=buildPDF;buildPDF=async function(){builds++;return _b.apply(this,arguments)};
+    finishSheet();const t0=performance.now();await new Promise(res=>{const iv=setInterval(()=>{if(/≈/.test(($('#cz_media')||{}).textContent||'')){clearInterval(iv);res()}},50)});out.estMs=performance.now()-t0;
+    out.est=$('#cz_media').textContent;out.builds=builds;buildPDF=_b;await Nav.back();
+    return out});
+  assert.deepEqual(r.grav,[0,270,90,180,null,90]);assert.equal(r.live,90);assert.equal(r.flat,90,'acostado debe recordar la última posición clara');
+  assert.equal(r.rot,90);assert.equal(r.camRot,90);
+  assert.ok(r.before>40&&r.after<12,'recorte parejo: '+r.before.toFixed(1)+' → '+r.after.toFixed(1)+' px');assert.equal(r.goodTouched,false,'un recorte bueno no se toca');
+  assert.match(r.est,/≈ [\d.,]+ (KB|MB)/);assert.equal(r.builds,0,'no debe armar el PDF entero para mostrar los tamaños');
+  /* primera foto del lote: se muestra grande y se puede repetir */
+  await pg.evaluate(()=>{S.autoCapture=false;delete S.camRevMode;Cam.open('batch')});await pg.waitForFunction(()=>Cam.stream&&$('#camVideo').videoWidth>0,null,{timeout:15000});
+  await pg.click('#camShot');await pg.waitForFunction(()=>!$('#camRev2').hidden&&$('#rv2Img').src&&$('#rv2Img').naturalWidth>0,null,{timeout:30000});
+  const v=await pg.evaluate(()=>({w:$('#rv2Img').getBoundingClientRect().width,vw:innerWidth,n:Cam.batch.length,busy:Cam.busy,msg:$('#rv2Msg').textContent}));
+  assert.equal(v.n,1);assert.ok(v.busy,'mientras se revisa no se dispara otra foto');assert.ok(v.w>=v.vw*.6,'la foto tiene que verse grande: '+v.w+' de '+v.vw);assert.match(v.msg,/Sirve/);
+  await pg.click('#rv2Again');assert.equal(await pg.evaluate(()=>Cam.batch.length+'|'+$('#camRev2').hidden+'|'+Cam.busy),'0|true|false');
+  /* la segunda foto ya no se frena (solo la primera) */
+  await pg.click('#camShot');await pg.waitForFunction(()=>!$('#camRev2').hidden&&$('#rv2Img').naturalWidth>0,null,{timeout:30000});await pg.click('#rv2Go');
+  await pg.click('#camShot');await pg.waitForFunction(()=>Cam.batch.length===2,null,{timeout:30000});assert.equal(await pg.evaluate(()=>$('#camRev2').hidden),true);
+  await pg.click('#camCfg');await pg.waitForSelector('#camPanel [data-crv]');assert.match(await pg.textContent('#camPanel [data-crv]'),/Ver la foto al sacarla\s*La primera, grande/);
+  await pg.click('#camPanel [data-crv]');assert.equal(await pg.evaluate(()=>S.camRevMode),'all');
+  await pg.evaluate(()=>{camPanelClose();Cam.batch=[];Nav.back()});await W(300);
 });
 
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));

@@ -137,3 +137,9 @@ La app estrena un diseño más claro y sobrio: color tinta de sello, letra más 
 Herramientas → **PDF a EXCEL**, **WORD a EXCEL** o **Foto a Excel** (también en el inicio). Pasá el archivo o tocá **Escanear la planilla con la cámara**. Las tablas salen con sus columnas, celdas combinadas, negritas y bordes; los números y fechas quedan como números y fechas, y los DNI como texto. Si el PDF es escaneado o es una foto, se lee solo con OCR (para un PDF escaneado podés elegir «Leer con OCR: Siempre»). Antes de descargar ves una vista previa.
 
 Desde la versión 76 también salen ordenadas las planillas con líneas grises muy finas, las que no tienen líneas, las de columnas apretadas y las que tienen nombres u observaciones en dos renglones.
+
+## Cámara: orientación, recorte y revisión (v77)
+- **Las hojas salen como tenés el teléfono**: si lo ponés de costado, la hoja sale de costado y derecha. Si preferís siempre horizontal o vertical, cambialo en ⚙️ de la cámara → «Orientación de las hojas».
+- **Recorte parejo**: si quedó un borde de mesa en algún costado, se recorta solo.
+- **Primera foto grande**: después de la primera foto del lote la ves grande. Tocá **Repetir** si no sirve, o **Seguir** para continuar. En ⚙️ → «Ver la foto al sacarla» podés elegir verlas todas o ninguna.
+- Al terminar, «Documento listo» muestra enseguida el peso aproximado de cada calidad.
