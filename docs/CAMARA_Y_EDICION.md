@@ -648,3 +648,9 @@ Todo va dentro de `@media (min-width:1024px)`; el celular no cambia.
 - Flash automático con histéresis, re-enfoque al quedar quieta la hoja (300 ms), auto-captura bloqueada si la imagen está movida.
 - Recorte con lado mayor ≥ 2000 px para OCR y filtros nuevos: Nítido OCR (CLAHE), Gris OCR y B/N adaptativo.
 - Detalle técnico, parámetros y métricas: `docs/ESCANER_VISION.md`. Modo debug: `?debug=cam`.
+
+## v74 · Diseño «Expediente»
+- Identidad propia: un solo color de tinta de sello (#2E3FAD; #9AA8FF de noche) sobre papel oficio frío (#ECEFF3), sin degradados ni sombras de más.
+- Letra **Atkinson Hyperlegible** (OFL, en `libs/fonts/`, funciona sin internet): hecha para leerse bien, también al sol.
+- El inicio es una hoja con las mismas marcas de encuadre que dibuja la cámara. Herramientas en tinta (sin arcoíris), números como un renglón de planilla, títulos en minúscula.
+- Quien tenía el diseño de fábrica pasa solo al nuevo; quien lo había personalizado lo conserva. Se vuelve al anterior en Ajustes → Diseño → «Celeste Pro».

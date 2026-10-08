@@ -1264,6 +1264,21 @@ await test('Escáner v73: recorte con calidad OCR (≥ 2000 px) y filtros CLAHE,
   assert.deepEqual(r.flt,['Nítido OCR','Gris OCR','B/N adaptativo']);
 });
 
+await test('Diseño Expediente: tinta de sello, letra Atkinson, inicio como hoja con marcas de encuadre y vuelta a Celeste',async pg=>{
+  const r=await pg.evaluate(async()=>{go('home');await document.fonts.ready;const h=document.documentElement,hero=$('#v-home .hero'),cs=getComputedStyle(hero),bf=getComputedStyle(hero,'::before');
+    return {look:h.classList.contains('look-exp'),font:getComputedStyle(document.body).fontFamily,loaded:document.fonts.check('700 16px "Atkinson Hyperlegible"'),tinta:getComputedStyle(h).getPropertyValue('--tinta').trim(),
+      marks:bf.backgroundImage.split('linear-gradient').length-1,big:getComputedStyle($('#btn-camara')).backgroundColor,sub:$('#v-home .hero-s').textContent,
+      metricsGap:getComputedStyle($('#homeMetrics')).columnGap,catUpper:false}});
+  assert.equal(r.look,true,'el diseño nuevo debe estar activo por defecto');assert.match(r.font,/Atkinson Hyperlegible/);assert.ok(r.loaded,'la letra Atkinson no cargó (debe venir de libs/fonts)');
+  assert.equal(r.tinta.toUpperCase(),'#2E3FAD');assert.equal(r.marks,8,'faltan las marcas de encuadre del inicio');assert.equal(r.big,'rgb(46, 63, 173)');
+  assert.ok(!/·/.test(r.sub),'el subtítulo no debe ser una lista con puntos');
+  /* quien quiera el diseño anterior lo elige en Diseño → Celeste Pro */
+  await pg.evaluate(()=>{Object.assign(D(),JSON.parse(JSON.stringify(PRESETS.celeste)));delete D().label;saveS();applyDesign()});
+  assert.equal(await pg.evaluate(()=>document.documentElement.classList.contains('look-exp')),false);
+  await pg.evaluate(()=>{Object.assign(D(),JSON.parse(JSON.stringify(PRESETS.expediente)));delete D().label;saveS();applyDesign()});
+  assert.equal(await pg.evaluate(()=>document.documentElement.classList.contains('look-exp')),true);
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();

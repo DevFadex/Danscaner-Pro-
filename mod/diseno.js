@@ -9,7 +9,7 @@ const b=openSheet('🎨 Diseño y visualización',
 +'<div class="cph">Color principal</div><div class="swatches">'+cols.map(c=>'<button class="sw '+(d.color===c?'on':'')+'" data-col="'+c+'" style="background:'+c+'"></button>').join('')+'<label class="sw pick"><input type="color" id="dsCol" value="'+(d.color||'#e53935')+'"></label><button class="chip" data-col="">Por defecto</button></div>'
 +'<div class="cph">Estilo visual</div>'+seg('skin',[['suave','Actual'],['industrial','Industrial']])
 +'<div class="cph">Fondo</div>'+seg('bg',[['plano','Plano'],['suave','Degradado'],['papel','Papel']])
-+'<div class="cph">Tipografía de la app</div>'+seg('uifont',[['sys','Moderna'],['serif','Formal'],['round','Redondeada'],['mono','Máquina']])
++'<div class="cph">Tipografía de la app</div>'+seg('uifont',[['atk','Legible'],['sys','Moderna'],['serif','Formal'],['round','Redondeada'],['mono','Máquina']])
 +'<div class="cph">Tamaño general</div>'+seg('zoom',[[0.9,'Compacto'],[1,'Normal'],[1.1,'Grande'],[1.25,'Muy grande']])
 +'<div class="cph">Espaciado</div>'+seg('density',[['comp','Ajustado'],['normal','Normal'],['amplio','Amplio']])
 +'<div class="cph">Documentos se ven como</div>'+seg('docView',[['list','Lista'],['grid','Cuadrícula']])

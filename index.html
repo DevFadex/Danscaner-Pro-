@@ -3452,7 +3452,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 4.5',APP_VER='73';
+const NEXA_VER='Nexa 4.5',APP_VER='74';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3570,7 +3570,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='73 · 08/10/2026';
+const BUILD='74 · 08/10/2026';
 /* Versión que ven los usuarios: se cambia a mano solo cuando se decide publicar una versión nueva para todos.
    El administrador ve la versión interna (BUILD) con cada cambio. */
 const PUBLIC_VER='1.2';
@@ -6129,6 +6129,81 @@ $('#camPanel').addEventListener('click',async e=>{const t=e.target.closest('[dat
  if(S.camEngine!=='opencv'){if(!confirm('Detección con OpenCV: detecta los bordes con más precisión en fondos difíciles. Se descarga una sola vez (≈3 MB comprimido) y queda guardado para usar sin internet. ¿Activarlo?'))return;S.camEngine='opencv'}else S.camEngine='js';
  saveS();VisionEngine.setEngine(S.camEngine);const P=$('#camPanel');P._ck='';camPanelRender()},true);
 document.head.insertAdjacentHTML('beforeend','<style id="v73Css">#camDbg{position:absolute;left:6px;top:6px;right:6px;z-index:6;white-space:pre-wrap;font:11px/1.35 ui-monospace,Menlo,monospace;color:#fff;background:rgba(0,0,0,.62);border-radius:8px;padding:6px 8px;pointer-events:none}#camDbgSvg{position:absolute;inset:0;width:100%;height:100%;z-index:5;pointer-events:none}</style>');
+
+/* ===== Danscanner Pro v74: diseño «Expediente» (tinta de sello sobre papel oficio) ===== */
+/* Identidad propia: el inicio es una hoja con las mismas marcas de encuadre que dibuja la cámara; un solo color de tinta (azul de sello),
+ * superficies planas de papel, tipografía Atkinson Hyperlegible (hecha para leer bien, también al sol). Se aplica sobre el estilo Celeste
+ * (data-skin="aqua") con la clase html.look-exp, así la estructura y las funciones no cambian. */
+UIFONTS.atk='"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif';
+PRESETS.expediente={label:'Expediente',skin:'aqua',look:'exp',color:'#2E3FAD',shape:'round',ico:22,stroke:1.9,iconStyle:'line',anim:true,uifont:'atk',density:'normal',zoom:1,bg:'plano',contrast:false,docView:'list'};
+PRESETS.celeste.look='';PRESETS.nocturno.look='';
+Object.assign(DESIGN_DEF,{look:'exp',color:'#2E3FAD',uifont:'atk',stroke:1.9});
+{const _ad=applyDesign;applyDesign=function(){const r=_ad.apply(this,arguments);try{const d=D();document.documentElement.classList.toggle('look-exp',d.look==='exp'&&d.skin==='aqua')}catch(e){}return r}}
+/* una sola vez: quien tenía el diseño de fábrica (Celeste/Nocturno sin tocar) pasa al nuevo; quien lo personalizó lo conserva.
+ * Se vuelve al anterior desde Ajustes → Diseño → «Celeste Pro». */
+(function(){try{if(S.v74!==true){const d=D();if(d.skin==='aqua'&&['#1e88ff','#4ba3ff',''].includes(d.color||'')&&(d.uifont||'sys')==='sys'){d.look='exp';d.color='#2E3FAD';d.uifont='atk';d.stroke=1.9}else if(d.look===undefined||d.look==='exp')d.look=d.color==='#2E3FAD'?'exp':'';S.v74=true;saveS()}applyDesign()}catch(e){console.warn('diseño v74',e)}})();
+/* textos del inicio: frases en vez de listas con puntos, y el botón dice lo que hace */
+(function(){const s=$('#v-home .hero-s');if(s)s.textContent='Recorte automático, filtros, texto (OCR) y firma. Todo queda en tu teléfono.'})();
+{const fix=()=>{const b=$('#wizCard .aicard-btn');if(b&&/→/.test(b.textContent))b.textContent=b.textContent.replace(/\s*→\s*$/,'')};fix();if(typeof renderHome==='function'){const _rh=renderHome;renderHome=function(){const r=_rh.apply(this,arguments);try{fix()}catch(e){}return r}}setTimeout(fix,800)}
+document.head.insertAdjacentHTML('beforeend','<style id="v74Css">'+
+'@font-face{font-family:"Atkinson Hyperlegible";font-style:normal;font-weight:400;font-display:swap;src:url(libs/fonts/atkinson-hyperlegible-latin-400-normal.woff2) format("woff2")}'+
+'@font-face{font-family:"Atkinson Hyperlegible";font-style:normal;font-weight:700;font-display:swap;src:url(libs/fonts/atkinson-hyperlegible-latin-700-normal.woff2) format("woff2")}'+
+/* tokens: papel oficio frío, grafito, tinta de sello; y la versión nocturna (escritorio de noche, no negro puro) */
+'html.look-exp{--bg:#ECEFF3;--bg2:#FFFFFF;--bg-principal:#FFFFFF;--bg3:#E3E7ED;--bg4:#D3D9E1;--line:#D3D9E1;--tx:#1B2130;--texto-principal:#1B2130;--tx2:#566072;--stage:#E3E7ED;--soft:#E6E9F8;--soft-line:#C9CFF0;--tinta:#2E3FAD;--tinta-suave:#E6E9F8}'+
+'html.look-exp[data-theme="dark"]{--bg:#10151F;--bg2:#171E2B;--bg-principal:#171E2B;--bg3:#1F2838;--bg4:#2A3446;--line:#2A3446;--tx:#E8ECF4;--texto-principal:#E8ECF4;--tx2:#9AA4B8;--stage:#0C1119;--soft:#232C4A;--soft-line:#34406A;--tinta:#9AA8FF;--tinta-suave:#232C4A;--color-primario:#9AA8FF!important}'+
+'html.look-exp[data-skin] body{background:var(--bg)!important;background-image:none!important}'+
+'html.look-exp body,html.look-exp button,html.look-exp input,html.look-exp select,html.look-exp textarea{font-family:var(--ui-font)}'+
+/* barra superior y navegación: papel liso con una línea fina */
+'html.look-exp[data-skin] .top{background:var(--bg2);-webkit-backdrop-filter:none;backdrop-filter:none;border-bottom:1px solid var(--line);box-shadow:none}'+
+'html.look-exp[data-skin] #topTitle{font-weight:700;letter-spacing:-.01em}'+
+'html.look-exp[data-skin] .nx-top{background:var(--tinta-suave)!important;color:var(--tinta)!important;box-shadow:none!important}'+
+'html.look-exp[data-skin] .nav.nav2{background:var(--bg2);border-top:1px solid var(--line);box-shadow:none}'+
+'html.look-exp[data-skin] .nav.nav2 button.on{color:var(--tinta)}'+
+'html.look-exp[data-skin] .fab.fabcam{background:var(--tinta)!important;box-shadow:0 0 0 6px var(--bg2),0 8px 18px color-mix(in srgb,var(--tinta) 35%,transparent)!important}'+
+/* lo memorable: el inicio es una hoja con las marcas de encuadre de la cámara en las cuatro esquinas */
+'html.look-exp[data-skin] .hero{background:var(--bg2);border:1px solid var(--line);border-radius:10px;box-shadow:0 14px 30px -18px rgba(27,33,48,.35);padding:30px 26px 34px}'+
+'html.look-exp[data-skin][data-theme="dark"] .hero{background:var(--bg2);box-shadow:0 14px 30px -16px rgba(0,0,0,.6)}'+
+'html.look-exp[data-skin] .hero::before{content:"";position:absolute;inset:10px;pointer-events:none;border-radius:2px;opacity:.9;background:'+
+ 'linear-gradient(var(--tinta),var(--tinta)) left top/18px 3px no-repeat,linear-gradient(var(--tinta),var(--tinta)) left top/3px 18px no-repeat,'+
+ 'linear-gradient(var(--tinta),var(--tinta)) right top/18px 3px no-repeat,linear-gradient(var(--tinta),var(--tinta)) right top/3px 18px no-repeat,'+
+ 'linear-gradient(var(--tinta),var(--tinta)) left bottom/18px 3px no-repeat,linear-gradient(var(--tinta),var(--tinta)) left bottom/3px 18px no-repeat,'+
+ 'linear-gradient(var(--tinta),var(--tinta)) right bottom/18px 3px no-repeat,linear-gradient(var(--tinta),var(--tinta)) right bottom/3px 18px no-repeat;filter:none;transform:none;width:auto;height:auto;top:10px;left:10px;right:10px;bottom:10px}'+
+'html.look-exp[data-skin] .hero::after{content:none!important;display:none!important}'+
+'html.look-exp[data-skin] .hero-t{font-size:30px;line-height:1.08;font-weight:700;letter-spacing:-.02em;color:var(--tx);max-width:14ch}'+
+'html.look-exp[data-skin] .hero-s{font-size:15px;line-height:1.45;color:var(--tx2);max-width:34ch;margin-top:8px}'+
+'html.look-exp[data-skin] .hbtn{background:transparent;border:1px solid var(--line);box-shadow:none;border-radius:14px}'+
+'html.look-exp[data-skin] .hbtn i,html.look-exp[data-skin] .hbtn [data-ico]{color:var(--tinta)}'+
+'html.look-exp[data-skin] .hbtn span{font-weight:700}'+
+'html.look-exp[data-skin] .hbtn.big{background:var(--tinta);border-color:var(--tinta);color:#fff;box-shadow:none}'+
+'html.look-exp[data-skin][data-theme="dark"] .hbtn.big{color:#10151F}html.look-exp[data-skin][data-theme="dark"] .hbtn.big small{color:#1F2838}html.look-exp[data-skin][data-theme="dark"] .hbtn.big .icono-camara{background:#10151F}'+
+'html.look-exp[data-skin] .hbtn.big small{color:color-mix(in srgb,#fff 82%,var(--tinta))}'+
+/* asistente y números: sin degradados; los números como un renglón de planilla */
+'html.look-exp[data-skin] .aicard{background:var(--bg2)!important;border:1px solid var(--line)!important;box-shadow:none!important;border-radius:14px!important}'+
+'html.look-exp[data-skin] .aicard-ic{background:var(--tinta-suave)!important;color:var(--tinta)!important;box-shadow:none!important}'+
+'html.look-exp[data-skin] .aicard-btn{background:transparent!important;color:var(--tinta)!important;border:1.5px solid var(--tinta)!important;box-shadow:none!important}'+
+'html.look-exp[data-skin] .metrics{gap:0!important;background:var(--bg2);border:1px solid var(--line);border-radius:14px;overflow:hidden}'+
+'html.look-exp[data-skin] .metric{background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important}'+
+'html.look-exp[data-skin] .metric+.metric{border-left:1px solid var(--line)!important}'+
+'html.look-exp[data-skin] .metric strong{color:var(--tx)!important;font-weight:700;font-variant-numeric:tabular-nums}'+
+'html.look-exp[data-skin] .metric span{color:var(--tx2)!important;font-weight:400}'+
+/* encabezados de sección y enlaces: tipografía, no pastillas */
+'html.look-exp[data-skin] .sec{font-size:18px;font-weight:700;letter-spacing:-.01em}'+
+'html.look-exp[data-skin] .sec a{background:none;color:var(--tinta);padding:4px 0;font-size:14px;font-weight:700}'+
+'html.look-exp[data-skin] .catt,html.look-exp[data-skin] .cph{text-transform:none!important;letter-spacing:0!important;font-size:15px!important;font-weight:700!important;color:var(--tx)!important}'+
+/* herramientas: íconos en tinta sobre un cuadro suave, sin el arcoíris ni sombras */
+'html.look-exp[data-skin] .tool{background:var(--bg2);border:1px solid var(--line);border-radius:14px;box-shadow:none}'+
+'html.look-exp[data-skin] .tool .ic,html.look-exp[data-skin] .mitem .ic{background:var(--tinta-suave)!important;color:var(--tinta)!important;box-shadow:none!important;border-radius:12px}'+
+'html.look-exp[data-skin] .tool .ic svg,html.look-exp[data-skin] .mitem .ic svg{color:var(--tinta);stroke:currentColor}'+
+'html.look-exp[data-skin] .mitem{border-radius:12px}'+
+'html.look-exp[data-skin] .btn.pri,html.look-exp[data-skin] .chip.on{background:var(--tinta);border-color:var(--tinta);color:#fff}'+
+'html.look-exp[data-skin][data-theme="dark"] .btn.pri,html.look-exp[data-skin][data-theme="dark"] .chip.on{color:#10151F}'+
+/* ajustes: títulos de sección en minúscula y el avatar en tinta */
+'html.look-exp .set-sec{text-transform:none;letter-spacing:0;font-size:14px;color:var(--tx2)}'+
+'html.look-exp .sp-av{background:var(--tinta);color:var(--bg2)}'+
+/* foco visible con teclado */
+'html.look-exp :focus-visible{outline:3px solid color-mix(in srgb,var(--tinta) 70%,transparent);outline-offset:2px}'+
+'@media (prefers-reduced-motion:reduce){html.look-exp *{transition:none!important;animation-duration:.01ms!important}}'+
+'</style>');
 </script>
 </body>
 </html>
