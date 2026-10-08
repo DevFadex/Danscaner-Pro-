@@ -641,3 +641,10 @@ Todo va dentro de `@media (min-width:1024px)`; el celular no cambia.
 ## v71 · Nexa: apodo y aviso de «con internet»
 - Nexa entiende cómo querés que te llame: «llamame Dani», «quiero que me llames Dani y no Flores», «me gusta que me digas Dani», «decime Dani», «mi nombre es Dani». Lo guarda en el equipo, lo usa en el saludo y se lo indica a la IA con internet («Dani, nunca Flores»). Frases como «decime qué dice…» ya no se toman como nombre.
 - Si elegís **Nexa con internet** pero no está activada (falta la clave gratis de Gemini) o no hay conexión, la respuesta lo dice al principio con un botón **Activar Nexa con internet**, en vez de presentarse como «sin internet» sin explicación.
+
+## v73 · Escáner en tiempo real (Worker + OpenCV opcional)
+- La detección de la hoja corre en un Worker (`mod/vision-worker.js`) con Canny + contornos + approxPolyDP a 720p: el hilo de la interfaz pasa de 48 ms a 0,1 ms por detección y el marco se mueve a 30 FPS.
+- Motor opcional **OpenCV.js** desde ⚙️ Ajustes de la cámara → «Detección de bordes» (se descarga una vez, ≈3 MB).
+- Flash automático con histéresis, re-enfoque al quedar quieta la hoja (300 ms), auto-captura bloqueada si la imagen está movida.
+- Recorte con lado mayor ≥ 2000 px para OCR y filtros nuevos: Nítido OCR (CLAHE), Gris OCR y B/N adaptativo.
+- Detalle técnico, parámetros y métricas: `docs/ESCANER_VISION.md`. Modo debug: `?debug=cam`.

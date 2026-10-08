@@ -1091,7 +1091,7 @@ new MutationObserver(ms=>{for(const m of ms)for(const n of m.addedNodes)if(n.nod
 
 /* ---------- Filtros nuevos ---------- */
 FILTERS.push(['nitido','Nítido'],['color','Doc. color'],['contraste','Alto contraste'],['vivo','Vivo'],['pizarra','Pizarra'],['calido','Cálido'],['frio','Frío'],['sepia','Sepia'],['invertir','Negativo']);
-function applyExtraFilter(c,d,f){const w=c.width,h=c.height;switch(f){
+function applyExtraFilter(c,d,f){const w=c.width,h=c.height;if(typeof vxEnhance==='function'&&vxEnhance(c,d,f))return true;switch(f){
 case 'nitido':autoLevels(d,.01,.99);unsharp(d,w,h,1.2,1);return true;
 case 'color':bgDivide(c,d,false);lutApply(d,makeLut(v=>sCurve((v-8)*255/240,.35)));saturate(d,1.25);unsharp(d,w,h,.4,1);return true;
 case 'contraste':autoLevels(d,.02,.98);lutApply(d,makeLut(v=>sCurve(v,.9)));return true;
@@ -1896,9 +1896,9 @@ async function ocrCanvases(getImgs,lang,total){busy('Cargando motor OCR (la prim
 const FW={w:null,ok:null,seq:0,pend:new Map(),
  build(){if(this.ok===false)return null;if(this.w)return this.w;
   try{if(typeof Worker==='undefined'||typeof OffscreenCanvas==='undefined')throw new Error('sin soporte');
-   const names=['lutApply','makeLut','sCurve','autoLevels','saturate','unsharp','bgDivide','sepFilter','clahe','toGray','applyExtraFilter','applyFilter','clamp','otsu','_v21_lum','_v21_lut','_v21_applyLUT','binarizeSauvola','clahePro','autoLevelsPro','sCurveLUT','unsharpPro','removeShadows','adjustSaturation','adjustTemperature','_origApplyFilter','_prePrintFilter','printBW','_despeckle','_clearBorder','docEnhance','cleanEdges','isDocLike','isDocLike2','flatField','csEnhance','photoEnhance','toneActive','toneAdjust'];
+   const names=['lutApply','makeLut','sCurve','autoLevels','saturate','unsharp','bgDivide','sepFilter','clahe','toGray','applyExtraFilter','applyFilter','clamp','otsu','_v21_lum','_v21_lut','_v21_applyLUT','binarizeSauvola','clahePro','autoLevelsPro','sCurveLUT','unsharpPro','removeShadows','adjustSaturation','adjustTemperature','_origApplyFilter','_prePrintFilter','printBW','_despeckle','_clearBorder','docEnhance','cleanEdges','isDocLike','isDocLike2','flatField','csEnhance','photoEnhance','toneActive','toneAdjust','enhanceImage','vxEnhance'];
    let src="'use strict';self.canvas=(w,h)=>new OffscreenCanvas(Math.max(1,Math.round(w)),Math.max(1,Math.round(h)));\n";
-   const T={lutApply:(typeof lutApply!=='undefined'?lutApply:null),makeLut:(typeof makeLut!=='undefined'?makeLut:null),sCurve:(typeof sCurve!=='undefined'?sCurve:null),autoLevels:(typeof autoLevels!=='undefined'?autoLevels:null),saturate:(typeof saturate!=='undefined'?saturate:null),unsharp:(typeof unsharp!=='undefined'?unsharp:null),bgDivide:(typeof bgDivide!=='undefined'?bgDivide:null),sepFilter:(typeof sepFilter!=='undefined'?sepFilter:null),clahe:(typeof clahe!=='undefined'?clahe:null),toGray:(typeof toGray!=='undefined'?toGray:null),applyExtraFilter:(typeof applyExtraFilter!=='undefined'?applyExtraFilter:null),applyFilter:(typeof applyFilter!=='undefined'?applyFilter:null),clamp:(typeof clamp!=='undefined'?clamp:null),otsu:(typeof otsu!=='undefined'?otsu:null),_v21_lum:(typeof _v21_lum!=='undefined'?_v21_lum:null),_v21_lut:(typeof _v21_lut!=='undefined'?_v21_lut:null),_v21_applyLUT:(typeof _v21_applyLUT!=='undefined'?_v21_applyLUT:null),binarizeSauvola:(typeof binarizeSauvola!=='undefined'?binarizeSauvola:null),clahePro:(typeof clahePro!=='undefined'?clahePro:null),autoLevelsPro:(typeof autoLevelsPro!=='undefined'?autoLevelsPro:null),sCurveLUT:(typeof sCurveLUT!=='undefined'?sCurveLUT:null),unsharpPro:(typeof unsharpPro!=='undefined'?unsharpPro:null),removeShadows:(typeof removeShadows!=='undefined'?removeShadows:null),adjustSaturation:(typeof adjustSaturation!=='undefined'?adjustSaturation:null),_prePrintFilter:(typeof _prePrintFilter!=='undefined'?_prePrintFilter:null),printBW:(typeof printBW!=='undefined'?printBW:null),_despeckle:(typeof _despeckle!=='undefined'?_despeckle:null),_clearBorder:(typeof _clearBorder!=='undefined'?_clearBorder:null),docEnhance:(typeof docEnhance!=='undefined'?docEnhance:null),cleanEdges:(typeof cleanEdges!=='undefined'?cleanEdges:null),flatField:(typeof flatField!=='undefined'?flatField:null),photoEnhance:(typeof photoEnhance!=='undefined'?photoEnhance:null),isDocLike2:(typeof isDocLike2!=='undefined'?isDocLike2:null),csEnhance:(typeof csEnhance!=='undefined'?csEnhance:null),isDocLike:(typeof isDocLike!=='undefined'?isDocLike:null),toneActive:(typeof toneActive!=='undefined'?toneActive:null),toneAdjust:(typeof toneAdjust!=='undefined'?toneAdjust:null),adjustTemperature:(typeof adjustTemperature!=='undefined'?adjustTemperature:null),_origApplyFilter:(typeof _origApplyFilter!=='undefined'?_origApplyFilter:null)};for(const n of names){const f=T[n];if(typeof f!=='function')continue;const s=f.toString();src+='var '+n+'=('+s+');\n'}
+   const T={lutApply:(typeof lutApply!=='undefined'?lutApply:null),makeLut:(typeof makeLut!=='undefined'?makeLut:null),sCurve:(typeof sCurve!=='undefined'?sCurve:null),autoLevels:(typeof autoLevels!=='undefined'?autoLevels:null),saturate:(typeof saturate!=='undefined'?saturate:null),unsharp:(typeof unsharp!=='undefined'?unsharp:null),bgDivide:(typeof bgDivide!=='undefined'?bgDivide:null),sepFilter:(typeof sepFilter!=='undefined'?sepFilter:null),clahe:(typeof clahe!=='undefined'?clahe:null),toGray:(typeof toGray!=='undefined'?toGray:null),applyExtraFilter:(typeof applyExtraFilter!=='undefined'?applyExtraFilter:null),applyFilter:(typeof applyFilter!=='undefined'?applyFilter:null),clamp:(typeof clamp!=='undefined'?clamp:null),otsu:(typeof otsu!=='undefined'?otsu:null),_v21_lum:(typeof _v21_lum!=='undefined'?_v21_lum:null),_v21_lut:(typeof _v21_lut!=='undefined'?_v21_lut:null),_v21_applyLUT:(typeof _v21_applyLUT!=='undefined'?_v21_applyLUT:null),binarizeSauvola:(typeof binarizeSauvola!=='undefined'?binarizeSauvola:null),clahePro:(typeof clahePro!=='undefined'?clahePro:null),autoLevelsPro:(typeof autoLevelsPro!=='undefined'?autoLevelsPro:null),sCurveLUT:(typeof sCurveLUT!=='undefined'?sCurveLUT:null),unsharpPro:(typeof unsharpPro!=='undefined'?unsharpPro:null),removeShadows:(typeof removeShadows!=='undefined'?removeShadows:null),adjustSaturation:(typeof adjustSaturation!=='undefined'?adjustSaturation:null),_prePrintFilter:(typeof _prePrintFilter!=='undefined'?_prePrintFilter:null),printBW:(typeof printBW!=='undefined'?printBW:null),_despeckle:(typeof _despeckle!=='undefined'?_despeckle:null),_clearBorder:(typeof _clearBorder!=='undefined'?_clearBorder:null),docEnhance:(typeof docEnhance!=='undefined'?docEnhance:null),cleanEdges:(typeof cleanEdges!=='undefined'?cleanEdges:null),flatField:(typeof flatField!=='undefined'?flatField:null),photoEnhance:(typeof photoEnhance!=='undefined'?photoEnhance:null),isDocLike2:(typeof isDocLike2!=='undefined'?isDocLike2:null),csEnhance:(typeof csEnhance!=='undefined'?csEnhance:null),isDocLike:(typeof isDocLike!=='undefined'?isDocLike:null),toneActive:(typeof toneActive!=='undefined'?toneActive:null),toneAdjust:(typeof toneAdjust!=='undefined'?toneAdjust:null),enhanceImage:(typeof enhanceImage!=='undefined'?enhanceImage:null),vxEnhance:(typeof vxEnhance!=='undefined'?vxEnhance:null),adjustTemperature:(typeof adjustTemperature!=='undefined'?adjustTemperature:null),_origApplyFilter:(typeof _origApplyFilter!=='undefined'?_origApplyFilter:null)};for(const n of names){const f=T[n];if(typeof f!=='function')continue;const s=f.toString();src+='var '+n+'=('+s+');\n'}
    src+="onmessage=e=>{const m=e.data;try{const oc=canvas(m.w,m.h),x=oc.getContext('2d',{willReadFrequently:true});x.putImageData(new ImageData(new Uint8ClampedArray(m.buf),m.w,m.h),0,0);applyFilter(oc,m.f,m.b,m.c,m.o);const out=x.getImageData(0,0,m.w,m.h);postMessage({id:m.id,buf:out.data.buffer},[out.data.buffer])}catch(err){postMessage({id:m.id,err:String(err&&err.message||err)})}};";
    const url=URL.createObjectURL(new Blob([src],{type:'text/javascript'}));
    this.w=new Worker(url);
@@ -3253,7 +3253,7 @@ const CamPro={flash:S.flashMode||'off',ev:0,caps:null,timer:null,level:null,lowL
    const cells=[];for(let cy=0;cy<4;cy++)for(let cx=0;cx<3;cx++){let s=0,n=0;for(let y=cy*16+2;y<cy*16+14;y+=2)for(let xx=cx*16+2;xx<cx*16+14;xx+=2){const i=(y*48+xx)*4;s+=d[i]*.299+d[i+1]*.587+d[i+2]*.114;n++}cells.push(s/n)}
    cells.sort((a,b)=>a-b);const mean=cells.reduce((a,b)=>a+b,0)/cells.length,spread=cells[cells.length-2]-cells[1];
    this.lowLight=mean<70;let msg='';if(this.lowLight)msg=this.flash==='auto'?'💡 Poca luz: flash automático encendido':'💡 Poca luz: activá el flash o acercate a una ventana';else if(spread>70)msg='⚠️ Sombra sobre el documento: mové la luz o el teléfono';
-   if(this.flash==='auto')this.torch(this.lowLight);
+   if(this.flash==='auto')this.torch(typeof camAutoTorch==='function'?camAutoTorch(this.lowLight):this.lowLight);
    const lv=this.level;if(!msg&&lv&&Math.max(Math.abs(lv.b),Math.abs(lv.g))>12)msg='📐 Poné el teléfono paralelo al documento';
    const w=$('#camWarn');if(w){w.textContent=msg;w.hidden=!msg}},700)},
  stop(){clearInterval(this.timer);this.timer=null},
@@ -3397,7 +3397,7 @@ const CAM_STEADY=3;
 Cam.detect=function(){const v=$('#camVideo');if(!v.videoWidth||this.busy)return;const svg=$('#camSvg'),hint=$('#camHint'),shot=$('#camShot');
  const cnt=this.mode==='batch'?' · '+(this.batch.length+(this._pend||0))+' foto(s)'+(this._pend?' (procesando '+this._pend+')':''):'';
  if(!S.autoCrop){svg.innerHTML='';hint.textContent=(this.mode==='batch'?'Lote':'Encuadre automático apagado')+cnt;this._stable=0;this._lastQuad=null;shot.classList.remove('arming');return}
- let q=detectQuad(v);if(q&&this.prevQ)q=q.map((p,i)=>({x:p.x*.6+this.prevQ[i].x*.4,y:p.y*.6+this.prevQ[i].y*.4}));this.prevQ=q;
+ let q=camQuadNow(v);if(q&&this.prevQ)q=q.map((p,i)=>({x:p.x*.6+this.prevQ[i].x*.4,y:p.y*.6+this.prevQ[i].y*.4}));this.prevQ=q;
  if(q&&this._lastQuad){const diff=q.reduce((s,p,i)=>s+Math.hypot(p.x-this._lastQuad[i].x,p.y-this._lastQuad[i].y),0);this._stable=diff<0.04?this._stable+1:0}else this._stable=0;this._lastQuad=q;
  const auto=S.autoCapture&&!this.replaceId,steady=q&&this._stable>=2;
  const cw=v.clientWidth,ch=v.clientHeight,s=Math.max(cw/v.videoWidth,ch/v.videoHeight),w=v.videoWidth*s,h=v.videoHeight*s,ox=(cw-w)/2,oy=(ch-h)/2,X=p=>ox+p.x*w,Y=p=>oy+p.y*h;
@@ -3452,7 +3452,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 4.5',APP_VER='72';
+const NEXA_VER='Nexa 4.5',APP_VER='73';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3570,7 +3570,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='72 · 05/10/2026';
+const BUILD='73 · 08/10/2026';
 /* Versión que ven los usuarios: se cambia a mano solo cuando se decide publicar una versión nueva para todos.
    El administrador ve la versión interna (BUILD) con cada cambio. */
 const PUBLIC_VER='1.2';
@@ -6007,6 +6007,128 @@ const CAM_ORIENT_L={land:'Horizontal',port:'Vertical',auto:'Automática (como es
 $('#camPanel').addEventListener('click',e=>{const t=e.target.closest('[data-co]');if(!t)return;e.stopImmediatePropagation();const n={land:'port',port:'auto',auto:'land'}[camOrient()];S.camOrient=n;saveS();
  toast('Hojas: '+CAM_ORIENT_L[n].replace(/ \(.*/,'').toLowerCase());const P=$('#camPanel');P._ck='';camPanelRender()},true);
 document.head.insertAdjacentHTML('beforeend','<style id="v72Css">.cq-or{font-style:normal;font-size:20px;line-height:1;min-width:28px;text-align:center;color:var(--pri,#2563eb)}</style>');
+
+/* ===== Danscanner Pro v73: escáner en tiempo real fuera del hilo de la interfaz ===== */
+/* Pilar 1 (detectDocument) vive en mod/vision-core.js y corre en mod/vision-worker.js.
+ * Bucle: requestVideoFrameCallback → createImageBitmap reducido a 720p (fuera del hilo principal) → se transfiere al Worker sin copiar.
+ * Si el Worker está ocupado el cuadro se descarta (nunca se encolan cuadros). El marco se dibuja a 30 FPS como máximo, interpolado. */
+const VisionEngine={w:null,ok:null,active:false,busy:false,seq:0,last:null,lastAt:0,engine:'js',state:'',v:null,_cb:0,_raf:0,_n:0,_fps:0,_fpsT:0,_frame:0,disp:null,_drawT:0,
+ stats:{det:[],warp:[],peak:0},
+ cfg(){return (self.DSVision&&self.DSVision.VISION_CFG)||{analysisMaxSide:720,everyN:1,stableMs:300,lowLuma:70,lowLumaOff:95,blurMin:60,blankStd:10,minLongOut:2000}},
+ supported(){return typeof Worker!=='undefined'&&typeof OffscreenCanvas!=='undefined'&&typeof createImageBitmap==='function'&&S.camVision!==false},
+ build(){if(this.w||this.ok===false)return this.w;try{this.w=new Worker('mod/vision-worker.js');this.ok=true;
+   this.w.onmessage=e=>this.onMsg(e.data);this.w.onerror=()=>{this.ok=false;this.stop();try{this.w.terminate()}catch(e){}this.w=null};this.setEngine(S.camEngine||'js')}catch(e){this.ok=false;this.w=null}return this.w},
+ setEngine(k){this.engine=k;const w=this.w;if(!w)return;w.postMessage(k==='opencv'?{type:'engine',engine:'opencv',url:new URL('libs/opencv/opencv.js',location.href).href}:{type:'engine',engine:'js'})},
+ onMsg(m){if(m.type==='result'){this.busy=false;const r=m.r;this.last=r;this.lastAt=performance.now();this._n++;const t=this.lastAt;if(t-this._fpsT>=1000){this._fps=this._n*1000/(t-this._fpsT);this._n=0;this._fpsT=t}
+   this.stat('det',r.t.total);try{autoFocusFlash(r)}catch(e){}if(camDebugOn())camDebugDraw(r);return}
+  if(m.type==='engine'){this.state=m.state;if(m.state==='fallback'){this.engine='js';toast('OpenCV no se pudo cargar: sigo con el detector rápido',3500)}else if(m.engine==='opencv'&&m.state==='ready')toast('✓ OpenCV listo ('+(m.ms/1000).toFixed(1)+' s)',2200);else if(m.engine==='opencv'&&m.state==='loading')toast('Descargando OpenCV (≈3 MB, una sola vez)…',3000);try{camPanelRender()}catch(e){}return}
+  if(m.type==='error'){this.busy=false}},
+ stat(k,ms){const a=this.stats[k];a.push(ms);if(a.length>60)a.shift();try{const pm=performance.memory;if(pm&&pm.usedJSHeapSize>this.stats.peak)this.stats.peak=pm.usedJSHeapSize}catch(e){}},
+ avg(k){const a=this.stats[k];return a.length?a.reduce((s,x)=>s+x,0)/a.length:0},
+ async start(v){if(this.active||!this.supported())return;try{await lazyMod('vision-core')}catch(e){}if(!this.build())return;this.v=v;this.active=true;this.busy=false;this.last=null;this.disp=null;this._fpsT=performance.now();this._n=0;
+  try{this.w.postMessage({type:'config',cfg:S.visionCfg||{}})}catch(e){}this.schedule();this.animate()},
+ stop(){this.active=false;this.busy=false;this.last=null;this.disp=null;const v=this.v;try{if(this._cb&&v&&v.cancelVideoFrameCallback)v.cancelVideoFrameCallback(this._cb)}catch(e){}cancelAnimationFrame(this._raf);this._cb=0;this._raf=0;if(this.w)this.w.postMessage({type:'dispose'});const d=$('#camDbg');if(d)d.hidden=true},
+ schedule(){const v=this.v;if(!this.active||!v)return;if(v.requestVideoFrameCallback)this._cb=v.requestVideoFrameCallback(()=>this.tick());else this._raf2=requestAnimationFrame(()=>this.tick())},
+ async tick(){const v=this.v;if(!this.active)return;this.schedule();const C=this.cfg();if(++this._frame%(C.everyN||1))return;
+  if(this.busy||!v.videoWidth||Cam.busy||Cam.review||(typeof camPanelOpen==='function'&&camPanelOpen()))return;
+  const s=Math.min(1,(C.analysisMaxSide||720)/Math.max(v.videoWidth,v.videoHeight)),w=Math.max(16,Math.round(v.videoWidth*s)),h=Math.max(16,Math.round(v.videoHeight*s));
+  this.busy=true;let bm=null;
+  try{bm=await createImageBitmap(v,{resizeWidth:w,resizeHeight:h,resizeQuality:'low'})}
+  catch(e){try{const c=this._sc||(this._sc=canvas(w,h));if(c.width!==w||c.height!==h){c.width=w;c.height=h}c.getContext('2d').drawImage(v,0,0,w,h);bm=await createImageBitmap(c)}catch(e2){this.busy=false;return}}
+  if(!this.active){bm.close();this.busy=false;return}
+  this.w.postMessage({type:'frame',bitmap:bm,w,h,seq:++this.seq,ts:performance.now()},[bm]);
+  setTimeout(()=>{if(this.busy&&performance.now()-this.lastAt>2000)this.busy=false},2000)},
+ /* esquinas para Cam.detect: undefined = no hay motor (usa el detector viejo); null = no hay hoja */
+ fresh(){return this.active&&this.last&&performance.now()-this.lastAt<600?this.last:null},
+ quad(){if(!this.active)return undefined;const r=this.fresh();if(!r)return this.lastAt?null:undefined;return r.quad},
+ /* marco a 30 FPS como máximo, acercándose suave a las últimas esquinas (en vez de saltar cada 240 ms) */
+ animate(){if(!this.active)return;this._raf=requestAnimationFrame(()=>this.animate());const t=performance.now();if(t-this._drawT<33)return;this._drawT=t;
+  const r=this.fresh(),svg=$('#camSvg'),v=this.v;if(!r||!r.quad||!svg||!v||!v.videoWidth){this.disp=null;return}
+  const tq=r.quad;this.disp=this.disp?this.disp.map((p,i)=>({x:p.x+(tq[i].x-p.x)*.45,y:p.y+(tq[i].y-p.y)*.45})):tq.map(p=>({x:p.x,y:p.y}));
+  const cw=v.clientWidth,ch=v.clientHeight,sc=Math.max(cw/v.videoWidth,ch/v.videoHeight),W=v.videoWidth*sc,H=v.videoHeight*sc,ox=(cw-W)/2,oy=(ch-H)/2,X=p=>(ox+p.x*W).toFixed(1),Y=p=>(oy+p.y*H).toFixed(1),q=this.disp;
+  const pgs=svg.querySelectorAll('polygon');if(!pgs.length)return;pgs.forEach(pg=>pg.setAttribute('points',q.map(p=>X(p)+','+Y(p)).join(' ')));
+  svg.querySelectorAll('circle').forEach((c,i)=>{if(i<4){c.setAttribute('cx',X(q[i]));c.setAttribute('cy',Y(q[i]))}});
+  const ln=svg.querySelector('line');if(ln){const a={x:(q[0].x+q[1].x)/2,y:(q[0].y+q[1].y)/2},b={x:(q[3].x+q[2].x)/2,y:(q[3].y+q[2].y)/2};ln.setAttribute('x1',X(a));ln.setAttribute('y1',Y(a));ln.setAttribute('x2',X(b));ln.setAttribute('y2',Y(b))}}};
+function camQuadNow(v){const q=VisionEngine.quad();return q===undefined?detectQuad(v):q}
+{const _o=Cam.open;Cam.open=async function(){const r=await _o.apply(this,arguments);let k=0;const go=()=>{const v=$('#camVideo');if(this.stream&&v&&v.videoWidth)VisionEngine.start(v);else if(++k<60&&Nav.isOpen('camera'))setTimeout(go,150)};go();return r}}
+{const _st=Cam.stop;Cam.stop=function(){VisionEngine.stop();return _st.apply(this,arguments)}}
+
+/* Pilar 4: enfoque y flash automáticos con los datos del Worker */
+function autoFocusFlash(r){const C=VisionEngine.cfg(),t=performance.now(),V=self.DSVision;if(!V||!Cam.track)return;
+ /* flash: con histéresis (se prende con poca luz y se apaga recién con bastante), solo en modo automático */
+ if(typeof CamPro!=='undefined'&&CamPro.flash==='auto'&&!Cam.review&&t-(Cam._torchT||0)>700){const want=V.torchDecision(r.luma,!!Cam.torch,C);if(want!==!!Cam.torch){Cam._torchT=t;CamPro.lowLight=want;CamPro.torch(want)}}
+ /* re-enfoque: cuando la hoja cambió de lugar y queda quieta más de stableMs, enfoca una vez en su centro */
+ const q=r.quad;if(!q){Cam._afC=null;return}const c={x:(q[0].x+q[1].x+q[2].x+q[3].x)/4,y:(q[0].y+q[1].y+q[2].y+q[3].y)/4};
+ if(!Cam._afC||Math.hypot(c.x-Cam._afC.x,c.y-Cam._afC.y)>0.03){Cam._afC=c;Cam._afT=t;Cam._afDone=false;return}
+ if(Cam._afDone||t-Cam._afT<C.stableMs||Cam._locking||Cam.busy||t-(Cam._tapT||0)<4000)return;Cam._afDone=true;
+ const caps=typeof camCaps==='function'?camCaps():{},fm=caps.focusMode||[],adv={},tr=Cam.track;if('pointsOfInterest' in caps)adv.pointsOfInterest=[c];if(fm.includes('single-shot'))adv.focusMode='single-shot';if(!Object.keys(adv).length)return;
+ Cam._refocusN=(Cam._refocusN||0)+1;tr.applyConstraints({advanced:[adv]}).catch(()=>{});if(adv.focusMode==='single-shot')setTimeout(()=>{if(Cam.track===tr&&fm.includes('continuous'))tr.applyConstraints({advanced:[{focusMode:'continuous'}]}).catch(()=>{})},1500)}
+function camAutoTorch(fallback){const r=VisionEngine.fresh(),V=self.DSVision;return r&&V?V.torchDecision(r.luma,!!Cam.torch,VisionEngine.cfg()):fallback}
+/* no se auto-dispara con la imagen movida o desenfocada (varianza del laplaciano baja); a mano se puede igual */
+{const _d=Cam.detect;Cam.detect=function(){const r=VisionEngine.fresh(),V=self.DSVision;const blocked=!!(r&&r.quad&&V&&S.autoCapture&&!this.replaceId&&!V.captureAllowed(r,VisionEngine.cfg()));if(blocked)this._stable=Math.min(this._stable||0,0);
+ const out=_d.apply(this,arguments);if(blocked&&this._lastQuad){this._stable=0;const h=$('#camHint');if(h&&!/Capturada/.test(h.textContent))h.textContent='📷 Imagen movida o desenfocada: quedate quieto';const s=$('#camShot');if(s)s.classList.remove('arming')}return out}}
+
+/* Pilar 2: corrección de perspectiva con salida de calidad OCR (lado mayor ≥ 2000 px cuando la foto lo permite) */
+function correctPerspective(src,q,maxSide){return warp(src,q,maxSide)}
+{const _w=warp;warp=function(src,q,maxSide){const t0=performance.now();let c=_w.apply(this,arguments);
+ try{const C=VisionEngine.cfg(),need=C.minLongOut||2000,L=Math.max(c.width,c.height),iw=src.naturalWidth||src.width,ih=src.naturalHeight||src.height;
+  if(S.ocrMin!==false&&L<need&&(!maxSide||maxSide>=need)&&Math.max(iw,ih)>=1200){const s=Math.min(2,need/L);c=warpTo(src,q,Math.round(c.width*s),Math.round(c.height*s))}}catch(e){}
+ VisionEngine.stat('warp',performance.now()-t0);return c}}
+
+/* modo debug: ?debug=cam en la dirección (o S.camDebug) muestra FPS, ms por etapa, luz, nitidez y el contorno crudo */
+function camDebugOn(){if(S.camDebug)return true;try{return /[?&#]debug=cam/.test(location.href)}catch(e){return false}}
+function camDebugDraw(r){const st=$('#camera .cam-stage');if(!st)return;let d=$('#camDbg');if(!d){st.insertAdjacentHTML('beforeend','<div id="camDbg"></div><svg id="camDbgSvg"></svg>');d=$('#camDbg')}d.hidden=false;
+ const E=VisionEngine,pm=E.stats.peak?' · mem pico '+(E.stats.peak/1048576).toFixed(0)+' MB':'';
+ d.textContent='motor '+r.engine+(E.state==='loading'?' (cargando OpenCV)':'')+' · '+E._fps.toFixed(1)+' FPS det · '+r.w+'×'+r.h+'\n'+
+  'gris '+r.t.gray+' · gauss '+r.t.blur+' · canny '+r.t.canny+' · contornos '+r.t.contours+' · total '+r.t.total+' ms (prom '+E.avg('det').toFixed(1)+')\n'+
+  'luz '+r.luma+' (p5 '+r.p5+' p95 '+r.p95+') · nitidez '+r.blur+' · desvío '+r.std+' · bordes '+Math.round(r.conf*100)+'% '+(r.src||'')+'\n'+
+  'warp prom '+E.avg('warp').toFixed(0)+' ms'+pm+' · flash '+(Cam.torch?'ON':'off')+' · re-enfoques '+(Cam._refocusN||0);
+ const s=$('#camDbgSvg'),v=$('#camVideo');if(!s||!v||!v.videoWidth)return;const cw=v.clientWidth,ch=v.clientHeight,sc=Math.max(cw/v.videoWidth,ch/v.videoHeight),W=v.videoWidth*sc,H=v.videoHeight*sc,ox=(cw-W)/2,oy=(ch-H)/2;
+ s.setAttribute('viewBox','0 0 '+cw+' '+ch);s.innerHTML=r.quad?'<polygon points="'+r.quad.map(p=>(ox+p.x*W).toFixed(1)+','+(oy+p.y*H).toFixed(1)).join(' ')+'" fill="none" stroke="#ef4444" stroke-width="2" stroke-dasharray="6 4"/>':''}
+
+/* Pilar 3: mejora para lectura/OCR. Autocontenida (se copia tal cual al Worker de filtros).
+ * mode 'color': CLAHE sobre la luminancia (clip 2,0, grilla 8×8) → gamma adaptativa → máscara de enfoque suave; el color se conserva
+ *               escalando R,G,B por el cambio de luminancia (equivale a trabajar el canal L de LAB sin convertir todo a LAB, 3-4× más rápido).
+ * mode 'gris':  lo mismo, salida en escala de grises.
+ * mode 'bn':    umbral adaptativo gaussiano (blockSize 11, C 2), como cv.adaptiveThreshold(ADAPTIVE_THRESH_GAUSSIAN_C). */
+function enhanceImage(d,w,h,mode,cfg){
+ const C=Object.assign({claheClip:2.0,claheTiles:8,unsharpAmount:0.6,bnBlock:11,bnC:2},cfg||{}),n=w*h;
+ const Y=new Float32Array(n);for(let i=0,j=0;i<n;i++,j+=4)Y[i]=d[j]*.299+d[j+1]*.587+d[j+2]*.114;
+ const gblur=(src,radius,sigma)=>{const k=[];let s=0;for(let i=-radius;i<=radius;i++){const v=Math.exp(-i*i/(2*sigma*sigma));k.push(v);s+=v}for(let i=0;i<k.length;i++)k[i]/=s;
+  const t=new Float32Array(n),o=new Float32Array(n);for(let y=0;y<h;y++){const r=y*w;for(let x=0;x<w;x++){let a=0;for(let i=-radius;i<=radius;i++){const xx=x+i<0?0:x+i>=w?w-1:x+i;a+=src[r+xx]*k[i+radius]}t[r+x]=a}}
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){let a=0;for(let i=-radius;i<=radius;i++){const yy=y+i<0?0:y+i>=h?h-1:y+i;a+=t[yy*w+x]*k[i+radius]}o[y*w+x]=a}return o};
+ if(mode==='bn'){const b=C.bnBlock|1,r=b>>1,sig=0.3*((b-1)*0.5-1)+0.8,m=gblur(Y,r,sig);for(let i=0,j=0;i<n;i++,j+=4){const v=Y[i]>m[i]-C.bnC?255:0;d[j]=d[j+1]=d[j+2]=v}return d}
+ /* CLAHE: histograma por baldosa, recorte (clip × píxeles/256) con redistribución, interpolación bilineal entre baldosas */
+ const T=Math.max(1,C.claheTiles|0),tw=Math.ceil(w/T),th=Math.ceil(h/T),maps=new Array(T*T);
+ for(let ty=0;ty<T;ty++)for(let tx=0;tx<T;tx++){const x0=tx*tw,y0=ty*th,x1=Math.min(w,x0+tw),y1=Math.min(h,y0+th),H=new Float64Array(256);let cnt=0;
+  for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){H[Y[y*w+x]|0]++;cnt++}const lim=Math.max(1,C.claheClip*cnt/256);let ex=0;for(let v=0;v<256;v++)if(H[v]>lim){ex+=H[v]-lim;H[v]=lim}
+  const add=ex/256,M=new Uint8Array(256);let acc=0;for(let v=0;v<256;v++){acc+=H[v]+add;M[v]=cnt?Math.min(255,Math.round(acc*255/cnt)):v}maps[ty*T+tx]=M}
+ const L=new Float32Array(n);
+ for(let y=0;y<h;y++){const fy=(y+.5)/th-.5,ty0=Math.max(0,Math.min(T-1,Math.floor(fy))),ty1=Math.min(T-1,ty0+1),ay=Math.max(0,Math.min(1,fy-ty0));
+  for(let x=0;x<w;x++){const fx=(x+.5)/tw-.5,tx0=Math.max(0,Math.min(T-1,Math.floor(fx))),tx1=Math.min(T-1,tx0+1),ax=Math.max(0,Math.min(1,fx-tx0)),v=Y[y*w+x]|0;
+   L[y*w+x]=(maps[ty0*T+tx0][v]*(1-ax)+maps[ty0*T+tx1][v]*ax)*(1-ay)+(maps[ty1*T+tx0][v]*(1-ax)+maps[ty1*T+tx1][v]*ax)*ay}}
+ /* gamma adaptativa: con la media del histograma; un documento claro oscurece apenas los medios tonos (tinta más negra), una foto oscura se aclara */
+ let mean=0;for(let i=0;i<n;i++)mean+=L[i];mean=mean/n/255;const g=Math.max(.75,Math.min(1.25,Math.log(.55)/Math.log(Math.max(.05,Math.min(.95,mean)))));
+ const lut=new Float32Array(256);for(let v=0;v<256;v++)lut[v]=255*Math.pow(v/255,g);
+ /* niveles: el papel (percentil 99) a blanco */
+ const H2=new Uint32Array(256);for(let i=0;i<n;i++)H2[Math.round(lut[Math.min(255,L[i]|0)])]++;let a=0,hi=255;for(let v=0;v<256;v++){a+=H2[v];if(a>=n*.99){hi=Math.max(64,v);break}}
+ for(let i=0;i<n;i++)L[i]=Math.min(255,lut[Math.min(255,L[i]|0)]*255/hi);
+ /* máscara de enfoque suave (radio 1) para que el texto quede nítido */
+ const bl=gblur(L,1,1.0);for(let i=0;i<n;i++)L[i]=Math.max(0,Math.min(255,L[i]+C.unsharpAmount*(L[i]-bl[i])));
+ if(mode==='gris'){for(let i=0,j=0;i<n;i++,j+=4){const v=L[i];d[j]=d[j+1]=d[j+2]=v}return d}
+ for(let i=0,j=0;i<n;i++,j+=4){const k=L[i]/Math.max(1,Y[i]);d[j]=Math.min(255,d[j]*k);d[j+1]=Math.min(255,d[j+1]*k);d[j+2]=Math.min(255,d[j+2]*k)}return d}
+function vxEnhance(c,d,f){const m={ocr:'color',ocrgris:'gris',bnad:'bn'}[f];if(!m)return false;enhanceImage(d,c.width,c.height,m);return true}
+/* Pilar 3: filtros de salida nuevos (además de los existentes) */
+FILTERS.push(['ocr','Nítido OCR'],['ocrgris','Gris OCR'],['bnad','B/N adaptativo']);
+
+/* Ajuste en la cámara: motor de detección (rápido JS / OpenCV preciso) */
+{const _r=camPanelRender;camPanelRender=function(){const r=_r.apply(this,arguments);const P=$('#camPanel');if(!P||P.hidden)return r;const m=P.querySelector('.cq .cq-more');
+ if(m&&!P.querySelector('[data-ve]')){const k=S.camEngine==='opencv'?'opencv':'js',ld=VisionEngine.state==='loading'&&k==='opencv';
+  m.insertAdjacentHTML('beforebegin','<button class="cq-row on" data-ve="1"><span><b>Detección de bordes</b><small>'+(k==='opencv'?'OpenCV · más precisa'+(ld?' (descargando…)':''):'Rápida · sin descargas')+'</small></span><i class="cq-or">'+(k==='opencv'?'CV':'JS')+'</i></button>')}return r}}
+$('#camPanel').addEventListener('click',async e=>{const t=e.target.closest('[data-ve]');if(!t)return;e.stopImmediatePropagation();
+ if(S.camEngine!=='opencv'){if(!confirm('Detección con OpenCV: detecta los bordes con más precisión en fondos difíciles. Se descarga una sola vez (≈3 MB comprimido) y queda guardado para usar sin internet. ¿Activarlo?'))return;S.camEngine='opencv'}else S.camEngine='js';
+ saveS();VisionEngine.setEngine(S.camEngine);const P=$('#camPanel');P._ck='';camPanelRender()},true);
+document.head.insertAdjacentHTML('beforeend','<style id="v73Css">#camDbg{position:absolute;left:6px;top:6px;right:6px;z-index:6;white-space:pre-wrap;font:11px/1.35 ui-monospace,Menlo,monospace;color:#fff;background:rgba(0,0,0,.62);border-radius:8px;padding:6px 8px;pointer-events:none}#camDbgSvg{position:absolute;inset:0;width:100%;height:100%;z-index:5;pointer-events:none}</style>');
 </script>
 </body>
 </html>

@@ -126,3 +126,6 @@ Al abrir Nexa te saluda por tu nombre y te ofrece tres grupos de sugerencias: **
 
 ### Nexa: cómo querés que te llame (v71)
 Decile a Nexa «llamame Dani» o «quiero que me llames Dani y no Flores» y lo recuerda en este equipo, con o sin internet. Si elegiste «Nexa con internet» y todavía no la activaste, Nexa te avisa y te ofrece el botón para activarla gratis con una clave de Google Gemini.
+
+### Escáner más rápido y preciso (v73)
+La cámara detecta la hoja en tiempo real sin trabarse y el marco sigue la hoja de forma suave. En ⚙️ Ajustes de la cámara, **Detección de bordes** permite elegir entre la detección rápida (sin descargas) y **OpenCV** (más precisa en fondos difíciles; se descarga una sola vez). El flash automático se prende con poca luz, la cámara re-enfoca cuando dejás quieta la hoja y no dispara sola si la imagen salió movida. Filtros nuevos para leer mejor el texto: **Nítido OCR**, **Gris OCR** y **B/N adaptativo**.

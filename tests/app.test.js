@@ -162,7 +162,8 @@ await test('Cámara: bordes precisos, modo Libro y auto-captura sin repetir',asy
     const g=x.createLinearGradient(1100,0,1300,0);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(.5,'rgba(0,0,0,.45)');g.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=g;x.fillRect(1100,150,200,1400);
     const ps=await splitBook(await makePage(c.toDataURL('image/jpeg',.9)));return [ps.length,ps[0].quad[1].x*2400]});
   assert.equal(cut[0],2);assert.ok(Math.abs(cut[1]-1200)<40,'lomo mal ubicado: '+cut[1]);
-  await pg.evaluate(()=>{const _d=detectQuad;window.detectQuad=src=>src instanceof HTMLVideoElement?[{x:.2,y:.15},{x:.8,y:.15},{x:.8,y:.85},{x:.2,y:.85}]:_d(src);S.autoCapture=true;Cam.open('batch')});
+  /* esta prueba simula el detector en el hilo principal: se apaga el Worker de visión (v73) */
+  await pg.evaluate(()=>{const _d=detectQuad;window.detectQuad=src=>src instanceof HTMLVideoElement?[{x:.2,y:.15},{x:.8,y:.15},{x:.8,y:.85},{x:.2,y:.85}]:_d(src);S.camVision=false;S.autoCapture=true;Cam.open('batch')});
   await W(5000);assert.equal(await pg.evaluate(()=>Cam.batch.length),1,'la auto-captura repitió la misma hoja o no capturó');
   assert.ok(await pg.$('#camKinds [data-kind="book"]'),'faltan los tipos de captura');
 });
@@ -1053,7 +1054,7 @@ await test('Cámara estilo Adobe: barra de modos con guías, marco de cuatro pun
   const f=await pg.evaluate(()=>{clearInterval(Cam.timer);const svg=$('#camSvg');svg.innerHTML='<polygon points="80,150 300,170 320,520 60,500" stroke="#22d3ee"/>';camFrameDraw();return [svg.querySelectorAll('circle.cf-d').length,svg.querySelectorAll('polygon.cf-l').length]});
   assert.deepEqual(f,[4,1]);
   /* panel compacto: interruptores y «Más ajustes» */
-  await pg.click('#camCfg');await pg.waitForSelector('#camPanel .cq');assert.equal(await pg.$$eval('#camPanel .cq-row',x=>x.length),8);
+  await pg.click('#camCfg');await pg.waitForSelector('#camPanel .cq');assert.equal(await pg.$$eval('#camPanel .cq-row',x=>x.length),9);
   await pg.click('#camPanel [data-cq="snd"]');assert.equal(await pg.evaluate(()=>S.camSound),true);
   await pg.click('#camPanel [data-cp="grid"]');assert.equal(await pg.evaluate(()=>!!S.grid),true);assert.ok(await pg.$('#camPanel .cq'),'se fue del panel compacto');
   await pg.click('#camPanel [data-cq="more"]');await pg.waitForSelector('#camPanel [data-cp4]');await pg.click('#camPanel [data-cq="less"]');await pg.waitForSelector('#camPanel .cq');
@@ -1196,6 +1197,71 @@ await test('Cámara: todas las hojas salen horizontales (por defecto), o vertica
   await pg.click('#camPanel [data-co]');assert.equal(await pg.evaluate(()=>S.camOrient),'port');assert.match(await pg.textContent('#camPanel [data-co]'),/Vertical/);
   await pg.click('#camPanel [data-co]');await pg.click('#camPanel [data-co]');assert.equal(await pg.evaluate(()=>S.camOrient),'land');
   await pg.evaluate(()=>{camPanelClose();Nav.back()});await W(300);
+});
+
+await test('Escáner v73: lógica pura (esquinas, tamaño, nitidez, luz) y casos límite de detección',async pg=>{
+  const r=await pg.evaluate(async()=>{await lazyMod('vision-core');const V=DSVision;
+    /* esquinas en cualquier orden → TL,TR,BR,BL; también con la hoja girada 50° */
+    const o1=V.orderCorners([{x:90,y:95},{x:10,y:5},{x:12,y:92},{x:95,y:8}]),o2=V.orderCorners([{x:50,y:0},{x:100,y:50},{x:0,y:50},{x:50,y:100}]);
+    const ds=V.destSize([{x:0,y:0},{x:100,y:0},{x:100,y:141},{x:0,y:141}],2000),ds2=V.destSize([{x:0,y:0},{x:3000,y:0},{x:3000,y:4000},{x:0,y:4000}],2000,3500);
+    /* nitidez: una imagen con texto nítido tiene más varianza del laplaciano que la misma desenfocada */
+    const W=200,H=120,g=new Uint8Array(W*H);for(let y=0;y<H;y++)for(let x=0;x<W;x++)g[y*W+x]=(y%10<3&&x%7<4)?40:220;const gb=V.gauss5(V.gauss5(g,W,H),W,H);
+    const sh=V.blurScore(g,W,H,0,0,W,H).lapVar,bl=V.blurScore(gb,W,H,0,0,W,H).lapVar;
+    /* casos límite sintéticos (720×405) */
+    const img=(bg,q,fg,o={})=>{const w=720,h=405,d=new Uint8ClampedArray(w*h*4);let sd=7;const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647};
+      const ins=(x,y)=>{let c=false;for(let i=0,j=3;i<4;j=i++){const a=q[i],b=q[j];if(((a.y>y)!=(b.y>y))&&(x<(b.x-a.x)*(y-a.y)/(b.y-a.y)+a.x))c=!c}return c};
+      for(let y=0;y<h;y++)for(let x=0;x<w;x++){const inn=ins(x,y);let v=inn?fg:(o.wood?110+40*Math.sin(x/7+Math.sin(y/23)*3)+25*Math.sin(y/3):bg);if(inn&&y%14<3&&x%9<6)v-=120;if(o.shadow&&inn&&x<w*.45)v-=o.shadow;
+        if(o.finger){const dx=x-o.finger.x,dy=y-o.finger.y;if(dx*dx/900+dy*dy/4000<1)v=150}v+=(rnd()-.5)*(o.noise||10);const i=(y*w+x)*4;d[i]=d[i+1]=d[i+2]=Math.max(0,Math.min(255,v));d[i+3]=255}return d};
+    const Q=[{x:180,y:40},{x:560,y:60},{x:540,y:380},{x:160,y:360}],R=[{x:360,y:20},{x:560,y:200},{x:360,y:390},{x:160,y:200}];
+    const err=(r,q)=>{if(!r.quad)return 99;const o=V.orderCorners(q);return Math.max(...r.quad.map((p,i)=>Math.hypot(p.x*720-o[i].x,p.y*405-o[i].y)))};
+    const C={oscuro:[img(15,Q,200),Q],sombra:[img(60,Q,225,{shadow:70}),Q],dedo:[img(60,Q,225,{finger:{x:360,y:55}}),Q],girada50:[img(60,R,225),R],pocaLuz:[img(20,Q,70,{noise:18}),Q],fondoMadera:[img(0,Q,225,{wood:1}),Q]};
+    const res={};const B={};for(const [k,[d,q]] of Object.entries(C)){const r=V.detectDocument(d,720,405,null,B);res[k]=+err(r,q).toFixed(1)}
+    const vacio=V.detectDocument(img(90,[{x:0,y:0},{x:1,y:0},{x:1,y:1},{x:0,y:1}],90),720,405,null,B);
+    const tor=[V.torchDecision(60,false),V.torchDecision(80,true),V.torchDecision(80,false),V.torchDecision(100,true)];
+    const cap=[V.captureAllowed({quad:Q,blur:20,std:40}),V.captureAllowed({quad:Q,blur:200,std:40}),V.captureAllowed({quad:Q,blur:5,std:3}),V.captureAllowed({quad:null,blur:200,std:40})];
+    return {o1,o2,ds,ds2,sh,bl,res,vacio:vacio.quad,tor,cap,cfg:V.VISION_CFG}});
+  assert.deepEqual(r.o1,[{x:10,y:5},{x:95,y:8},{x:90,y:95},{x:12,y:92}]);
+  assert.deepEqual(r.o2.map(p=>p.x+','+p.y),['50,0','100,50','50,100','0,50'],'hoja a 45°: horario empezando por arriba');
+  assert.deepEqual(r.ds,{w:1418,h:2000});assert.deepEqual(r.ds2,{w:2625,h:3500});
+  assert.ok(r.sh>r.bl*3,'la nitidez no distingue: '+r.sh+' vs '+r.bl);
+  for(const [k,e] of Object.entries(r.res))assert.ok(e<=4,'caso '+k+': esquina a '+e+' px');
+  assert.equal(r.vacio,null,'sin documento no debe inventar un marco');
+  assert.deepEqual(r.tor,[true,true,false,false],'flash con histéresis');assert.deepEqual(r.cap,[false,true,true,false],'bloqueo por desenfoque');
+  assert.equal(r.cfg.cannyLo,75);assert.equal(r.cfg.cannyHi,200);assert.equal(r.cfg.minAreaFrac,.2);assert.equal(r.cfg.analysisMaxSide,720);
+});
+
+await test('Escáner v73: la cámara detecta en un Worker (el hilo de la interfaz queda libre), debug con FPS y tiempos, OpenCV opcional',async pg=>{
+  pg.on('dialog',d=>d.accept());
+  await pg.evaluate(()=>{S.autoCapture=false;S.camDebug=true;Cam.open('batch')});await pg.waitForFunction(()=>Cam.stream&&$('#camVideo').videoWidth>0,null,{timeout:15000});
+  await pg.waitForFunction(()=>VisionEngine.active&&VisionEngine.last&&VisionEngine.last.engine==='js',null,{timeout:15000});
+  const m=await pg.evaluate(async()=>{await sleep(1200);const t=[];for(let i=0;i<15;i++){const a=performance.now();Cam.detect();t.push(performance.now()-a)}t.sort((a,b)=>a-b);
+    return {med:t[7],w:VisionEngine.last.w,h:VisionEngine.last.h,fps:VisionEngine._fps,dbg:$('#camDbg')&&$('#camDbg').textContent,stages:Object.keys(VisionEngine.last.t)}});
+  assert.ok(m.med<10,'Cam.detect sigue pesado en el hilo principal: '+m.med+' ms');
+  assert.equal(Math.max(m.w,m.h),720,'el análisis debe ser a 720p');assert.ok(m.fps>0);
+  assert.match(m.dbg,/motor js · [\d.]+ FPS det/);assert.match(m.dbg,/canny [\d.]+ · contornos [\d.]+ · total/);assert.match(m.dbg,/warp prom/);
+  assert.deepEqual(m.stages,['gray','blur','canny','contours','total']);
+  /* OpenCV desde los ajustes de la cámara: se descarga una vez y reemplaza al detector rápido */
+  await pg.click('#camCfg');await pg.waitForSelector('#camPanel [data-ve]');assert.match(await pg.textContent('#camPanel [data-ve]'),/Detección de bordes\s*Rápida/);
+  await pg.click('#camPanel [data-ve]');assert.equal(await pg.evaluate(()=>S.camEngine),'opencv');
+  await pg.evaluate(()=>camPanelClose());
+  await pg.waitForFunction(()=>VisionEngine.last&&VisionEngine.last.engine==='opencv',null,{timeout:90000});
+  assert.match(await pg.evaluate(()=>$('#camDbg').textContent),/motor opencv/);
+  await pg.click('#camCfg');await pg.waitForSelector('#camPanel [data-ve]');assert.match(await pg.textContent('#camPanel [data-ve]'),/OpenCV/);await pg.click('#camPanel [data-ve]');
+  assert.equal(await pg.evaluate(()=>S.camEngine),'js');await pg.evaluate(()=>camPanelClose());
+  await pg.waitForFunction(()=>VisionEngine.last&&VisionEngine.last.engine==='js',null,{timeout:15000});
+  await pg.evaluate(()=>{S.camDebug=false;Nav.back()});await pg.waitForFunction(()=>!VisionEngine.active,null,{timeout:5000});
+});
+
+await test('Escáner v73: recorte con calidad OCR (≥ 2000 px) y filtros CLAHE, gris y B/N adaptativo',async pg=>{
+  const r=await pg.evaluate(async()=>{const c=canvas(1600,1200),x=c.getContext('2d');x.fillStyle='#444';x.fillRect(0,0,1600,1200);x.fillStyle='#ddd';x.fillRect(300,50,1000,1100);x.fillStyle='#333';x.font='40px Arial';for(let y=300;y<1050;y+=60)x.fillText('Oficio judicial 2026',450,y);
+    const Qd=[{x:300,y:50},{x:1300,y:50},{x:1300,y:1150},{x:300,y:1150}],out=correctPerspective(c,Qd),thumb=correctPerspective(c,Qd,600);
+    const f={};for(const k of ['ocr','ocrgris','bnad','original']){const cc=canvas(400,300),xx=cc.getContext('2d');xx.drawImage(c,400,200,800,600,0,0,400,300);if(k!=='original')await applyFilterAsync(cc,k);
+      const d=xx.getImageData(0,0,400,300).data;const vals=new Set();let gray=true,lo=255,hi=0;for(let i=0;i<d.length;i+=4){vals.add(d[i]);if(d[i]!==d[i+1]||d[i]!==d[i+2])gray=false;const l=d[i];if(l<lo)lo=l;if(l>hi)hi=l}f[k]={n:vals.size,gray,lo,hi}}
+    return {out:[out.width,out.height],thumb:[thumb.width,thumb.height],f,flt:FILTERS.filter(x=>['ocr','ocrgris','bnad'].includes(x[0])).map(x=>x[1])}});
+  assert.ok(Math.max(...r.out)>=2000,'el recorte debe tener al menos 2000 px: '+r.out);assert.ok(Math.max(...r.thumb)<=700,'las miniaturas no se agrandan: '+r.thumb);
+  assert.ok(r.f.bnad.n<=2&&r.f.bnad.gray,'B/N adaptativo debe quedar en blanco y negro puro');assert.ok(r.f.ocrgris.gray,'Gris OCR debe ser gris');
+  assert.ok(r.f.ocr.hi-r.f.ocr.lo>r.f.original.hi-r.f.original.lo,'Nítido OCR debe subir el contraste');
+  assert.deepEqual(r.flt,['Nítido OCR','Gris OCR','B/N adaptativo']);
 });
 
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
