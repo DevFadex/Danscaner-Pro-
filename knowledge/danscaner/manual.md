@@ -129,3 +129,6 @@ Decile a Nexa «llamame Dani» o «quiero que me llames Dani y no Flores» y lo 
 
 ### Escáner más rápido y preciso (v73)
 La cámara detecta la hoja en tiempo real sin trabarse y el marco sigue la hoja de forma suave. En ⚙️ Ajustes de la cámara, **Detección de bordes** permite elegir entre la detección rápida (sin descargas) y **OpenCV** (más precisa en fondos difíciles; se descarga una sola vez). El flash automático se prende con poca luz, la cámara re-enfoca cuando dejás quieta la hoja y no dispara sola si la imagen salió movida. Filtros nuevos para leer mejor el texto: **Nítido OCR**, **Gris OCR** y **B/N adaptativo**.
+
+### Diseño nuevo «Expediente» (v74)
+La app estrena un diseño más claro y sobrio: color tinta de sello, letra más legible y el inicio con forma de hoja. Para volver al diseño anterior: Ajustes → Diseño de botones y funciones → plantilla **Celeste Pro**. La letra se puede cambiar en «Tipografía de la app» (Legible, Moderna, Formal…).
