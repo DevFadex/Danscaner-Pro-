@@ -668,3 +668,14 @@ Todo va dentro de `@media (min-width:1024px)`; el celular no cambia.
 - **Tablas sin líneas**: las columnas son las «calles» verticales vacías en todos los renglones (se tolera un título que cruce). Las frases se cortan con el espacio real del documento, así las columnas apretadas no se juntan.
 - **Celdas de dos o más renglones**: se juntan con su fila por las rayas horizontales si las hay o, si no, por la columna ancla (la que nunca ocupa dos renglones seguidos, como N° o DNI).
 - **Celdas vecinas que el PDF juntó en un solo texto**: se separan mirando los huecos reales de tinta en la página.
+
+## v77 · Cámara: hojas como el teléfono, recorte parejo, primera foto grande y «Documento listo» rápido
+- **Orientación como el teléfono** (nueva opción por defecto). La app está fija en vertical, así que se lee el sensor de gravedad (`devicemotion`). Con el teléfono inclinado se sabe dónde está «arriba» y la foto se gira de entrada. Acostado sobre la hoja se usa la última posición clara. Con la posición clara ya no se adivina por el texto, que era lo que a veces dejaba hojas dadas vuelta. En iPhone se pide permiso del sensor al abrir la cámara. «Horizontal», «Vertical» y «Automática» siguen en los ajustes rápidos. Quien tenía «Horizontal» pasa una vez a «Como está el teléfono».
+- **Recorte parejo** (`camEdgeTrim`):
+  - con la hoja ya enderezada, se miden en 11 puntos de cada borde las franjas de mesa que quedaron;
+  - tienen que formar una recta o una cuña, y como mucho ocupar el 5 %;
+  - las esquinas se corren con la misma perspectiva.
+  
+  En la prueba, un recorte corrido 62 px queda a ≤ 12 px; un recorte bueno no se toca. El marco del video solo reemplaza la detección en la foto grande si esta no encontró la hoja (antes la pisaba y corría el recorte).
+- **Primera foto grande**: en lote, la primera foto se muestra recortada y grande, con «Repetir», «Seguir» y «Listo». Mientras se revisa no se dispara otra foto. En la cámara, «Ver la foto al sacarla» ofrece: la primera / todas / no.
+- **«Documento listo» rápido**: el tamaño de cada calidad se estima con 1 o 2 hojas de muestra («≈ 1,2 MB»). Antes armaba el PDF entero cuatro veces. El tamaño exacto aparece al guardar.

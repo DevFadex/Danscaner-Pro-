@@ -1640,9 +1640,9 @@ function finishSheet(){if(!DOC||!DOC.pages.length)return;let lvl=S.quality||'med
 const b=openSheet('✅ Documento listo','<div style="display:flex;gap:12px;align-items:center;margin-bottom:10px"><img src="'+(DOC.pages[0].thumb||'')+'" style="width:64px;height:84px;object-fit:cover;border-radius:8px;border:1px solid var(--line)"><div><b>'+esc(DOC.name)+'</b><div class="muted">'+DOC.pages.length+' página(s)</div></div></div><div class="muted" style="margin:6px 0">Calidad y tamaño del PDF</div><div class="complist">'+COMP.map(([k,n,d])=>'<button class="compopt" data-lv="'+k+'"><b>'+n+'</b><small>'+d+'</small><em id="cz_'+k+'">calculando…</em></button>').join('')+'</div><div class="row" style="margin-top:8px"><button class="btn pri block" id="fnSave"><i data-ico="save">💾</i> Guardar PDF</button><button class="btn block" id="fnShare"><i data-ico="share">📤</i> Compartir</button></div><div class="row"><button class="btn block" id="fnMore"><i data-ico="layers">🗂️</i> Más formatos</button></div><div class="cph">Dividir en partes</div><div class="row"><label class="opt" style="flex:1"><span>Cantidad de partes</span><input type="number" id="fnN" min="2" max="20" value="2"></label><button class="btn block" id="fnSplit" style="align-self:flex-end"><i data-ico="crop">✂️</i> Dividir</button></div><div class="muted">'+DOC.pages.length+' páginas · se reparten lo más parejo posible.</div><div class="result" id="fnRes"></div><button class="btn block" data-back style="margin-top:8px"><i data-ico="pencil">✏️</i> Seguir editando</button>');
 const mark=()=>$$('.compopt',b).forEach(x=>x.classList.toggle('on',x.dataset.lv===lvl));mark();
 const build=async(k,silent)=>{if(cache[k])return cache[k];const bytes=await buildPDF(DOC.pages,{size:S.size,orient:S.orient,margin:S.margin,quality:k,title:DOC.name},silent?null:(i,n)=>busy('Generando PDF '+i+'/'+n));return cache[k]=pdfBlob(bytes)};
-(async()=>{for(const [k] of ((typeof IS_IOS!=='undefined'&&IS_IOS)?COMP.filter(x=>x[0]===lvl):COMP)){try{const bl=await build(k,true);const el=$('#cz_'+k,b);if(el)el.textContent=fmtSize(bl.size)}catch(e){const el=$('#cz_'+k,b);if(el)el.textContent='—'}}})();
-b.onclick=async e=>{const o=e.target.closest('[data-lv]');if(o){lvl=o.dataset.lv;mark();const el=$('#cz_'+lvl,b);if(el&&!cache[lvl]){el.textContent='calculando…';build(lvl,true).then(bl=>{el.textContent=fmtSize(bl.size)}).catch(()=>{el.textContent='—'})}return}
-if(e.target.closest('#fnSave'))return withBusy(async()=>{busy('Preparando…');const bl=await build(lvl);busy(false);download(bl,safeName(DOC.name)+'.pdf');toast('Guardado · '+fmtSize(bl.size))});
+(async()=>{try{const est=await pdfSizeEstimate(DOC.pages);for(const [k] of COMP){const el=$('#cz_'+k,b);if(el&&!cache[k])el.textContent='≈ '+fmtSize(est[k])}}catch(e){for(const [k] of COMP){const el=$('#cz_'+k,b);if(el&&!cache[k])el.textContent='—'}}})();
+b.onclick=async e=>{const o=e.target.closest('[data-lv]');if(o){lvl=o.dataset.lv;mark();return}
+if(e.target.closest('#fnSave'))return withBusy(async()=>{busy('Preparando…');const bl=await build(lvl);busy(false);download(bl,safeName(DOC.name)+'.pdf');const ez=$('#cz_'+lvl,b);if(ez)ez.textContent=fmtSize(bl.size);toast('Guardado · '+fmtSize(bl.size))});
 if(e.target.closest('#fnShare'))return withBusy(async()=>{busy('Preparando…');const bl=await build(lvl);busy(false);share(bl,safeName(DOC.name)+'.pdf')});
 if(e.target.closest('#fnMore')){await Nav.back();exportSheet();return}
 if(e.target.closest('#fnSplit'))return withBusy(async()=>{const n=Math.max(2,Math.min(20,+$('#fnN',b).value||2));if(DOC.pages.length<n)return toast('El documento tiene menos páginas que partes');
@@ -3452,7 +3452,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 4.5',APP_VER='76';
+const NEXA_VER='Nexa 4.5',APP_VER='77';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3570,7 +3570,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='76 · 08/10/2026';
+const BUILD='77 · 08/10/2026';
 /* Versión que ven los usuarios: se cambia a mano solo cuando se decide publicar una versión nueva para todos.
    El administrador ve la versión interna (BUILD) con cada cambio. */
 const PUBLIC_VER='1.2';
@@ -5087,7 +5087,8 @@ function camMapHint(h,W,H){if(!h||!h.q||!h.vw||!h.vh||!W||!H)return null;const a
 {const _mp=makePage;makePage=function(src,o){if(!o||!o.hint)return _mp.apply(this,arguments);const h=o.hint,o2=Object.assign({},o);delete o2.hint;
  return _mp(src,o2).then(async p=>{try{if(!p||(o2.auto??S.autoCrop)===false)return p;const img=await loadImg(p.orig),hq=camMapHint(h,img.naturalWidth,img.naturalHeight);if(!hq)return p;
   const dist=p.quad?p.quad.reduce((s2,c,i)=>s2+Math.hypot(c.x-hq[i].x,c.y-hq[i].y),0)/4:1;
-  if(dist>.035){p.quad=refineQuad(img,hq);p.hinted=true;await makeThumb(p)}}catch(e){console.warn('marco en vivo',e)}return p})}}
+  const ar=q=>Math.abs(q.reduce((s3,c,i)=>{const n=q[(i+1)%4];return s3+c.x*n.y-n.x*c.y},0))/2;
+  if(!p.quad||(dist>.035&&ar(p.quad)<ar(hq)*.6)){p.quad=refineQuad(img,hq);p.hinted=true;await makeThumb(p)}}catch(e){console.warn('marco en vivo',e)}return p})}}
 Cam._hintNow=function(){const v=$('#camVideo');return this._lastQuad&&v&&v.videoWidth?{q:this._lastQuad.map(p=>({x:p.x,y:p.y})),vw:v.videoWidth,vh:v.videoHeight}:null};
 /* también en «Individual» y al reemplazar una página */
 {const _mp=makePage;makePage=function(src,o){if(typeof Cam!=='undefined'&&Cam._shotHint&&Nav.isOpen('camera')&&!(o&&o.hint)){const h=Cam._shotHint;Cam._shotHint=null;return _mp.call(this,src,Object.assign({},o||{},{hint:h}))}return _mp.apply(this,arguments)}}
@@ -5450,8 +5451,8 @@ async function pageAutoClean(p,{dewarp=true,finger=true}={}){const k=pageKey(p),
  base.width=base.height=1;if(r.dw||r.fg)await makeThumb(p);return r}
 /* en la cámara: después de enderezar y revisar repetidas */
 /* v72: orientación de las hojas de la cámara: horizontal (por defecto), vertical o automática. Se gira acá, antes de limpiar, para que la limpieza use la hoja ya girada */
-const camOrient=()=>S.camOrient||'land';
-{const _pp=camPostProcess;camPostProcess=async function(pages,kind){const r=await _pp.apply(this,arguments);const o=camOrient();if(o==='auto')return r;
+const camOrient=()=>S.camOrient||'phone';
+{const _pp=camPostProcess;camPostProcess=async function(pages,kind){const r=await _pp.apply(this,arguments);const o=camOrient();if(o==='auto'||o==='phone')return r;
  for(const p of pages){try{const c=await renderPage(p,{maxSide:400,noOverlays:true});const port=c.height>c.width*1.02,land=c.width>c.height*1.02;c.width=c.height=1;
   if((o==='land'&&port)||(o==='port'&&land)){p.rot=((p.rot||0)+(o==='land'?270:90))%360;await makeThumb(p);const f=Cam._flags.get(p);if(f)f.orient=o}}catch(e){console.warn('orientación',e)}}return r}}
 {const _pp=camPostProcess;camPostProcess=async function(pages,kind){const r=await _pp.apply(this,arguments);for(const p of pages){try{const o=await pageAutoClean(p,{dewarp:kind!=='board'});const f=Cam._flags.get(p)||{};if(o.dw)f.dw=true;if(o.fg)f.fg=true;Cam._flags.set(p,f);
@@ -6001,10 +6002,10 @@ function nxOnlineWhy(){if(Nexa.st.prov!=='online')return '';if(isCloud(Nexa.prov
 {const _nc=NxHist.newChat;NxHist.newChat=function(){Nexa._nxWhyShown=0;return _nc.apply(this,arguments)}}
 
 /* v72: fila «Orientación de las hojas» en los ajustes rápidos de la cámara (Horizontal → Vertical → Automática) */
-const CAM_ORIENT_L={land:'Horizontal',port:'Vertical',auto:'Automática (como está la hoja)'};
+const CAM_ORIENT_L={phone:'Como está el teléfono',land:'Horizontal',port:'Vertical',auto:'Automática (como está la hoja)'};
 {const _r=camPanelRender;camPanelRender=function(){const r=_r.apply(this,arguments);const P=$('#camPanel');if(!P||P.hidden)return r;const m=P.querySelector('.cq .cq-more');
- if(m&&!P.querySelector('[data-co]'))m.insertAdjacentHTML('beforebegin','<button class="cq-row on" data-co="1"><span><b>Orientación de las hojas</b><small>'+CAM_ORIENT_L[camOrient()]+'</small></span><i class="cq-or">'+(camOrient()==='land'?'▭':camOrient()==='port'?'▯':'A')+'</i></button>');return r}}
-$('#camPanel').addEventListener('click',e=>{const t=e.target.closest('[data-co]');if(!t)return;e.stopImmediatePropagation();const n={land:'port',port:'auto',auto:'land'}[camOrient()];S.camOrient=n;saveS();
+ if(m&&!P.querySelector('[data-co]'))m.insertAdjacentHTML('beforebegin','<button class="cq-row on" data-co="1"><span><b>Orientación de las hojas</b><small>'+CAM_ORIENT_L[camOrient()]+'</small></span><i class="cq-or">'+(camOrient()==='land'?'▭':camOrient()==='port'?'▯':camOrient()==='phone'?'⟳':'A')+'</i></button>');return r}}
+$('#camPanel').addEventListener('click',e=>{const t=e.target.closest('[data-co]');if(!t)return;e.stopImmediatePropagation();const n={phone:'land',land:'port',port:'auto',auto:'phone'}[camOrient()];S.camOrient=n;saveS();
  toast('Hojas: '+CAM_ORIENT_L[n].replace(/ \(.*/,'').toLowerCase());const P=$('#camPanel');P._ck='';camPanelRender()},true);
 document.head.insertAdjacentHTML('beforeend','<style id="v72Css">.cq-or{font-style:normal;font-size:20px;line-height:1;min-width:28px;text-align:center;color:var(--pri,#2563eb)}</style>');
 
@@ -6226,6 +6227,101 @@ function uiToExcel(el,accept){el.innerHTML='<div class="muted" style="padding:20
  ocrCanvases=async function(){if(typeof OcrConf==='undefined')return _ocBase.apply(this,arguments);OcrConf.cur=[];try{const r=await _ocBase.apply(this,arguments);OcrConf.last={pages:OcrConf.cur,t:Date.now()};return r}finally{OcrConf.cur=null}}}
 document.head.insertAdjacentHTML('beforeend','<style id="v75Css">.tx-intro{margin:0 0 10px}.tx-scroll{overflow:auto;max-height:55vh;border:1px solid var(--line);border-radius:10px;background:#fff;margin:6px 0 12px}'+
  '.tx-prev{border-collapse:collapse;font:12px/1.35 Arial,sans-serif;color:#111;min-width:100%}.tx-prev td{padding:4px 7px;border:1px dotted #d6dbe3;vertical-align:top;white-space:pre-wrap}.tx-prev td.g{border:1px solid #6b7280}.tx-prev td.b{font-weight:700}.tx-prev td.t{border:0;padding:6px 7px}</style>');
+
+/* ===== v77 · cámara: hojas como está el teléfono, recorte parejo, primera foto grande y «Documento listo» rápido ===== */
+/* ---- 1) cómo está el teléfono al sacar la foto (la app queda fija en vertical: se lee el sensor de gravedad) ----
+ * Con el teléfono inclinado se sabe hacia dónde está «arriba». Acostado sobre la hoja no hay forma de saberlo: se recuerda la última
+ * posición clara (como hace la cámara del teléfono) y, si nunca hubo, decide el enderezado por el texto (como antes). */
+if(!S.v77){if(S.camOrient==='land')S.camOrient='phone';S.v77=true;try{saveS()}catch(e){}}
+const CamTilt={rot:null,on:false,h:null,
+ fromGravity(x,y,ios){if(x==null||y==null)return null;if(ios){x=-x;y=-y}const ax=Math.abs(x),ay=Math.abs(y);if(Math.hypot(x,y)<2.5||Math.max(ax,ay)<Math.min(ax,ay)*1.4)return null;return ay>ax?(y>0?0:180):(x>0?270:90)},
+ start(){if(this.on)return;this.on=true;this.rot=null;
+  this.h=e=>{const g=e.accelerationIncludingGravity;if(!g)return;const r=this.fromGravity(g.x,g.y,typeof IS_IOS!=='undefined'&&IS_IOS);if(r!==null)this.rot=r};
+  try{if(typeof DeviceMotionEvent!=='undefined'&&typeof DeviceMotionEvent.requestPermission==='function')DeviceMotionEvent.requestPermission().then(s=>{if(s==='granted'&&this.on)addEventListener('devicemotion',this.h)}).catch(()=>{});else addEventListener('devicemotion',this.h)}catch(e){}},
+ stop(){if(this.h)removeEventListener('devicemotion',this.h);this.on=false;this.h=null}};
+{const _o=Cam.open;Cam.open=function(){try{CamTilt.start()}catch(e){}return _o.apply(this,arguments)}}
+{const _st=Cam.stop;Cam.stop=function(){CamTilt.stop();return _st.apply(this,arguments)}}
+Cam._tiltOf=new Map();
+{const _g=camGrab;camGrab=async function(){const rot=CamTilt.rot;const src=await _g.apply(this,arguments);if(typeof src==='string')Cam._tiltOf.set(src,rot);return src}}
+{const _mp=makePage;makePage=function(src,o){const has=typeof src==='string'&&Cam._tiltOf.has(src),rot=has?Cam._tiltOf.get(src):null;if(has)Cam._tiltOf.delete(src);
+ return _mp.apply(this,arguments).then(async p=>{if(p&&has&&camOrient()==='phone'){p.camRot=rot;if(rot){p.rot=((p.rot||0)+rot)%360;await makeThumb(p)}}return p})}}
+/* con la posición del teléfono clara no se adivina por el texto (era lo que a veces dejaba la hoja dada vuelta) */
+let _v77noAutoRot=false;
+{const _po=pageOrient;pageOrient=function(c){if(_v77noAutoRot)return {rot:0};return _po.apply(this,arguments)}}
+
+/* ---- 2) recorte parejo: después de enderezar se miden las franjas de mesa que quedaron en cada borde y se corren las esquinas ----
+ * En cada lado se toman 11 muestras; la franja tiene que ser una recta (si no, es parte de la hoja: un membrete, una mancha) y es como mucho el 5 %. */
+function camEdgeDepths(c){const W=c.width,H=c.height,d=c.getContext('2d',{willReadFrequently:true}).getImageData(0,0,W,H).data,g=new Uint8Array(W*H);for(let i=0,j=0;i<g.length;i++,j+=4)g[i]=(d[j]*77+d[j+1]*150+d[j+2]*29)>>8;
+ const side=(len,depthMax,at,norm)=>{const xs=[],ds=[];for(let i=0;i<=10;i++){const t=.06+.88*i/10,s=Math.round(t*(len-1));
+   const ref=[];for(let k=depthMax;k<depthMax+12;k++)ref.push(at(s,k));ref.sort((a,b)=>a-b);const P=ref[ref.length>>1];if(P<90)continue;const th=P*.8;
+   let dep=-1;for(let k=0;k<depthMax;k++){if(at(s,k)>=th&&at(s,k+1)>=th&&at(s,k+2)>=th&&at(s,k+3)>=th){dep=k;break}}if(dep<0)continue;xs.push(t);ds.push(dep)}
+  // recta por mínimos cuadrados; se descartan los peores puntos hasta que todos queden a ≤ 2 px.
+  // Una cuña (franja que se afina hasta desaparecer) se ajusta solo con los puntos que tienen franja.
+  const fit=(X,D,min)=>{X=X.slice();D=D.slice();for(let it=0;it<6&&X.length>=min;it++){const n=X.length,mx=X.reduce((a,b)=>a+b)/n,md=D.reduce((a,b)=>a+b)/n;let sxx=0,sxd=0;for(let i=0;i<n;i++){sxx+=(X[i]-mx)**2;sxd+=(X[i]-mx)*(D[i]-md)}const b=sxx?sxd/sxx:0,a=md-b*mx;
+    let wi=-1,wr=0;for(let i=0;i<n;i++){const r=Math.abs(D[i]-(a+b*X[i]));if(r>wr){wr=r;wi=i}}if(wr<=2)return {a,b};X.splice(wi,1);D.splice(wi,1)}return null};
+  let F=fit(xs,ds,6);
+  if(!F){const P=xs.map((x,i)=>[x,ds[i]]).filter(q=>q[1]>0),Z=xs.filter((x,i)=>ds[i]===0);const G=P.length>=4?fit(P.map(q=>q[0]),P.map(q=>q[1]),4):null;if(G&&Z.every(x=>G.a+G.b*x<=2))F=G}
+  if(!F)return [0,0];const e0=Math.max(0,Math.min(depthMax,F.a)),e1=Math.max(0,Math.min(depthMax,F.a+F.b));return [e0/norm,e1/norm]};
+ const mH=Math.round(H*.05),mW=Math.round(W*.05),px=(x,y)=>g[Math.max(0,Math.min(H-1,y))*W+Math.max(0,Math.min(W-1,x))];
+ const top=side(W,mH,(s,k)=>px(s,k),H),bot=side(W,mH,(s,k)=>px(s,H-1-k),H),lef=side(H,mW,(s,k)=>px(k,s),W),rig=side(H,mW,(s,k)=>px(W-1-k,s),W);
+ return {top,bot,lef,rig}}
+async function camEdgeTrim(p){if(!p||!p.quad||p.quad.length!==4||S.camEdgeTrim===false)return false;
+ const c=await renderPage({...p,rot:0,filter:'original',bright:0,contrast:0,sat:0,sharp:0,temp:0,intensity:100,shadows:0,highlights:0,gamma:0,black:0,white:0,enh:false,art:'',fixes:null,overlays:null,dw:null,fg:null,erase:null},{maxSide:900,noOverlays:true,noClean:true,noFix:true,noArt:true});
+ const e=camEdgeDepths(c);c.width=c.height=1;const pad=.002,f=v=>v>.003?v+pad:0;
+ const T=e.top.map(f),B=e.bot.map(f),L=e.lef.map(f),R=e.rig.map(f);if(![...T,...B,...L,...R].some(v=>v>0))return false;
+ // esquinas nuevas en la hoja enderezada (0..1) → a la foto con la misma transformación de perspectiva
+ const nq=[{x:L[0],y:T[0]},{x:1-R[0],y:T[1]},{x:1-R[1],y:1-B[1]},{x:L[1],y:1-B[0]}];
+ const hm=homography([{x:0,y:0},{x:1,y:0},{x:1,y:1},{x:0,y:1}],p.quad),map=q=>{const den=hm[6]*q.x+hm[7]*q.y+1;return {x:(hm[0]*q.x+hm[1]*q.y+hm[2])/den,y:(hm[3]*q.x+hm[4]*q.y+hm[5])/den}};
+ p.quad=nq.map(map).map(q=>({x:Math.max(0,Math.min(1,q.x)),y:Math.max(0,Math.min(1,q.y))}));p.trim=true;return true}
+{const _pp=camPostProcess;camPostProcess=async function(pages,kind){
+ for(const p of pages){try{if(kind!=='board'&&await camEdgeTrim(p))await makeThumb(p)}catch(e){console.warn('recorte parejo',e)}}
+ _v77noAutoRot=camOrient()==='phone'&&pages.length>0&&pages.every(p=>p.camRot!=null);
+ try{return await _pp.apply(this,arguments)}finally{_v77noAutoRot=false}}}
+
+/* ---- 3) la primera foto del lote se muestra grande para decidir si sirve (como CamScanner) ---- */
+const CAM_REV_L={first:'La primera, grande',all:'Todas, grandes',no:'No mostrar'};
+const camRevMode=()=>S.camRevMode||'first';
+(function(){const st=$('#camera .cam-stage');if(!st||$('#camRev2'))return;
+ st.insertAdjacentHTML('beforeend','<div class="cam-rev cam-rev2" id="camRev2" hidden role="dialog" aria-label="Revisar la foto"><small id="rv2Msg">Procesando la foto…</small><div class="rv2-img"><img id="rv2Img" alt="Foto recortada"><span class="rv2-spin" aria-hidden="true"></span></div>'
+  +'<div class="rv-b"><button id="rv2Again">'+icoSvg('trash')+' Repetir</button><button class="ok" id="rv2Go">'+icoSvg('camera')+' Seguir</button><button id="rv2Done">'+icoSvg('check')+' Listo</button></div></div>');
+ const close=()=>{$('#camRev2').hidden=true;Cam._rev2=null;Cam.busy=false;Cam._stable=0;$('#camera .cam-stage').classList.remove('reviewing')};
+ $('#rv2Again').onclick=()=>{const p=Cam._rev2;if(p){const i=Cam.batch.indexOf(p);if(i>=0)Cam.batch.splice(i,1)}close();Cam.updUI();toast('Foto borrada: sacá otra')};
+ $('#rv2Go').onclick=()=>{close();toast('Seguí sacando fotos',1600)};
+ $('#rv2Done').onclick=async()=>{close();await Nav.back()};
+})();
+async function camShowRev2(p){const box=$('#camRev2');if(!box||!p)return;Cam._rev2=p;Cam.busy=true;$('#camera .cam-stage').classList.add('reviewing');$('#rv2Msg').textContent='¿Sirve así? Mirala bien antes de seguir';
+ const im=$('#rv2Img');im.removeAttribute('src');box.classList.add('loading');box.hidden=false;
+ try{const c=await renderPage(p,{maxSide:1400});if(Cam._rev2===p)im.src=c.toDataURL('image/jpeg',.88);c.width=c.height=1}catch(e){im.src=p.thumb||''}box.classList.remove('loading')}
+{const _sh=Cam.shoot;Cam.shoot=async function(){
+ const want=this.mode==='batch'&&!this.replaceId&&!!this.stream&&!this._rev2&&(camRevMode()==='all'||(camRevMode()==='first'&&!this.batch.length&&!this._pend));
+ const n0=this._seq;const r=await _sh.apply(this,arguments);
+ if(want&&this._seq>n0&&Nav.isOpen('camera')){const box=$('#camRev2');if(box){this.busy=true;this._rev2='…';$('#rv2Msg').textContent='Procesando la foto…';$('#rv2Img').removeAttribute('src');box.classList.add('loading');box.hidden=false}
+  const sid=this._sid;await this._q;if(this._sid!==sid||!Nav.isOpen('camera'))return r;const p=this.batch[this.batch.length-1];if(p)await camShowRev2(p);else{box&&(box.hidden=true);this._rev2=null;this.busy=false}}
+ return r}}
+{const _st=Cam.stop;Cam.stop=function(){if(this._rev2){$('#camRev2')&&($('#camRev2').hidden=true);this._rev2=null;this.busy=false}return _st.apply(this,arguments)}}
+{const _r=camPanelRender;camPanelRender=function(){const r=_r.apply(this,arguments);const P=$('#camPanel');if(!P||P.hidden)return r;const m=P.querySelector('.cq .cq-more');
+ if(m&&!P.querySelector('[data-crv]'))m.insertAdjacentHTML('beforebegin','<button class="cq-row on" data-crv="1"><span><b>Ver la foto al sacarla</b><small>'+CAM_REV_L[camRevMode()]+'</small></span><i class="cq-or">'+(camRevMode()==='no'?'–':camRevMode()==='all'?'∞':'1')+'</i></button>');return r}}
+$('#camPanel').addEventListener('click',e=>{const t=e.target.closest('[data-crv]');if(!t)return;e.stopImmediatePropagation();const n={first:'all',all:'no',no:'first'}[camRevMode()];S.camRevMode=n;saveS();
+ toast('Ver la foto: '+CAM_REV_L[n].toLowerCase());const P=$('#camPanel');P._ck='';camPanelRender()},true);
+
+/* ---- 4) «Documento listo»: el tamaño de cada calidad se estima con una o dos hojas de muestra (antes armaba el PDF entero 4 veces) ---- */
+async function pdfSizeEstimate(pages){const n=pages.length,idx=n>4?[0,Math.floor(n/2)]:[0],per={};for(const [k] of COMP)per[k]=0;
+ for(const i of idx){const p=pages[i],png=typeof printBWOn==='function'&&printBWOn(p);const big=await renderPage(p,{maxSide:QUAL.alta.max});const L=Math.max(big.width,big.height);
+  let nat=L;try{const im=await loadImg(p.orig);nat=Math.max(im.naturalWidth,im.naturalHeight)}catch(e){}
+  for(const [k] of COMP){const Q=QUAL[k]||QUAL.alta;const s=Math.min(1,(Q.max||L)/L);const c=s<.999?scaleCanvas(big,s):big;const b=await canvasBlob(c,png?'image/png':'image/jpeg',Q.q);
+   // «Sin comprimir» puede ser más grande que la muestra: se agranda por la superficie
+   const f=Q.max>QUAL.alta.max?Math.pow(Math.min(Q.max,Math.max(nat,L))/L,2):1;per[k]+=b.size*f;if(c!==big)c.width=c.height=1}
+  big.width=big.height=1}
+ const out={};for(const [k] of COMP)out[k]=Math.round(per[k]/idx.length*n+1500+n*600);return out}
+
+document.head.insertAdjacentHTML('beforeend','<style id="v77Css">'+
+ '.cam-rev img{max-width:94%;max-height:70vh}'+
+ '.cam-rev2{background:#000e;gap:12px;padding:14px 10px}.cam-rev2 small{font-size:15px;font-weight:700;color:#fff}'+
+ '.rv2-img{position:relative;display:flex;align-items:center;justify-content:center;width:100%;min-height:40vh;flex:1 1 auto;max-height:74vh}.rv2-img img{max-width:96%;max-height:74vh;object-fit:contain;border-radius:6px;background:#fff;box-shadow:0 6px 24px #000a}'+
+ '.cam-rev2.loading .rv2-img img{opacity:.25}.rv2-spin{display:none;position:absolute;width:42px;height:42px;border:4px solid #fff4;border-top-color:#fff;border-radius:50%;animation:rv2s 0.9s linear infinite}.cam-rev2.loading .rv2-spin{display:block}@keyframes rv2s{to{transform:rotate(360deg)}}'+
+ '.cam-rev2 .rv-b button{min-height:48px;font-size:15px}.cam-rev2 .rv-b button:focus-visible{outline:3px solid #fff;outline-offset:2px}'+
+ '</style>');
+
 </script>
 </body>
 </html>
