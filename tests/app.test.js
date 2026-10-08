@@ -1337,6 +1337,29 @@ await test('Herramientas: PDF a EXCEL, WORD a EXCEL y Foto a Excel con vista pre
   assert.match(await pg.textContent('#tMain .tx-prev'),/PRUEBA UNO\s*11\.111\.111/);assert.match(await pg.$eval('#tMain .result input',e=>e.value),/^lista/);assert.match(await pg.textContent('#tMain .result'),/\.xlsx[\s\S]*2 filas/);
 });
 
+await test('A Excel ordenado (v76): líneas grises finas, columnas apretadas, celdas de dos renglones, solo rayas horizontales y celdas vecinas juntadas por el PDF',async pg=>{
+  const r=await pg.evaluate(async()=>{await lazyMod('tabla');await loadLib('pdflib');const TX=TablaX;const {PDFDocument,StandardFonts,rgb}=PDFLib;const out={};
+    /* datos ficticios: 12 filas, la observación a veces ocupa dos renglones */
+    const AP=['GOMEZ','LOPEZ','DIAZ','SOSA'],NO=['PEDRO ALBERTO','MARIA DE LOS ANGELES','JUAN','ROSA ELENA'];const data=[];
+    for(let i=1;i<=12;i++)data.push([String(i),AP[i%4]+' '+NO[(i+1)%4],(30000000+i*12345).toLocaleString('es-AR'),'12/0'+(i%9+1)+'/2024',i%3?'Traslado U'+(i%4+1):'Ingreso por traslado desde la Unidad '+(i%4+1)+' con informe',String(i*3),'$ '+(i*1250).toLocaleString('es-AR')]);
+    const HDR=['N°','Apellido y nombre','DNI','Fecha','Observaciones','Días','Monto'];
+    const mk=async o=>{const pdf=await PDFDocument.create(),p=pdf.addPage([842,595]),F=await pdf.embedFont(StandardFonts.Helvetica),FB=await pdf.embedFont(StandardFonts.HelveticaBold);
+      const xs=o.xs,fs=7.5,lh=fs*1.15;let y=560;const ys=[y];p.drawText('PLANILLA DE PRUEBA',{x:300,y:575,size:11,font:FB});
+      for(const [ri,row] of [HDR,...data].entries()){const f=ri?F:FB;let n=1;row.forEach((t,c)=>{const w=xs[c+1]-xs[c]-6,ls=[];let cur='';for(const wd of t.split(' ')){const tt=cur?cur+' '+wd:wd;if(f.widthOfTextAtSize(tt,fs)>w&&cur){ls.push(cur);cur=wd}else cur=tt}ls.push(cur);n=Math.max(n,ls.length);
+          ls.forEach((s,k)=>p.drawText(s,{x:xs[c]+3,y:y-fs-3-k*lh,size:fs,font:f}))});y-=16+(n-1)*lh;ys.push(y)}
+      if(o.col){for(const yy of ys)p.drawLine({start:{x:xs[0],y:yy},end:{x:xs[xs.length-1],y:yy},thickness:o.th,color:o.col});if(!o.soloH)xs.forEach(x=>p.drawLine({start:{x,y:560},end:{x,y},thickness:o.th,color:o.col}))}
+      return (await pdf.save()).buffer};
+    const ancho=[30,52,200,262,310,520,550,620],angosto=[30,52,140,200,248,380,410,480],apretado=[30,44,170,212,256,470,490,540];
+    const cases={grisFino:{xs:ancho,col:rgb(.85,.85,.85),th:.25},sinLineasDosRenglones:{xs:angosto},grisDosRenglones:{xs:angosto,col:rgb(.7,.7,.7),th:.4},soloRayas:{xs:angosto,col:rgb(.6,.6,.6),th:.5,soloH:true},apretado:{xs:apretado}};
+    for(const [k,o] of Object.entries(cases)){const pages=await TX.fromPdf(await mk(o));const sh=TX.toSheets(pages,'una')[0];const flat=sh.rows.map(r=>r.map(c=>c?c.v.replace(/\s+/g,' '):''));
+      const bad=[];if(JSON.stringify(flat.find(r=>r[0]==='N°'))!==JSON.stringify(HDR))bad.push('encabezado: '+JSON.stringify(flat.find(r=>r[0]==='N°')));
+      for(const d of data){const row=flat.find(r=>r[0]===d[0]&&r.length>=7);if(JSON.stringify(row)!==JSON.stringify(d))bad.push(JSON.stringify(row)+' ≠ '+JSON.stringify(d))}
+      out[k]={bad:bad.slice(0,3),kinds:pages[0].blocks.map(b=>b.kind).join(',')}}
+    return out});
+  for(const [k,v] of Object.entries(r))assert.deepEqual(v.bad,[],k+' salió desordenado ('+v.kinds+')');
+  assert.match(r.grisFino.kinds,/grid/,'las líneas grises finas tienen que formar la grilla');assert.match(r.grisDosRenglones.kinds,/grid/);
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();

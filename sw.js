@@ -1,5 +1,5 @@
 // Danscanner Pro — funcionamiento sin conexión
-const VERSION = 'danscaner-v75';
+const VERSION = 'danscaner-v76';
 // Herramientas (PDF, OCR, idioma español, Word, Excel, IA local): se guardan aparte y NO se borran al actualizar la app
 const LIBS = 'danscaner-libs';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon.svg', './icon-192.png', './icon-512.png', './icon-maskable-192.png', './icon-maskable-512.png', './apple-touch-icon.png', './mod/admin.js', './mod/texto.js', './mod/excel.js', './mod/pptx.js', './mod/diseno.js', './mod/tabla.js', './mod/vision-core.js', './mod/vision-worker.js', './libs/fonts/atkinson-hyperlegible-latin-400-normal.woff2', './libs/fonts/atkinson-hyperlegible-latin-700-normal.woff2', './knowledge/knowledge-version.json', './knowledge/danscaner/manual.md', './knowledge/danscaner/herramientas.md', './knowledge/danscaner/nexa.md', './knowledge/documentos/escaneo.md', './knowledge/documentos/formatos.md', './knowledge/documentos/ocr.md', './knowledge/documentos/pdf.md', './knowledge/soporte/problemas.md', './knowledge/leyes/indice.json', './knowledge/leyes/relaciones.json', './knowledge/leyes/cp.json', './knowledge/leyes/cppf.json', './knowledge/leyes/cppn.json', './knowledge/leyes/ep.json', './knowledge/leyes/sppt.json', './knowledge/leyes/rd905.json'];

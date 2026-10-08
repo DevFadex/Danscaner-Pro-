@@ -662,3 +662,9 @@ Todo va dentro de `@media (min-width:1024px)`; el celular no cambia.
 - El Excel sale con ExcelJS (MIT, `libs/exceljs/`): bordes donde había líneas, negritas, combinadas, anchos de columna, números y fechas reales (DNI y CUIL quedan como texto). Vista previa antes de descargar y botón para escanear la planilla con la cámara.
 - OCR general: si la primera lectura sale con poca confianza, se relee en otro modo y se queda la mejor.
 - PDF a EXCEL y WORD a EXCEL quedan en los accesos del inicio.
+
+## v76 · PDF a Excel ordenado en planillas difíciles
+- **Líneas grises y finas**: en un PDF digital se conocen las letras, así que se borran antes de buscar rayas y el umbral es mucho más fino. Las grillas con líneas grises claras de 0,25 pt ahora se detectan.
+- **Tablas sin líneas**: las columnas son las «calles» verticales vacías en todos los renglones (se tolera un título que cruce). Las frases se cortan con el espacio real del documento, así las columnas apretadas no se juntan.
+- **Celdas de dos o más renglones**: se juntan con su fila por las rayas horizontales si las hay o, si no, por la columna ancla (la que nunca ocupa dos renglones seguidos, como N° o DNI).
+- **Celdas vecinas que el PDF juntó en un solo texto**: se separan mirando los huecos reales de tinta en la página.
