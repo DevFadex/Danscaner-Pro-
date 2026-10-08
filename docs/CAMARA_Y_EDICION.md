@@ -654,3 +654,11 @@ Todo va dentro de `@media (min-width:1024px)`; el celular no cambia.
 - Letra **Atkinson Hyperlegible** (OFL, en `libs/fonts/`, funciona sin internet): hecha para leerse bien, también al sol.
 - El inicio es una hoja con las mismas marcas de encuadre que dibuja la cámara. Herramientas en tinta (sin arcoíris), números como un renglón de planilla, títulos en minúscula.
 - Quien tenía el diseño de fábrica pasa solo al nuevo; quien lo había personalizado lo conserva. Se vuelve al anterior en Ajustes → Diseño → «Celeste Pro».
+
+## v75 · PDF, Word o foto a Excel «tal cual» y OCR mejorado
+- Nuevo motor `mod/tabla.js`: detecta las líneas de las tablas en la página (filas, columnas y celdas combinadas) y ubica cada palabra en su celda por su posición. Sin líneas, las columnas salen de los espacios que se repiten en todos los renglones (los nombres con espacios ya no se parten). Los nombres en dos renglones dentro de una celda quedan juntos.
+- **WORD a EXCEL**: se lee el XML del .docx: celdas combinadas (gridSpan / vMerge), negritas, colores de fondo y anchos.
+- **Foto a Excel** y PDF escaneados: OCR automático. Antes de leer se borran las líneas de la tabla y cada celda se lee sola, agrandada; números, fechas y DNI se releen solo con dígitos.
+- El Excel sale con ExcelJS (MIT, `libs/exceljs/`): bordes donde había líneas, negritas, combinadas, anchos de columna, números y fechas reales (DNI y CUIL quedan como texto). Vista previa antes de descargar y botón para escanear la planilla con la cámara.
+- OCR general: si la primera lectura sale con poca confianza, se relee en otro modo y se queda la mejor.
+- PDF a EXCEL y WORD a EXCEL quedan en los accesos del inicio.

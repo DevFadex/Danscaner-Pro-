@@ -132,3 +132,6 @@ La cámara detecta la hoja en tiempo real sin trabarse y el marco sigue la hoja 
 
 ### Diseño nuevo «Expediente» (v74)
 La app estrena un diseño más claro y sobrio: color tinta de sello, letra más legible y el inicio con forma de hoja. Para volver al diseño anterior: Ajustes → Diseño de botones y funciones → plantilla **Celeste Pro**. La letra se puede cambiar en «Tipografía de la app» (Legible, Moderna, Formal…).
+
+### PDF, Word o foto a Excel (v75)
+Herramientas → **PDF a EXCEL**, **WORD a EXCEL** o **Foto a Excel** (también en el inicio). Pasá el archivo o tocá **Escanear la planilla con la cámara**. Las tablas salen con sus columnas, celdas combinadas, negritas y bordes; los números y fechas quedan como números y fechas, y los DNI como texto. Si el PDF es escaneado o es una foto, se lee solo con OCR (para un PDF escaneado podés elegir «Leer con OCR: Siempre»). Antes de descargar ves una vista previa.

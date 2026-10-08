@@ -1017,7 +1017,7 @@ const TOOLS=MENU.flatMap(([cat,col,items])=>items.map(([name,fa,key])=>{const b=
 function toolIc(t){return '<span class="ic" style="background:'+t.col+'"><i class="'+t.fa+'"></i><em>'+t.ic+'</em></span>'}
 function toolTile(t,i){return '<button class="tool" data-tool="'+i+'">'+toolIc(t)+'<span>'+t.name+'</span></button>'}
 function toolRow(t,i){return '<button class="mitem" data-tool="'+i+'">'+toolIc(t)+'<span>'+t.name+'</span></button>'}
-function renderTools(){const cats=[...new Set(TOOLS.map(t=>t.cat))];$('#toolsGrid').innerHTML=cats.map(c=>'<div class="catt">'+c+'</div><div class="mlist">'+TOOLS.map((t,i)=>t.cat===c?toolRow(t,i):'').join('')+'</div>').join('')+'<p class="muted" style="margin-top:24px;text-align:center">Todo se procesa en tu dispositivo. Algunas funciones descargan módulos la primera vez (requiere internet).</p>';const quick=(S.design&&S.design.quick&&S.design.quick.length)?S.design.quick:['Escanea a PDF','Unir PDF','PDF a WORD','Firmar PDF','Comprimir PDF','OCR PDF','JPG a PDF','Editar PDF'];$('#quickTools').innerHTML=quick.map(n=>{const i=TOOLS.findIndex(t=>t.name===n);return i>=0?toolTile(TOOLS[i],i):''}).join('')}
+function renderTools(){const cats=[...new Set(TOOLS.map(t=>t.cat))];$('#toolsGrid').innerHTML=cats.map(c=>'<div class="catt">'+c+'</div><div class="mlist">'+TOOLS.map((t,i)=>t.cat===c?toolRow(t,i):'').join('')+'</div>').join('')+'<p class="muted" style="margin-top:24px;text-align:center">Todo se procesa en tu dispositivo. Algunas funciones descargan módulos la primera vez (requiere internet).</p>';const quick=(S.design&&S.design.quick&&S.design.quick.length)?S.design.quick:['Escanea a PDF','Unir PDF','PDF a WORD','PDF a EXCEL','WORD a EXCEL','Firmar PDF','Comprimir PDF','OCR PDF'];$('#quickTools').innerHTML=quick.map(n=>{const i=TOOLS.findIndex(t=>t.name===n);return i>=0?toolTile(TOOLS[i],i):''}).join('')}
 function openTool(i){const t=TOOLS[i];if(t.direct)return t.direct();$('#toolTitle').textContent=t.name;$('#toolBody').innerHTML='<div class="tdesc">'+(t.desc||'')+'</div><div id="tMain"></div>';Nav.push('toolScreen');t.ui($('#tMain'))}
 document.addEventListener('click',e=>{const t=e.target.closest('[data-tool]');if(t)openTool(+t.dataset.tool)});
 async function settingsSheet(){let est='';try{const q=await navigator.storage.estimate();est='Espacio usado: '+fmtSize(q.usage||0)}catch(e){}const setRow=(id,ico,emo,t,d)=>'<button class="set-row" id="'+id+'"><span class="set-ic"><i data-ico="'+ico+'">'+emo+'</i></span><span class="set-t"><b>'+t+'</b><small>'+d+'</small></span><span class="set-chev">›</span></button>';
@@ -3452,7 +3452,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 4.5',APP_VER='74';
+const NEXA_VER='Nexa 4.5',APP_VER='75';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3570,7 +3570,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='74 · 08/10/2026';
+const BUILD='75 · 08/10/2026';
 /* Versión que ven los usuarios: se cambia a mano solo cuando se decide publicar una versión nueva para todos.
    El administrador ve la versión interna (BUILD) con cada cambio. */
 const PUBLIC_VER='1.2';
@@ -6204,6 +6204,28 @@ document.head.insertAdjacentHTML('beforeend','<style id="v74Css">'+
 'html.look-exp :focus-visible{outline:3px solid color-mix(in srgb,var(--tinta) 70%,transparent);outline-offset:2px}'+
 '@media (prefers-reduced-motion:reduce){html.look-exp *{transition:none!important;animation-duration:.01ms!important}}'+
 '</style>');
+
+/* ===== Danscanner Pro v75: PDF, Word o foto → Excel «tal cual» (mod/tabla.js) y OCR con segunda lectura ===== */
+LOCAL_LIBS.exceljs='libs/exceljs/exceljs.min.js';
+function uiToExcel(el,accept){el.innerHTML='<div class="muted" style="padding:20px;text-align:center">Cargando…</div>';lazyMod('tabla').then(()=>__mods.uiToExcel(el,{accept})).catch(e=>{el.innerHTML='<div class="hint">'+esc(e.message)+'</div>'})}
+(function(){const i=TOOLS.findIndex(t=>t.name==='PDF a EXCEL');if(i<0)return;const base=TOOLS[i];
+ TOOLS[i]={...base,desc:'Las tablas del PDF a Excel tal cual: columnas, celdas combinadas, negritas y bordes. Si el PDF es escaneado, lo lee solo con OCR.',ui:el=>uiToExcel(el)};
+ TOOLS.splice(i+1,0,{...base,name:'WORD a EXCEL',fa:'fa-solid fa-file-word',ic:'📊',desc:'Las tablas de un Word (.docx) a Excel, con sus celdas combinadas, negritas y colores.',ui:el=>uiToExcel(el,'.docx')},
+  {...base,name:'Foto a Excel',fa:'fa-solid fa-camera',ic:'📷',desc:'Sacale una foto a una planilla impresa (o elegí la imagen) y pasala a Excel: se lee con OCR.',ui:el=>uiToExcel(el,'image/*,.pdf,application/pdf')});
+ try{renderTools()}catch(e){}})();
+/* OCR general: si la primera lectura sale con poca confianza, se relee con otro modo y se queda la mejor */
+{const _ocBase=async function(getImgs,lang,total){busy('Cargando motor OCR (la primera vez descarga el idioma)…');await loadLib('tess');let cur=0;
+ const w=await Tesseract.createWorker(lang||S.lang,1,{logger:m=>{if(m.status==='recognizing text')busy('Reconociendo texto · página '+cur+(total?'/'+total:'')+' · '+Math.round(m.progress*100)+'%')}});
+ const texts=[];try{await getImgs(async img=>{cur++;busy('Preparando imagen '+cur+(total?'/'+total:'')+'…');const prep=(img&&img.getContext)?prepOcr(img):img;
+  const read=async psm=>{try{await w.setParameters({preserve_interword_spaces:'1',tessedit_pageseg_mode:psm,user_defined_dpi:'300'})}catch(e){}try{return (await w.recognize(prep,{},{text:true,blocks:true})).data}catch(e){return (await w.recognize(prep)).data}};
+  let d=await read('3');if((d.confidence||0)<62&&String(d.text||'').trim().length>0){busy('Releyendo con otro modo (página '+cur+')…');const d2=await read('6');if((d2.confidence||0)>(d.confidence||0)+3)d=d2}
+  if((!d.text||!d.text.trim())&&img&&img.getContext){busy('Releyendo la imagen original (página '+cur+')…');try{await w.setParameters({tessedit_pageseg_mode:'3'})}catch(e){}try{const d3=(await w.recognize(img,{},{text:true,blocks:true})).data;if(d3.text&&d3.text.trim())d=d3}catch(e){}}
+  texts.push(ocrLayout(d))})}finally{await w.terminate()}
+ return texts};
+ /* se mantiene el cálculo de «confianza de la lectura» (OcrConf) que envolvía a la función anterior */
+ ocrCanvases=async function(){if(typeof OcrConf==='undefined')return _ocBase.apply(this,arguments);OcrConf.cur=[];try{const r=await _ocBase.apply(this,arguments);OcrConf.last={pages:OcrConf.cur,t:Date.now()};return r}finally{OcrConf.cur=null}}}
+document.head.insertAdjacentHTML('beforeend','<style id="v75Css">.tx-intro{margin:0 0 10px}.tx-scroll{overflow:auto;max-height:55vh;border:1px solid var(--line);border-radius:10px;background:#fff;margin:6px 0 12px}'+
+ '.tx-prev{border-collapse:collapse;font:12px/1.35 Arial,sans-serif;color:#111;min-width:100%}.tx-prev td{padding:4px 7px;border:1px dotted #d6dbe3;vertical-align:top;white-space:pre-wrap}.tx-prev td.g{border:1px solid #6b7280}.tx-prev td.b{font-weight:700}.tx-prev td.t{border:0;padding:6px 7px}</style>');
 </script>
 </body>
 </html>
