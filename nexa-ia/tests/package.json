@@ -1,0 +1,11 @@
+{
+  "name": "nexa-ia-tests",
+  "private": true,
+  "description": "Pruebas de extremo a extremo de Nexa IA",
+  "scripts": {
+    "test": "node nexa.test.js"
+  },
+  "devDependencies": {
+    "playwright": "1.56.1"
+  }
+}

@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; media-src 'self' blob:; connect-src 'self' blob: data: https://huggingface.co https://*.huggingface.co https://*.hf.co https://raw.githubusercontent.com https://api.anthropic.com https://generativelanguage.googleapis.com https://api.openai.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#0f1117" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f5f6fa" media="(prefers-color-scheme: light)">
+<meta name="description" content="Nexa IA: asistente personal y de seguridad para tu celular. Privada, cifrada y sin inventar.">
+<title>Nexa IA</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="img/nexa.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="img/icon-192.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M8.5 12l2.5 2.5 4.5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-brain" viewBox="0 0 24 24"><path d="M12 4a3 3 0 0 0-5.6 1.5A3 3 0 0 0 4 9a3 3 0 0 0 1 5.2A3 3 0 0 0 8 19a3 3 0 0 0 4 1V4zm0 0a3 3 0 0 1 5.6 1.5A3 3 0 0 1 20 9a3 3 0 0 1-1 5.2A3 3 0 0 1 16 19a3 3 0 0 1-4 1" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M4 12l16-8-6 16-2.5-6.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M5 9v6h4l5 4V5L9 9zM17 9a4 4 0 0 1 0 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 8V4H4v12h4" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4h11l-2 4 2 4H5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+</svg>
+
+<!-- Bloqueo: crear o ingresar el PIN -->
+<section id="lock" class="lock" aria-labelledby="lockT">
+  <div class="lock-box">
+    <img src="img/nexa.svg" alt="" class="lock-logo" width="84" height="84">
+    <h1 id="lockT">Nexa IA</h1>
+    <p id="lockSub" class="muted">Tu asistente personal y de seguridad</p>
+    <form id="lockForm" autocomplete="off">
+      <label for="pin" id="pinLbl">PIN o frase</label>
+      <input id="pin" type="password" inputmode="text" autocomplete="off" minlength="6" required>
+      <label for="pin2" id="pin2Lbl" hidden>Repetí el PIN</label>
+      <input id="pin2" type="password" autocomplete="off" hidden>
+      <p id="lockErr" class="err" role="alert"></p>
+      <button class="btn pri big" id="lockBtn" type="submit">Entrar</button>
+    </form>
+    <p class="muted small" id="lockNota"></p>
+  </div>
+</section>
+
+<div id="app" hidden>
+  <header class="top">
+    <img src="img/nexa.svg" alt="" width="34" height="34">
+    <div class="top-t"><b>Nexa IA</b><small id="topSub">Asistente</small></div>
+    <label class="sw" title="Modo humano: responde de forma natural, sin cambiar el contenido">
+      <input type="checkbox" id="swHumano" checked><span class="sw-ui" aria-hidden="true"></span><span class="sw-t">Modo humano</span>
+    </label>
+    <button class="ib" id="btnLock" title="Bloquear" aria-label="Bloquear"><svg><use href="#i-lock"/></svg></button>
+  </header>
+
+  <main>
+    <section class="view active" id="v-chat" aria-label="Conversación">
+      <div id="log" class="log" aria-live="polite"></div>
+      <div class="sugs" id="sugs"></div>
+      <form class="bar" id="bar">
+        <button type="button" class="ib" id="btnMic" title="Hablar" aria-label="Hablar"><svg><use href="#i-mic"/></svg></button>
+        <textarea id="inp" rows="1" placeholder="Escribile a Nexa…" aria-label="Mensaje para Nexa"></textarea>
+        <button type="submit" class="ib pri" id="btnSend" title="Enviar" aria-label="Enviar"><svg><use href="#i-send"/></svg></button>
+      </form>
+    </section>
+
+    <section class="view" id="v-seg" aria-label="Seguridad">
+      <div class="card score-card">
+        <div class="ring" id="ring" style="--p:0"><span id="scoreN">—</span></div>
+        <div><h2>Seguridad</h2><p class="muted" id="scoreTxt">Todavía no revisé.</p>
+          <button class="btn pri" id="btnRevisar">Revisar ahora</button></div>
+      </div>
+      <ul class="hall" id="hall"></ul>
+      <div class="card">
+        <h3>¿Es una estafa?</h3>
+        <p class="muted small">Pegá un mensaje de WhatsApp, SMS o correo, o un enlace. Lo reviso acá, sin abrirlo ni mandarlo a ningún lado.</p>
+        <textarea id="anaTxt" rows="4" placeholder="Pegá acá el mensaje o el enlace"></textarea>
+        <button class="btn" id="btnAnalizar">Analizar</button>
+        <div id="anaRes" class="res" aria-live="polite"></div>
+      </div>
+      <div class="card">
+        <h3>¿Mi contraseña es fuerte?</h3>
+        <p class="muted small">Se evalúa en el teléfono y no se guarda. Mejor probá con una parecida, no la real.</p>
+        <input id="passTxt" type="password" autocomplete="off" placeholder="Escribí una contraseña de prueba" aria-label="Contraseña de prueba">
+        <div id="passRes" class="res" aria-live="polite"></div>
+      </div>
+      <div class="card"><h3>Lo que no puedo ver</h3><ul id="limites" class="lim"></ul></div>
+      <div class="card"><h3>Accesos y eventos</h3><ul id="eventos" class="ev"></ul></div>
+    </section>
+
+    <section class="view" id="v-mem" aria-label="Memoria">
+      <div class="card"><h2>Lo que aprendí</h2><p class="muted small">Solo guardo lo que me pedís, cifrado en este teléfono. Cuando lo uso, te aviso que me lo contaste vos.</p></div>
+      <div id="memList"></div>
+      <div class="card danger">
+        <button class="btn" id="btnBorrarChat"><svg><use href="#i-trash"/></svg> Borrar la conversación</button>
+        <button class="btn bad" id="btnOlvidarTodo"><svg><use href="#i-trash"/></svg> Borrar todo lo aprendido</button>
+      </div>
+    </section>
+
+    <section class="view" id="v-aj" aria-label="Ajustes">
+      <div id="ajustes"></div>
+    </section>
+  </main>
+
+  <nav class="nav" aria-label="Secciones">
+    <button data-v="chat" class="on"><svg><use href="#i-chat"/></svg><span>Nexa</span></button>
+    <button data-v="seg"><svg><use href="#i-shield"/></svg><span>Seguridad</span><i class="dot" id="segDot" hidden></i></button>
+    <button data-v="mem"><svg><use href="#i-brain"/></svg><span>Memoria</span></button>
+    <button data-v="aj"><svg><use href="#i-gear"/></svg><span>Ajustes</span></button>
+  </nav>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<div id="modal" class="modal" hidden><div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modalT"><h3 id="modalT"></h3><div id="modalB"></div><div class="modal-acts" id="modalA"></div></div></div>
+
+<script src="js/util.js"></script>
+<script src="js/cifrado.js"></script>
+<script src="js/boveda.js"></script>
+<script src="js/memoria.js"></script>
+<script src="js/juridico.js"></script>
+<script src="js/documental.js"></script>
+<script src="js/humano.js"></script>
+<script src="js/ia-local.js"></script>
+<script src="js/ia-nube.js"></script>
+<script src="js/seguridad.js"></script>
+<script src="js/voz.js"></script>
+<script src="js/asistente.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
