@@ -700,3 +700,17 @@ Todo va dentro de `@media (min-width:1024px)`; el celular no cambia.
   - Más: QR, DNI, mejorar fotos, extraer texto, Asistente IA. El traductor pide permiso antes de usar internet, como corresponde.
 - **Nueva prueba automática** «Todas las herramientas»: corre 22 herramientas (las que no usan OCR) en cada versión. El OCR, Excel, Nexa y la cámara ya tenían sus propias pruebas.
 - **Sin internet de verdad**: antes cada librería se guardaba recién la primera vez que se usaba su herramienta (si nunca habías pasado OCR con internet, sin conexión no andaba). Ahora, con internet y una sola vez, se guardan todas en segundo plano (≈13 MB: PDF, OCR en español, Word, Excel, PowerPoint, QR, fuentes) en la caché permanente (`offlineWarm`, `OFFLINE_LIBS`). No se descarga con ahorro de datos ni en 2G. OpenCV y la IA del teléfono siguen siendo opcionales.
+
+## v80 · Ingreso con huella
+- En Ajustes → Seguridad y accesos, «Bloqueo con PIN» pasa a **«Ingreso con huella y PIN»**. Al abrir la app y después de 5 minutos sin usarla, pide la huella (o el rostro); el **PIN queda de respaldo**.
+- **WebAuthn** con el sensor del teléfono (autenticador de plataforma, `userVerification: 'required'`). La huella la verifica el sistema: no llega a la app ni a internet.
+  - La app guarda solo el id de la credencial y su llave pública (`S.lock.bio`).
+  - Al desbloquear comprueba el desafío al azar, el origen, la verificación de usuario y la **firma** con esa llave (ECDSA P-256 o RSA).
+- Después de entrar con la contraseña, se ofrece activar la huella **una sola vez**.
+- Si el teléfono o navegador no ofrece huella para la web, queda el bloqueo con PIN como antes. Quien ya tenía PIN lo conserva y puede sumar la huella desde el mismo lugar.
+- Prueba e2e con un sensor de huella simulado del navegador (CDP WebAuthn):
+  - registra y desbloquea;
+  - no entra si el sensor no verifica a la persona;
+  - rechaza una firma de otra llave;
+  - el PIN desbloquea;
+  - «Dejar de usar la huella» mantiene el PIN.
