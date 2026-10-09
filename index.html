@@ -3452,7 +3452,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 4.5',APP_VER='78';
+const NEXA_VER='Nexa 4.5',APP_VER='79';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3570,7 +3570,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='78 · 09/10/2026';
+const BUILD='79 · 09/10/2026';
 /* Versión que ven los usuarios: se cambia a mano solo cuando se decide publicar una versión nueva para todos.
    El administrador ve la versión interna (BUILD) con cada cambio. */
 const PUBLIC_VER='1.2';
@@ -6439,6 +6439,26 @@ document.head.insertAdjacentHTML('beforeend','<style id="v78Css">'+
  '.nx-rd{opacity:.8}.nx-wait{display:block;margin:4px 0 0 4px;font-size:12.5px;color:var(--mut,#6b7280)}'+
  '</style>');
 
+
+/* ===== v79 · todo listo para usar sin internet =====
+ * Antes cada librería (PDF, OCR, Word, Excel…) se guardaba recién la primera vez que se usaba su herramienta:
+ * si nunca habías pasado OCR con internet, sin conexión no andaba. Ahora, con internet y una sola vez, se guardan todas
+ * en segundo plano (≈13 MB) en la caché permanente que usa el service worker. Quedan afuera las opcionales grandes
+ * (OpenCV y la IA del teléfono), que se bajan solo si se activan. */
+const OFFLINE_VER='79';
+const OFFLINE_LIBS=['libs/pdf.min.js','libs/pdf.worker.min.js','libs/pdf-lib.min.js','libs/pdf-lib-cifrado.min.js','libs/tesseract.min.js','libs/tesseract/worker.min.js',
+ 'libs/tesseract/tesseract-core-simd-lstm.wasm.js','libs/tesseract/tesseract-core-lstm.wasm.js','libs/tesseract/lang/spa.traineddata.gz','libs/mammoth.browser.min.js',
+ 'libs/html2pdf.bundle.min.js','libs/jsQR.js','libs/xlsx.full.min.js','libs/jszip.min.js','libs/pptxgen.bundle.js','libs/docx-preview.min.js','libs/html2canvas.min.js',
+ 'libs/qrcode.min.js','libs/exceljs/exceljs.min.js','libs/fontkit-1.1.1.umd.min.js','libs/fonts/LiberationSans-Regular.ttf'];
+async function offlineWarm({force=false,onProg}={}){if(!('caches' in window))return {ok:false,why:'sin caché'};
+ if(!force){if(S.offlineLibs===OFFLINE_VER||!navigator.onLine)return {ok:false,why:'ya está'};const cn=navigator.connection;if(cn&&(cn.saveData||/2g/.test(cn.effectiveType||'')))return {ok:false,why:'ahorro de datos'}}
+ const c=await caches.open('danscaner-libs');let got=0,fail=[];
+ for(const [i,p] of OFFLINE_LIBS.entries()){const u=new URL(p,location.href).href;onProg&&onProg(i+1,OFFLINE_LIBS.length);
+  try{if(await c.match(u)){got++;continue}const r=await fetch(u,{cache:'no-cache'});if(r.ok){await c.put(u,r);got++}else fail.push(p)}catch(e){fail.push(p)}}
+ if(!fail.length){S.offlineLibs=OFFLINE_VER;try{saveS()}catch(e){}}return {ok:!fail.length,got,fail}}
+/* se lanza sola un rato después de abrir la app, sin molestar */
+setTimeout(()=>{const go=()=>offlineWarm().then(r=>{if(r&&r.ok&&r.got)toast('✅ Herramientas listas para usar sin internet',3500)}).catch(()=>{});
+ if('requestIdleCallback' in window)requestIdleCallback(go,{timeout:20000});else go()},15000);
 </script>
 </body>
 </html>

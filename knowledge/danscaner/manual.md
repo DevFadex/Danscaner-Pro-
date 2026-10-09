@@ -146,3 +146,6 @@ Desde la versión 76 también salen ordenadas las planillas con líneas grises m
 
 ## Chatear con un documento (Nexa, v78)
 Adjuntá un documento con 📎 en Nexa. Nexa lo lee página por página, te cuenta de qué trata y te sugiere preguntas. Preguntale lo que necesites, por ejemplo «¿qué se ordena?», «¿cuándo es la audiencia?» o «¿quién firma?»: cada respuesta trae la página de donde sale. Tocá **pág. N** para ver esa hoja con lo buscado resaltado, o abrí el documento en esa página. Funciona sin internet. Con «Nexa con internet» la respuesta sale redactada y también con las páginas.
+
+## Usar sin internet (v79)
+La primera vez que abrís la app con internet, se guardan solas todas las herramientas: PDF, OCR, Word, Excel y PowerPoint. Cuando terminan, aparece «Herramientas listas para usar sin internet». Desde ahí funcionan sin conexión. Solo necesitan internet Nexa con internet, el traductor y la copia en la nube.

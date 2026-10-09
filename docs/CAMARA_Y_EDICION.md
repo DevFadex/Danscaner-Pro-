@@ -689,3 +689,14 @@ Todo va dentro de `@media (min-width:1024px)`; el celular no cambia.
   - Si no está en el documento, lo dice.
 - **Citas tocables**: [pág. N] es un botón que abre la hoja, el texto de la página con lo buscado resaltado y «Abrir el documento en esta página».
 - Todo es local: el OCR y la búsqueda corren en el teléfono. Solo con «Nexa con internet» se manda el texto al proveedor elegido, como antes.
+
+## v79 · Revisión de todas las funciones y listo para usar sin internet
+- **Revisión completa**: se probaron las 39 herramientas con archivos ficticios y en todas el resultado se abre bien.
+  - Ordenar: unir, dividir, eliminar, extraer, ordenar.
+  - Optimizar: comprimir, reparar, OCR.
+  - Convertir a PDF y desde PDF: JPG, Word, PowerPoint, Excel, HTML, PDF/A, Markdown y PDF/Word/foto a Excel.
+  - Editar: rotar, números de página, marca de agua, recortar, editar, formularios.
+  - Seguridad: desbloquear, proteger (pide la clave), firmar, censurar, comparar.
+  - Más: QR, DNI, mejorar fotos, extraer texto, Asistente IA. El traductor pide permiso antes de usar internet, como corresponde.
+- **Nueva prueba automática** «Todas las herramientas»: corre 22 herramientas (las que no usan OCR) en cada versión. El OCR, Excel, Nexa y la cámara ya tenían sus propias pruebas.
+- **Sin internet de verdad**: antes cada librería se guardaba recién la primera vez que se usaba su herramienta (si nunca habías pasado OCR con internet, sin conexión no andaba). Ahora, con internet y una sola vez, se guardan todas en segundo plano (≈13 MB: PDF, OCR en español, Word, Excel, PowerPoint, QR, fuentes) en la caché permanente (`offlineWarm`, `OFFLINE_LIBS`). No se descarga con ahorro de datos ni en 2G. OpenCV y la IA del teléfono siguen siendo opcionales.
