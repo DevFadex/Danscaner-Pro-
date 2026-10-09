@@ -1439,6 +1439,46 @@ await test('Nexa estilo ChatPDF (v78): lee por página, presenta el documento, r
   await pg.evaluate(()=>{Nexa.st.msgs=[];Nexa.st.docs=[];Nexa.save()});
 });
 
+await test('Sin internet (v79): todas las librerías locales existen y quedan guardadas para usar sin conexión',async pg=>{
+  const r=await pg.evaluate(async()=>{const vals=Object.entries(LOCAL_LIBS).filter(([k])=>k!=='supabase').map(([,v])=>v);
+    const notListed=vals.filter(v=>!OFFLINE_LIBS.includes(v));const st=[];for(const p of OFFLINE_LIBS){const x=await fetch(p,{method:'HEAD'});st.push(x.ok?'':p)}
+    await caches.delete('danscaner-libs');delete S.offlineLibs;const w=await offlineWarm({force:true});const c=await caches.open('danscaner-libs');const miss=[];for(const p of OFFLINE_LIBS)if(!(await c.match(new URL(p,location.href).href)))miss.push(p);
+    return {notListed,missingFiles:st.filter(Boolean),w:{ok:w.ok,fail:w.fail},miss,flag:S.offlineLibs,again:(await offlineWarm()).why}});
+  assert.deepEqual(r.notListed,[],'librerías que no se guardan para usar sin internet');assert.deepEqual(r.missingFiles,[]);
+  assert.deepEqual(r.w,{ok:true,fail:[]});assert.deepEqual(r.miss,[]);assert.equal(r.flag,'79');assert.equal(r.again,'ya está','no se descarga dos veces');
+});
+
+await test('Todas las herramientas (v79): cada una corre con un archivo de prueba y lo que sale se abre bien',async pg=>{
+  /* archivos ficticios hechos en la página */
+  const fx=await pg.evaluate(async()=>{await loadLib('pdflib');await loadLib('xlsx');await loadLib('pptx');const {PDFDocument,StandardFonts}=PDFLib;const b64=u8=>{let s='';for(let i=0;i<u8.length;i+=8192)s+=String.fromCharCode.apply(null,u8.subarray(i,i+8192));return btoa(s)};const o={};
+    const mk=async(n,t)=>{const d=await PDFDocument.create(),F=await d.embedFont(StandardFonts.Helvetica);for(let i=1;i<=n;i++)d.addPage([595,842]).drawText(t+' pagina '+i,{x:60,y:780,size:16,font:F});return b64(await d.save())};
+    o.pdf=await mk(3,'OFICIO DE PRUEBA');o.pdf2=await mk(1,'OTRO OFICIO');
+    {const d=await PDFDocument.create(),p=d.addPage([595,842]),f=d.getForm();f.createTextField('nombre').addToPage(p,{x:60,y:700,width:200,height:24});o.form=b64(await d.save())}
+    const c=canvas(800,1100),x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,800,1100);x.fillStyle='#111';x.font='36px Arial';x.fillText('Foto de prueba',60,120);o.jpg=c.toDataURL('image/jpeg',.9).split(',')[1];
+    o.docx=b64(new Uint8Array(await (await makeDocx([{type:'p',text:'Documento de prueba.'}])).arrayBuffer()));
+    const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['Nombre','DNI'],['PRUEBA UNO','11.111.111']]),'Hoja1');o.xlsx=b64(new Uint8Array(XLSX.write(wb,{type:'array',bookType:'xlsx'})));
+    const pr=new PptxGenJS();pr.addSlide().addText('Diapositiva de prueba',{x:1,y:1,w:8,h:1});o.pptx=b64(new Uint8Array(await pr.write({outputType:'arraybuffer'})));
+    o.html=btoa('<h1>Informe de prueba</h1><p>Texto.</p>');return o});
+  const F=(n,mime)=>({name:n,mimeType:mime,buffer:Buffer.from(fx[n.split('.')[0]==='doc2'?'pdf2':{pdf:'pdf',docx:'docx',xlsx:'xlsx',pptx:'pptx',html:'html',jpg:'jpg'}[n.split('.').pop()]],'base64')});
+  const PDF=F('doc.pdf','application/pdf'),PDF2={...F('doc2.pdf','application/pdf')},FORM={name:'form.pdf',mimeType:'application/pdf',buffer:Buffer.from(fx.form,'base64')};
+  const cases=[['Unir PDF',[PDF,PDF2],/\.pdf 4p/],['Dividir PDF',[PDF],/parte1\.pdf/],['Ordenar PDF',[PDF],/\.pdf 3p/],['Comprimir PDF',[PDF],/\.pdf 3p/],['Reparar PDF',[PDF],/\.pdf 3p/],
+    ['JPG a PDF',[F('foto.jpg','image/jpeg')],/\.pdf 1p/],['WORD a PDF',[F('doc.docx','application/vnd.openxmlformats-officedocument.wordprocessingml.document')],/\.pdf 1p/],['POWERPOINT a PDF',[F('pres.pptx','application/vnd.openxmlformats-officedocument.presentationml.presentation')],/\.pdf \dp/],
+    ['EXCEL a PDF',[F('tabla.xlsx','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')],/\.pdf 1p/],['HTML a PDF',[F('pagina.html','text/html')],/\.pdf 1p/],['PDF a JPG',[PDF],/\.jpg/],['PDF a WORD',[PDF],/\.docx/],
+    ['PDF a POWERPOINT',[PDF],/\.pptx/],['PDF a PDF/A',[PDF],/\.pdf 3p/],['Rotar PDF',[PDF],/\.pdf 3p/],['Insertar números de página',[PDF],/\.pdf 3p/],['Insertar marca de agua',[PDF],/\.pdf 3p/],
+    ['Formularios PDF',[FORM],/\.pdf 1p/],['Desbloquear PDF',[PDF],/\.pdf 3p/],['Comparar PDF',[PDF,PDF2],/\.html/],['PDF a Markdown',[PDF],/\.md/],['Extraer texto',[F('doc.docx','application/vnd.openxmlformats-officedocument.wordprocessingml.document')],/\.txt/]];
+  await pg.evaluate(()=>{const _sr=showResults;showResults=function(el,outs){window._outs=outs;return _sr.apply(this,arguments)};window._fails=[];const _t=toast;toast=function(m){if(/❌/.test(m))window._fails.push(String(m));return _t.apply(this,arguments)}});
+  const bad=[];
+  for(const [name,files,re] of cases){await pg.evaluate(n=>{window._outs=null;window._fails=[];openTool(TOOLS.findIndex(t=>t.name===n))},name);await W(500);
+    await pg.evaluate(async()=>{for(let k=0;k<3&&Nav.top()!=='toolScreen';k++)await Nav.back()});await W(200);
+    const inp=await pg.$('#tMain input[type=file]');await inp.setInputFiles(await inp.getAttribute('multiple')!==null?files:files.slice(0,1));await W(1200);
+    await pg.evaluate(()=>(document.querySelector('#tMain .run')||[...document.querySelectorAll('#tMain .btn.pri')].find(b=>b.offsetParent)).click());
+    await pg.waitForFunction(()=>window._outs||window._fails.length,null,{timeout:60000}).catch(()=>{});
+    const got=await pg.evaluate(async()=>{const r=[];for(const o of window._outs||[]){let info=o.name;if(/\.pdf$/.test(o.name)){try{info+=' '+(await openPdfjs(await o.blob.arrayBuffer())).numPages+'p'}catch(e){info+=' NO ABRE'}}else if(!o.blob.size)info+=' VACÍO';r.push(info)}return {r,f:window._fails}});
+    if(!got.r.some(x=>re.test(x))||got.r.some(x=>/NO ABRE|VACÍO/.test(x)))bad.push(name+' → '+JSON.stringify(got));
+    await pg.evaluate(async()=>{while(Nav.top()&&Nav.top()!=='home'){const t=Nav.top();await Nav.back();if(Nav.top()===t)break}});await W(200)}
+  assert.deepEqual(bad,[],'herramientas que fallan');
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();
