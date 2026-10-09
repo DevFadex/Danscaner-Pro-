@@ -1406,6 +1406,39 @@ await test('Cámara v77: la hoja sigue al teléfono, el recorte desparejo se emp
   await pg.evaluate(()=>{camPanelClose();Cam.batch=[];Nav.back()});await W(300);
 });
 
+await test('Nexa estilo ChatPDF (v78): lee por página, presenta el documento, responde con la página y la cita abre la hoja',async pg=>{
+  await pg.evaluate(async()=>{/* documento ficticio de 3 páginas con su texto ya leído */
+    const mk=t=>{const c=canvas(620,877),x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,620,877);x.fillStyle='#111';x.font='18px Arial';t.split('\n').forEach((l,i)=>x.fillText(l,40,80+i*30));return {id:uid(),orig:c.toDataURL('image/jpeg',.9),quad:null,rot:0,filter:'original',bright:0,contrast:0,overlays:[]}};
+    const T=['OFICIO N° 999/2026\nSan Miguel de Tucumán, 3 de octubre de 2026.\nAl Sr. Director de la Unidad de Prueba.\nRef.: Expte. 11-22/2026 caratulado "PRUEBA PEDRO s/ HURTO".',
+      'Por la presente se ordena el traslado del interno PRUEBA PEDRO, DNI 30.123.456, a la audiencia fijada para el día 15/10/2026 a horas 10.\nDeberá informarse el cumplimiento dentro del plazo de 48 horas.',
+      'Saluda atentamente.\nFirmado: Dra. Jueza de Prueba, Juzgado de Ejecución de Prueba.'];
+    const d={id:'chat1',name:'Oficio de prueba',created:1,updated:Date.now(),text:T.join('\n\n'),pages:T.map(mk)};d.pageTexts=T;d.pageIds=d.pages.map(p=>p.id);await DB.putDoc(d);
+    Nexa.st.msgs=[];Nexa.st.docs=[];Nexa.st.prov='basic';go('nexa');Nexa.attachDoc(await DB.getDoc('chat1'))});
+  await pg.waitForFunction(()=>Nexa.st.msgs.some(m=>m.intro==='chat1'),null,{timeout:15000});
+  const intro=await pg.evaluate(()=>({t:Nexa.st.msgs.find(m=>m.intro==='chat1').text,chips:[...document.querySelectorAll('#nxLog .nx-q')].map(b=>b.textContent.trim()),chip:$('#nxDocs').textContent}));
+  assert.match(intro.t,/Oficio de prueba\*\* · 3 páginas · Oficio/);assert.match(intro.t,/30\.123\.456/);assert.ok(intro.chips.includes('¿Qué se ordena o se pide?'),'faltan preguntas sugeridas: '+intro.chips);assert.match(intro.chip,/3 pág\./);
+  /* pregunta sugerida → respuesta con la frase y la página */
+  await pg.click('#nxLog .nx-q');await pg.waitForFunction(()=>Nexa.st.msgs.at(-1).role==='assistant'&&!Nexa.sending&&Nexa.st.msgs.length>=3,null,{timeout:15000});
+  const a=await pg.evaluate(()=>({t:Nexa.st.msgs.at(-1).text,cites:[...document.querySelectorAll('#nxLog .nx-msg.ai:last-child .nx-cite')].map(b=>b.dataset.cp)}));
+  assert.match(a.t,/se ordena el traslado del interno PRUEBA PEDRO.*\[pág\. 2\]/);assert.ok(a.cites.includes('2'),'la cita debe ser un botón: '+JSON.stringify(a.cites));
+  const f=await pg.evaluate(async()=>{const out=[];for(const q of ['¿Cuándo es la audiencia?','¿Quién firma?','¿Qué dice sobre el perro del vecino?']){const m={role:'user',text:q};Nexa.st.msgs.push(m);await Nexa.ask(m);out.push(Nexa.st.msgs.at(-1).text)}return out});
+  assert.match(f[0],/15\/10\/2026.*\[pág\. 2\]/);assert.match(f[1],/Firmado: Dra\. Jueza de Prueba.*\[pág\. 3\]/);assert.match(f[2],/No encontré eso/);
+  /* la cita abre la hoja con lo buscado resaltado */
+  await pg.click('#nxLog .nx-cite[data-cp="2"]');await pg.waitForFunction(()=>{const i=document.querySelector('#nxcImg');return i&&i.naturalWidth>0},null,{timeout:10000});
+  const sh=await pg.evaluate(()=>({title:[...document.querySelectorAll('.sheet h3, .sh-title, .sheet .title')].map(x=>x.textContent).join('|')||document.body.textContent.includes('Página 2 · Oficio de prueba'),marks:document.querySelectorAll('.nxc-txt mark').length,open:!!document.querySelector('#nxcOpen')}));
+  assert.ok(sh.title,'falta el título de la página');assert.ok(sh.open);await pg.evaluate(()=>Nav.back());
+  /* con internet: el texto va rotulado por página y se pide citar; después se restituye */
+  const sys=await pg.evaluate(()=>{Nexa.st.msgs.push({role:'user',text:'¿Qué plazo hay?'});const d=Nexa.st.docs[0],before=d.text;const s=Nexa.system();return {lab:s.includes('[pág. 2]\nPor la presente se ordena'),rule:/CITAS DE PÁGINA/.test(s),restored:d.text===before}});
+  assert.deepEqual(sys,{lab:true,rule:true,restored:true});
+  /* un documento escaneado sin texto: se lee con OCR por página (en el teléfono) */
+  const ocr=await pg.evaluate(async()=>{const c=canvas(900,500),x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,900,500);x.fillStyle='#000';x.font='bold 44px Arial';x.fillText('CONSTANCIA DE PRUEBA',60,140);x.font='38px Arial';x.fillText('Se deja constancia del traslado.',60,240);
+    await DB.putDoc({id:'chat2',name:'Escaneo sin texto',created:1,updated:Date.now(),text:'',pages:[{id:uid(),orig:c.toDataURL('image/jpeg',.92),quad:null,rot:0,filter:'original',bright:0,contrast:0,overlays:[]}]});
+    Nexa.st.docs=[];Nexa.attachDoc(await DB.getDoc('chat2'));const d=Nexa.st.docs.find(x=>x.id==='chat2');const m={role:'user',text:'¿Qué constancia se deja?'};Nexa.st.msgs.push(m);await Nexa.ask(m);
+    const saved=await DB.getDoc('chat2');return {pg:d.pg,vis:d.vis,saved:(saved.pageTexts||[]).length,text:saved.text,ans:Nexa.st.msgs.at(-1).text}});
+  assert.match((ocr.pg||[''])[0],/CONSTANCIA DE PRUEBA/i);assert.equal(ocr.vis,false);assert.equal(ocr.saved,1);assert.match(ocr.text,/traslado/);assert.match(ocr.ans,/traslado.*\[pág\. 1\]/);
+  await pg.evaluate(()=>{Nexa.st.msgs=[];Nexa.st.docs=[];Nexa.save()});
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();

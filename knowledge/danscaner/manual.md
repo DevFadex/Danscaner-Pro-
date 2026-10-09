@@ -143,3 +143,6 @@ Desde la versión 76 también salen ordenadas las planillas con líneas grises m
 - **Recorte parejo**: si quedó un borde de mesa en algún costado, se recorta solo.
 - **Primera foto grande**: después de la primera foto del lote la ves grande. Tocá **Repetir** si no sirve, o **Seguir** para continuar. En ⚙️ → «Ver la foto al sacarla» podés elegir verlas todas o ninguna.
 - Al terminar, «Documento listo» muestra enseguida el peso aproximado de cada calidad.
+
+## Chatear con un documento (Nexa, v78)
+Adjuntá un documento con 📎 en Nexa. Nexa lo lee página por página, te cuenta de qué trata y te sugiere preguntas. Preguntale lo que necesites, por ejemplo «¿qué se ordena?», «¿cuándo es la audiencia?» o «¿quién firma?»: cada respuesta trae la página de donde sale. Tocá **pág. N** para ver esa hoja con lo buscado resaltado, o abrí el documento en esa página. Funciona sin internet. Con «Nexa con internet» la respuesta sale redactada y también con las páginas.
