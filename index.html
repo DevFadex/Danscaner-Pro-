@@ -3452,7 +3452,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 4.5',APP_VER='77';
+const NEXA_VER='Nexa 4.5',APP_VER='78';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3570,7 +3570,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='77 · 08/10/2026';
+const BUILD='78 · 09/10/2026';
 /* Versión que ven los usuarios: se cambia a mano solo cuando se decide publicar una versión nueva para todos.
    El administrador ve la versión interna (BUILD) con cada cambio. */
 const PUBLIC_VER='1.2';
@@ -6320,6 +6320,123 @@ document.head.insertAdjacentHTML('beforeend','<style id="v77Css">'+
  '.rv2-img{position:relative;display:flex;align-items:center;justify-content:center;width:100%;min-height:40vh;flex:1 1 auto;max-height:74vh}.rv2-img img{max-width:96%;max-height:74vh;object-fit:contain;border-radius:6px;background:#fff;box-shadow:0 6px 24px #000a}'+
  '.cam-rev2.loading .rv2-img img{opacity:.25}.rv2-spin{display:none;position:absolute;width:42px;height:42px;border:4px solid #fff4;border-top-color:#fff;border-radius:50%;animation:rv2s 0.9s linear infinite}.cam-rev2.loading .rv2-spin{display:block}@keyframes rv2s{to{transform:rotate(360deg)}}'+
  '.cam-rev2 .rv-b button{min-height:48px;font-size:15px}.cam-rev2 .rv-b button:focus-visible{outline:3px solid #fff;outline-offset:2px}'+
+ '</style>');
+
+
+/* ===== v78 · Nexa estilo ChatPDF: cada documento se lee por página, las respuestas citan [pág. N], la cita abre la hoja,
+ * y al adjuntar un documento Nexa cuenta de qué trata y sugiere preguntas. Todo en el teléfono: el OCR y la búsqueda son locales. ===== */
+/* ---- 1) texto por página (antes se guardaba todo junto y no se sabía de qué hoja salía cada dato) ---- */
+const NxRead={w:null,lang:'',q:Promise.resolve(),
+ async worker(){const lang=S.lang||'spa';if(this.w&&this.lang===lang)return this.w;await loadLib('tess');if(this.w)try{await this.w.terminate()}catch(e){}
+  this.w=await Tesseract.createWorker(lang,1);this.lang=lang;try{await this.w.setParameters({preserve_interword_spaces:'1',tessedit_pageseg_mode:'3',user_defined_dpi:'300'})}catch(e){}return this.w},
+ async page(p){const c=await renderPage(p,{maxSide:2200});let img=c;try{if(typeof prepOcr==='function')img=prepOcr(c)}catch(e){}const w=await this.worker();const {data}=await w.recognize(img);c.width=c.height=1;
+  return String(data.text||'').replace(/[ \t]+\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim()},
+ async end(){if(this.w){const w=this.w;this.w=null;try{await w.terminate()}catch(e){}}}};
+/* textos guardados alineados con las páginas actuales (si se reordenan o se borran hojas, sigue sirviendo por id) */
+function nxAligned(doc){if(!doc||!Array.isArray(doc.pages))return [];const m=new Map();if(Array.isArray(doc.pageTexts)&&Array.isArray(doc.pageIds))doc.pageIds.forEach((id,i)=>m.set(id,doc.pageTexts[i]));
+ return doc.pages.map(p=>m.has(p.id)?m.get(p.id):null)}
+/* cuando la app ya pasó OCR a todo el documento, se guardan también los textos por página */
+let _nxOcrLast=null;
+{const _o=ocrCanvases;ocrCanvases=async function(){const r=await _o.apply(this,arguments);try{if(Array.isArray(r))_nxOcrLast={t:r.slice(),at:Date.now()}}catch(e){}return r}}
+{const _p=DB.putDoc;DB.putDoc=function(d){try{const L=_nxOcrLast;if(d&&Array.isArray(d.pages)&&L&&Date.now()-L.at<180000&&L.t.length===d.pages.length&&d.text&&L.t.join('\n\n').trim().slice(0,20000)===d.text){d.pageTexts=L.t.map(x=>String(x||'').slice(0,15000));d.pageIds=d.pages.map(p=>p.id)}}catch(e){}return _p.apply(DB,arguments)}}
+/* prepara un documento adjunto: usa los textos guardados y lee con OCR solo las páginas que falten (de a una, sin bloquear la pantalla) */
+function nxPrep(d){if(d._prep)return d._prep;
+ d._prep=NxRead.q=NxRead.q.then(async()=>{try{const doc=await DB.getDoc(d.id);if(!doc||!doc.pages||!doc.pages.length)return;const N=Math.min(doc.pages.length,60);const tx=nxAligned(doc).slice(0,N);
+   const miss=[];tx.forEach((t,i)=>{if(t==null)miss.push(i)});
+   // un escaneo sin texto lo lee el lector de Nexa al preguntar (avisa página por página y se puede detener); acá no se duplica
+   if(miss.length&&d.vis)return;
+   if(miss.length){d.reading={i:0,n:miss.length};Nexa.renderDocs();
+    for(const [k,i] of miss.entries()){if(!Nexa.st.docs.includes(d))break;d.reading={i:k+1,n:miss.length};Nexa.renderDocs();try{tx[i]=await NxRead.page(doc.pages[i])}catch(e){tx[i]=''}}
+    const cur=await DB.getDoc(d.id)||doc;const prev=new Map();nxAligned(cur).forEach((t,i)=>{if(t!=null)prev.set(cur.pages[i].id,t)});doc.pages.slice(0,N).forEach((p,i)=>{if(tx[i]!=null)prev.set(p.id,tx[i])});
+    cur.pageIds=[...prev.keys()];cur.pageTexts=[...prev.values()].map(t=>String(t||'').slice(0,15000));const all=tx.map(t=>t||'').join('\n\n').trim();if(!(cur.text||'').trim()&&all)cur.text=all.slice(0,20000);
+    try{await DB.putDoc(cur)}catch(e){}}
+   d.pg=tx.map(t=>t||'');d.nPages=doc.pages.length;const all=d.pg.join('\n\n').trim();if(all.length>40){if(!(d.text||'').trim()||d.vis)d.text=all.slice(0,20000);d.vis=false}
+  }catch(e){console.warn('Nexa: lectura por página',e)}finally{d.reading=null;d._ready=true;try{Nexa.renderDocs()}catch(e){}if(d._intro){d._intro=false;nxIntro(d)}}});
+ return d._prep}
+{const _r=Nexa.renderDocs;Nexa.renderDocs=function(){const r=_r.apply(this,arguments);try{for(const d of this.st.docs){if(!d._prep)nxPrep(d);const ch=$('#nxDocs [data-rm="'+(window.CSS&&CSS.escape?CSS.escape(d.id):d.id)+'"]');const chip=ch&&ch.parentElement;
+   if(chip&&!chip.querySelector('.nx-rd')){chip.insertAdjacentHTML('beforeend','<small class="nx-rd">'+(d.reading?' · leyendo pág. '+d.reading.i+'/'+d.reading.n:d.pg?' · '+d.nPages+' pág.':'')+'</small>')}}}catch(e){}return r}}
+/* adjuntado recién: cuando termina de leerlo, Nexa lo presenta */
+{const _a=Nexa.attachDoc;Nexa.attachDoc=function(d){const r=_a.apply(this,arguments);const it=this.st.docs.find(x=>x.id===d.id);if(it)nxWantIntro(it);return r}}
+{const _p=Nexa.pickDocs;Nexa.pickDocs=async function(){const before=new Set(this.st.docs);const r=await _p.apply(this,arguments);for(const d of this.st.docs)if(!before.has(d)&&d.fresh)nxWantIntro(d);return r}}
+function nxWantIntro(d){d._introAt=Nexa.st.msgs.length;nxPrep(d);if(d._ready)nxIntro(d);else d._intro=true}
+/* el lector de escaneos sin texto de Nexa (con aviso por página y botón detener) ahora también deja el texto de cada página */
+{const _e=Nexa.ensureText;Nexa.ensureText=async function(){const vis=this.st.docs.filter(x=>x.vis);if(!vis.length)return _e.apply(this,arguments);const col=[];const _ol=ocrLayout;
+ ocrLayout=function(){const r=_ol.apply(this,arguments);col.push(r);return r};try{return await _e.apply(this,arguments)}finally{ocrLayout=_ol;
+  try{for(const d of vis){const doc=await DB.getDoc(d.id);if(!doc||!doc.pages.length)continue;const n=Math.min(10,doc.pages.length),tx=col.splice(0,n);if(tx.length!==n||d.vis)break;
+   doc.pageIds=doc.pages.slice(0,n).map(p=>p.id);doc.pageTexts=tx.map(t=>String(t||'').slice(0,15000));try{await DB.putDoc(doc)}catch(e){}d.pg=tx.map(t=>String(t||''));d.nPages=doc.pages.length;d._ch=null}}catch(e){console.warn('Nexa: páginas',e)}}}}
+/* ---- 2) búsqueda por fragmentos (BM25) con sinónimos de oficina ---- */
+const NX_STOP=new Set('el la los las un una unos unas de del al a en y o u e que se por para con sin su sus es son fue ser lo le les me mi mis tu te como cual cuales donde cuando quien quienes este esta estos estas ese esa eso esto hay tiene tienen dice dicen sobre segun ya no si mas muy pero tambien ni nos hace hacer algun alguna algo cosa documento documentos oficio escrito pagina paginas favor decime dime indicame contame'.split(' '));
+const NX_SYN={ordena:['ordena','ordeno','dispone','dispongo','resuelve','resuelvo','solicita','requiere','pide','manda','librese'],pide:['pide','solicita','requiere','ordena','dispone'],resolvio:['resuelve','resuelvo','resolvio','dispone','dispongo','falla','fallo'],
+ plazo:['plazo','dias','termino','vence','vencimiento','hasta','dentro'],fecha:['fecha','fechas','dia','dias','hora','horas'],cuando:['fecha','dia','dias','hora','horas','audiencia'],firma:['firma','firmado','juez','jueza','dr','dra','secretario','secretaria'],
+ pena:['pena','condena','prision','anos','meses','reclusion','multa'],condena:['condena','pena','prision','condenado','sentencia'],audiencia:['audiencia','comparendo','comparecer','citacion','cita'],traslado:['traslado','trasladar','trasladado','conduccion','comparendo'],
+ domicilio:['domicilio','domiciliado','calle','barrio','localidad'],telefono:['telefono','celular','tel'],visita:['visita','visitas','visitante','vinculo']};
+const nxStem=w=>w.length>4?w.replace(/(mente|ciones|cion|es|s)$/,''):w;
+const nxToks=s=>nbNorm(String(s||'').replace(/(\d)\.(?=\d{3}\b)/g,'$1')).replace(/[^a-z0-9\s]/g,' ').split(/\s+/).filter(w=>w.length>1&&!NX_STOP.has(w));
+function nxQueryToks(q){const out=new Map();for(const w of nxToks(q)){out.set(nxStem(w),Math.max(out.get(nxStem(w))||0,1));for(const s of (NX_SYN[w]||NX_SYN[nxStem(w)]||[]))if(!out.has(nxStem(s)))out.set(nxStem(s),.6)}return out}
+function nxChunks(d){if(d._ch&&d._chK===d.pg)return d._ch;const out=[];(d.pg||[]).forEach((t,i)=>{const paras=String(t||'').split(/\n{2,}|\n(?=[A-ZÁÉÍÓÚÑ0-9“"-])/).map(x=>x.replace(/\s+/g,' ').trim()).filter(Boolean);let cur='';
+  const push=()=>{if(cur.trim())out.push({d,page:i+1,text:cur.trim(),toks:nxToks(cur).map(nxStem)});cur=''};for(const p of paras){if(cur&&(cur.length+p.length)>700)push();cur+=(cur?' ':'')+p}push()});d._ch=out;d._chK=d.pg;return out}
+function nxRetrieve(q,docs,k=6){const ch=[];for(const d of docs)ch.push(...nxChunks(d));if(!ch.length)return [];const Q=nxQueryToks(q);if(!Q.size)return [];
+ const df=new Map();for(const c of ch)for(const t of new Set(c.toks))df.set(t,(df.get(t)||0)+1);const N=ch.length,avg=ch.reduce((a,c)=>a+c.toks.length,0)/N||1;
+ const sc=ch.map(c=>{const tf=new Map();for(const t of c.toks)tf.set(t,(tf.get(t)||0)+1);let s=0;for(const [t,wq] of Q){const f=tf.get(t)||0;if(!f)continue;const idf=Math.log(1+(N-(df.get(t)||0)+.5)/((df.get(t)||0)+.5));s+=wq*idf*(f*2.2)/(f+1.2*(.25+.75*c.toks.length/avg))}return {c,s}});
+ return sc.filter(x=>x.s>0).sort((a,b)=>b.s-a.s).slice(0,k).map(x=>({...x.c,score:x.s}))}
+const nxCiteTag=(d,page,multi)=>'['+(multi?d.name.replace(/[\[\],]/g,' ').trim()+', ':'')+'pág. '+page+']';
+
+/* ---- 3) Nexa con internet: los documentos van rotulados por página y se pide citar ---- */
+{const _s=Nexa.system;Nexa.system=function(){const ds=this.st.docs.filter(d=>d.pg&&d.pg.some(x=>x&&x.trim()));if(!ds.length)return _s.apply(this,arguments);
+ const multi=this.st.docs.length>1,saved=ds.map(d=>[d,d.text,d.vis]),q=nxLastQ();const total=ds.reduce((a,d)=>a+d.pg.reduce((b,t)=>b+t.length+16,0),0);
+ try{if(total<=36000)for(const d of ds)d.text=d.pg.map((t,i)=>nxCiteTag(d,i+1,multi)+'\n'+(t.trim()||'(página sin texto)')).join('\n\n');
+  else{const top=nxRetrieve(q,ds,28);for(const d of ds){const mine=top.filter(c=>c.d===d).sort((a,b)=>a.page-b.page);d.text='(Documento largo: van los fragmentos más relacionados con la pregunta)\n\n'+(mine.length?mine:nxChunks(d).slice(0,6)).map(c=>nxCiteTag(d,c.page,multi)+'\n'+c.text).join('\n\n')}}
+  ds.forEach(d=>d.vis=false);
+  return _s.apply(this,arguments)+'\n\nCITAS DE PÁGINA: el texto de los documentos viene rotulado por página. Cada dato que tomes de un documento terminalo con su rótulo entre corchetes, igual que en el texto: '+(multi?'[Nombre del documento, pág. N]':'[pág. N]')+'. No inventes páginas ni datos: si algo no figura en los documentos, decí «no figura en el documento».'}
+ finally{saved.forEach(([d,t,v])=>{d.text=t;d.vis=v})}}}
+
+/* ---- 4) Nexa sin internet: responde preguntas sobre el documento con las frases que lo dicen y su página ---- */
+const NX_SENT=s=>String(s).replace(/([.;!?])\s+(?=[A-ZÁÉÍÓÚÑ0-9“"(¿¡-])/g,(m,p,o,str)=>p==='.'&&/\b(Dr|Dra|Sr|Sra|Sres|Lic|Ing|Art|Arts|Inc|Expte|N|Nro|Dto|Pab|Av|Cdad|Prov)\.$/i.test(str.slice(Math.max(0,o-8),o+1))?m:p+'\n').split(/\n+/).map(x=>x.trim()).filter(x=>x.length>12);
+function nxDocAnswer(q,docs){const multi=docs.length>1,n=nbNorm(q),top=nxRetrieve(q,docs,6);const Q=nxQueryToks(q);const lines=[],seen=new Set();
+ // datos puntuales: fechas, DNI y personas con la página donde aparecen
+ const ent=[];const want=k=>({fechas:/\b(fecha|fechas|cuando|plazo|vence|dia|audiencia)\b/,dni:/\b(dni|d\.n\.i|documento de identidad)\b/,personas:/\b(quien|quienes|persona|personas|nombre|nombres|interno|imputado|condenado)\b/,expedientes:/\b(expediente|expte|legajo|causa)\b/})[k].test(n);
+ for(const k of ['fechas','dni','personas','expedientes'])if(want(k))for(const d of docs)d.pg.forEach((t,i)=>{for(const v of (nbEntities(t)[k]||[]).slice(0,6)){const key=k+v;if(seen.has(key))continue;seen.add(key);ent.push('- **'+v+'** '+nxCiteTag(d,i+1,multi))}});
+ const best=top[0]?top[0].score:0;
+ if(best>=.5){const cand=[];for(const c of top.slice(0,4))for(const s of NX_SENT(c.text)){const st=new Set(nxToks(s).map(nxStem));let v=0;for(const [t,w] of Q)if(st.has(t))v+=w;if(v>0)cand.push({s,v:v+c.score*.15,c})}
+  cand.sort((a,b)=>b.v-a.v);for(const x of cand){const k=x.s.slice(0,80);if(seen.has(k))continue;seen.add(k);lines.push('- «'+x.s.replace(/\s+/g,' ').slice(0,420)+'» '+nxCiteTag(x.c.d,x.c.page,multi));if(lines.length>=3)break}}
+ if(!lines.length&&!ent.length)return null;
+ const head=multi?'Esto dicen tus documentos:':'Según **'+docs[0].name+'**:';
+ return head+'\n\n'+(lines.length?lines.join('\n'):'')+(ent.length?(lines.length?'\n\n**Datos que figuran:**\n':'')+ent.slice(0,12).join('\n'):'')+'\n\n*Tocá la página para ver la hoja. Para una respuesta redactada, usá **Nexa con internet**.*'}
+{const _a=NexaBasic.answer;NexaBasic.answer=async function(q,docs){const ds=(docs||[]).filter(d=>d.pg&&d.pg.some(x=>x&&x.trim()));const n=nbNorm(q);
+ if(ds.length&&(nxIsQuestion(q)||/\b(en que pagina|que pagina|donde dice|donde figura)\b/.test(n))&&!/\b(resum\w*|extrae\w*|extrai\w*|corregi\w*|corrige|traduc\w*|redact\w*|plantilla)\b/.test(n)&&!/\bbusc\w* en (todos|mis)\b/.test(n)){
+  const r=nxDocAnswer(q,ds);if(r)return r;if(nxAboutDoc(q)||/\b(dice|figura|aparece|menciona|ordena|dispone|resuelve)\b/.test(n))return 'No encontré eso en **'+(ds.length>1?'los documentos adjuntos':ds[0].name)+'**. Probá con otras palabras (por ejemplo, el apellido, el número o la fecha).'}
+ return _a.apply(this,arguments)}}
+
+/* ---- 5) presentación al adjuntar: de qué trata, datos y preguntas sugeridas ---- */
+const NX_SUGQ={Oficio:['¿Qué se ordena o se pide?','¿Hay algún plazo o fecha?','¿A quién se refiere y con qué DNI?'],Notificación:['¿Qué se notifica?','¿Hay algún plazo o fecha?','¿A quién se refiere y con qué DNI?'],Cédula:['¿Qué se notifica?','¿Hay algún plazo o fecha?','¿A quién se refiere?'],
+ Sentencia:['¿Qué se resolvió?','¿Qué pena o medida dispone?','¿Quién firma y en qué fecha?'],Resolución:['¿Qué se resolvió?','¿Qué se ordena?','¿Quién firma y en qué fecha?'],'Auto interlocutorio':['¿Qué se resolvió?','¿Qué se ordena?','¿Quién firma y en qué fecha?'],
+ Acta:['¿Qué se hizo constar?','¿Quiénes intervinieron?','¿En qué fecha y hora?'],Informe:['¿Qué se informa?','¿Qué fechas figuran?','¿A quién se refiere?']};
+function nxIntro(d){/* solo si todavía no se empezó a conversar sobre él (si ya preguntaste, no se interrumpe) */
+ if(!Nexa.st.docs.includes(d)||!d.pg||Nexa.sending||(d._introAt!=null&&Nexa.st.msgs.length!==d._introAt))return;const all=d.pg.join('\n\n'),a=docAnalyze(all),e=nbEntities(all);if(all.trim().length<40)return;
+ const sents=[];d.pg.some((t,i)=>{for(const s of NX_SENT(t))if(s.length>40&&!/^(poder judicial|republica|provincia|ministerio|expte|oficio n)/i.test(nbNorm(s))){sents.push(s.replace(/\s+/g,' ').slice(0,260)+' '+nxCiteTag(d,i+1,false));if(sents.length>=2)return true}return false});
+ const dat=[];if(e.personas.length)dat.push('**Personas:** '+e.personas.slice(0,3).join(', '));if(e.dni.length)dat.push('**DNI:** '+e.dni.slice(0,3).join(', '));if(e.expedientes.length)dat.push('**Expediente:** '+e.expedientes.slice(0,2).join(', '));if(e.fechas.length)dat.push('**Fechas:** '+e.fechas.slice(0,4).join(', '));
+ const qs=NX_SUGQ[a.type]||['¿De qué trata el documento?','¿Qué fechas figuran?','¿Qué personas se mencionan?'];
+ Nexa.st.msgs.push({role:'assistant',prov:'basic',intro:d.id,text:'📄 **'+d.name+'** · '+d.nPages+' página'+(d.nPages===1?'':'s')+(a.type?' · '+a.type:'')+'\n\n'+(sents.length?'**De qué trata:** '+sents.join(' '):'')+(dat.length?'\n\n'+dat.join(' · '):'')+'\n\nPreguntame lo que necesites; te digo en qué página está cada cosa.\n\n'+qs.map(x=>'[['+x+'|'+x+']]').join(' ')});
+ Nexa.save();Nexa.render()}
+
+/* ---- 6) citas tocables: [pág. N] abre la hoja con el texto de la página y lo buscado resaltado ---- */
+{const _md=nexaMd;nexaMd=function(s){const h=_md(s);return h.replace(/\[(?:([^\[\]<>\n]{1,90}?),\s*)?p[áa]g(?:ina|s)?\.?\s*(\d{1,4})(?:\s*[-–y]\s*\d{1,4})?\]/gi,(m,nm,p)=>'<button class="nx-cite" data-cn="'+(nm||'').trim()+'" data-cp="'+p+'" aria-label="Ver la página '+p+'">'+(nm?nm.trim()+' · ':'')+'pág. '+p+'</button>')}}
+async function nxShowCite(name,page){const docs=Nexa.st.docs;const nn=nbNorm(name||'');let d=null;
+ if(nn)d=docs.find(x=>nbNorm(x.name)===nn)||docs.find(x=>nbNorm(x.name).includes(nn)||nn.includes(nbNorm(x.name)));if(!d)d=docs.find(x=>x.pg)||docs[0];
+ if(!d)return toast('El documento ya no está adjunto');const doc=await DB.getDoc(d.id);if(!doc||!doc.pages[page-1])return toast('Ese documento no tiene página '+page);
+ const t=(d.pg&&d.pg[page-1])||'',Q=nxQueryToks(nxLastQ());const hl=esc(t).replace(/[A-Za-zÁÉÍÓÚÑáéíóúñü0-9.]{3,}/g,w=>Q.has(nxStem(nxToks(w)[0]||''))?'<mark>'+w+'</mark>':w).replace(/\n/g,'<br>');
+ const b=openSheet('Página '+page+' · '+d.name,'<div class="nxc-img"><img id="nxcImg" alt="Página '+page+'"></div>'+(t?'<div class="cph">Texto de la página</div><div class="nxc-txt">'+hl+'</div>':'')+'<button class="btn pri block" id="nxcOpen"><i data-ico="doc">📄</i> Abrir el documento en esta página</button>');
+ try{iconize(b)}catch(e){}renderPage(doc.pages[page-1],{maxSide:1200}).then(c=>{const im=$('#nxcImg',b);if(im)im.src=c.toDataURL('image/jpeg',.85);c.width=c.height=1}).catch(()=>{});
+ const mk=b.querySelector('.nxc-txt mark');if(mk)setTimeout(()=>mk.scrollIntoView({block:'center'}),350);
+ $('#nxcOpen',b).onclick=async()=>{await Nav.back();await openDocById(d.id);if(DOC&&DOC.pages[page-1])Ed.open(page-1)}}
+document.addEventListener('click',e=>{const c=e.target.closest('.nx-cite');if(!c)return;e.preventDefault();e.stopPropagation();nxShowCite(c.dataset.cn,+c.dataset.cp)},true);
+if(typeof NX_CAPS!=='undefined')NX_CAPS.unshift(['Chatear con el documento','¿Qué se ordena en este oficio?','adjuntá un documento y preguntale: te respondo con la página donde lo dice']);
+document.head.insertAdjacentHTML('beforeend','<style id="v78Css">'+
+ '.nx-cite{display:inline-flex;align-items:center;gap:3px;margin:0 2px;padding:1px 8px;border-radius:999px;border:1px solid var(--ac,#2E3FAD);background:transparent;color:var(--ac,#2E3FAD);font-size:.82em;font-weight:700;line-height:1.6;vertical-align:baseline;cursor:pointer;white-space:nowrap}'+
+ '.nx-cite:hover{background:var(--ac,#2E3FAD);color:#fff}.nx-cite:focus-visible{outline:3px solid var(--ac,#2E3FAD);outline-offset:2px}'+
+ '.nxc-img{display:flex;justify-content:center;background:var(--bg2,#f1f3f6);border-radius:10px;padding:8px;margin-bottom:10px}.nxc-img img{max-width:100%;max-height:52vh;object-fit:contain;background:#fff;box-shadow:0 2px 10px #0002}'+
+ '.nxc-txt{max-height:30vh;overflow:auto;font-size:14px;line-height:1.55;padding:10px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:10px;white-space:normal}.nxc-txt mark{background:#ffe58a;color:#111;border-radius:3px;padding:0 1px}'+
+ '.nx-rd{opacity:.8}.nx-wait{display:block;margin:4px 0 0 4px;font-size:12.5px;color:var(--mut,#6b7280)}'+
  '</style>');
 
 </script>

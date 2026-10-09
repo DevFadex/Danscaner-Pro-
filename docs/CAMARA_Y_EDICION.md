@@ -679,3 +679,13 @@ Todo va dentro de `@media (min-width:1024px)`; el celular no cambia.
   En la prueba, un recorte corrido 62 px queda a ≤ 12 px; un recorte bueno no se toca. El marco del video solo reemplaza la detección en la foto grande si esta no encontró la hoja (antes la pisaba y corría el recorte).
 - **Primera foto grande**: en lote, la primera foto se muestra recortada y grande, con «Repetir», «Seguir» y «Listo». Mientras se revisa no se dispara otra foto. En la cámara, «Ver la foto al sacarla» ofrece: la primera / todas / no.
 - **«Documento listo» rápido**: el tamaño de cada calidad se estima con 1 o 2 hojas de muestra («≈ 1,2 MB»). Antes armaba el PDF entero cuatro veces. El tamaño exacto aparece al guardar.
+
+## v78 · Nexa estilo ChatPDF: chatear con el documento y ver la página
+- **Texto por página**: al adjuntar un documento, Nexa lo lee hoja por hoja con OCR en el teléfono (`NxRead`), sin bloquear la pantalla. En el adjunto se ve «leyendo pág. 3/10» y después «10 pág.». Los textos quedan guardados en el documento (`pageTexts` + `pageIds`, alineados por id de página), así la próxima vez no se vuelven a leer. Cuando la app ya pasó OCR a todo el documento, también se guardan por página. Antes todo quedaba junto y no se sabía de qué hoja salía cada dato. Un escaneo sin texto ahora se puede preguntar sin internet.
+- **Presentación al adjuntar**: cuenta de qué trata (con su página), qué personas, DNI, expediente y fechas figuran, y sugiere 3 preguntas según el tipo (oficio, sentencia, acta, informe…).
+- **Respuestas con la página**:
+  - Sin internet, busca por fragmentos (BM25 con sinónimos de oficina: ordena/dispone/resuelve, plazo/vence, firma/juez…). Responde con las frases textuales y su página. Fechas, DNI y personas se listan con su página.
+  - Con internet, el texto va rotulado por página (o, si es largo, solo los fragmentos relacionados) y se le pide a la IA que cite cada dato con [pág. N].
+  - Si no está en el documento, lo dice.
+- **Citas tocables**: [pág. N] es un botón que abre la hoja, el texto de la página con lo buscado resaltado y «Abrir el documento en esta página».
+- Todo es local: el OCR y la búsqueda corren en el teléfono. Solo con «Nexa con internet» se manda el texto al proveedor elegido, como antes.
