@@ -3452,7 +3452,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 4.5',APP_VER='80';
+const NEXA_VER='Nexa 4.5',APP_VER='81';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3570,7 +3570,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='80 · 09/10/2026';
+const BUILD='81 · 10/10/2026';
 /* Versión que ven los usuarios: se cambia a mano solo cuando se decide publicar una versión nueva para todos.
    El administrador ve la versión interna (BUILD) con cada cambio. */
 const PUBLIC_VER='1.2';
@@ -6491,19 +6491,24 @@ const Bio={
    const ok=await crypto.subtle.verify(es?{name:'ECDSA',hash:'SHA-256'}:'RSASSA-PKCS1-v1_5',key,es?this.der2raw(r.signature):r.signature,data);if(!ok)return false}
   return true}};
 /* pantalla de bloqueo: huella primero, PIN como respaldo */
-Lock.show=function(){if($('#lockScr'))return;const d=document.createElement('div');d.id='lockScr';const bio=Bio.on;
+const BIO_MAX_FAILS=5;
+Lock.show=function(){if($('#lockScr'))return;const d=document.createElement('div');d.id='lockScr';const bio=Bio.on&&(S.lock.bioFails||0)<BIO_MAX_FAILS;
  d.innerHTML='<div class="lockbox" role="dialog" aria-label="Desbloquear Danscanner Pro"><div class="lockico">'+(bio?icoSvg('finger'):'🔒')+'</div><b>Danscanner Pro está bloqueado</b>'
-  +(bio?'<button class="btn pri block lk-bio" id="lockBio">'+icoSvg('finger')+' Ingresar con huella</button><button class="btn block lk-alt" id="lockUsePin">Usar el PIN</button>':'')
+  +(bio?'<button class="btn pri block lk-bio" id="lockBio">'+icoSvg('finger')+' Ingresar con huella</button>':'')
   +'<div class="lk-pin"'+(bio?' hidden':'')+'><input id="lockPin" type="password" inputmode="numeric" maxlength="12" placeholder="PIN" aria-label="PIN"><button class="btn pri block" id="lockGo">Desbloquear</button></div><div class="muted" id="lockMsg" role="status"></div></div>';
- document.body.appendChild(d);const ok=()=>{d.remove();Lock.t=Date.now()};
+ document.body.appendChild(d);const ok=()=>{d.remove();Lock.t=Date.now();if(S.lock&&S.lock.bioFails){S.lock.bioFails=0;saveS()}};
+ if(!bio&&Bio.on)$('#lockMsg').textContent='Hubo '+BIO_MAX_FAILS+' intentos con la huella que no se pudieron verificar. Ingresá con el PIN.';
  const goPin=async()=>{const v=$('#lockPin').value;if(!v)return;const h=await pinHash(v,S.lock.salt);if(h===S.lock.hash)ok();else{$('#lockMsg').textContent='PIN incorrecto';$('#lockPin').value=''}};
  $('#lockGo').onclick=goPin;$('#lockPin').onkeydown=e=>{if(e.key==='Enter')goPin()};
- const showPin=()=>{d.querySelector('.lk-pin').hidden=false;const u=$('#lockUsePin');if(u)u.hidden=true;$('#lockPin').focus()};
+ const showPin=()=>{d.querySelector('.lk-pin').hidden=false;const u=$('#lockBio');if(u)u.hidden=true;$('#lockPin').focus()};
+ const fail=why=>{S.lock.bioFails=(S.lock.bioFails||0)+1;saveS();const n=S.lock.bioFails;if(n>=BIO_MAX_FAILS){$('#lockMsg').textContent='Hubo '+BIO_MAX_FAILS+' intentos fallidos. Ingresá con el PIN.';showPin()}else $('#lockMsg').textContent=why+' Intento '+n+' de '+BIO_MAX_FAILS+'.'};
  if(bio){let busyB=false;const goBio=async()=>{if(busyB)return;busyB=true;$('#lockMsg').textContent='Apoyá el dedo en el sensor…';
-   try{if(await Bio.verify())return ok();$('#lockMsg').textContent='No se pudo verificar. Probá de nuevo o usá el PIN.'}
-   catch(e){$('#lockMsg').textContent=e&&e.name==='NotAllowedError'?'Cancelado. Tocá «Ingresar con huella» o usá el PIN.':'La huella no está disponible ('+(e.message||e.name||e)+'). Usá el PIN.'}
+   try{if(await Bio.verify())return ok();fail('No se pudo verificar la huella.')}
+   catch(e){if(e&&e.name==='NotAllowedError')fail('No se reconoció o se canceló. Tocá «Ingresar con huella» para probar de nuevo.');
+    // si el teléfono ya no ofrece la huella (se borraron las huellas del sistema, otro navegador), se pasa al PIN para no quedar afuera
+    else{$('#lockMsg').textContent='La huella no está disponible en este teléfono ('+(e.message||e.name||e)+'). Ingresá con el PIN.';showPin()}}
    finally{busyB=false}};
-  $('#lockBio').onclick=goBio;$('#lockUsePin').onclick=showPin;
+  $('#lockBio').onclick=goBio;
   // se pide sola al aparecer (si el navegador lo permite sin tocar; si no, queda el botón)
   if(document.visibilityState==='visible')setTimeout(goBio,250)}
  else $('#lockPin').focus()};
@@ -6511,7 +6516,7 @@ Lock.show=function(){if($('#lockScr'))return;const d=document.createElement('div
 if($('#lockScr')&&Lock.cfg){$('#lockScr').remove();Lock.show()}
 /* ajustes: «Bloqueo con PIN» pasa a «Ingreso con huella y PIN» */
 lockSheet=async function(){const on=!!Lock.cfg,can=await Bio.can();
- const b=openSheet('Ingreso con huella y PIN','<p class="muted">Al abrir la app y después de '+(Lock.cfg?.mins||5)+' minutos sin usarla te pide la huella (o el rostro). El PIN queda de respaldo por si el sensor falla. La huella la verifica el teléfono: nunca llega a la app ni a internet. No cifra los archivos: alguien con conocimientos técnicos y el teléfono en la mano igual podría leerlos, así que no guardes documentación reservada más tiempo del necesario.</p>'
+ const b=openSheet('Ingreso con huella y PIN','<p class="muted">Al abrir la app y después de '+(Lock.cfg?.mins||5)+' minutos sin usarla te pide solo la huella (o el rostro). Si 5 intentos seguidos no se pueden verificar, te pide el PIN de respaldo. La huella la verifica el teléfono: nunca llega a la app ni a internet. No cifra los archivos: alguien con conocimientos técnicos y el teléfono en la mano igual podría leerlos, así que no guardes documentación reservada más tiempo del necesario.</p>'
   +(on?'<div class="hint">'+(Bio.on?'Huella y PIN activados':'PIN activado')+'</div>'
      +(can&&!Bio.on?'<button class="btn pri block" id="lkBioOn">'+icoSvg('finger')+' Activar ingreso con huella</button>':'')
      +(Bio.on?'<button class="btn block" id="lkBioOff">'+icoSvg('finger')+' Dejar de usar la huella</button>':'')

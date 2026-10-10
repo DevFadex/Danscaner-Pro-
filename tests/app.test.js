@@ -1491,12 +1491,22 @@ await test('Ingreso con huella (v80): se registra con el sensor, desbloquea con 
   const st=await pg.evaluate(()=>({pk:!!S.lock.bio.pk,alg:S.lock.bio.alg,keys:Object.keys(S.lock).sort().join(',')}));assert.ok(st.pk,'debe guardar la llave pública');assert.equal(st.alg,-7);
   /* bloqueo: se pide la huella sola y desbloquea */
   await pg.evaluate(()=>{for(let i=0;i<4;i++)if(Nav.top())Nav.back();Lock.show()});await pg.waitForFunction(()=>!document.querySelector('#lockScr'),null,{timeout:10000});
-  /* con un sensor que no verifica a la persona, no entra; el PIN sigue sirviendo */
+  /* v81: solo huella; con un sensor que no verifica a la persona no entra, y el PIN aparece recién después de 5 intentos fallidos */
   await cdp.send('WebAuthn.setUserVerified',{authenticatorId:aid,isUserVerified:false});
-  await pg.evaluate(()=>Lock.show());await pg.waitForFunction(()=>/No se pudo verificar|no está disponible|Cancelado/.test(($('#lockMsg')||{}).textContent||''),null,{timeout:10000});
+  await pg.evaluate(()=>Lock.show());await pg.waitForFunction(()=>/Intento 1 de 5/.test(($('#lockMsg')||{}).textContent||''),null,{timeout:10000});
   assert.ok(await pg.$('#lockScr'),'no debe desbloquear sin verificar la huella');
-  await pg.click('#lockUsePin');await pg.fill('#lockPin','1111');await pg.click('#lockGo');await W(400);assert.match(await pg.textContent('#lockMsg'),/PIN incorrecto/);
+  assert.deepEqual(await pg.evaluate(()=>[!!document.querySelector('#lockUsePin'),document.querySelector('#lockScr .lk-pin').hidden]),[false,true],'al principio se ve solo la huella');
+  for(let k=2;k<=4;k++){await pg.click('#lockBio');await pg.waitForFunction(k=>new RegExp('Intento '+k+' de 5').test($('#lockMsg').textContent),k,{timeout:10000});assert.equal(await pg.evaluate(()=>$('#lockScr .lk-pin').hidden),true,'el PIN no debe aparecer antes de 5 intentos')}
+  /* el contador se guarda: cerrar y volver a abrir no lo reinicia */
+  await pg.evaluate(()=>{$('#lockScr').remove();Lock.show()});await pg.waitForFunction(()=>/5 intentos fallidos/.test($('#lockMsg').textContent),null,{timeout:10000});
+  assert.deepEqual(await pg.evaluate(()=>[$('#lockScr .lk-pin').hidden,$('#lockBio').hidden,S.lock.bioFails]),[false,true,5]);
+  await pg.evaluate(()=>{$('#lockScr').remove();Lock.show()});assert.deepEqual(await pg.evaluate(()=>[$('#lockScr .lk-pin').hidden,!!$('#lockBio')]),[false,false],'con 5 fallas guardadas pide directo el PIN');
+  await pg.fill('#lockPin','1111');await pg.click('#lockGo');await W(400);assert.match(await pg.textContent('#lockMsg'),/PIN incorrecto/);
   await pg.fill('#lockPin','4321');await pg.click('#lockGo');await W(400);assert.equal(await pg.$('#lockScr'),null,'el PIN de respaldo debe desbloquear');
+  assert.equal(await pg.evaluate(()=>S.lock.bioFails),0,'al entrar se reinicia el contador');
+  /* la próxima vez vuelve a pedir solo la huella */
+  await cdp.send('WebAuthn.setUserVerified',{authenticatorId:aid,isUserVerified:true});
+  await pg.evaluate(()=>Lock.show());await pg.waitForFunction(()=>!document.querySelector('#lockScr'),null,{timeout:10000});
   /* una firma que no corresponde a la llave guardada no desbloquea */
   await cdp.send('WebAuthn.setUserVerified',{authenticatorId:aid,isUserVerified:true});
   const forged=await pg.evaluate(async()=>{const real=S.lock.bio.pk;const k=await crypto.subtle.generateKey({name:'ECDSA',namedCurve:'P-256'},true,['sign','verify']);S.lock.bio.pk=Bio.b64u(await crypto.subtle.exportKey('spki',k.publicKey));const r=await Bio.verify();S.lock.bio.pk=real;return r});

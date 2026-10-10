@@ -714,3 +714,11 @@ Todo va dentro de `@media (min-width:1024px)`; el celular no cambia.
   - rechaza una firma de otra llave;
   - el PIN desbloquea;
   - «Dejar de usar la huella» mantiene el PIN.
+
+## v81 · Solo huella; el PIN después de 5 intentos fallidos
+- La pantalla de bloqueo muestra **solo «Ingresar con huella»** (se quitó «Usar el PIN»).
+- Cada intento que no se puede verificar (huella no reconocida o cancelada) suma uno: «Intento 2 de 5».
+- Al quinto intento fallido aparece el PIN.
+- El contador se guarda en el teléfono (`S.lock.bioFails`): cerrar y volver a abrir la app no lo reinicia. Mientras haya 5 fallas guardadas, pide directo el PIN.
+- Al entrar (con huella o con PIN) el contador vuelve a 0, y la próxima vez pide otra vez solo la huella.
+- Excepción para no quedar afuera: si el teléfono ya no ofrece la huella (se borraron las huellas del sistema u otro navegador), pasa directo al PIN.
