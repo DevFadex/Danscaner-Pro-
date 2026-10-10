@@ -151,4 +151,4 @@ Adjuntá un documento con 📎 en Nexa. Nexa lo lee página por página, te cuen
 La primera vez que abrís la app con internet, se guardan solas todas las herramientas: PDF, OCR, Word, Excel y PowerPoint. Cuando terminan, aparece «Herramientas listas para usar sin internet». Desde ahí funcionan sin conexión. Solo necesitan internet Nexa con internet, el traductor y la copia en la nube.
 
 ## Ingresar con huella (v80)
-Ajustes → **Seguridad y accesos** → **Ingreso con huella y PIN**. Elegí un PIN de respaldo y tocá **Activar huella y PIN**: el teléfono te pide la huella una vez para registrarla. Desde ahí, al abrir la app apoyás el dedo y entrás. Si el sensor falla, tocá **Usar el PIN**. La huella la verifica el teléfono y no se guarda en la app.
+Ajustes → **Seguridad y accesos** → **Ingreso con huella y PIN**. Elegí un PIN de respaldo y tocá **Activar huella y PIN**: el teléfono te pide la huella una vez para registrarla. Desde ahí, al abrir la app apoyás el dedo y entrás. La pantalla muestra solo la huella. Si 5 intentos seguidos no se pueden verificar, te pide el PIN de respaldo. La huella la verifica el teléfono y no se guarda en la app.
