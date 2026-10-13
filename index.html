@@ -3452,7 +3452,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 4.5',APP_VER='81';
+const NEXA_VER='Nexa 4.5',APP_VER='82';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3570,7 +3570,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='81 · 10/10/2026';
+const BUILD='82 · 13/10/2026';
 /* Versión que ven los usuarios: se cambia a mano solo cuando se decide publicar una versión nueva para todos.
    El administrador ve la versión interna (BUILD) con cada cambio. */
 const PUBLIC_VER='1.2';
@@ -6293,6 +6293,8 @@ async function camShowRev2(p){const box=$('#camRev2');if(!box||!p)return;Cam._re
  const im=$('#rv2Img');im.removeAttribute('src');box.classList.add('loading');box.hidden=false;
  try{const c=await renderPage(p,{maxSide:1400});if(Cam._rev2===p)im.src=c.toDataURL('image/jpeg',.88);c.width=c.height=1}catch(e){im.src=p.thumb||''}box.classList.remove('loading')}
 {const _sh=Cam.shoot;Cam.shoot=async function(){
+ /* v82: si se toca el disparador mientras se revisa la foto, se sigue y se saca la próxima (nunca queda trabada) */
+ if(this._rev2&&this._rev2!=='…'){$('#camRev2').hidden=true;this._rev2=null;this.busy=false;this._stable=0;try{$('#camera .cam-stage').classList.remove('reviewing')}catch(e){}}
  const want=this.mode==='batch'&&!this.replaceId&&!!this.stream&&!this._rev2&&(camRevMode()==='all'||(camRevMode()==='first'&&!this.batch.length&&!this._pend));
  const n0=this._seq;const r=await _sh.apply(this,arguments);
  if(want&&this._seq>n0&&Nav.isOpen('camera')){const box=$('#camRev2');if(box){this.busy=true;this._rev2='…';$('#rv2Msg').textContent='Procesando la foto…';$('#rv2Img').removeAttribute('src');box.classList.add('loading');box.hidden=false}
@@ -6317,7 +6319,9 @@ async function pdfSizeEstimate(pages){const n=pages.length,idx=n>4?[0,Math.floor
 document.head.insertAdjacentHTML('beforeend','<style id="v77Css">'+
  '.cam-rev img{max-width:94%;max-height:70vh}'+
  '.cam-rev2{background:#000e;gap:12px;padding:14px 10px}.cam-rev2 small{font-size:15px;font-weight:700;color:#fff}'+
- '.rv2-img{position:relative;display:flex;align-items:center;justify-content:center;width:100%;min-height:40vh;flex:1 1 auto;max-height:74vh}.rv2-img img{max-width:96%;max-height:74vh;object-fit:contain;border-radius:6px;background:#fff;box-shadow:0 6px 24px #000a}'+
+ /* v82: la hoja vertical ocupaba todo el alto y empujaba el texto y los botones fuera de la pantalla: ahora la imagen se achica y los botones quedan siempre a la vista */
+ '.rv2-img{position:relative;display:flex;align-items:center;justify-content:center;width:100%;flex:1 1 0;min-height:0}.rv2-img img{max-width:96%;max-height:100%;width:auto;height:auto;object-fit:contain;border-radius:6px;background:#fff;box-shadow:0 6px 24px #000a}'+
+ '#camRev2{justify-content:space-between;overflow:hidden}#camRev2>small,#camRev2>.rv-b{flex:none}'+
  '.cam-rev2.loading .rv2-img img{opacity:.25}.rv2-spin{display:none;position:absolute;width:42px;height:42px;border:4px solid #fff4;border-top-color:#fff;border-radius:50%;animation:rv2s 0.9s linear infinite}.cam-rev2.loading .rv2-spin{display:block}@keyframes rv2s{to{transform:rotate(360deg)}}'+
  '.cam-rev2 .rv-b button{min-height:48px;font-size:15px}.cam-rev2 .rv-b button:focus-visible{outline:3px solid #fff;outline-offset:2px}'+
  '</style>');
