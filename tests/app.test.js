@@ -1398,6 +1398,15 @@ await test('Cámara v77: la hoja sigue al teléfono, el recorte desparejo se emp
   const v=await pg.evaluate(()=>({w:$('#rv2Img').getBoundingClientRect().width,vw:innerWidth,n:Cam.batch.length,busy:Cam.busy,msg:$('#rv2Msg').textContent}));
   assert.equal(v.n,1);assert.ok(v.busy,'mientras se revisa no se dispara otra foto');assert.ok(v.w>=v.vw*.6,'la foto tiene que verse grande: '+v.w+' de '+v.vw);assert.match(v.msg,/Sirve/);
   await pg.click('#rv2Again');assert.equal(await pg.evaluate(()=>Cam.batch.length+'|'+$('#camRev2').hidden+'|'+Cam.busy),'0|true|false');
+  /* v82: una hoja vertical (A4/oficio) no debe empujar los botones fuera de la pantalla */
+  await pg.evaluate(async()=>{const c=canvas(1240,2000),x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,1240,2000);x.fillStyle='#123';x.font='60px Arial';x.fillText('Hoja vertical de prueba',80,200);
+    const p=await makePage(c.toDataURL('image/jpeg',.9),{auto:false,filter:'original'});Cam.batch.push(p);await camShowRev2(p)});
+  await pg.waitForFunction(()=>$('#rv2Img').naturalWidth>0,null,{timeout:15000});await W(300);
+  const vis=await pg.evaluate(()=>{const st=$('#camera .cam-stage').getBoundingClientRect();return ['#rv2Again','#rv2Go','#rv2Done','#rv2Msg'].map(s=>{const e=$(s),r=e.getBoundingClientRect(),c=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return s+':'+(r.top>=st.top-1&&r.bottom<=st.bottom+1&&r.bottom<=innerHeight&&(c===e||e.contains(c)))})});
+  assert.deepEqual(vis,['#rv2Again:true','#rv2Go:true','#rv2Done:true','#rv2Msg:true'],'con hoja vertical el texto o los botones quedan fuera');
+  /* tocar el disparador mientras se revisa: sigue y saca la próxima, no queda trabada */
+  await pg.click('#camShot');await pg.waitForFunction(()=>Cam.batch.length===2&&!Cam.busy,null,{timeout:30000});assert.equal(await pg.evaluate(()=>$('#camRev2').hidden),true);
+  await pg.evaluate(()=>{Cam.batch=[];Cam.updUI()});
   /* la segunda foto ya no se frena (solo la primera) */
   await pg.click('#camShot');await pg.waitForFunction(()=>!$('#camRev2').hidden&&$('#rv2Img').naturalWidth>0,null,{timeout:30000});await pg.click('#rv2Go');
   await pg.click('#camShot');await pg.waitForFunction(()=>Cam.batch.length===2,null,{timeout:30000});assert.equal(await pg.evaluate(()=>$('#camRev2').hidden),true);

@@ -722,3 +722,9 @@ Todo va dentro de `@media (min-width:1024px)`; el celular no cambia.
 - El contador se guarda en el teléfono (`S.lock.bioFails`): cerrar y volver a abrir la app no lo reinicia. Mientras haya 5 fallas guardadas, pide directo el PIN.
 - Al entrar (con huella o con PIN) el contador vuelve a 0, y la próxima vez pide otra vez solo la huella.
 - Excepción para no quedar afuera: si el teléfono ya no ofrece la huella (se borraron las huellas del sistema u otro navegador), pasa directo al PIN.
+
+## v82 · La revisión de la primera foto ya no traba el lote
+- Con una hoja vertical (A4 u oficio), la foto grande ocupaba todo el alto y empujaba el texto y los botones «Repetir / Seguir / Listo» fuera de la pantalla: la cámara parecía trabada.
+- Ahora la imagen se achica para dejar lugar, y el texto y los botones quedan siempre a la vista.
+- Además, tocar el **disparador** mientras se revisa equivale a «Seguir» y saca la próxima foto: nunca queda trabada.
+- La prueba de cámara suma una hoja vertical (con la versión anterior falla) y el disparador durante la revisión.
