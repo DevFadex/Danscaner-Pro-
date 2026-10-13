@@ -728,3 +728,9 @@ Todo va dentro de `@media (min-width:1024px)`; el celular no cambia.
 - Ahora la imagen se achica para dejar lugar, y el texto y los botones quedan siempre a la vista.
 - Además, tocar el **disparador** mientras se revisa equivale a «Seguir» y saca la próxima foto: nunca queda trabada.
 - La prueba de cámara suma una hoja vertical (con la versión anterior falla) y el disparador durante la revisión.
+
+## v83 · Girar en la revisión y menos giros solos
+- En la revisión de la foto (lote: «¿Sirve así?»; individual: «¿Quedó bien la foto?») hay dos botones **Girar** (↺ y ↻). La foto se gira antes de seguir y la miniatura se actualiza.
+- **Por qué se giraba sola:** con el teléfono casi acostado sobre la hoja, una inclinación chica (~15°) alcanzaba para que la app creyera que estaba de costado o al revés. Ahora:
+  - el sensor solo cuenta si el teléfono está bien levantado (≥ ~40°);
+  - si al sacar la foto está acostado sobre la hoja, no se usa una posición vieja: la hoja se endereza mirando el texto.

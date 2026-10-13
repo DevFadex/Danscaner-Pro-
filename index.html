@@ -3452,7 +3452,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 4.5',APP_VER='82';
+const NEXA_VER='Nexa 4.5',APP_VER='83';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3570,7 +3570,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='82 · 13/10/2026';
+const BUILD='83 · 13/10/2026';
 /* Versión que ven los usuarios: se cambia a mano solo cuando se decide publicar una versión nueva para todos.
    El administrador ve la versión interna (BUILD) con cada cambio. */
 const PUBLIC_VER='1.2';
@@ -6234,15 +6234,15 @@ document.head.insertAdjacentHTML('beforeend','<style id="v75Css">.tx-intro{margi
  * posición clara (como hace la cámara del teléfono) y, si nunca hubo, decide el enderezado por el texto (como antes). */
 if(!S.v77){if(S.camOrient==='land')S.camOrient='phone';S.v77=true;try{saveS()}catch(e){}}
 const CamTilt={rot:null,on:false,h:null,
- fromGravity(x,y,ios){if(x==null||y==null)return null;if(ios){x=-x;y=-y}const ax=Math.abs(x),ay=Math.abs(y);if(Math.hypot(x,y)<2.5||Math.max(ax,ay)<Math.min(ax,ay)*1.4)return null;return ay>ax?(y>0?0:180):(x>0?270:90)},
+ fromGravity(x,y,ios){if(x==null||y==null)return null;if(ios){x=-x;y=-y}const ax=Math.abs(x),ay=Math.abs(y);if(Math.hypot(x,y)<6.3||Math.max(ax,ay)<Math.min(ax,ay)*1.4)return null;return ay>ax?(y>0?0:180):(x>0?270:90)},
  start(){if(this.on)return;this.on=true;this.rot=null;
-  this.h=e=>{const g=e.accelerationIncludingGravity;if(!g)return;const r=this.fromGravity(g.x,g.y,typeof IS_IOS!=='undefined'&&IS_IOS);if(r!==null)this.rot=r};
+  this.h=e=>{const g=e.accelerationIncludingGravity;if(!g)return;const r=this.fromGravity(g.x,g.y,typeof IS_IOS!=='undefined'&&IS_IOS);if(r!==null){this.rot=r;this.flat=false}else if(g.x!=null&&Math.hypot(g.x,g.y)<4)this.flat=true};
   try{if(typeof DeviceMotionEvent!=='undefined'&&typeof DeviceMotionEvent.requestPermission==='function')DeviceMotionEvent.requestPermission().then(s=>{if(s==='granted'&&this.on)addEventListener('devicemotion',this.h)}).catch(()=>{});else addEventListener('devicemotion',this.h)}catch(e){}},
  stop(){if(this.h)removeEventListener('devicemotion',this.h);this.on=false;this.h=null}};
 {const _o=Cam.open;Cam.open=function(){try{CamTilt.start()}catch(e){}return _o.apply(this,arguments)}}
 {const _st=Cam.stop;Cam.stop=function(){CamTilt.stop();return _st.apply(this,arguments)}}
 Cam._tiltOf=new Map();
-{const _g=camGrab;camGrab=async function(){const rot=CamTilt.rot;const src=await _g.apply(this,arguments);if(typeof src==='string')Cam._tiltOf.set(src,rot);return src}}
+{const _g=camGrab;camGrab=async function(){/* v83: con el teléfono acostado sobre la hoja no se usa una posición vieja: endereza el texto */const rot=CamTilt.flat?null:CamTilt.rot;const src=await _g.apply(this,arguments);if(typeof src==='string')Cam._tiltOf.set(src,rot);return src}}
 {const _mp=makePage;makePage=function(src,o){const has=typeof src==='string'&&Cam._tiltOf.has(src),rot=has?Cam._tiltOf.get(src):null;if(has)Cam._tiltOf.delete(src);
  return _mp.apply(this,arguments).then(async p=>{if(p&&has&&camOrient()==='phone'){p.camRot=rot;if(rot){p.rot=((p.rot||0)+rot)%360;await makeThumb(p)}}return p})}}
 /* con la posición del teléfono clara no se adivina por el texto (era lo que a veces dejaba la hoja dada vuelta) */
@@ -6550,6 +6550,18 @@ document.head.insertAdjacentHTML('beforeend','<style id="v80Css">'+
  '.bio-hero{display:flex;justify-content:center;margin:6px 0 10px}.bio-hero svg{width:72px;height:72px;color:var(--ac,#2E3FAD)}'+
  '</style>');
 
+
+/* ===== v83 · girar la foto en la revisión =====
+ * En la revisión de la foto (lote: «¿Sirve así?»; individual: «¿Quedó bien la foto?») hay ↺ y ↻ para girarla antes de seguir. */
+async function camRotateReview(p,deg,img){if(!p)return;p.rot=(((p.rot||0)+deg)%360+360)%360;p.camRot=p.camRot==null?null:p.camRot;
+ try{await makeThumb(p);const c=await renderPage(p,{maxSide:1400});if(img)img.src=c.toDataURL('image/jpeg',.88);c.width=c.height=1}catch(e){console.warn('girar',e)}try{Cam.updUI()}catch(e){}}
+(function(){const rotRow=id=>'<div class="rv-rot" role="group" aria-label="Girar la foto"><button data-rr="-90" aria-label="Girar a la izquierda">'+icoSvg('rotl')+'<span>Girar</span></button><button data-rr="90" aria-label="Girar a la derecha">'+icoSvg('rotr')+'<span>Girar</span></button></div>';
+ const b2=$('#camRev2 .rv-b');if(b2&&!$('#camRev2 .rv-rot')){b2.insertAdjacentHTML('beforebegin',rotRow());$('#camRev2 .rv-rot').onclick=async e=>{const b=e.target.closest('[data-rr]');const p=Cam._rev2;if(!b||!p||p==='…')return;b.disabled=true;await camRotateReview(p,+b.dataset.rr,$('#rv2Img'));b.disabled=false}}
+ const b1=$('#camRev .rv-b');if(b1&&!$('#camRev .rv-rot')){b1.insertAdjacentHTML('beforebegin',rotRow());$('#camRev .rv-rot').onclick=async e=>{const b=e.target.closest('[data-rr]');const r=Cam.review;if(!b||!r||!r[0])return;b.disabled=true;await camRotateReview(r[0],+b.dataset.rr,$('#camRevImg'));b.disabled=false}}})();
+document.head.insertAdjacentHTML('beforeend','<style id="v83Css">'+
+ '.rv-rot{display:flex;gap:12px;justify-content:center;flex:none}.rv-rot button{display:flex;align-items:center;gap:6px;min-height:44px;padding:8px 16px;border-radius:14px;background:#ffffff26;color:#fff;font-weight:700;font-size:14.5px}'+
+ '.rv-rot button svg{width:20px;height:20px;position:static}.rv-rot button:focus-visible{outline:3px solid #fff;outline-offset:2px}.rv-rot button:disabled{opacity:.5}'+
+ '</style>');
 </script>
 </body>
 </html>
