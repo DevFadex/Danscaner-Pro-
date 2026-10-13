@@ -152,3 +152,6 @@ La primera vez que abrís la app con internet, se guardan solas todas las herram
 
 ## Ingresar con huella (v80)
 Ajustes → **Seguridad y accesos** → **Ingreso con huella y PIN**. Elegí un PIN de respaldo y tocá **Activar huella y PIN**: el teléfono te pide la huella una vez para registrarla. Desde ahí, al abrir la app apoyás el dedo y entrás. La pantalla muestra solo la huella. Si 5 intentos seguidos no se pueden verificar, te pide el PIN de respaldo. La huella la verifica el teléfono y no se guarda en la app.
+
+## Girar la foto al revisarla (v83)
+Cuando la cámara te muestra la foto grande («¿Sirve así?»), tenés **Girar** a la izquierda y a la derecha, arriba de Repetir, Seguir y Listo. Si sacás con el teléfono acostado sobre la hoja, la app la endereza mirando el texto.

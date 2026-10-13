@@ -1371,7 +1371,8 @@ await test('Cámara v77: la hoja sigue al teléfono, el recorte desparejo se emp
     /* sensor de gravedad → giro de la foto (en iPhone los signos van al revés); acostado sobre la mesa no se adivina */
     out.grav=[CamTilt.fromGravity(0,9.6,false),CamTilt.fromGravity(9.5,.5,false),CamTilt.fromGravity(-9.5,1,false),CamTilt.fromGravity(0,-9,false),CamTilt.fromGravity(.5,1,false),CamTilt.fromGravity(9.5,0,true)];
     CamTilt.start();window.dispatchEvent(new DeviceMotionEvent('devicemotion',{accelerationIncludingGravity:{x:-9.4,y:.8,z:1}}));out.live=CamTilt.rot;
-    window.dispatchEvent(new DeviceMotionEvent('devicemotion',{accelerationIncludingGravity:{x:.3,y:.2,z:9.8}}));out.flat=CamTilt.rot;CamTilt.stop();
+    /* v83: una inclinación chica (teléfono casi acostado, ~20°) no cambia la orientación */window.dispatchEvent(new DeviceMotionEvent('devicemotion',{accelerationIncludingGravity:{x:.5,y:-3.3,z:9.2}}));out.tilt20=CamTilt.rot;
+    window.dispatchEvent(new DeviceMotionEvent('devicemotion',{accelerationIncludingGravity:{x:.3,y:.2,z:9.8}}));out.flat=CamTilt.rot;out.flatFlag=CamTilt.flat;CamTilt.stop();
     /* una foto sacada con el teléfono de costado sale derecha */
     const mkImg=(w,h)=>{const c=canvas(w,h),x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,w,h);x.fillStyle='#111';x.font='26px Arial';for(let y=70;y<h-30;y+=40)x.fillText('Renglón de prueba '+y,40,y);return c.toDataURL('image/jpeg',.9)};
     delete S.camOrient;const src=mkImg(800,600);Cam._tiltOf.set(src,90);const p0=await makePage(src,{auto:false,filter:'original'});out.rot=p0.rot;out.camRot=p0.camRot;
@@ -1388,7 +1389,7 @@ await test('Cámara v77: la hoja sigue al teléfono, el recorte desparejo se emp
     finishSheet();const t0=performance.now();await new Promise(res=>{const iv=setInterval(()=>{if(/≈/.test(($('#cz_media')||{}).textContent||'')){clearInterval(iv);res()}},50)});out.estMs=performance.now()-t0;
     out.est=$('#cz_media').textContent;out.builds=builds;buildPDF=_b;await Nav.back();
     return out});
-  assert.deepEqual(r.grav,[0,270,90,180,null,90]);assert.equal(r.live,90);assert.equal(r.flat,90,'acostado debe recordar la última posición clara');
+  assert.deepEqual(r.grav,[0,270,90,180,null,90]);assert.equal(r.live,90);assert.equal(r.tilt20,90,'una inclinación chica no debe girar la hoja');assert.equal(r.flat,90,'acostado debe recordar la última posición clara');assert.equal(r.flatFlag,true,'acostado: la orientación la decide el texto');
   assert.equal(r.rot,90);assert.equal(r.camRot,90);
   assert.ok(r.before>40&&r.after<12,'recorte parejo: '+r.before.toFixed(1)+' → '+r.after.toFixed(1)+' px');assert.equal(r.goodTouched,false,'un recorte bueno no se toca');
   assert.match(r.est,/≈ [\d.,]+ (KB|MB)/);assert.equal(r.builds,0,'no debe armar el PDF entero para mostrar los tamaños');
@@ -1404,6 +1405,14 @@ await test('Cámara v77: la hoja sigue al teléfono, el recorte desparejo se emp
   await pg.waitForFunction(()=>$('#rv2Img').naturalWidth>0,null,{timeout:15000});await W(300);
   const vis=await pg.evaluate(()=>{const st=$('#camera .cam-stage').getBoundingClientRect();return ['#rv2Again','#rv2Go','#rv2Done','#rv2Msg'].map(s=>{const e=$(s),r=e.getBoundingClientRect(),c=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return s+':'+(r.top>=st.top-1&&r.bottom<=st.bottom+1&&r.bottom<=innerHeight&&(c===e||e.contains(c)))})});
   assert.deepEqual(vis,['#rv2Again:true','#rv2Go:true','#rv2Done:true','#rv2Msg:true'],'con hoja vertical el texto o los botones quedan fuera');
+  /* v83: girar la foto en la revisión */
+  const rot0=await pg.evaluate(()=>({r:Cam._rev2.rot||0,w:$('#rv2Img').naturalWidth,h:$('#rv2Img').naturalHeight}));
+  await pg.click('#camRev2 [data-rr="90"]');await pg.waitForFunction(w=>$('#rv2Img').naturalWidth!==w,rot0.w,{timeout:10000});
+  const rot1=await pg.evaluate(()=>({r:Cam._rev2.rot,w:$('#rv2Img').naturalWidth,h:$('#rv2Img').naturalHeight}));
+  assert.equal(rot1.r,(rot0.r+90)%360);assert.ok(rot0.h>rot0.w&&rot1.w>rot1.h,'la foto tiene que verse girada: '+JSON.stringify([rot0,rot1]));
+  await pg.click('#camRev2 [data-rr="-90"]');await pg.waitForFunction(()=>Cam._rev2.rot===0||Cam._rev2.rot===360,null,{timeout:10000}).catch(()=>{});
+  assert.equal(await pg.evaluate(()=>Cam._rev2.rot%360),rot0.r%360);
+  const vis2=await pg.evaluate(()=>{const st=$('#camera .cam-stage').getBoundingClientRect();return ['#rv2Again','#rv2Go','#rv2Done','#camRev2 [data-rr="90"]'].every(s=>{const r=$(s).getBoundingClientRect();return r.top>=st.top-1&&r.bottom<=st.bottom+1})});assert.ok(vis2,'con los botones de girar, todo sigue a la vista');
   /* tocar el disparador mientras se revisa: sigue y saca la próxima, no queda trabada */
   await pg.click('#camShot');await pg.waitForFunction(()=>Cam.batch.length===2&&!Cam.busy,null,{timeout:30000});assert.equal(await pg.evaluate(()=>$('#camRev2').hidden),true);
   await pg.evaluate(()=>{Cam.batch=[];Cam.updUI()});
