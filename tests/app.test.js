@@ -1664,6 +1664,45 @@ await test('v85: Word con logo y firma en su lugar (libres y movibles), firma de
   assert.equal(cam.ok,true,'no tomó la hoja entera');assert.ok(Math.abs(cam.q[0][0]-180)<30&&Math.abs(cam.q[0][1]-160)<30&&Math.abs(cam.q[2][0]-1060)<30&&Math.abs(cam.q[2][1]-1420)<30,'esquinas: '+JSON.stringify(cam.q));
 });
 
+await test('v86: la cámara encuentra la hoja sobre madera clara con tablilla, la foto se procesa sin rehacer pasos y el documento sigue en otra herramienta',async pg=>{
+  /* hoja blanca sobre madera clara (casi la misma luz), con el gancho de la tablilla tapando el borde de arriba y una tabla adentro */
+  const det=await pg.evaluate(async()=>{await lazyMod('vision-core');const W=540,H=720,c=canvas(W,H),x=c.getContext('2d');x.fillStyle='rgb(214,170,110)';x.fillRect(0,0,W,H);
+    for(let i=0;i<60;i++){x.strokeStyle='rgba(150,100,50,.25)';x.lineWidth=2;x.beginPath();x.moveTo(0,i*12+Math.sin(i)*4);x.bezierCurveTo(180,i*12+8,360,i*12-8,W,i*12+3);x.stroke()}
+    x.fillStyle='#b91c1c';x.fillRect(60,70,420,600);const P=[{x:50,y:110},{x:450,y:105},{x:515,y:680},{x:25,y:668}];
+    x.fillStyle='rgb(206,206,202)';x.beginPath();P.forEach((q,i)=>i?x.lineTo(q.x,q.y):x.moveTo(q.x,q.y));x.closePath();x.fill();
+    x.strokeStyle='#111';x.lineWidth=3;x.strokeRect(95,150,330,320);for(let i=1;i<10;i++){x.beginPath();x.moveTo(95,150+i*32);x.lineTo(425,150+i*32);x.stroke()}for(let i=1;i<5;i++){x.beginPath();x.moveTo(95+i*66,150);x.lineTo(95+i*66,470);x.stroke()}
+    x.fillStyle='#5b5b5b';x.fillRect(140,20,260,120);
+    const d=x.getImageData(0,0,W,H).data;const r=DSVision.detectDocument(d,W,H,{},{});return {src:r.src,q:r.quad&&r.quad.map(p=>[Math.round(p.x*W),Math.round(p.y*H)])}});
+  assert.ok(det.q,'no encontró la hoja');
+  const P=[[50,110],[450,105],[515,680],[25,668]];det.q.forEach((q,i)=>assert.ok(Math.hypot(q[0]-P[i][0],q[1]-P[i][1])<30,'esquina '+i+' '+JSON.stringify(det.q)+' ('+det.src+')'));
+  /* con la cámara abierta la miniatura se arma una sola vez y la vista de 1000 px no se repite */
+  const sp=await pg.evaluate(async()=>{
+    const c=canvas(1500,2000),x=c.getContext('2d');x.fillStyle='#3a2a1a';x.fillRect(0,0,1500,2000);x.fillStyle='#f5f5f2';x.fillRect(150,200,1200,1650);x.fillStyle='#111';x.font='40px Arial';for(let i=0;i<20;i++)x.fillText('Renglón de prueba número '+i,250,320+i*70);
+    await Cam.open('single');await new Promise(r=>setTimeout(r,600));
+    const p=await makePage(c.toDataURL('image/jpeg',.9));const hadThumb=!!p.thumb;
+    await camPostProcess([p],'doc');await Nav.back();return {hadThumb,thumb:!!p.thumb}});
+  assert.ok(sp.hadThumb&&sp.thumb,'sin miniatura');
+  /* resultado de una herramienta → «Seguir con otra herramienta» → entra directo en PDF a WORD */
+  const ch=await pg.evaluate(async()=>{const host=document.createElement('div');document.body.appendChild(host);await loadLib('pdflib');const d=await PDFLib.PDFDocument.create();d.addPage([300,400]).drawText('Hoja',{x:40,y:300});
+    showResults(host,[{blob:new Blob([await d.save()],{type:'application/pdf'}),name:'hoja.pdf'}]);await new Promise(r=>setTimeout(r,300));
+    const btn=host.querySelector('[data-ch="0"]');if(!btn)return {btn:false};btn.click();await new Promise(r=>setTimeout(r,500));
+    const sheet=document.querySelector('#sheetBody');const txt=sheet?sheet.textContent:'';const chip=[...sheet.querySelectorAll('.ch-top [data-ci]')].find(b=>b.textContent.trim()==='PDF a WORD');if(!chip)return {btn:true,txt};
+    Source.lastFP=null;chip.click();for(let i=0;i<30&&Nav.top()!=='toolScreen';i++)await new Promise(r=>setTimeout(r,100));await new Promise(r=>setTimeout(r,400));
+    const out={btn:true,txt,top:Nav.top(),title:$('#toolTitle').textContent,files:Source.lastFP?Source.lastFP.files.map(f=>f.name):null};host.remove();await Nav.back();return out});
+  assert.ok(ch.btn,'falta «Seguir con otra herramienta»');assert.match(ch.txt,/Más usadas/);assert.equal(ch.top,'toolScreen');assert.equal(ch.title,'PDF a WORD');assert.deepEqual(ch.files,['hoja.pdf']);
+  /* documento escaneado → «Documento listo» lo guarda en la app y ofrece seguir con Comprimir PDF; también desde el botón Herramientas */
+  await seedPage(pg);
+  const dc=await pg.evaluate(async()=>{DOC=newDoc();DOC.name='Planilla prueba';DOC.pages.push(window._pg);openDocScreen();await new Promise(r=>setTimeout(r,300));
+    finishSheet();await new Promise(r=>setTimeout(r,400));const b=$('#sheetBody');const saved=!!b.querySelector('.fn-saved');const chips=[...b.querySelectorAll('#fnChain [data-fc]')].map(x=>x.textContent.trim());
+    Source.lastFP=null;b.querySelector('#fnChain [data-fc="Comprimir PDF"]').click();for(let i=0;i<60&&Nav.top()!=='toolScreen';i++)await new Promise(r=>setTimeout(r,100));await new Promise(r=>setTimeout(r,400));
+    const r={saved,chips,title:$('#toolTitle').textContent,files:Source.lastFP?Source.lastFP.files.map(f=>f.name):null};await Nav.back();
+    $('#docTools').click();for(let i=0;i<60&&!/Seguir con otra herramienta/.test(($('#sheetTitle')||{}).textContent||document.querySelector('.sheet.open')?.textContent||'');i++)await new Promise(r=>setTimeout(r,100));
+    r.sheet=/Seguir con otra herramienta/.test(document.body.textContent)&&!!document.querySelector('#sheetBody [data-ci]');await Nav.back();
+    await new Promise(r=>setTimeout(r,300));r.inDb=(await DB.metas()).some(m=>m.name==='Planilla prueba');return r});
+  assert.ok(dc.saved,'no avisa que quedó guardado');assert.ok(dc.chips.includes('PDF a WORD')&&dc.chips.some(c=>/Todas/.test(c)),'chips: '+dc.chips);
+  assert.equal(dc.title,'Comprimir PDF');assert.deepEqual(dc.files,['Planilla prueba.pdf']);assert.ok(dc.sheet,'el botón Herramientas no abrió la lista');assert.ok(dc.inDb,'el documento no quedó en la app');
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();

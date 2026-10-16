@@ -778,3 +778,15 @@ Herramienta nueva **Editor de Word** (en «Editar PDF»), con su propio módulo 
   - si el recorte agarró un recuadro de adentro (media hoja, una tabla) y otro más grande lo contiene con papel claro, gana la hoja entera. Vale en vivo (Worker) y en la foto;
   - la orientación de fábrica pasa a **Vertical (al derecho)**: una hoja vertical sacada de costado se gira hacia el lado en que el texto queda derecho; una hoja apaisada de verdad no se fuerza;
   - el enderezado por texto ya no confunde renglones cortos en una hoja ancha con texto de costado.
+
+## v86 · Hoja sobre madera y tablilla, foto nítida, procesado más rápido, seguir con otra herramienta
+- **Detección en vivo**: con luz de tubo, la madera clara y la hoja tienen casi la misma luminancia, y el borde no pasaba Canny. Ahora el detector también mira la **«blancura»** (el menor de R, G y B): la madera, una tablilla roja o una mesa beige tienen el azul bajo y el papel no. Hay un candidato nuevo (`blanco`) y un apoyo por **contraste a los dos lados de cada borde**, además del apoyo por bordes Canny. Así se encuentra la hoja entera aunque el gancho de la tablilla tape el borde de arriba, y no se queda con la tabla de adentro.
+- **Foto nítida**: la nitidez de referencia se junta aunque todavía no haya marco. El enfoque previo y el aviso de «salió movida» funcionan desde la primera foto.
+- **Hoja entera en la foto**: la comparación con el recuadro grande ya no exige las 4 esquinas adentro; alcanza con el 85 % del área.
+- **Más rápido**: con la cámara abierta, la miniatura se arma una sola vez al final, no en cada ajuste del recorte. El revisado (enderezar, orientación) reusa la vista de 1000 px mientras la página no cambia. En la PC baja de ≈3,3 s a ≈2,4 s por foto.
+- **Seguir con otra herramienta**:
+  - en «Documento listo» queda **guardado en la app** y hay atajos (PDF a Word, Editor de Word, Editar PDF, Firmar, Comprimir, PDF a Excel y «Todas»);
+  - en la pantalla del documento, el botón **Herramientas**;
+  - en el resultado de cualquier herramienta, **«Seguir con otra herramienta»**.
+
+  El archivo entra directo en la herramienta elegida (`openTool(i,[archivo])`), sin volver a buscarlo, así se encadenan pasos antes de compartir o descargar.

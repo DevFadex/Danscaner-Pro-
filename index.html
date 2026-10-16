@@ -684,6 +684,7 @@ html[data-skin="aqua"] .tb{border-radius:14px}
   <div class="sbody"><div class="muted" id="docInfo" style="margin-bottom:10px"></div><div class="pages" id="pageGrid"></div></div>
   <div class="sfoot">
     <button class="tb" id="docAdd"><b data-ico="plus">➕</b>Agregar</button>
+    <button class="tb" id="docTools"><b data-ico="apps">🧰</b>Herramientas</button>
     <button class="tb" id="docFilterAll"><b data-ico="layers">🎨</b>Filtro a todas</button>
     <button class="tb" id="docOrganize"><b data-ico="move">🔀</b>Organizar</button>
     <button class="tb" id="docOcr"><b data-ico="ocr">🔎</b>Extraer texto</button>
@@ -3456,7 +3457,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 4.5',APP_VER='85';
+const NEXA_VER='Nexa 4.5',APP_VER='86';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3574,7 +3575,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='85 · 16/10/2026';
+const BUILD='86 · 16/10/2026';
 /* Versión que ven los usuarios: se cambia a mano solo cuando se decide publicar una versión nueva para todos.
    El administrador ve la versión interna (BUILD) con cada cambio. */
 const PUBLIC_VER='1.2';
@@ -5186,7 +5187,7 @@ function camGlareOf(src,q,SW,SH){const xs=q.map(p=>p.x),ys=q.map(p=>p.y);let x0=
 /* análisis en vivo: nitidez de referencia mientras la hoja está quieta y aviso de reflejo */
 (function(){const st=$('#camera .cam-stage');if(st&&!$('#camGlare'))st.insertAdjacentHTML('beforeend','<div class="cam-glare" id="camGlare" hidden>✨ Reflejo de luz sobre la hoja: inclinala un poco o mové la luz</div>')})();
 function camAnalyze(){const v=$('#camVideo');if(!v||!v.videoWidth||Cam.busy||!Nav.isOpen('camera'))return;Cam._tick=(Cam._tick||0)+1;const vw=v.videoWidth,vh=v.videoHeight,q=Cam._lastQuad;
- if(q&&Cam._stable>=1&&Cam._tick%2===0){const s=camSharpOf(v,vw*.2,vh*.2,vw*.6,vh*.6);if(s>0){(Cam._sharpHist=Cam._sharpHist||[]).push(s);if(Cam._sharpHist.length>10)Cam._sharpHist.shift()}}
+ if((q?Cam._stable>=1:Cam._tick%4===0)&&Cam._tick%2===0){const s=camSharpOf(v,vw*.2,vh*.2,vw*.6,vh*.6);if(s>0){(Cam._sharpHist=Cam._sharpHist||[]).push(s);if(Cam._sharpHist.length>10)Cam._sharpHist.shift()}}
  if(S.camFast&&q&&Cam._stable>=1&&Cam._tick%2===0){Cam._buf=Cam._buf||[];Cam._bi=((Cam._bi||0)+1)%2;let b=Cam._buf[Cam._bi];if(!b||b.c.width!==vw||b.c.height!==vh)b=Cam._buf[Cam._bi]={c:canvas(vw,vh)};
   b.c.getContext('2d').drawImage(v,0,0);b.s=camSharpCenter(b.c,vw,vh);b.t=performance.now()}
  if(!q)Cam._glare=false;else if(Cam._tick%2===1)Cam._glare=camGlareOf(v,q,vw,vh).glare;const el=$('#camGlare');if(el)el.hidden=!Cam._glare}
@@ -6626,10 +6627,12 @@ const quadArea=q=>Math.abs(q.reduce((s3,c,i)=>{const n=q[(i+1)%4];return s3+c.x*
 const inQuad=(pt,q)=>{let ins=false;for(let i=0,j=3;i<4;j=i++){const a=q[i],b=q[j];if(((a.y>pt.y)!==(b.y>pt.y))&&(pt.x<(b.x-a.x)*(pt.y-a.y)/(b.y-a.y+1e-12)+a.x))ins=!ins}return ins};
 function quadLuma(g,w,h,q,ring){const L=[];for(let i=1;i<10;i++)for(let j=1;j<10;j++){const u=i/10,v=j/10;const x=(1-u)*(1-v)*q[0].x+u*(1-v)*q[1].x+u*v*q[2].x+(1-u)*v*q[3].x,y=(1-u)*(1-v)*q[0].y+u*(1-v)*q[1].y+u*v*q[2].y+(1-u)*v*q[3].y;
  if(ring&&inQuad({x,y},ring))continue;L.push(g[Math.min(h-1,Math.round(y*h))*w+Math.min(w-1,Math.round(x*w))])}L.sort((a,b)=>a-b);return L.length?L[L.length>>1]:0}
+/* v86: qué parte del recuadro chico queda dentro del grande (0-1): la hoja entera puede no contener las 4 esquinas de un recorte que se pasó un poco */
+function quadCover(a,b){let n=0,k=0;for(let i=0;i<=10;i++)for(let j=0;j<=10;j++){const u=i/10,v=j/10;const x=(1-u)*(1-v)*a[0].x+u*(1-v)*a[1].x+u*v*a[2].x+(1-u)*v*a[3].x,y=(1-u)*(1-v)*a[0].y+u*(1-v)*a[1].y+u*v*a[2].y+(1-u)*v*a[3].y;n++;if(inQuad({x,y},b))k++}return k/n}
 async function camWholeSheet(p){await lazyMod('vision-core');const V=self.DSVision;if(!V)return false;const img=await loadImg(p.orig);const s=Math.min(1,720/Math.max(img.naturalWidth,img.naturalHeight));
  const w=Math.round(img.naturalWidth*s),h=Math.round(img.naturalHeight*s),c=canvas(w,h),x=c.getContext('2d',{willReadFrequently:true});x.drawImage(img,0,0,w,h);const d=x.getImageData(0,0,w,h).data;c.width=c.height=1;
  const r=V.detectDocument(d,w,h,Object.assign({},V.VISION_CFG,S.visionCfg||{}),{});if(!r||!r.quad)return false;const big=r.quad,small=p.quad;const g=new Uint8Array(w*h);for(let i=0,j=0;i<g.length;i++,j+=4)g[i]=(d[j]*77+d[j+1]*150+d[j+2]*29)>>8;
- if(quadArea(big)<quadArea(small)*1.35||!small.every(pt=>inQuad(pt,big.map(q=>({x:q.x,y:q.y}))))&&!small.every(pt=>inQuad({x:pt.x*.98+.01,y:pt.y*.98+.01},big)))return false;
+ if(quadArea(big)<quadArea(small)*1.2||quadCover(small,big)<.85)return false;
  const ringL=quadLuma(g,w,h,big,small),inL=quadLuma(g,w,h,small,null);if(ringL<Math.max(110,inL-45))return false;/* lo que se suma tiene que ser papel, no la mesa */
  p.quad=big;p.whole=true;return true}
 {const _mp=makePage;makePage=function(src,o){return _mp.apply(this,arguments).then(async p=>{try{if(p&&p.quad&&((o&&o.auto)??S.autoCrop)!==false&&typeof Cam!=='undefined'&&Nav.isOpen('camera')&&await camWholeSheet(p))await makeThumb(p)}catch(e){console.warn('hoja entera',e)}return p})}}
@@ -6665,6 +6668,65 @@ document.head.insertAdjacentHTML('beforeend','<style id="v85Css">'+
  '.wd-doc{position:relative}.wd-doc section.wpg{position:relative}.wd-doc img.wfl{position:absolute;max-width:none;z-index:2;touch-action:none;cursor:move;user-select:none;-webkit-user-select:none}'+
  '.wd-doc section.wpg>p,.wd-doc section.wpg>h1,.wd-doc section.wpg>h2,.wd-doc section.wpg>h3{margin-bottom:0}.wd-doc img.wfl.wsel{outline:2px dashed #2E3FAD;outline-offset:3px}.wd-app:not(.wd-sheet) .wd-doc section.wpg+section.wpg{border-top:2px dashed #9aa3b5;margin-top:18px;padding-top:12px}.wd-tip{font-size:12.5px}'+
  '</style>');
+/* ===================== v86 ===================== */
+/* ---- 1) cámara: la miniatura se arma una sola vez al final (antes se rehacía en cada ajuste del recorte) ---- */
+let _thHold=0;const _thPend=new Set();
+{const _mt=makeThumb;makeThumb=function(p){if(_thHold>0&&p){_thPend.add(p);return Promise.resolve()}return _mt.apply(this,arguments)};
+ const _mp=makePage;makePage=function(src,o){if(typeof Cam==='undefined'||!Nav.isOpen('camera'))return _mp.apply(this,arguments);_thHold++;
+  return _mp.apply(this,arguments).finally(async()=>{if(--_thHold>0)return;const L=[..._thPend];_thPend.clear();for(const q of L){try{await _mt(q)}catch(e){}}})}}
+
+/* el revisado de cada foto (enderezar, orientación, limpieza) pedía la misma vista de 1000 px dos veces: se reusa mientras la página no cambie */
+let _rpMemo=null;
+{const _rp=renderPage;renderPage=function(p,o){if(!_rpMemo||!p||!o||o.maxSide!==1000||!o.noOverlays||Object.keys(o).length!==2)return _rp.apply(this,arguments);
+  let key;try{key=JSON.stringify(p,(k,v)=>k==='thumb'||k==='orig'?undefined:v)+'|'+String(p.orig||'').length+String(p.orig||'').slice(-64)}catch(e){return _rp.apply(this,arguments)}
+  const dup=c=>{const d=canvas(c.width,c.height);d.getContext('2d').drawImage(c,0,0);return d};
+  const hit=_rpMemo.get(p);if(hit&&hit.key===key)return Promise.resolve(dup(hit.c));
+  return _rp.apply(this,arguments).then(c=>{if(_rpMemo&&c&&c.width>1)_rpMemo.set(p,{key,c:dup(c)});return c})}}
+{const _pp=camPostProcess;camPostProcess=async function(){const own=!_rpMemo;if(own)_rpMemo=new Map();try{return await _pp.apply(this,arguments)}finally{if(own){for(const v of _rpMemo.values())v.c.width=v.c.height=1;_rpMemo=null}}}}
+
+/* ---- 2) seguir con otra herramienta: el resultado (o el documento escaneado) entra directo en la herramienta elegida ---- */
+const CHAIN_P='.pdf,application/pdf';
+const CHAIN_ACC={'Unir PDF':CHAIN_P+',image/*','Dividir PDF':CHAIN_P,'Eliminar páginas':CHAIN_P,'Extraer páginas':CHAIN_P,'Ordenar PDF':CHAIN_P,'Comprimir PDF':CHAIN_P,'Reparar PDF':CHAIN_P,'OCR PDF':CHAIN_P+',image/*',
+ 'JPG a PDF':'image/*','WORD a PDF':'.docx','POWERPOINT a PDF':'.pptx','EXCEL a PDF':'.xlsx,.xls,.xlsm,.csv,.ods','HTML a PDF':'.html,.htm,.txt,.md',
+ 'PDF a JPG':CHAIN_P,'PDF a WORD':CHAIN_P,'PDF a POWERPOINT':CHAIN_P,'PDF a EXCEL':CHAIN_P+',.docx,image/*','WORD a EXCEL':'.docx','Foto a Excel':'image/*,'+CHAIN_P,'PDF a PDF/A':CHAIN_P,
+ 'Rotar PDF':CHAIN_P,'Insertar números de página':CHAIN_P,'Insertar marca de agua':CHAIN_P,'Recortar PDF':CHAIN_P,'Editar PDF':CHAIN_P,'Editor de Word':CHAIN_P+',.docx','Formularios PDF':CHAIN_P,
+ 'Desbloquear PDF':CHAIN_P,'Proteger PDF':CHAIN_P,'Firmar PDF':CHAIN_P,'Censurar PDF':CHAIN_P,'PDF a Markdown':CHAIN_P,'Traductor':'.pdf,.docx,.txt,.md,.csv,image/*',
+ 'Extraer texto':'.pdf,.docx,.xlsx,.xls,.xlsm,.csv,.pptx,.txt,.md,.json,.html,image/*'};
+const CHAIN_TOP={pdf:['PDF a WORD','Editor de Word','Editar PDF','Firmar PDF','Comprimir PDF','PDF a EXCEL','OCR PDF','Unir PDF'],docx:['Editor de Word','WORD a PDF','WORD a EXCEL','Extraer texto'],img:['JPG a PDF','Foto a Excel','OCR PDF','Extraer texto'],other:['Extraer texto']};
+function chainTools(file){return TOOLS.map((t,i)=>({t,i})).filter(({t})=>CHAIN_ACC[t.name]&&acceptOk(file,CHAIN_ACC[t.name]))}
+async function chainSheet(file){const ok=chainTools(file);if(!ok.length){toast('Ninguna otra herramienta usa este tipo de archivo');return}
+ const ext=extOf(file.name).toLowerCase(),k=ext==='.pdf'?'pdf':ext==='.docx'?'docx':/^image\//.test(file.type)?'img':'other';
+ const top=CHAIN_TOP[k].map(n=>ok.find(x=>x.t.name===n)).filter(Boolean),cats=[...new Set(ok.map(x=>x.t.cat))];
+ const plain=h=>String(h||'').replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim();
+ const row=x=>'<button class="src-opt" data-ci="'+x.i+'"><span class="src-ic">'+(x.t.ic||'📄')+'</span><span><b>'+esc(x.t.name)+'</b>'+(plain(x.t.desc)?'<small>'+esc(plain(x.t.desc).slice(0,80))+'</small>':'')+'</span></button>';
+ const i=await sheetAsk('Seguir con otra herramienta','<div class="src-chip ch-file">'+icoSvg('files')+' <b>'+esc(file.name)+'</b></div><p class="muted">Elegí qué hacer ahora. El archivo entra directo, sin buscarlo de nuevo.</p>'
+  +(top.length?'<div class="cph">Más usadas</div><div class="ch-top">'+top.map(x=>'<button class="chip" data-ci="'+x.i+'">'+esc(x.t.name)+'</button>').join('')+'</div>':'')
+  +cats.map(c=>'<div class="cph">'+esc(c)+'</div>'+ok.filter(x=>x.t.cat===c).map(row).join('')).join(''),e=>{const b=e.target.closest('[data-ci]');return b?+b.dataset.ci:undefined});
+ if(i==null)return;await chainOpen(i,file)}
+async function chainOpen(i,file){for(let k=0;k<4&&Nav.isOpen('toolScreen');k++)await Nav.back();openTool(i,[file]);toast('✓ '+file.name+' → '+TOOLS[i].name,2600)}
+/* el documento escaneado como PDF (o como Word/imagen) para pasarlo a otra herramienta */
+async function docAsFile(){if(!DOC||!DOC.pages.length)return null;let f=null;await withBusy(async()=>{busy('Preparando PDF…');saveDoc(true);
+ const bytes=await buildPDF(DOC.pages,{size:S.size,orient:S.orient,margin:S.margin,quality:S.quality,title:DOC.name},(i,n)=>busy('Preparando PDF '+i+'/'+n));f=new File([bytes],safeName(DOC.name)+'.pdf',{type:'application/pdf'})});return f}
+async function docChain(){const f=await docAsFile();if(f)await chainSheet(f)}
+$('#docTools').onclick=()=>docChain();
+/* «Documento listo»: queda guardado en la app y se puede seguir con cualquier herramienta antes de compartir o descargar */
+{const _fs=finishSheet;finishSheet=function(){const r=_fs.apply(this,arguments);try{if(DOC&&DOC.pages.length){saveDoc(true);const b=$('#sheetBody');const first=b&&b.firstElementChild;
+  if(first&&!$('#fnChain',b)){first.insertAdjacentHTML('afterend','<div class="fn-saved">'+icoSvg('check')+' Guardado en Documentos de la app</div><div class="cph">Seguir con otra herramienta</div><div class="ch-top" id="fnChain">'
+   +CHAIN_TOP.pdf.slice(0,6).filter(n=>toolIdx(n)>=0).map(n=>'<button class="chip" data-fc="'+esc(n)+'">'+esc(n)+'</button>').join('')+'<button class="chip ch-all" data-fc="*">'+icoSvg('apps')+' Todas</button></div>');
+   $('#fnChain',b).onclick=async e=>{const c=e.target.closest('[data-fc]');if(!c)return;const n=c.dataset.fc;await Nav.back();const f=await docAsFile();if(!f)return;if(n==='*')return chainSheet(f);const i=toolIdx(n);if(i>=0)chainOpen(i,f)}}}}catch(e){console.warn('seguir',e)}return r}}
+/* resultados de cualquier herramienta: botón «Seguir con otra herramienta» */
+{const _vr=v85Results;v85Results=function(el,outs){const r=_vr.apply(this,arguments);try{$$('.rcard',el).forEach((card,i)=>{const o=outs[i];if(!o||!o.blob||card.querySelector('[data-ch]'))return;
+  const f=new File([o.blob],o.name,{type:o.blob.type||''});if(!chainTools(f).length)return;let m=card.querySelector('.rmore');if(!m){card.insertAdjacentHTML('beforeend','<div class="rmore"></div>');m=card.querySelector('.rmore')}
+  m.insertAdjacentHTML('afterbegin','<button class="btn sm pri ch-go" data-ch="'+i+'">'+icoSvg('apps')+' Seguir con otra herramienta</button>')});
+ el.addEventListener('click',e=>{const c=e.target.closest('[data-ch]');if(!c)return;e.stopPropagation();const i=+c.dataset.ch,o=outs[i];const v=(($('[data-rn="'+i+'"]',el)||{}).value||'').trim();const n=v?safeName(v)+extOf(o.name):o.name;
+  chainSheet(new File([o.blob],n,{type:o.blob.type||''}))})}catch(e){console.warn('seguir',e)}return r}}
+document.head.insertAdjacentHTML('beforeend','<style id="v86Css">'
+ +'.ch-top{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 6px}.ch-top .chip{min-height:44px;padding:0 14px;font-weight:700;display:inline-flex;align-items:center;gap:6px}.ch-top .chip svg{width:18px;height:18px}'
+ +'.ch-file{display:flex;align-items:center;gap:8px;overflow:hidden}.ch-file b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ch-file svg{width:18px;height:18px;flex:none}'
+ +'.fn-saved{display:flex;align-items:center;gap:6px;margin:4px 0 8px;font-weight:700;color:#15803d}.fn-saved svg{width:18px;height:18px}'
+ +'html[data-theme="dark"] .fn-saved{color:#4ade80}'
+ +'</style>');
+
 </script>
 </body>
 </html>
