@@ -1187,21 +1187,25 @@ await test('Nexa: entiende «llamame Dani y no Flores» y avisa si «con interne
   await pg.evaluate(()=>{NexaMem.clear();Nexa.st.msgs=[];Nexa.save()});
 });
 
-await test('Cámara: hojas como el teléfono (por defecto, v77), u horizontales, verticales o automáticas desde los ajustes',async pg=>{
+await test('Cámara: hojas verticales al derecho (por defecto, v85), u horizontales, como el teléfono o automáticas desde los ajustes',async pg=>{
+  /* v85: el dueño pidió «siempre vertical y que no esté dada vuelta»: «Vertical» es lo de fábrica y gira hacia el lado en que el texto queda derecho; una hoja apaisada de verdad (texto horizontal) no se fuerza */
   /* v77: el dueño pidió que las hojas sigan la posición del teléfono; «Horizontal» (v72) queda como opción */
   const r=await pg.evaluate(async()=>{S.camOrient='land';Cam._sigs=[];const mk=async(w,h)=>{const c=canvas(w,h),x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,w,h);x.fillStyle='#111';x.font='28px Arial';for(let y=80;y<h-40;y+=44)x.fillText('Oficio judicial número '+y,60,y);return makePage(c.toDataURL('image/jpeg',.9),{auto:false,filter:'original'})};
     const dims=async p=>{const c=await renderPage(p,{maxSide:600});return c.width>c.height?'h':'v'};
     const a=await mk(1240,1754);await camPostProcess([a],'doc');const b=await mk(1754,1240);await camPostProcess([b],'doc');
     S.camOrient='port';const c=await mk(1754,1240);await camPostProcess([c],'doc');
+    /* hoja vertical fotografiada de costado (texto en vertical): sale vertical y con el texto al derecho */
+    const side=await (async()=>{const c0=canvas(1240,1754),x=c0.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,1240,1754);x.fillStyle='#111';x.font='34px Arial';for(let y=100;y<1650;y+=52)x.fillText('Oficio judicial número '+y+' renglón de prueba',70,y);const r=rotateCanvas(c0,90);return makePage(r.toDataURL('image/jpeg',.9),{auto:false,filter:'original'})})();
+    await camPostProcess([side],'doc');const sideC=await renderPage(side,{maxSide:1000});const sideUp=pageOrient(sideC).rot;
     S.camOrient='auto';const d=await mk(1240,1754);await camPostProcess([d],'doc');delete S.camOrient;
-    return [await dims(a),await dims(b),await dims(c),await dims(d)]});
-  assert.deepEqual(r,['h','h','v','v']);
+    return [await dims(a),await dims(b),await dims(c),await dims(side),sideUp,await dims(d)]});
+  assert.deepEqual(r,['h','h','h','v',0,'v']);
   await pg.evaluate(()=>{S.autoCapture=false;Cam.open('batch')});await pg.waitForFunction(()=>Cam.stream&&$('#camVideo').videoWidth>0,null,{timeout:15000});
   await pg.click('#camCfg');await pg.waitForSelector('#camPanel [data-co]');
-  assert.match(await pg.textContent('#camPanel [data-co]'),/Orientación de las hojas\s*Como está el teléfono/);
-  await pg.click('#camPanel [data-co]');assert.equal(await pg.evaluate(()=>S.camOrient),'land');assert.match(await pg.textContent('#camPanel [data-co]'),/Horizontal/);
-  await pg.click('#camPanel [data-co]');assert.equal(await pg.evaluate(()=>S.camOrient),'port');
-  await pg.click('#camPanel [data-co]');await pg.click('#camPanel [data-co]');assert.equal(await pg.evaluate(()=>S.camOrient),'phone');
+  assert.match(await pg.textContent('#camPanel [data-co]'),/Orientación de las hojas\s*Vertical \(al derecho\)/);
+  await pg.click('#camPanel [data-co]');assert.equal(await pg.evaluate(()=>S.camOrient),'auto');
+  await pg.click('#camPanel [data-co]');assert.equal(await pg.evaluate(()=>S.camOrient),'phone');assert.match(await pg.textContent('#camPanel [data-co]'),/Como está el teléfono/);
+  await pg.click('#camPanel [data-co]');assert.equal(await pg.evaluate(()=>S.camOrient),'land');
   await pg.evaluate(()=>{camPanelClose();Nav.back()});await W(300);
 });
 
@@ -1375,7 +1379,7 @@ await test('Cámara v77: la hoja sigue al teléfono, el recorte desparejo se emp
     window.dispatchEvent(new DeviceMotionEvent('devicemotion',{accelerationIncludingGravity:{x:.3,y:.2,z:9.8}}));out.flat=CamTilt.rot;out.flatFlag=CamTilt.flat;CamTilt.stop();
     /* una foto sacada con el teléfono de costado sale derecha */
     const mkImg=(w,h)=>{const c=canvas(w,h),x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,w,h);x.fillStyle='#111';x.font='26px Arial';for(let y=70;y<h-30;y+=40)x.fillText('Renglón de prueba '+y,40,y);return c.toDataURL('image/jpeg',.9)};
-    delete S.camOrient;const src=mkImg(800,600);Cam._tiltOf.set(src,90);const p0=await makePage(src,{auto:false,filter:'original'});out.rot=p0.rot;out.camRot=p0.camRot;
+    /* v85: la orientación por el teléfono ya no es la de fábrica; se elige para probarla */S.camOrient='phone';const src=mkImg(800,600);Cam._tiltOf.set(src,90);const p0=await makePage(src,{auto:false,filter:'original'});out.rot=p0.rot;out.camRot=p0.camRot;
     /* foto: mesa oscura y hoja inclinada; el recorte quedó corrido hacia afuera */
     const W=1600,H=2100,c=canvas(W,H),x=c.getContext('2d');x.fillStyle='#5a4632';x.fillRect(0,0,W,H);
     const Q=[{x:230,y:190},{x:1390,y:240},{x:1340,y:1900},{x:170,y:1850}];x.fillStyle='#f2f0ea';x.beginPath();Q.forEach((q,i)=>i?x.lineTo(q.x,q.y):x.moveTo(q.x,q.y));x.closePath();x.fill();
@@ -1560,7 +1564,8 @@ await test('Editor de Word (v84): PDF → documento editable, formato, imagen, f
   const fmt=await pg.evaluate(()=>{const d=$('#tMain .wd-doc');const all=[...d.querySelectorAll('b,strong,span,font')].filter(e=>/Segundo/.test(e.textContent));return {bold:all.some(e=>/^(B|STRONG)$/.test(e.tagName)||/bold|700/.test(e.style.fontWeight)),size:all.some(e=>e.style.fontSize==='18pt')}});
   assert.deepEqual(fmt,{bold:true,size:true});
   /* insertar: imagen (logo), firma, fecha, tabla, lista y salto de página al final */
-  const caretEnd=()=>pg.evaluate(()=>{const d=$('#tMain .wd-doc');const p=document.createElement('p');p.innerHTML='<br>';d.appendChild(p);const r=document.createRange();r.setStart(p,0);r.collapse(true);d.focus();const s=getSelection();s.removeAllRanges();s.addRange(r)});
+  /* al final del documento (adentro de la última hoja, como cuando uno toca al final del texto) */
+  const caretEnd=()=>pg.evaluate(()=>{const d0=$('#tMain .wd-doc'),secs=d0.querySelectorAll('section.wpg'),d=secs.length?secs[secs.length-1]:d0;const p=document.createElement('p');p.innerHTML='<br>';d.appendChild(p);const r=document.createRange();r.setStart(p,0);r.collapse(true);d.focus();const s=getSelection();s.removeAllRanges();s.addRange(r)});
   await pg.click('#tMain .wd-tabs [data-tab="insertar"]');await caretEnd();
   const logo=await pg.evaluate(()=>{const c=canvas(240,120),x=c.getContext('2d');x.fillStyle='#2E3FAD';x.fillRect(0,0,240,120);x.fillStyle='#fff';x.font='bold 40px Arial';x.fillText('LOGO',60,75);return c.toDataURL('image/png').split(',')[1]});
   await pg.setInputFiles('#tMain .wd-bar input[data-k="img"]',{name:'logo.png',mimeType:'image/png',buffer:Buffer.from(logo,'base64')});await pg.waitForFunction(()=>$('#tMain .wd-doc img'),null,{timeout:10000});
@@ -1570,10 +1575,15 @@ await test('Editor de Word (v84): PDF → documento editable, formato, imagen, f
   await caretEnd();await pg.click('#tMain .wd-bar [data-k="table"]');await pg.waitForSelector('#wdTOk');await pg.fill('#wdR','2');await pg.fill('#wdC','2');await pg.click('#wdTOk');await pg.waitForFunction(()=>$$('#tMain .wd-doc table').length===2);
   await caretEnd();await pg.click('#tMain .wd-bar [data-k="pb"]');
   await pg.click('#tMain .wd-tabs [data-tab="inicio"]');await caretEnd();await pg.evaluate(()=>document.execCommand('insertText',false,'Primer punto'));await pg.click('#tMain .wd-bar [data-k="insertOrderedList"]');
-  /* la imagen se agranda y se centra desde su panel */
-  await pg.click('#tMain .wd-doc img');await pg.waitForSelector('#tMain .wd-ctx:not([hidden]) input[type=range]');
-  await pg.$eval('#tMain .wd-ctx input[type=range]',e=>{e.value=50;e.dispatchEvent(new Event('input',{bubbles:true}))});await pg.click('#tMain .wd-ctx [data-k="ic"]');
-  assert.deepEqual(await pg.evaluate(()=>{const i=$('#tMain .wd-doc img');return [i.style.width,i.style.marginLeft,i.style.marginRight]}),['50%','auto','auto']);await pg.click('#tMain .wd-ctx [data-c="ok"]');
+  /* v85: el logo y la firma entran libres (como en el PDF original): se arrastran con el dedo, se agrandan, se centran o se pasan al texto */
+  const fl=await pg.evaluate(()=>$$('#tMain .wd-doc img.wfl').map(i=>({w:+i.dataset.w,x:+i.dataset.x,alt:i.alt})));assert.equal(fl.length,2,'logo y firma tienen que ser libres');assert.deepEqual(fl.map(f=>f.alt),['Imagen','Firma']);
+  await pg.click('#tMain .wd-ctx [data-c="ok"]').catch(()=>{});
+  await pg.$eval('#tMain .wd-doc img.wfl',e=>e.scrollIntoView({block:'center'}));await W(200);
+  const box=await (await pg.$('#tMain .wd-doc img.wfl')).boundingBox();await pg.mouse.move(box.x+box.width/2,box.y+box.height/2);await pg.mouse.down();await pg.mouse.move(box.x+box.width/2+40,box.y+box.height/2+60,{steps:5});await pg.mouse.up();
+  const moved=await pg.evaluate(()=>{const i=$('#tMain .wd-doc img.wfl');return {x:+i.dataset.x,y:+i.dataset.y}});assert.ok(moved.x>fl[0].x+3,'no se movió a la derecha: '+JSON.stringify([fl[0],moved]));
+  await pg.click('#tMain .wd-doc img.wfl');await pg.waitForSelector('#tMain .wd-ctx:not([hidden]) input[data-c="fw"]');
+  await pg.$eval('#tMain .wd-ctx input[data-c="fw"]',e=>{e.value=60;e.dispatchEvent(new Event('input',{bubbles:true}))});await pg.click('#tMain .wd-ctx [data-c="fc"]');
+  assert.deepEqual(await pg.evaluate(()=>{const i=$('#tMain .wd-doc img.wfl');return [+i.dataset.w,+i.dataset.x]}),[60,75]);await pg.click('#tMain .wd-ctx [data-c="ok"]');
   /* revisar: reemplazar y contar */
   await pg.click('#tMain .wd-tabs [data-tab="revisar"]');await pg.click('#tMain .wd-bar [data-k="find"]');await pg.waitForSelector('#wfQ');await pg.fill('#wfQ','prueba');await pg.fill('#wfR','EJEMPLO');await pg.click('#wfAll');
   assert.match(await pg.textContent('#wfMsg'),/Se reemplazó 4 veces/);await pg.evaluate(()=>Nav.back());
@@ -1583,9 +1593,9 @@ await test('Editor de Word (v84): PDF → documento editable, formato, imagen, f
   const out=await pg.evaluate(async()=>{const W=$('#tMain')._wd;const blob=await W.toDocx();await loadLib('jszip');const z=await JSZip.loadAsync(blob);const x=await z.file('word/document.xml').async('string');
     const media=Object.keys(z.files).filter(f=>/^word\/media\/.+/.test(f)).length;await loadLib('mammoth');const back=(await mammoth.convertToHtml({arrayBuffer:await blob.arrayBuffer()})).value;
     const pdf=await W.toPdf();const pd=await openPdfjs(await pdf.arrayBuffer());
-    return {center:/<w:jc w:val="center"\/>/.test(x),right:/<w:jc w:val="right"\/>/.test(x),bold:/<w:b\/>/.test(x),size:/<w:sz w:val="36"\/>/.test(x),tables:(x.match(/<w:tbl>/g)||[]).length,drawings:(x.match(/<w:drawing>/g)||[]).length,media,
+    return {center:/<w:jc w:val="center"\/>/.test(x),right:/<w:jc w:val="right"\/>/.test(x),bold:/<w:b\/>/.test(x),size:/<w:sz w:val="36"\/>/.test(x),tables:(x.match(/<w:tbl>/g)||[]).length,drawings:(x.match(/<w:drawing>/g)||[]).length,anchors:(x.match(/<wp:anchor /g)||[]).length,media,
       pageBreak:/<w:br w:type="page"\/>/.test(x),list:/<w:numId w:val="2"\/>/.test(x),footer:!!z.file('word/footer1.xml'),ind:/w:firstLine/.test(x),back:/EJEMPLO UNO/.test(back)&&/<table>/.test(back)&&/INFORME DE EJEMPLO/.test(back),pdf:pdf.size>2000,pages:pd.numPages}});
-  assert.deepEqual(out,{center:true,right:true,bold:true,size:true,tables:2,drawings:2,media:2,pageBreak:true,list:true,footer:true,ind:true,back:true,pdf:true,pages:2});
+  assert.deepEqual(out,{center:true,right:true,bold:true,size:true,tables:2,drawings:2,anchors:2,media:2,pageBreak:true,list:true,footer:true,ind:true,back:true,pdf:true,pages:2});
   /* borrador: al volver a entrar se ofrece seguir */
   await W(1500);await pg.evaluate(async()=>{await Nav.back();openTool(TOOLS.findIndex(t=>t.name==='Editor de Word'))});await W(600);await pg.evaluate(async()=>{for(let k=0;k<3&&Nav.top()!=='toolScreen';k++)await Nav.back()});
   await pg.waitForSelector('#wdDraft');assert.match(await pg.textContent('#wdDraft'),/Seguir con «informe»/);await pg.click('#wdDraft');
@@ -1597,6 +1607,61 @@ await test('Editor de Word (v84): PDF → documento editable, formato, imagen, f
   await pg.waitForFunction(()=>$('#tMain .wd-app')&&!$('#tMain .wd-app').hidden,null,{timeout:30000});
   assert.deepEqual(await pg.evaluate(()=>{const d=$('#tMain .wd-doc');return [/EJEMPLO DOS/.test(d.textContent),d.querySelectorAll('table').length>=1,d.querySelectorAll('img').length]}),[true,true,2]);
   await pg.evaluate(()=>localStorage.removeItem('ds_word_draft'));
+});
+
+await test('v85: Word con logo y firma en su lugar (libres y movibles), firma desde la página abierta de Editar PDF, compartir sin descargar dos veces, guardar en la app y cámara con la hoja entera',async pg=>{
+  /* PDF ficticio: logo arriba a la izquierda (en el margen), texto, y una firma con «letras basura» encima (como trae un PDF real) */
+  const pdfB64=await pg.evaluate(async()=>{await loadLib('pdflib');const {PDFDocument,StandardFonts}=PDFLib;const d=await PDFDocument.create(),F=await d.embedFont(StandardFonts.TimesRoman);const p=d.addPage([595,842]);
+    const png=(w,h,draw)=>{const c=canvas(w,h),x=c.getContext('2d');draw(x,w,h);return c.toDataURL('image/png')};
+    const logo=await d.embedPng(png(200,200,(x,w,h)=>{x.fillStyle='#fff';x.fillRect(0,0,w,h);x.fillStyle='#1d3a8a';x.beginPath();x.arc(100,100,90,0,7);x.fill();x.fillStyle='#fff';x.font='bold 60px Arial';x.fillText('UP',45,122)}));
+    const firma=await d.embedPng(png(300,120,(x,w,h)=>{x.fillStyle='#fff';x.fillRect(0,0,w,h);x.strokeStyle='#0d3fa6';x.lineWidth=6;x.beginPath();x.moveTo(10,100);x.bezierCurveTo(80,0,170,140,290,30);x.stroke()}));
+    p.drawImage(logo,{x:40,y:842-40-60,width:60,height:60});
+    p.drawText('INFORME DE PRUEBA',{x:220,y:740,size:16,font:F});
+    for(let i=0;i<6;i++)p.drawText('Renglon de prueba numero '+(i+1)+' del documento ficticio para convertir.',{x:71,y:700-i*16,size:12,font:F});
+    p.drawImage(firma,{x:340,y:420,width:150,height:60});p.drawText('e,',{x:400,y:450,size:9,font:F});
+    const u8=await d.save();let s='';for(let i=0;i<u8.length;i+=8192)s+=String.fromCharCode.apply(null,u8.subarray(i,i+8192));return btoa(s)});
+  const r1=await pg.evaluate(async b64=>{await lazyMod('word');const ab=Uint8Array.from(atob(b64),c=>c.charCodeAt(0)).buffer;const r=await WordEd.pdfToHtml(ab);const box=document.createElement('div');box.innerHTML=r.html;
+    const fl=[...box.querySelectorAll('img.wfl')].map(i=>({x:+i.dataset.x,y:+i.dataset.y,w:+i.dataset.w}));return {floats:r.floats,fl,garbage:/(^|\s)e,(\s|$)/.test(box.textContent),text:/Renglon de prueba numero 6/.test(box.textContent),sec:box.querySelectorAll('section.wpg').length}},pdfB64);
+  assert.equal(r1.floats,2);assert.equal(r1.sec,1);assert.ok(r1.text);assert.equal(r1.garbage,false,'el texto que cae sobre la firma no debe quedar');
+  const near=(a,b,t)=>Math.abs(a-b)<=t;assert.ok(near(r1.fl[0].x,14.1,1.5)&&near(r1.fl[0].y,14.1,1.5)&&near(r1.fl[0].w,21.2,1.5),'logo fuera de lugar: '+JSON.stringify(r1.fl[0]));
+  assert.ok(near(r1.fl[1].x,119.9,1.5)&&near(r1.fl[1].y,127.7,1.5),'firma fuera de lugar: '+JSON.stringify(r1.fl[1]));
+  /* en el editor: vista hoja, el logo se arrastra; el Word lleva las dos imágenes ancladas a la página (delante del texto) */
+  await pg.evaluate(()=>{localStorage.removeItem('ds_word_draft');openTool(TOOLS.findIndex(t=>t.name==='Editor de Word'))});await W(600);await pg.evaluate(async()=>{for(let k=0;k<3&&Nav.top()!=='toolScreen';k++)await Nav.back()});
+  await pg.setInputFiles('#tMain .wd-start input[type=file]',{name:'informe.pdf',mimeType:'application/pdf',buffer:Buffer.from(pdfB64,'base64')});await pg.waitForFunction(()=>$('#tMain .wd-app')&&!$('#tMain .wd-app').hidden,null,{timeout:60000});await W(500);
+  assert.equal(await pg.evaluate(()=>$('#tMain .wd-app').classList.contains('wd-sheet')),true,'con imágenes libres abre en vista hoja');
+  const bb=await (await pg.$('#tMain .wd-doc img.wfl')).boundingBox();await pg.mouse.move(bb.x+bb.width/2,bb.y+bb.height/2);await pg.mouse.down();await pg.mouse.move(bb.x+bb.width/2+30,bb.y+bb.height/2+20,{steps:4});await pg.mouse.up();
+  const mv=await pg.evaluate(()=>+$('#tMain .wd-doc img.wfl').dataset.x);assert.ok(mv>r1.fl[0].x+2,'el logo no se movió');
+  const dx=await pg.evaluate(async()=>{const b=await $('#tMain')._wd.toDocx();await loadLib('jszip');const z=await JSZip.loadAsync(b);const x=await z.file('word/document.xml').async('string');const offs=[...x.matchAll(/<wp:posOffset>(\d+)<\/wp:posOffset>/g)].map(m=>+m[1]);
+    const pdf=await $('#tMain')._wd.toPdf();const pd=await openPdfjs(await pdf.arrayBuffer());return {anchors:(x.match(/<wp:anchor /g)||[]).length,front:/behindDoc="0"/.test(x),offs,pages:pd.numPages}});
+  assert.equal(dx.anchors,2);assert.ok(dx.front);assert.ok(Math.abs(dx.offs[2]-119.9*36000)<1.5*36000,'la firma en el Word no quedó en su lugar');assert.equal(dx.pages,1);
+  await pg.evaluate(async()=>{localStorage.removeItem('ds_word_draft');await Nav.back()});await W(300);
+  /* Editar PDF: desde la página abierta (Corregir) se agrega la firma y después se mueve */
+  await pg.evaluate(()=>{window.signatureSheet=()=>Promise.resolve((()=>{const c=canvas(300,100),x=c.getContext('2d');x.strokeStyle='#0d3fa6';x.lineWidth=5;x.beginPath();x.moveTo(10,80);x.lineTo(290,20);x.stroke();return c.toDataURL('image/png')})());openTool(TOOLS.findIndex(t=>t.name==='Editar PDF'))});await W(600);
+  await pg.evaluate(async()=>{for(let k=0;k<3&&Nav.top()!=='toolScreen';k++)await Nav.back()});
+  await pg.setInputFiles('#tMain input[type=file]',{name:'informe.pdf',mimeType:'application/pdf',buffer:Buffer.from(pdfB64,'base64')});await pg.waitForSelector('#tMain .gridwrap .pg .pgimg img[src]',{timeout:20000});
+  await pg.click('#tMain .gridwrap .pgimg');await pg.waitForFunction(()=>Nav.top()==='fixer'&&!$('#fxTools').hidden,null,{timeout:20000}).catch(async e=>{throw new Error('fixer: '+await pg.evaluate(()=>Nav.top()+' tools='+($('#fxTools')&&$('#fxTools').hidden)+' onTool='+typeof Fix._onTool))});
+  assert.deepEqual(await pg.evaluate(()=>[...document.querySelectorAll('#fxTools [data-ft]')].map(b=>b.dataset.ft)),['sig','txt','date','img','white']);
+  await pg.click('#fxTools [data-ft="sig"]');await pg.waitForFunction(()=>Nav.top()==='placer'||document.querySelector('#plOk')&&document.querySelector('#plOk').offsetParent,null,{timeout:20000}).catch(async e=>{throw new Error('placer: '+await pg.evaluate(()=>Nav.top()))});await W(300);await pg.click('#plOk');
+  await pg.waitForFunction(()=>$$('#tMain .plist .frow').length===1,null,{timeout:10000});assert.match(await pg.textContent('#tMain .plist'),/Firma · página 1/);
+  const before=await pg.evaluate(()=>JSON.stringify(document.querySelector('#tMain .plist [data-mvp]')?1:0));assert.equal(before,'1','falta el botón Mover');
+  await pg.click('#tMain .plist [data-mvp]');await pg.waitForFunction(()=>document.querySelector('#plOk')&&document.querySelector('#plOk').offsetParent,null,{timeout:20000});await W(200);await pg.click('#plOk');await W(300);
+  assert.equal(await pg.evaluate(()=>$$('#tMain .plist .frow').length),1,'mover no debe duplicar');
+  await pg.evaluate(async()=>{for(let k=0;k<4&&Nav.top();k++)await Nav.back()});await W(200);
+  /* resultados: compartir un Word no lo vuelve a descargar; «Guardar en la app» crea el documento */
+  const res=await pg.evaluate(async()=>{let dls=0;const _d=download;download=function(){dls++};const host=document.createElement('div');document.body.appendChild(host);
+    const docx=await makeDocx([{type:'p',text:'Prueba'}]);const pdfB=new Blob([await (async()=>{await loadLib('pdflib');const d=await PDFLib.PDFDocument.create();d.addPage([300,400]).drawText('Hoja de prueba',{x:40,y:300});return d.save()})()],{type:'application/pdf'});
+    showResults(host,[{blob:docx,name:'nota.docx'},{blob:pdfB,name:'hoja.pdf'}]);await new Promise(r=>setTimeout(r,300));
+    host.querySelector('[data-dl="0"]').click();await new Promise(r=>setTimeout(r,500));const afterDl=dls;host.querySelector('[data-sh="0"]').click();await new Promise(r=>setTimeout(r,400));const afterSh=dls;
+    const sheetTxt=(document.querySelector('.sheet:last-of-type')||document.body).textContent;await Nav.back();
+    const m0=(await DB.metas()).length;host.querySelector('[data-sv="1"]').click();for(let i=0;i<60&&(await DB.metas()).length===m0;i++)await new Promise(r=>setTimeout(r,100));const m1=(await DB.metas()).length;
+    download=_d;host.remove();return {afterDl,afterSh,ya:/ya está en Descargas/i.test(document.body.textContent+sheetTxt),saved:m1-m0,hasPdfBtn:true}});
+  assert.equal(res.afterDl,1);assert.equal(res.afterSh,1,'compartir no debe volver a descargar');assert.equal(res.saved,1,'«Guardar en la app» no creó el documento');
+  /* cámara: si el recorte agarró un recuadro de adentro (una tabla), se toma la hoja entera */
+  const cam=await pg.evaluate(async()=>{const W=1200,H=1600,c=canvas(W,H),x=c.getContext('2d');x.fillStyle='#4a3826';x.fillRect(0,0,W,H);const P=[{x:180,y:160},{x:1040,y:180},{x:1060,y:1420},{x:160,y:1400}];
+    x.fillStyle='#f3f1ec';x.beginPath();P.forEach((q,i)=>i?x.lineTo(q.x,q.y):x.moveTo(q.x,q.y));x.closePath();x.fill();x.strokeStyle='#111';x.lineWidth=6;x.strokeRect(300,300,600,500);x.fillStyle='#222';x.font='26px Arial';for(let i=0;i<12;i++)x.fillText('Texto de prueba '+i,320,880+i*40);
+    const p={id:'t',orig:c.toDataURL('image/jpeg',.9),quad:[{x:300/W,y:300/H},{x:900/W,y:300/H},{x:900/W,y:800/H},{x:300/W,y:800/H}],rot:0,filter:'original'};const ok=await camWholeSheet(p);
+    return {ok,q:p.quad.map(q=>[Math.round(q.x*W),Math.round(q.y*H)])}});
+  assert.equal(cam.ok,true,'no tomó la hoja entera');assert.ok(Math.abs(cam.q[0][0]-180)<30&&Math.abs(cam.q[0][1]-160)<30&&Math.abs(cam.q[2][0]-1060)<30&&Math.abs(cam.q[2][1]-1420)<30,'esquinas: '+JSON.stringify(cam.q));
 });
 
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));

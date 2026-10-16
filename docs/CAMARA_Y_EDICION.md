@@ -757,3 +757,24 @@ Herramienta nueva **Editor de Word** (en «Editar PDF»), con su propio módulo 
 - **Word de salida (.docx propio)**: párrafos con alineación, interlineado y sangrías; letra, tamaño, negrita, cursiva, subrayado, tachado, color y resaltado; títulos con estilos; listas con viñetas y numeradas (cada lista numerada reinicia en 1); tablas con celdas combinadas y bordes; imágenes en su tamaño; saltos de página; hoja y márgenes; pie con número de página.
 - **PDF de salida**: html2pdf con la hoja, los márgenes, los saltos de página y los números elegidos. El PDF es imagen: el texto no se puede seleccionar. Para eso, pasalo después por «OCR PDF».
 - **Celular**: la vista «edición» muestra la letra a tamaño legible; la vista «hoja» muestra la página real con sus márgenes. En la PC arranca en «hoja».
+
+## v85 · Compartir y guardar, firma en la página abierta, Word con logos y firma en su lugar, cámara con la hoja entera y vertical
+- **Resultados**:
+  - Chrome en Android no deja compartir Word ni Excel desde una página web (solo PDF, imágenes, texto, audio y video). Antes «Compartir» volvía a descargar. Ahora, si ya se descargó, no lo baja de nuevo y explica cómo mandarlo desde Descargas.
+  - En un Word aparece **«Compartir como PDF»**.
+  - **«Guardar en la app»** (PDF, Word o imagen) lo deja en Documentos.
+- **Editar PDF**:
+  - en la página abierta («Corregir · página N») hay **Firma, Texto, Fecha, Imagen y Tapar**;
+  - lo agregado tiene **«✥ Mover»** para reubicarlo.
+- **Editor de Word con PDF**:
+  - las imágenes del PDF (logos, sellos, firmas) se sacan de las operaciones de dibujo de la página, con su lugar exacto, y se recortan con el blanco transparente;
+  - quedan **libres y superpuestas** como en el original: se arrastran con el dedo y se agrandan, se centran o se pasan al texto;
+  - las letras basura que el PDF trae sobre una firma o un logo se quitan;
+  - el texto conserva sangría, interlineado, tamaño de letra y espacios del PDF, así queda a la altura de los sellos;
+  - abre en vista hoja.
+- **Word de salida**: las imágenes libres van **ancladas a la página, delante del texto** (como en el original). En el PDF, cada hoja convertida se arma con sus márgenes, así los logos del margen no se cortan.
+- **Firma, imagen o logo nuevos** entran libres, dentro de la hoja y sin caer encima de otra imagen, y se arrastran a su lugar.
+- **Cámara**:
+  - si el recorte agarró un recuadro de adentro (media hoja, una tabla) y otro más grande lo contiene con papel claro, gana la hoja entera. Vale en vivo (Worker) y en la foto;
+  - la orientación de fábrica pasa a **Vertical (al derecho)**: una hoja vertical sacada de costado se gira hacia el lado en que el texto queda derecho; una hoja apaisada de verdad no se fuerza;
+  - el enderezado por texto ya no confunde renglones cortos en una hoja ancha con texto de costado.

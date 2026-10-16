@@ -164,3 +164,10 @@ Herramientas → **Editor de Word**. Abrí un PDF (si es escaneado se lee con OC
 - **Revisar**: buscar y reemplazar, contar palabras.
 
 Tocá una imagen para cambiarle el tamaño o centrarla, y una tabla para sumarle filas o columnas. Arriba, **Word** o **PDF** lo guardan. El borrador queda en el teléfono y podés seguirlo después.
+
+## Novedades v85
+- **Compartir un Word o un Excel**: el celular no deja compartirlos directo desde la app. Se descargan una sola vez y se mandan desde Descargas (WhatsApp → clip → Documento). En un Word tenés **Compartir como PDF**.
+- **Guardar en la app**: en el resultado, el botón lo deja en Documentos.
+- **Editar PDF**: al abrir la página grande tenés Firma, Texto, Fecha, Imagen y Tapar. Lo agregado se puede **Mover**.
+- **Editor de Word**: al abrir un PDF, los logos, el sello y la firma quedan en su lugar. Tocalos y arrastralos para moverlos. En el Word quedan delante del texto, como en el original.
+- **Cámara**: toma la hoja entera aunque tenga tablas o recuadros, y la deja vertical y al derecho.
