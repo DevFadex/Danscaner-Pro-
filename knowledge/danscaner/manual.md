@@ -171,3 +171,10 @@ Tocá una imagen para cambiarle el tamaño o centrarla, y una tabla para sumarle
 - **Editar PDF**: al abrir la página grande tenés Firma, Texto, Fecha, Imagen y Tapar. Lo agregado se puede **Mover**.
 - **Editor de Word**: al abrir un PDF, los logos, el sello y la firma quedan en su lugar. Tocalos y arrastralos para moverlos. En el Word quedan delante del texto, como en el original.
 - **Cámara**: toma la hoja entera aunque tenga tablas o recuadros, y la deja vertical y al derecho.
+
+## Novedades v86
+- **Cámara**:
+  - encuentra la hoja aunque esté sobre una mesa de madera clara o en una tablilla con gancho;
+  - avisa si la foto salió movida;
+  - procesa más rápido.
+- **Seguir con otra herramienta**: al terminar un escaneo («Documento listo»), en la pantalla del documento (botón Herramientas) o en el resultado de cualquier herramienta, elegís la siguiente (por ejemplo PDF a Word, firmar o comprimir) y el archivo entra solo. El documento queda guardado en la app.
