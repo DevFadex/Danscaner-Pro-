@@ -943,12 +943,16 @@ function viewBoxToPage(b,angle){angle=((angle%360)+360)%360;if(angle===90)return
 function uiMark(mode){return el=>{const M={edit:{hint:'Tocá una página para entrar y <b>corregir una palabra</b> (borrarla y escribir la correcta), o usá ✍️ firma, 🔤 texto, 🕒 fecha, 🖼️ imagen o ⬜ tapar (rectángulo blanco).',btns:[['fix',icoSvg('spell')||'Aa'],['sig','✍️'],['txt','🔤'],['date','🕒'],['img','🖼️'],['white','⬜']],save:'Guardar PDF editado',suf:'_editado'},redact:{hint:'Tocá ⬛ en la página y cubrí lo que quieras censurar. Las páginas censuradas se convierten en imagen para que el texto tapado no se pueda recuperar.',btns:[['black','⬛']],save:'Guardar PDF censurado',suf:'_censurado'},crop:{hint:'Tocá ✂️ en una página y ajustá el recuadro al área que querés CONSERVAR. Podés aplicarlo a todas las páginas.',btns:[['crop','✂️']],save:'Guardar PDF recortado',suf:'_recortado'}}[mode];const lbl={fix:'Corrección',sig:'Firma',txt:'Texto',date:'Fecha',img:'Imagen',white:'Tapado',black:'Censura',crop:'Recorte'};let pdf=null,file=null,places=[],dels=new Set();
 el.innerHTML='<div class="fp"></div><div class="hint">'+M.hint+' Tocá 🔍 para ver la página grande con zoom.'+(mode==='edit'?' Con 🗑 marcás las páginas que querés <b>borrar</b> (podés marcar varias).':'')+'</div>'+(mode==='edit'?'<div class="selbar delbar" hidden><b class="delc" style="flex:1">Ninguna página para borrar</b><input class="delr" placeholder="ej. 2-5,9" inputmode="numeric" style="width:96px"><button class="btn sm" data-dr="mark">🗑 Marcar</button><button class="btn sm" data-dr="none">Desmarcar</button></div>':'')+'<div class="gridwrap"></div><div class="plist"></div><button class="btn pri block run">'+M.save+'</button><div class="result"></div>';
 const drawDels=()=>{const bar=$('.delbar',el);if(!bar)return;bar.hidden=!pdf;$('.delc',bar).textContent=dels.size?'🗑 '+dels.size+' página(s) para borrar: '+[...dels].sort((a,b)=>a-b).join(', '):'Ninguna página para borrar';$$('.gridwrap .pg[data-n]',el).forEach(g=>g.classList.toggle('deleted',dels.has(+g.dataset.n)))};
-const drawList=()=>{$('.plist',el).innerHTML=places.map((p,i)=>'<div class="frow"><img src="'+p.png+'" style="height:26px;width:48px;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:4px"><span style="flex:1">'+lbl[p.kind]+' · '+(p.all?'todas las páginas':'página '+p.n)+'</span><button data-rmp="'+i+'">✕</button></div>').join('')};
+const drawList=()=>{$('.plist',el).innerHTML=places.map((p,i)=>'<div class="frow"><img src="'+p.png+'" style="height:26px;width:48px;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:4px"><span style="flex:1">'+lbl[p.kind]+' · '+(p.all?'todas las páginas':'página '+p.n)+'</span>'+(p.box&&p.kind!=='fix'?'<button data-mvp="'+i+'" title="Mover" aria-label="Mover">✥ Mover</button>':'')+'<button data-rmp="'+i+'">✕</button></div>').join('')};
 filePicker($('.fp',el),{accept:'.pdf,application/pdf',multi:false,onChange:files=>{file=files[0];places=[];dels.clear();drawList();$('.gridwrap',el).innerHTML='';$('.result',el).innerHTML='';pdf=null;drawDels();if(!file)return;withBusy(async()=>{busy('Cargando páginas…');pdf=await openPdfjs(await file.arrayBuffer());const g=document.createElement('div');g.className='pages small';$('.gridwrap',el).appendChild(g);g.innerHTML=Array.from({length:pdf.numPages},(_,i)=>'<div class="pg" data-n="'+(i+1)+'"><div class="pgimg"><img alt=""></div><div class="pgn">'+(i+1)+'</div><div class="pgc">'+M.btns.map(([k,ic])=>'<button data-s="'+k+'">'+ic+'</button>').join('')+'</div><div class="pgc pgx"><button data-z title="Ver con zoom">🔍</button>'+(mode==='edit'?'<button data-del title="Borrar esta página">🗑</button>':'')+'</div></div>').join('');busy(false);drawDels();for(let i=1;i<=pdf.numPages;i++){const {c}=await renderPdfPage(pdf,i,.35);const im=g.querySelector('[data-n="'+i+'"] img');if(im)im.src=c.toDataURL('image/jpeg',.7)}})}});
+/* v85: la misma acción sirve desde la miniatura y desde la página abierta (Corregir) */
+const doTool=async(n,k)=>{if(k==='fix'){await pdfFixPage(pdf,n,places,drawList,mode==='edit'?doTool:null);return}let png=null,free=false;if(k==='img')png=await pickImagePng();else if(k==='sig')png=await signatureSheet();else if(k==='txt')png=await textStampSheet();else if(k==='date')png=await dateStampSheet();else if(k==='white'){png=rectPng('#ffffff','#bbbbbb');free=true}else if(k==='black'){png=rectPng('#000000');free=true}else if(k==='crop'){png=rectPng('rgba(229,50,45,.12)','#e5322d');free=true}if(!png)return;busy('Preparando página…');let bg;try{const {c}=await renderPdfPage(pdf,n,1.6);bg=c.toDataURL('image/jpeg',.85)}finally{busy(false)}const r=await placeOverlay(bg,png,{allOption:pdf.numPages>1,title:lbl[k]+' · página '+n,free,init:k==='crop'?{x:.05,y:.05,w:.9,h:.9}:k==='white'||k==='black'?{x:.3,y:.4,w:.4,h:.06}:null});if(r){if(k==='white')r.png=rectPng('#ffffff');places.push({n,png,kind:k,...r});drawList();toast('Agregado. Tocá "'+M.save+'".')}};
 el.addEventListener('click',async e=>{const rm=e.target.closest('[data-rmp]');if(rm){places.splice(+rm.dataset.rmp,1);drawList();return}
+/* v85: mover lo que ya se agregó (firma, sello, imagen, texto) */
+const mv=e.target.closest('[data-mvp]');if(mv&&pdf){const P=places[+mv.dataset.mvp];if(!P||!P.box)return;busy('Preparando página…');let bg;try{const {c}=await renderPdfPage(pdf,P.n,1.6);bg=c.toDataURL('image/jpeg',.85)}finally{busy(false)}const r=await placeOverlay(bg,P.png,{allOption:pdf.numPages>1,title:'Mover · '+lbl[P.kind]+' · página '+P.n,free:P.kind==='white'||P.kind==='black'||P.kind==='crop',init:P.box});if(r){Object.assign(P,r);drawList();toast('Listo: quedó en el nuevo lugar')}return}
 if(pdf&&e.target.closest('.gridwrap [data-z]')){const n=+e.target.closest('.pg').dataset.n;Zoom.open({count:pdf.numPages,at:n-1,title:i=>'Página '+(i+1)+' de '+pdf.numPages+(dels.has(i+1)?' · para borrar':''),get:async i=>(await renderPdfPage(pdf,i+1,2.4)).c});return}
 if(pdf&&e.target.closest('.gridwrap [data-del]')){const n=+e.target.closest('.pg').dataset.n;dels.has(n)?dels.delete(n):dels.add(n);drawDels();return}
-const dr=e.target.closest('[data-dr]');if(dr&&pdf){if(dr.dataset.dr==='none')dels.clear();else{const v=$('.delr',el).value.trim();if(!v)return toast('Escribí las páginas, ej. 2-5,9');parseRange(v,pdf.numPages).forEach(n=>dels.add(n))}drawDels();return}const th=mode==='edit'&&e.target.closest('.gridwrap .pgimg');if(th&&pdf){await pdfFixPage(pdf,+th.closest('.pg').dataset.n,places,drawList);return}const b=e.target.closest('.gridwrap [data-s]');if(!b||!pdf)return;const n=+b.closest('.pg').dataset.n,k=b.dataset.s;if(k==='fix'){await pdfFixPage(pdf,n,places,drawList);return}let png=null,free=false;if(k==='img')png=await pickImagePng();else if(k==='sig')png=await signatureSheet();else if(k==='txt')png=await textStampSheet();else if(k==='date')png=await dateStampSheet();else if(k==='white'){png=rectPng('#ffffff','#bbbbbb');free=true}else if(k==='black'){png=rectPng('#000000');free=true}else if(k==='crop'){png=rectPng('rgba(229,50,45,.12)','#e5322d');free=true}if(!png)return;busy('Preparando página…');let bg;try{const {c}=await renderPdfPage(pdf,n,1.6);bg=c.toDataURL('image/jpeg',.85)}finally{busy(false)}const r=await placeOverlay(bg,png,{allOption:pdf.numPages>1,title:lbl[k]+' · página '+n,free,init:k==='crop'?{x:.05,y:.05,w:.9,h:.9}:k==='white'||k==='black'?{x:.3,y:.4,w:.4,h:.06}:null});if(r){if(k==='white')r.png=rectPng('#ffffff');places.push({n,png,kind:k,...r});drawList();toast('Agregado. Tocá "'+M.save+'".')}});
+const dr=e.target.closest('[data-dr]');if(dr&&pdf){if(dr.dataset.dr==='none')dels.clear();else{const v=$('.delr',el).value.trim();if(!v)return toast('Escribí las páginas, ej. 2-5,9');parseRange(v,pdf.numPages).forEach(n=>dels.add(n))}drawDels();return}const th=mode==='edit'&&e.target.closest('.gridwrap .pgimg');if(th&&pdf){await pdfFixPage(pdf,+th.closest('.pg').dataset.n,places,drawList,doTool);return}const b=e.target.closest('.gridwrap [data-s]');if(!b||!pdf)return;await doTool(+b.closest('.pg').dataset.n,b.dataset.s)});
 $('.run',el).onclick=()=>withBusy(async()=>{if(!file)return toast('Seleccioná un PDF');if(!places.length&&!dels.size)return toast('Agregá al menos un elemento');if(dels.size&&dels.size>=pdf.numPages)return toast('No podés borrar todas las páginas');busy('Guardando…');const src=await loadPdfLib(await file.arrayBuffer());const pages=src.getPages();let bytes;
 if(mode==='crop'){for(const pl of places){for(const p of (pl.all?pages:[pages[pl.n-1]])){const mb=p.getCropBox(),b=viewBoxToPage(pl.box,p.getRotation().angle);const x=mb.x+b.x*mb.width,y=mb.y+(1-b.y-b.h)*mb.height,w=b.w*mb.width,h=b.h*mb.height;p.setMediaBox(x,y,w,h);p.setCropBox(x,y,w,h)}}bytes=await src.save()}
 else if(mode==='edit'){for(const pl of places){const img=await src.embedPng(dataURLtoBytes(pl.png||rectPng('#ffffff')));for(const p of (pl.all?pages:[pages[pl.n-1]])){const {width:W,height:H}=p.getSize(),bx=pl.box;p.drawImage(img,{x:bx.x*W,y:H-(bx.y+bx.h)*H,width:bx.w*W,height:bx.h*H})}}[...dels].sort((a,b)=>b-a).forEach(n=>src.removePage(n-1));bytes=await src.save()}
@@ -3452,7 +3456,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 4.5',APP_VER='84';
+const NEXA_VER='Nexa 4.5',APP_VER='85';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3570,7 +3574,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='84 · 16/10/2026';
+const BUILD='85 · 16/10/2026';
 /* Versión que ven los usuarios: se cambia a mano solo cuando se decide publicar una versión nueva para todos.
    El administrador ve la versión interna (BUILD) con cada cambio. */
 const PUBLIC_VER='1.2';
@@ -4128,8 +4132,8 @@ document.head.insertAdjacentHTML('beforeend','<style id="v35Css">html.nx-locked 
 nexaGate();
 
 /* ===== Danscanner Pro v36: Editar PDF → entrar a cada página y corregir palabras; zoom en Corregir y en Colocar ===== */
-async function pdfFixPage(pdf,n,places,drawList){let c;busy('Abriendo página '+n+'…');try{c=(await renderPdfPage(pdf,n,2.5)).c}catch(e){busy(false);return toast('No se pudo abrir la página: '+e.message)}busy(false);
- Fix.openCanvas(c,{title:'Corregir · página '+n,onCommit:(list,rects,base)=>{for(const [i,o] of list.entries()){const r=rects[i];if(!r)continue;const w=r.X1-r.X0,h=r.Y1-r.Y0;if(w<2||h<2)continue;
+async function pdfFixPage(pdf,n,places,drawList,onTool){let c;busy('Abriendo página '+n+'…');try{c=(await renderPdfPage(pdf,n,2.5)).c}catch(e){busy(false);return toast('No se pudo abrir la página: '+e.message)}busy(false);
+ Fix.openCanvas(c,{title:'Corregir · página '+n,onTool:onTool?(k=>onTool(n,k)):null,onCommit:(list,rects,base)=>{for(const [i,o] of list.entries()){const r=rects[i];if(!r)continue;const w=r.X1-r.X0,h=r.Y1-r.Y0;if(w<2||h<2)continue;
    const pc=canvas(w,h);pc.getContext('2d').drawImage(base,r.X0,r.Y0,w,h,0,0,w,h);
    places.push({kind:'fix',n,png:pc.toDataURL('image/png'),box:{x:r.X0/base.width,y:r.Y0/base.height,w:w/base.width,h:h/base.height},all:false,t:o.t,orig:o.orig})}drawList()}})}
 /* zoom con dos dedos (y con la rueda del mouse) en la pantalla Corregir */
@@ -5451,10 +5455,9 @@ async function pageAutoClean(p,{dewarp=true,finger=true}={}){const k=pageKey(p),
  base.width=base.height=1;if(r.dw||r.fg)await makeThumb(p);return r}
 /* en la cámara: después de enderezar y revisar repetidas */
 /* v72: orientación de las hojas de la cámara: horizontal (por defecto), vertical o automática. Se gira acá, antes de limpiar, para que la limpieza use la hoja ya girada */
-const camOrient=()=>S.camOrient||'phone';
+const camOrient=()=>S.camOrient||'port';
 {const _pp=camPostProcess;camPostProcess=async function(pages,kind){const r=await _pp.apply(this,arguments);const o=camOrient();if(o==='auto'||o==='phone')return r;
- for(const p of pages){try{const c=await renderPage(p,{maxSide:400,noOverlays:true});const port=c.height>c.width*1.02,land=c.width>c.height*1.02;c.width=c.height=1;
-  if((o==='land'&&port)||(o==='port'&&land)){p.rot=((p.rot||0)+(o==='land'?270:90))%360;await makeThumb(p);const f=Cam._flags.get(p);if(f)f.orient=o}}catch(e){console.warn('orientación',e)}}return r}}
+ for(const p of pages){try{if(await camForceOrient(p,o)){await makeThumb(p);const f=Cam._flags.get(p);if(f)f.orient=o}}catch(e){console.warn('orientación',e)}}return r}}
 {const _pp=camPostProcess;camPostProcess=async function(pages,kind){const r=await _pp.apply(this,arguments);for(const p of pages){try{const o=await pageAutoClean(p,{dewarp:kind!=='board'});const f=Cam._flags.get(p)||{};if(o.dw)f.dw=true;if(o.fg)f.fg=true;Cam._flags.set(p,f);
   if(o.fg)toast('🧽 Se borró un dedo del borde de la hoja',2200);else if(o.dw)toast('📖 Hoja curva aplanada',2000)}catch(e){console.warn('limpiar',e)}}return r}}
 
@@ -6593,6 +6596,74 @@ document.head.insertAdjacentHTML('beforeend','<style id="v84Css">'+
  '.wd-doc hr.wpb{border:0;border-top:2px dashed #9aa3b5;margin:18px 0;position:relative;overflow:visible}.wd-doc hr.wpb::after{content:"Salto de página";position:absolute;left:50%;top:-10px;transform:translateX(-50%);background:#fff;color:#5d6577;font:12px/20px system-ui,sans-serif;padding:0 8px}'+
  '.wd-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}.wd-stats div{display:flex;flex-direction:column;padding:12px;border:1px solid var(--line);border-radius:12px}.wd-stats b{font-size:24px}.wd-stats span{color:var(--tx2);font-size:13px}'+
  '[data-theme="dark"] .wd-desk{background:#1d2129}'+
+ '</style>');
+
+/* ===== v85 · compartir y guardar resultados, firma en la página abierta de Editar PDF, cámara: hoja entera, vertical y al derecho ===== */
+/* ---- 1) orientación forzada (vertical por defecto): se gira hacia el lado en que el texto queda al derecho ---- */
+if(!S.v85cam){if(!S.camOrient||S.camOrient==='phone')S.camOrient='port';S.v85cam=true;try{saveS()}catch(e){}}
+async function camForceOrient(p,o){const c=await renderPage(p,{maxSide:1000,noOverlays:true});const isL=c.width>c.height*1.02,isP=c.height>c.width*1.02;
+ /* «Horizontal» (v72): siempre apaisada, como se pidió */
+ if(o==='land'){c.width=c.height=1;if(isP){p.rot=((p.rot||0)+270)%360;return true}return false}
+ try{const ax=camTextAxis(c);
+  if(o==='port'&&isL){if(ax==='h'){const po=pageOrient(c);if(po.rot===180){p.rot=((p.rot||0)+180)%360;return true}return false}/* texto horizontal: hoja apaisada de verdad, no se fuerza */
+   /* texto de costado (o no se sabe): se gira 90° y, si el texto queda al revés, 180° más */
+   const r1=((p.rot||0)+90)%360;const c2=await renderPage({...p,rot:r1},{maxSide:1000,noOverlays:true});const p2=pageOrient(c2);c2.width=c2.height=1;p.rot=(r1+(p2.rot===180?180:0))%360;return true}
+  const po=pageOrient(c);if(po.rot===180){p.rot=((p.rot||0)+180)%360;return true}return false}finally{c.width=c.height=1}}
+if(typeof CAM_ORIENT_L!=='undefined'){CAM_ORIENT_L.port='Vertical (al derecho)'}
+/* dirección de los renglones: con renglones horizontales hay filas en blanco entre ellos (y casi ninguna columna en blanco); con renglones verticales, al revés */
+function camTextAxis(c){const k=Math.min(1,800/Math.max(c.width,c.height)),W=Math.max(1,Math.round(c.width*k)),H=Math.max(1,Math.round(c.height*k)),t=canvas(W,H),x=t.getContext('2d',{willReadFrequently:true});x.drawImage(c,0,0,W,H);
+ const d=x.getImageData(0,0,W,H).data,n=W*H,g=new Uint8Array(n),hist=new Uint32Array(256);for(let i=0,j=0;i<n;i++,j+=4){g[i]=(d[j]*77+d[j+1]*150+d[j+2]*29)>>8;hist[g[i]]++}t.width=t.height=1;
+ let sum=0;for(let v=0;v<256;v++)sum+=v*hist[v];let sb=0,wb=0,best=0,th=128;for(let v=0;v<256;v++){wb+=hist[v];if(!wb)continue;const wf=n-wb;if(!wf)break;sb+=v*hist[v];const mb=sb/wb,mf=(sum-sb)/wf,bt=wb*wf*(mb-mf)*(mb-mf);if(bt>best){best=bt;th=v}}
+ const R=new Uint32Array(H),C=new Uint32Array(W);let ink=0;for(let y=0;y<H;y++)for(let xx=0;xx<W;xx++)if(g[y*W+xx]<th){R[y]++;C[xx]++;ink++}if(ink<n*.004)return null;
+ const span=(A,tot)=>{let acc=0,a0=0,a1=A.length-1;for(let i=0;i<A.length;i++){acc+=A[i];if(acc>tot*.01){a0=i;break}}acc=0;for(let i=A.length-1;i>=0;i--){acc+=A[i];if(acc>tot*.01){a1=i;break}}return [a0,a1]};
+ const [y0,y1]=span(R,ink),[x0,x1]=span(C,ink),bw=x1-x0+1,bh=y1-y0+1;if(bw<20||bh<20)return null;
+ let eR=0,eC=0;for(let y=y0;y<=y1;y++)if(R[y]<=Math.max(1,bw*.004))eR++;for(let xx=x0;xx<=x1;xx++)if(C[xx]<=Math.max(1,bh*.004))eC++;eR/=bh;eC/=bw;
+ if(eR>eC*1.6&&eR>.1)return 'h';if(eC>eR*1.6&&eC>.1)return 'v';return null}
+/* el enderezado por texto confundía renglones cortos en una hoja ancha con texto de costado: si los renglones son horizontales, no se gira 90° */
+{const _po=pageOrient;pageOrient=function(c){const r=_po.apply(this,arguments);if(r&&(r.rot===90||r.rot===270)){try{if(camTextAxis(c)==='h')return {rot:0,why:'renglones horizontales'}}catch(e){}}return r}}
+/* ---- 2) cámara: si se eligió un recuadro de adentro (media hoja, una tabla, un sello) y hay otro más grande que lo contiene con papel claro, gana la hoja entera ---- */
+const quadArea=q=>Math.abs(q.reduce((s3,c,i)=>{const n=q[(i+1)%4];return s3+c.x*n.y-n.x*c.y},0))/2;
+const inQuad=(pt,q)=>{let ins=false;for(let i=0,j=3;i<4;j=i++){const a=q[i],b=q[j];if(((a.y>pt.y)!==(b.y>pt.y))&&(pt.x<(b.x-a.x)*(pt.y-a.y)/(b.y-a.y+1e-12)+a.x))ins=!ins}return ins};
+function quadLuma(g,w,h,q,ring){const L=[];for(let i=1;i<10;i++)for(let j=1;j<10;j++){const u=i/10,v=j/10;const x=(1-u)*(1-v)*q[0].x+u*(1-v)*q[1].x+u*v*q[2].x+(1-u)*v*q[3].x,y=(1-u)*(1-v)*q[0].y+u*(1-v)*q[1].y+u*v*q[2].y+(1-u)*v*q[3].y;
+ if(ring&&inQuad({x,y},ring))continue;L.push(g[Math.min(h-1,Math.round(y*h))*w+Math.min(w-1,Math.round(x*w))])}L.sort((a,b)=>a-b);return L.length?L[L.length>>1]:0}
+async function camWholeSheet(p){await lazyMod('vision-core');const V=self.DSVision;if(!V)return false;const img=await loadImg(p.orig);const s=Math.min(1,720/Math.max(img.naturalWidth,img.naturalHeight));
+ const w=Math.round(img.naturalWidth*s),h=Math.round(img.naturalHeight*s),c=canvas(w,h),x=c.getContext('2d',{willReadFrequently:true});x.drawImage(img,0,0,w,h);const d=x.getImageData(0,0,w,h).data;c.width=c.height=1;
+ const r=V.detectDocument(d,w,h,Object.assign({},V.VISION_CFG,S.visionCfg||{}),{});if(!r||!r.quad)return false;const big=r.quad,small=p.quad;const g=new Uint8Array(w*h);for(let i=0,j=0;i<g.length;i++,j+=4)g[i]=(d[j]*77+d[j+1]*150+d[j+2]*29)>>8;
+ if(quadArea(big)<quadArea(small)*1.35||!small.every(pt=>inQuad(pt,big.map(q=>({x:q.x,y:q.y}))))&&!small.every(pt=>inQuad({x:pt.x*.98+.01,y:pt.y*.98+.01},big)))return false;
+ const ringL=quadLuma(g,w,h,big,small),inL=quadLuma(g,w,h,small,null);if(ringL<Math.max(110,inL-45))return false;/* lo que se suma tiene que ser papel, no la mesa */
+ p.quad=big;p.whole=true;return true}
+{const _mp=makePage;makePage=function(src,o){return _mp.apply(this,arguments).then(async p=>{try{if(p&&p.quad&&((o&&o.auto)??S.autoCrop)!==false&&typeof Cam!=='undefined'&&Nav.isOpen('camera')&&await camWholeSheet(p))await makeThumb(p)}catch(e){console.warn('hoja entera',e)}return p})}}
+/* ---- 3) Editar PDF: en la página abierta (Corregir) también se agrega firma, texto, fecha, imagen o se tapa ---- */
+(function(){const msg=$('#fxMsg');if(!msg||$('#fxTools'))return;msg.insertAdjacentHTML('afterend','<div class="fx-tools" id="fxTools" hidden role="toolbar" aria-label="Agregar a la página">'
+  +[['sig','sign','Firma'],['txt','type','Texto'],['date','clock','Fecha'],['img','image','Imagen'],['white','eraser','Tapar']].map(([k,ic,n])=>'<button class="chip" data-ft="'+k+'">'+icoSvg(ic)+' '+n+'</button>').join('')+'</div>');
+ $('#fxTools').onclick=async e=>{const b=e.target.closest('[data-ft]');const f=Fix._onTool;if(!b||!f)return;Fix._onTool=null;$('#fxDone').click();for(let i=0;i<20&&Nav.top()==='fixer';i++)await sleep(50);if(Nav.top()==='fixer')await Nav.back();f(b.dataset.ft)}})();
+{const _oc=Fix.openCanvas;Fix.openCanvas=function(c,o){const r=_oc.apply(this,arguments);const t=$('#fxTools');Fix._onTool=(o&&o.onTool)||null;if(t)t.hidden=!Fix._onTool;return r}}
+{const _op=Fix.open;Fix.open=function(){const t=$('#fxTools');if(t)t.hidden=true;Fix._onTool=null;return _op.apply(this,arguments)}}
+/* ---- 4) resultados: compartir sin volver a descargar, «Compartir como PDF» y «Guardar en la app» ---- */
+const canShareFile=(blob,name)=>{try{return !!(navigator.canShare&&navigator.canShare({files:[new File([blob],name,{type:blob.type||'application/octet-stream'})]}))}catch(e){return false}};
+async function saveBlobToApp(blob,name){const ext=extOf(name).toLowerCase();let ab=null;
+ if(ext==='.docx'){busy('Pasando el Word a PDF…');blob=await docxToPdfBlob(await blob.arrayBuffer())}
+ const d=newDoc();d.name=name.replace(/\.[^.]+$/,'');
+ if(ext==='.pdf'||ext==='.docx'){ab=await blob.arrayBuffer();await pdfEachPage(ab,2,async(c,i,n)=>{busy('Guardando página '+i+'/'+n+'…');d.pages.push(await makePage(c.toDataURL('image/jpeg',.92),{auto:false,filter:'original'}))})}
+ else{const u=URL.createObjectURL(blob);try{d.pages.push(await makePage(u,{auto:false,filter:'original'}))}finally{URL.revokeObjectURL(u)}}
+ if(!d.pages.length)throw new Error('No se pudo leer el archivo');await DB.putDoc(d);try{refreshLists()}catch(e){}return d}
+{const _sr=showResults;showResults=function(el,outs){const r=_sr.apply(this,arguments);try{v85Results(el,outs)}catch(e){console.warn('resultados',e)}return r}}
+function v85Results(el,outs){const dl=new Set(),nm=i=>{const v=(($('[data-rn="'+i+'"]',el)||{}).value||'').trim();return v?safeName(v)+extOf(outs[i].name):outs[i].name};
+ $$('.rcard',el).forEach((card,i)=>{const o=outs[i];if(!o||card.querySelector('.rmore'))return;const ext=extOf(o.name).toLowerCase();const can=/^\.(pdf|docx|jpe?g|png|webp)$/.test(ext);
+  const h=(can?'<button class="btn sm" data-sv="'+i+'">'+icoSvg('save')+' Guardar en la app</button>':'')+(ext==='.docx'&&!canShareFile(o.blob,o.name)?'<button class="btn sm" data-shp="'+i+'">'+icoSvg('share')+' Compartir como PDF</button>':'');
+  if(h)card.insertAdjacentHTML('beforeend','<div class="rmore">'+h+'</div>')});
+ el.addEventListener('click',async e=>{const d=e.target.closest('[data-dl]');if(d){dl.add(+d.dataset.dl);return}
+  const s=e.target.closest('[data-sh]');if(s){const i=+s.dataset.sh,o=outs[i];if(o&&!canShareFile(o.blob,o.name)){e.stopImmediatePropagation();e.preventDefault();const n=nm(i);if(!dl.has(i)){download(o.blob,n);dl.add(i)}
+    const isDoc=/\.docx$/i.test(n);const b=openSheet('Compartir','<p>El celular no deja compartir archivos <b>'+esc(extOf(n).slice(1).toUpperCase())+'</b> directo desde la app. <b>'+esc(n)+'</b> ya está en <b>Descargas</b>.</p><p class="muted">En WhatsApp: tocá el clip → Documento → buscalo en Descargas.</p>'+(isDoc?'<button class="btn pri block" id="v85ShP">'+icoSvg('share')+' Compartir como PDF</button>':'')+'<button class="btn block" data-back>Entendido</button>');
+    const bp=$('#v85ShP',b);if(bp)bp.onclick=async()=>{await Nav.back();sharePdfOf(o.blob,n)}}return}
+  const sp=e.target.closest('[data-shp]');if(sp){const i=+sp.dataset.shp;sharePdfOf(outs[i].blob,nm(i));return}
+  const sv=e.target.closest('[data-sv]');if(sv){const i=+sv.dataset.sv;await withBusy(async()=>{busy('Guardando en la app…');const doc=await saveBlobToApp(outs[i].blob,nm(i));busy(false);sv.disabled=true;sv.innerHTML=icoSvg('check')+' Guardado en Documentos';toast('Guardado en Documentos: '+doc.name)})}},true)}
+async function sharePdfOf(blob,name){let pdf=null;await withBusy(async()=>{busy('Pasando a PDF…');pdf=await docxToPdfBlob(await blob.arrayBuffer())});if(pdf)shareWhatsApp(pdf,name.replace(/\.[^.]+$/,'')+'.pdf')}
+document.head.insertAdjacentHTML('beforeend','<style id="v85Css">'+
+ '.fx-tools{display:flex;gap:6px;overflow-x:auto;padding:6px 12px;scrollbar-width:none}.fx-tools[hidden]{display:none}.fx-tools .chip{display:inline-flex;align-items:center;gap:6px;min-height:40px;white-space:nowrap;font-weight:700}.fx-tools .chip svg{width:18px;height:18px}'+
+ '.rmore{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.rmore .btn{display:inline-flex;align-items:center;gap:6px}.rmore .btn svg{width:16px;height:16px}'+
+ '.wd-doc{position:relative}.wd-doc section.wpg{position:relative}.wd-doc img.wfl{position:absolute;max-width:none;z-index:2;touch-action:none;cursor:move;user-select:none;-webkit-user-select:none}'+
+ '.wd-doc section.wpg>p,.wd-doc section.wpg>h1,.wd-doc section.wpg>h2,.wd-doc section.wpg>h3{margin-bottom:0}.wd-doc img.wfl.wsel{outline:2px dashed #2E3FAD;outline-offset:3px}.wd-app:not(.wd-sheet) .wd-doc section.wpg+section.wpg{border-top:2px dashed #9aa3b5;margin-top:18px;padding-top:12px}.wd-tip{font-size:12.5px}'+
  '</style>');
 </script>
 </body>

@@ -169,6 +169,12 @@ function detectDocument(rgba,w,h,cfg,B){
   // ajuste fino: cada lado se acomoda al borde más fuerte cercano (recta por mínimos cuadrados) y se cortan las rectas
   for(const c of cands){const r=refineQuad(c.q,B.mag,w,h,6);if(r&&validQuad(r,w,h,C)&&edgeSupport(r,dil,w,h)>=edgeSupport(c.q,dil,w,h)-0.02)c.q=r}
   let best=null;for(const c of cands){const sup=edgeSupport(c.q,dil,w,h),area=polyArea(c.q)/n;const sc=area*(0.25+0.75*sup)*(0.5+0.5*sup);if(sup>=(c.src==='blob'?0.3:C.minSupport)&&(!best||sc>best.sc))best={q:c.q,sc,sup,area,src:c.src}}
+  /* v85: si ganó un recuadro de adentro (media hoja, una tabla, un sello) y otro candidato más grande lo contiene con papel claro en lo que suma, gana la hoja entera */
+  if(best){const ok=[];for(const c of cands){const sup=edgeSupport(c.q,dil,w,h),area=polyArea(c.q)/n;if(sup>=(c.src==='blob'?0.3:C.minSupport*.8))ok.push({q:c.q,sup,area,src:c.src})}
+    const inside=(pt,q)=>{let ins=false;for(let i=0,j=3;i<4;j=i++){const a=q[i],b=q[j];if(((a.y>pt.y)!==(b.y>pt.y))&&(pt.x<(b.x-a.x)*(pt.y-a.y)/(b.y-a.y+1e-9)+a.x))ins=!ins}return ins};
+    const ringLuma=(big,small)=>{const L=[];for(let i=1;i<10;i++)for(let j=1;j<10;j++){const u=i/10,v=j/10;const x=(1-u)*(1-v)*big[0].x+u*(1-v)*big[1].x+u*v*big[2].x+(1-u)*v*big[3].x,y=(1-u)*(1-v)*big[0].y+u*(1-v)*big[1].y+u*v*big[2].y+(1-u)*v*big[3].y;if(inside({x,y},small))continue;L.push(g[Math.min(h-1,Math.max(0,Math.round(y)))*w+Math.min(w-1,Math.max(0,Math.round(x)))])}L.sort((a,b)=>a-b);return L.length?L[L.length>>1]:0};
+    const bo=orderCorners(best.q);let up=null;for(const c of ok){if(c.area<best.area*1.35)continue;const co=orderCorners(c.q);const cc={x:(co[0].x+co[2].x)/2,y:(co[0].y+co[2].y)/2};if(!bo.every(p=>inside({x:p.x+(cc.x-p.x)*.03,y:p.y+(cc.y-p.y)*.03},co)))continue;if(ringLuma(co,bo)<110)continue;if(!up||c.area>up.area)up=c}
+    if(up)best={q:up.q,sc:best.sc,sup:up.sup,area:up.area,src:up.src+'+entera'}}
   const t4=now();
   let quad=null,blur={lapVar:0,std:0};
   if(best){const q=orderCorners(best.q);quad=q.map(p=>({x:Math.min(1,Math.max(0,(p.x+.5)/w)),y:Math.min(1,Math.max(0,(p.y+.5)/h))}));

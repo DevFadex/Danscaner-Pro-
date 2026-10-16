@@ -19,8 +19,37 @@ const med=a=>{if(!a.length)return 0;const s=a.slice().sort((x,y)=>x-y);return s[
 const escH=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
 /* ---------- 1. PDF → HTML editable ---------- */
-WD.pdfToHtml=async function(ab,onProg){await lazyMod('tabla');const TX=__mods.TX;const pages=await TX.fromPdf(ab,{ocr:'auto',onProg});try{await TX.endOcr()}catch(e){}
- const html=pages.map(WD.blocksToHtml).filter(Boolean).join('<hr class="wpb">');return {html:html||'<p><br></p>',ocr:pages.some(p=>p.ocr),pages:pages.length}};
+/* v85: las imágenes del PDF (logos, sellos, firmas) se sacan con su lugar exacto: se recorren las operaciones de dibujo de la página
+ * (con la matriz de transformación) y se recorta cada una de la página dibujada, con el blanco transparente para que quede superpuesta como en el original.
+ * El texto que cae adentro de un logo o una firma (garabatos que el PDF trae como letras) se saca del texto. Una imagen que tapa 3 o más renglones
+ * es un fondo o una marca de agua: no se toma. */
+WD.pdfImages=async function(ab){const lib=await getPdfjs(),O=lib.OPS,pdf=await openPdfjs(ab),pages=[];
+ const mul=(m,t)=>[m[0]*t[0]+m[2]*t[1],m[1]*t[0]+m[3]*t[1],m[0]*t[2]+m[2]*t[3],m[1]*t[2]+m[3]*t[3],m[0]*t[4]+m[2]*t[5]+m[4],m[1]*t[4]+m[3]*t[5]+m[5]];
+ const IMG=new Set([O.paintImageXObject,O.paintInlineImageXObject,O.paintImageMaskXObject,O.paintJpegXObject].filter(x=>x!=null));
+ for(let n=1;n<=pdf.numPages;n++){const page=await pdf.getPage(n),vp=page.getViewport({scale:1}),ol=await page.getOperatorList();let ctm=[1,0,0,1,0,0];const stk=[],boxes=[];
+  for(let i=0;i<ol.fnArray.length;i++){const f=ol.fnArray[i],a=ol.argsArray[i];
+   if(f===O.save)stk.push(ctm.slice());else if(f===O.restore)ctm=stk.pop()||ctm;else if(f===O.transform)ctm=mul(ctm,a);
+   else if(f===O.paintFormXObjectBegin){stk.push(ctm.slice());if(a&&a[0]&&a[0].length===6)ctm=mul(ctm,a[0])}else if(f===O.paintFormXObjectEnd)ctm=stk.pop()||ctm;
+   else if(IMG.has(f)){const pts=[[0,0],[1,0],[0,1],[1,1]].map(([x,y])=>[ctm[0]*x+ctm[2]*y+ctm[4],ctm[1]*x+ctm[3]*y+ctm[5]]);
+    const r=vp.convertToViewportRectangle([Math.min(...pts.map(p=>p[0])),Math.min(...pts.map(p=>p[1])),Math.max(...pts.map(p=>p[0])),Math.max(...pts.map(p=>p[1]))]);
+    const b={x0:Math.max(0,Math.min(r[0],r[2])),y0:Math.max(0,Math.min(r[1],r[3])),x1:Math.min(vp.width,Math.max(r[0],r[2])),y1:Math.min(vp.height,Math.max(r[1],r[3]))};
+    if(b.x1-b.x0>=6&&b.y1-b.y0>=6&&!boxes.some(o=>Math.abs(o.x0-b.x0)<2&&Math.abs(o.y0-b.y0)<2&&Math.abs(o.x1-b.x1)<2&&Math.abs(o.y1-b.y1)<2))boxes.push(b)}}
+  pages.push({n,W:vp.width,H:vp.height,boxes})}
+ return {pdf,pages}};
+WD.cropTransparent=function(c,b,k){const pad=2,x=Math.max(0,Math.floor(b.x0*k)-pad),y=Math.max(0,Math.floor(b.y0*k)-pad),w=Math.min(c.width-x,Math.ceil((b.x1-b.x0)*k)+pad*2),h=Math.min(c.height-y,Math.ceil((b.y1-b.y0)*k)+pad*2);
+ const o=document.createElement('canvas');o.width=w;o.height=h;const ox=o.getContext('2d');ox.drawImage(c,x,y,w,h,0,0,w,h);const id=ox.getImageData(0,0,w,h),d=id.data;
+ for(let i=0;i<d.length;i+=4){const l=(d[i]*77+d[i+1]*150+d[i+2]*29)>>8;if(l>242)d[i+3]=0;else if(l>214)d[i+3]=Math.round((242-l)/28*255)}ox.putImageData(id,0,0);return o.toDataURL('image/png')};
+const mmPt=v=>Math.round(v*25.4/72*10)/10;
+WD.pdfToHtml=async function(ab,onProg){await lazyMod('tabla');const TX=__mods.TX;let im=null;onProg&&onProg('Buscando logos, sellos y firmas…');try{im=await WD.pdfImages(ab.slice(0))}catch(e){console.warn('imágenes del PDF',e)}
+ const pages=await TX.fromPdf(ab,{ocr:'auto',onProg});try{await TX.endOcr()}catch(e){}let floats=0;const secs=[];
+ for(const [i,pg] of pages.entries()){const P=im&&im.pages[i];let fl='';
+  if(P&&!pg.ocr){const sc=pg.scale||1;const lines=(pg.blocks||[]).filter(b=>b.kind==='text').map(b=>{const c=b.rows[0][0];return {b,cx:((c.x+(c.x1||c.x))/2)/sc,cy:(b.y+(c.h||10)/2)/sc,drop:false}});const keep=[];
+   for(const bx of P.boxes){if((bx.x1-bx.x0)*(bx.y1-bx.y0)>P.W*P.H*.5)continue;const inside=lines.filter(l=>l.cx>=bx.x0-2&&l.cx<=bx.x1+2&&l.cy>=bx.y0-2&&l.cy<=bx.y1+2);if(inside.length>=3)continue;inside.forEach(l=>l.drop=true);keep.push(bx)}
+   if(keep.length){pg.blocks=pg.blocks.filter(b=>!lines.some(l=>l.b===b&&l.drop));onProg&&onProg('Copiando logos, sellos y firmas…');const k=3;const {c}=await renderPdfPage(im.pdf,i+1,k);
+    for(const bx of keep){fl+='<img class="wfl" alt="" draggable="false" src="'+WD.cropTransparent(c,bx,k)+'" data-x="'+mmPt(bx.x0)+'" data-y="'+mmPt(bx.y0)+'" data-w="'+mmPt(bx.x1-bx.x0)+'">';floats++}c.width=c.height=1}}
+  const inner=WD.blocksToHtml(pg)||'<p><br></p>';const sst=(pg._lh&&Math.abs(pg._lh-1.15)>.08?'line-height:'+pg._lh+';':'')+(pg._pt&&pg._pt>=7&&pg._pt<=20&&Math.abs(pg._pt-12)>=.5?'font-size:'+pg._pt+'pt;':'');
+  secs.push('<section class="wpg"'+(sst?' style="'+sst+'"':'')+'>'+fl+inner+'</section>')}
+ return {html:secs.join('')||'<p><br></p>',ocr:pages.some(p=>p.ocr),pages:pages.length,floats}};
 WD.tableHtml=function(B){const cov=new Set(),span={};for(const m of B.merges||[]){span[m.r1+','+m.c1]=m;for(let r=m.r1;r<=m.r2;r++)for(let c=m.c1;c<=m.c2;c++)if(r!==m.r1||c!==m.c1)cov.add(r+','+c)}
  const nc=Math.max(1,...B.rows.map(r=>r.length)),bd=B.kind==='grid';let h='<table class="wtb'+(bd?'':' wtb-nb')+'"><tbody>';
  B.rows.forEach((row,r)=>{h+='<tr>';for(let c=0;c<nc;c++){if(cov.has(r+','+c))continue;const cell=row[c],m=span[r+','+c];const v=cell?escH(cell.v).replace(/\n/g,'<br>'):'';
@@ -31,16 +60,20 @@ WD.blocksToHtml=function(pg){const B=pg.blocks||[];if(!B.length)return '';const 
  const L=Math.min(...T.map(c=>c.x)),R=Math.max(...T.map(c=>c.x1||c.x)),CW=Math.max(1,R-L),hMed=med(T.map(c=>c.h||0).filter(Boolean))||12;
  const ys=[];for(let i=1;i<B.length;i++)if(B[i].kind==='text'&&B[i-1].kind==='text')ys.push(B[i].y-B[i-1].y);const pitch=med(ys)||hMed*1.5;
  const alignOf=c=>{const x0=c.x,x1=c.x1||c.x,w=x1-x0,mid=(x0+x1)/2;if(w<CW*.85&&Math.abs(mid-(L+R)/2)<Wd*.035&&x0>L+Wd*.04)return 'center';if(x0>L+CW*.35&&R-x1<Wd*.03)return 'right';return 'left'};
- const ptOf=c=>Math.round((c.h||hMed)/sc);let out='',P=null;
+ const ptOf=c=>Math.round((c.h||hMed)/sc);let out='',P=null,lastY=null;const mmOf=px=>Math.round(px/sc*.3528*10)/10;
+ /* v85: interlineado y tamaño de letra del PDF (se aplican a la hoja) */
+ pg._lh=Math.max(1,Math.min(2.4,Math.round(pitch/(hMed/1.02)*100)/100));pg._pt=Math.round(hMed/sc/1.02*2)/2;
  const flush=()=>{if(!P)return;let st='';const al=P.lines.length>1&&P.align==='left'&&P.lines.slice(0,-1).every(c=>R-(c.x1||c.x)<CW*.06)?'justify':P.align;
-  if(al!=='left')st+='text-align:'+al+';';if(P.align==='left'&&P.lines[0].x>L+Wd*.035&&P.lines[0].x<L+CW*.3)st+='text-indent:'+Math.round((P.lines[0].x-L)/sc*.3528*10)/10+'mm;';
+  if(al!=='left')st+='text-align:'+al+';';const x0s=P.lines.map(c=>c.x),allIn=P.align==='left'&&Math.min(...x0s)>L+Wd*.035;
+  if(allIn)st+='margin-left:'+mmOf(Math.min(...x0s)-L)+'mm;';else if(P.align==='left'&&P.lines[0].x>L+Wd*.035&&P.lines[0].x<L+CW*.3)st+='text-indent:'+mmOf(P.lines[0].x-L)+'mm;';
+  if(P.gap>0)st+='margin-top:'+P.gap+'mm;';
   const tag=P.head?(P.head>1.75?'h1':P.head>1.4?'h2':'h3'):'p';let txt='';P.lines.forEach((c,i)=>{const t=escH(c.v.replace(/\s{2,}/g,' ').trim());if(!i){txt=t;return}txt=/[A-Za-zÁÉÍÓÚÑáéíóúñ]-$/.test(txt)?txt.slice(0,-1)+t:txt+' '+t});
   if(P.bold&&!P.head)txt='<b>'+txt+'</b>';if(P.head)st+='font-size:'+P.pt+'pt;';out+='<'+tag+(st?' style="'+st+'"':'')+'>'+(txt||'<br>')+'</'+tag+'>';P=null};
  let prev=null;
  for(const b of B){if(b.kind!=='text'){flush();out+=WD.tableHtml(b);prev=null;continue}
   const c=b.rows[0][0],al=alignOf(c),rel=(c.h||hMed)/hMed,head=rel>=1.3?rel:0;
   const cont=P&&prev&&!head&&!P.head&&al==='left'&&P.align==='left'&&b.y-prev.y<=pitch*1.35&&R-(prev.x1||prev.x)<CW*.12&&!/[:]$/.test(prev.v.trim())&&!!c.b===!!P.bold;
-  if(!cont){flush();P={lines:[c],align:al,head,pt:ptOf(c),bold:!!c.b}}else P.lines.push(c);prev={...c,y:b.y}}
+  if(!cont){flush();/* espacio de más respecto del renglón anterior (o del margen de arriba en el primero) */const gap=lastY==null?Math.max(0,mmOf(b.y)-25):Math.max(0,mmOf(b.y-lastY-pitch));P={lines:[c],align:al,head,pt:ptOf(c),bold:!!c.b,gap:gap>1?Math.round(gap*10)/10:0}}else P.lines.push(c);prev={...c,y:b.y};lastY=b.y}
  flush();return out};
 
 /* ---------- 2. Word (.docx) → HTML (mammoth, MIT) ---------- */
@@ -64,7 +97,16 @@ WD.toDocx=async function(root,st){await loadLib('jszip');const pg=PAGES[st.page]
   if(s.fontWeight&&(s.fontWeight==='bold'||+s.fontWeight>=600))f.b=true;if(s.fontWeight&&(s.fontWeight==='normal'||+s.fontWeight&&+s.fontWeight<600))f.b=false;if(s.fontStyle==='italic')f.i=true;
   const td=(s.textDecorationLine||s.textDecoration||'');if(/underline/.test(td))f.u=true;if(/line-through/.test(td))f.s=true;if(s.color)f.color=hex(s.color)||f.color;if(s.backgroundColor){const h=hex(s.backgroundColor);if(h)f.hl=h}
   if(s.fontSize){const p=ptOfCss(s.fontSize);if(p)f.sz=p}if(s.fontFamily)f.font=s.fontFamily.split(',')[0].replace(/["']/g,'').trim();return f};
- const imgRun=(img)=>{const src=img.getAttribute('src')||'';const m=src.match(/^data:image\/(png|jpe?g|gif);base64,(.+)$/i);if(!m)return '';const ext=m[1].toLowerCase()==='jpg'?'jpeg':m[1].toLowerCase();
+ const picXml=(rid,name,cx,cy,id)=>'<a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="'+id+'" name="'+name+'"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="'+rid+'"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="'+cx+'" cy="'+cy+'"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic>';
+ const anchorRun=(img)=>{const src=img.getAttribute('src')||'';const m=src.match(/^data:image\/(png|jpe?g|gif);base64,(.+)$/i);if(!m)return '';const ext=m[1].toLowerCase()==='jpg'?'jpeg':m[1].toLowerCase();
+  const n=imgs.length+1;imgs.push({name:'image'+n+'.'+(ext==='jpeg'?'jpg':ext),data:m[2],id:'rIdImg'+n});const nw=img.naturalWidth||300,nh=img.naturalHeight||150,wmm=+img.dataset.w||40,hmm=wmm*nh/Math.max(1,nw);
+  const E=v=>Math.round(v*36000),id=docPrId++;
+  return '<w:r><w:drawing><wp:anchor distT="0" distB="0" distL="0" distR="0" simplePos="0" relativeHeight="'+(251658240+id)+'" behindDoc="0" locked="0" layoutInCell="1" allowOverlap="1"><wp:simplePos x="0" y="0"/><wp:positionH relativeFrom="page"><wp:posOffset>'+E(+img.dataset.x||0)+'</wp:posOffset></wp:positionH><wp:positionV relativeFrom="page"><wp:posOffset>'+E(+img.dataset.y||0)+'</wp:posOffset></wp:positionV><wp:extent cx="'+E(wmm)+'" cy="'+E(hmm)+'"/><wp:effectExtent l="0" t="0" r="0" b="0"/><wp:wrapNone/><wp:docPr id="'+id+'" name="Imagen '+id+'"/><wp:cNvGraphicFramePr><a:graphicFrameLocks noChangeAspect="1"/></wp:cNvGraphicFramePr>'+picXml(imgs[n-1].id,imgs[n-1].name,E(wmm),E(hmm),id)+'</wp:anchor></w:drawing></w:r>'};
+ /* párrafo mínimo (1 pt) que lleva las imágenes libres de una hoja; desde la segunda hoja, empieza página nueva */
+ let secN=0;const floatPara=(host)=>{const first=secN++===0;let fl=[...host.querySelectorAll('img.wfl')].filter(i=>(i.closest('section.wpg')||root)===host);
+  /* imágenes libres que quedaron fuera de las hojas: van con la primera */if(first&&host!==root)fl=fl.concat([...root.querySelectorAll('img.wfl')].filter(i=>!i.closest('section.wpg')));if(!fl.length&&first)return '';
+  return '<w:p><w:pPr>'+(first?'':'<w:pageBreakBefore/>')+'<w:spacing w:before="0" w:after="0" w:line="20" w:lineRule="exact"/><w:rPr><w:sz w:val="2"/></w:rPr></w:pPr>'+fl.map(anchorRun).join('')+'</w:p>'};
+ const imgRun=(img)=>{if(img.classList&&img.classList.contains('wfl'))return '';const src=img.getAttribute('src')||'';const m=src.match(/^data:image\/(png|jpe?g|gif);base64,(.+)$/i);if(!m)return '';const ext=m[1].toLowerCase()==='jpg'?'jpeg':m[1].toLowerCase();
   const n=imgs.length+1;imgs.push({name:'image'+n+'.'+(ext==='jpeg'?'jpg':ext),data:m[2],id:'rIdImg'+n});const nw=img.naturalWidth||+img.getAttribute('width')||300,nh=img.naturalHeight||+img.getAttribute('height')||150;
   let w=nw;const sw=img.style.width;if(/%$/.test(sw))w=contentPx*parseFloat(sw)/100;else if(/px$/.test(sw))w=parseFloat(sw);w=Math.min(w,contentPx);const h=w*nh/Math.max(1,nw);const cx=Math.round(w*9525),cy=Math.round(h*9525),id=docPrId++;
   return '<w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="'+cx+'" cy="'+cy+'"/><wp:docPr id="'+id+'" name="Imagen '+id+'"/><wp:cNvGraphicFramePr><a:graphicFrameLocks noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="'+id+'" name="'+imgs[n-1].name+'"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="'+imgs[n-1].id+'"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="'+cx+'" cy="'+cy+'"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>'};
@@ -72,14 +114,17 @@ WD.toDocx=async function(root,st){await loadLib('jszip');const pg=PAGES[st.page]
    if(t==='BR'){r+='<w:r><w:br/></w:r>';continue}if(t==='IMG'){r+=imgRun(n);continue}if(BLOCK.test(t))continue;r+=runs(n,fmtOf(n,f))}return r};
  const pPr=(el,{style,num,lvl,jcOver}={})=>{const s=el.style||{};let p='';if(style)p+='<w:pStyle w:val="'+style+'"/>';if(num)p+='<w:numPr><w:ilvl w:val="'+(lvl||0)+'"/><w:numId w:val="'+num+'"/></w:numPr>';
   const ta=jcOver||s.textAlign||(el.getAttribute&&el.getAttribute('align'))||'';const jc={center:'center',right:'right',justify:'both',left:'left',start:'left',end:'right'}[ta];
-  const lh=parseFloat(s.lineHeight);const sp=lh&&!/px|pt/.test(s.lineHeight)?'<w:spacing w:line="'+Math.round(240*lh)+'" w:lineRule="auto"/>':'';p+=sp;
+  const inSec=el.closest&&el.closest('section.wpg'),lhS=s.lineHeight||(inSec&&inSec.style.lineHeight)||'',lh=parseFloat(lhS),mt=mmOfCss(s.marginTop);
+  const la=lh&&!/px|pt/.test(lhS)?' w:line="'+Math.round(240*lh)+'" w:lineRule="auto"':'',bf=mt>0?' w:before="'+TW(mt)+'"':'',af=inSec?' w:after="0"':'';if(la||bf||af)p+='<w:spacing'+bf+af+la+'/>';
   let ind='';const ml=mmOfCss(s.marginLeft)||mmOfCss(s.paddingLeft)+(el.tagName==='BLOCKQUOTE'?10:0);const ti=mmOfCss(s.textIndent);if(ml||ti)ind='<w:ind'+(ml?' w:left="'+TW(ml)+'"':'')+(ti>0?' w:firstLine="'+TW(ti)+'"':ti<0?' w:hanging="'+TW(-ti)+'"':'')+'/>';p+=ind;
   if(jc)p+='<w:jc w:val="'+jc+'"/>';return p?'<w:pPr>'+p+'</w:pPr>':''};
  const para=(el,f,o)=>'<w:p>'+pPr(el,o)+runs(el,f)+'</w:p>';
- const hasBlock=el=>[...el.children].some(c=>BLOCK.test(c.tagName)||(c.tagName==='IMG'&&c.style.display==='block'));
+ const hasBlock=el=>[...el.children].some(c=>BLOCK.test(c.tagName)||(c.tagName==='IMG'&&(c.style.display==='block'||c.classList.contains('wfl'))));
  const imgBlock=img=>{const s=img.style;const jc=s.marginLeft==='auto'&&s.marginRight==='auto'?'center':s.marginLeft==='auto'?'right':'left';return '<w:p><w:pPr><w:jc w:val="'+jc+'"/></w:pPr>'+imgRun(img)+'</w:p>'};
  const blocks=(el,f,ctx={})=>{let out='';let inl=null;const flushInl=()=>{if(inl){out+='<w:p>'+pPr(el,{jcOver:el.style&&el.style.textAlign})+inl+'</w:p>';inl=null}};
   for(const n of el.childNodes){if(n.nodeType===3){if(n.nodeValue.trim()){inl=(inl||'')+runs({childNodes:[n]},f)}continue}if(n.nodeType!==1)continue;const t=n.tagName;
+   if(t==='IMG'&&n.classList.contains('wfl'))continue;
+   if(t==='SECTION'&&n.classList.contains('wpg')){flushInl();out+=floatPara(n)+blocks(n,fmtOf(n,f),ctx);continue}
    if(t==='IMG'&&n.style.display==='block'){flushInl();out+=imgBlock(n);continue}
    if(!BLOCK.test(t)){if(t==='BR'){inl=(inl||'')+'<w:r><w:br/></w:r>';continue}inl=(inl||'')+(t==='IMG'?imgRun(n):runs({childNodes:[n]},f));continue}
    flushInl();const nf=fmtOf(n,f);
@@ -106,7 +151,7 @@ WD.toDocx=async function(root,st){await loadLib('jszip');const pg=PAGES[st.page]
     const td=g.td,cf=fmtOf(td,f);if(td.tagName==='TH')cf.b=true;const sh=hex(td.style.backgroundColor);let inner=hasBlock(td)?blocks(td,cf):para(td,cf);if(!/<w:p[ >]/.test(inner))inner='<w:p/>';
     x+='<w:tc><w:tcPr><w:tcW w:w="'+colW*g.cs+'" w:type="dxa"/>'+(g.cs>1?'<w:gridSpan w:val="'+g.cs+'"/>':'')+(g.rs>1?'<w:vMerge w:val="restart"/>':'')+(sh?'<w:shd w:val="clear" w:color="auto" w:fill="'+sh+'"/>':'')+'</w:tcPr>'+inner+'</w:tc>';c+=g.cs}x+='</w:tr>'});
   return x+'</w:tbl>'};
- const body=blocks(root,{})||'<w:p/>';
+ const rootFl=root.querySelector('section.wpg')?'':floatPara(root);const body=(rootFl+blocks(root,{}))||'<w:p/>';
  const NS='xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"';
  const sect='<w:sectPr>'+(st.pnum?'<w:footerReference w:type="default" r:id="rIdFtr"/>':'')+'<w:pgSz w:w="'+TW(pw)+'" w:h="'+TW(ph)+'"'+(land?' w:orient="landscape"':'')+'/><w:pgMar w:top="'+TW(mg.t)+'" w:right="'+TW(mg.r)+'" w:bottom="'+TW(mg.b)+'" w:left="'+TW(mg.l)+'" w:header="709" w:footer="709" w:gutter="0"/></w:sectPr>';
  const doc='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document '+NS+'><w:body>'+body+sect+'</w:body></w:document>';
@@ -132,9 +177,16 @@ WD.toDocx=async function(root,st){await loadLib('jszip');const pg=PAGES[st.page]
 WD.toPdf=async function(root,st){await loadLib('html2pdf');const pg=PAGES[st.page]||PAGES.a4,mg=MARGINS[st.margin]||MARGINS.normal,land=st.orient==='h';const pw=land?pg.h:pg.w,ph=land?pg.w:pg.h;
  const wrap=document.createElement('div');wrap.className='wd-print';const c=root.cloneNode(true);c.removeAttribute('contenteditable');c.querySelectorAll('.wsel').forEach(n=>n.classList.remove('wsel'));
  c.querySelectorAll('hr.wpb').forEach(h=>{const d=document.createElement('div');d.className='html2pdf__page-break';h.replaceWith(d)});
- wrap.innerHTML='<style>.wd-print{color:#000;background:#fff}.wd-print p,.wd-print h1,.wd-print h2,.wd-print h3,.wd-print blockquote{margin:0 0 6pt}.wd-print h1{font-size:16pt}.wd-print h2{font-size:14pt}.wd-print h3{font-size:12pt}.wd-print table{border-collapse:collapse;width:100%}.wd-print td,.wd-print th{border:1px solid #000;padding:2pt 4pt;vertical-align:top}.wd-print table.wtb-nb td{border:0}.wd-print img{max-width:100%}.wd-print blockquote{margin-left:10mm;font-style:italic}tr,img{page-break-inside:avoid}</style>';
- wrap.appendChild(c);c.style.cssText=(root.getAttribute('style')||'')+';width:'+(pw-mg.l-mg.r)+'mm;padding:0;margin:0;min-height:0;box-shadow:none;zoom:1';
- let w=html2pdf().set({margin:[mg.t,mg.l,mg.b,mg.r],image:{type:'jpeg',quality:.96},html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff'},jsPDF:{unit:'mm',format:[pg.w,pg.h],orientation:land?'landscape':'portrait'},pagebreak:{mode:['css','legacy'],avoid:['tr','img']}}).from(wrap).toPdf();
+ wrap.innerHTML='<style>.wd-print{color:#000;background:#fff}.wd-print p,.wd-print h1,.wd-print h2,.wd-print h3,.wd-print blockquote{margin:0 0 6pt}.wd-print h1{font-size:16pt}.wd-print h2{font-size:14pt}.wd-print h3{font-size:12pt}.wd-print table{border-collapse:collapse;width:100%}.wd-print td,.wd-print th{border:1px solid #000;padding:2pt 4pt;vertical-align:top}.wd-print table.wtb-nb td{border:0}.wd-print section.wpg p,.wd-print section.wpg h1,.wd-print section.wpg h2,.wd-print section.wpg h3{margin-bottom:0}.wd-print img{max-width:100%}.wd-print blockquote{margin-left:10mm;font-style:italic}tr,img{page-break-inside:avoid}</style>';
+ wrap.appendChild(c);c.style.cssText=(root.getAttribute('style')||'')+';width:'+(pw-mg.l-mg.r)+'mm;padding:0;margin:0;min-height:0;box-shadow:none;zoom:1;position:relative;background-image:none';
+ /* v85: un PDF convertido trae una sección por hoja: cada una se arma como la hoja entera (con sus márgenes) para que logos, sellos y firmas
+  * queden en su lugar exacto, aunque estén en el margen */
+ const secs=[...c.querySelectorAll('section.wpg')];let margin=[mg.t,mg.l,mg.b,mg.r];
+ c.querySelectorAll('img.wfl').forEach(im=>{im.style.cssText='position:absolute;max-width:none;width:'+(+im.dataset.w||40)+'mm;left:'+(+im.dataset.x||0)+'mm;top:'+(+im.dataset.y||0)+'mm'});
+ if(secs.length){margin=[0,0,0,0];c.style.width=pw+'mm';secs.forEach((sc,i)=>{sc.style.cssText='position:relative;box-sizing:border-box;width:'+pw+'mm;min-height:'+(ph-.6)+'mm;padding:'+mg.t+'mm '+mg.r+'mm '+mg.b+'mm '+mg.l+'mm;margin:0';
+   if(i<secs.length-1){const d=document.createElement('div');d.className='html2pdf__page-break';sc.after(d)}})}
+ else c.querySelectorAll('img.wfl').forEach(im=>{im.style.left=((+im.dataset.x||0)-mg.l)+'mm';im.style.top=((+im.dataset.y||0)-mg.t)+'mm'});
+ let w=html2pdf().set({margin,image:{type:'jpeg',quality:.96},html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff'},jsPDF:{unit:'mm',format:[pg.w,pg.h],orientation:land?'landscape':'portrait'},pagebreak:{mode:['css','legacy'],avoid:['tr','img']}}).from(wrap).toPdf();
  if(st.pnum)w=w.get('pdf').then(pdf=>{const n=pdf.internal.getNumberOfPages();for(let i=1;i<=n;i++){pdf.setPage(i);pdf.setFontSize(10);pdf.setTextColor(60);pdf.text(String(i),pw/2,ph-Math.max(6,mg.b/2),{align:'center'})}});
  return w.outputPdf('blob')};
 
@@ -190,7 +242,33 @@ __mods.uiWord=function(el){
   app.classList.toggle('wd-sheet',st.view==='sheet');
   if(st.view==='sheet'){page.style.width=pw+'mm';page.style.minHeight=ph+'mm';doc.style.padding=mg.t+'mm '+mg.r+'mm '+mg.b+'mm '+mg.l+'mm';const avail=desk.clientWidth-24,px=pw*3.7795;page.style.zoom=avail>0&&px>avail?String(avail/px):'1';
    doc.style.backgroundImage='repeating-linear-gradient(to bottom,transparent 0,transparent calc('+(ph)+'mm - 1px),#9aa3b5 calc('+(ph)+'mm - 1px),#9aa3b5 '+ph+'mm)'}
-  else{page.style.width='';page.style.minHeight='';page.style.zoom='1';doc.style.padding='';doc.style.backgroundImage=''}};
+  else{page.style.width='';page.style.minHeight='';page.style.zoom='1';doc.style.padding='';doc.style.backgroundImage=''}
+  posFloats()};
+ /* v85: imágenes libres (logos, sellos, firmas): se guardan en mm desde el borde de la hoja (data-x/y/w) y se dibujan en su lugar */
+ const geom=()=>{const pg=PAGES[st.page],mg=MARGINS[st.margin],land=st.orient==='h';return {mg,pw:land?pg.h:pg.w,ph:land?pg.w:pg.h}};
+ const hostOf=im=>im.closest('section.wpg')||doc;
+ const pxPerMm=host=>{const {mg,pw}=geom();if(st.view==='sheet')return 3.7795;const cs=getComputedStyle(doc);const w=host===doc?doc.clientWidth-(parseFloat(cs.paddingLeft)||0)-(parseFloat(cs.paddingRight)||0):host.clientWidth;return w/(pw-mg.l-mg.r)};
+ function posFloats(){const {mg,ph}=geom(),sheet=st.view==='sheet';
+  doc.querySelectorAll('section.wpg').forEach(sc=>{sc.style.minHeight=sheet?(ph-mg.t-mg.b)+'mm':'';sc.style.marginBottom=sheet?(mg.b+mg.t)+'mm':''});
+  const cs=getComputedStyle(doc),padL=parseFloat(cs.paddingLeft)||0,padT=parseFloat(cs.paddingTop)||0;
+  doc.querySelectorAll('img.wfl').forEach(im=>{const host=hostOf(im),x=+im.dataset.x||0,y=+im.dataset.y||0,w=+im.dataset.w||40;im.setAttribute('contenteditable','false');im.draggable=false;
+   if(sheet){const inSec=host!==doc;im.style.left=(inSec?x-mg.l:x)+'mm';im.style.top=(inSec?y-mg.t:y)+'mm';im.style.width=w+'mm'}
+   else{const k=pxPerMm(host),ox=host===doc?padL:0,oy=host===doc?padT:0;im.style.left=(ox+(x-mg.l)*k)+'px';im.style.top=(oy+(y-mg.t)*k)+'px';im.style.width=(w*k)+'px'}})}
+ /* arrastrar con el dedo */
+ let drag=null;
+ doc.addEventListener('pointerdown',e=>{const im=e.target.closest('img.wfl');if(!im)return;e.preventDefault();const z=parseFloat(page.style.zoom)||1;
+  drag={im,x0:e.clientX,y0:e.clientY,dx:+im.dataset.x||0,dy:+im.dataset.y||0,k:pxPerMm(hostOf(im))*(st.view==='sheet'?z:1),moved:false};try{im.setPointerCapture(e.pointerId)}catch(er){}});
+ doc.addEventListener('pointermove',e=>{if(!drag)return;const dx=(e.clientX-drag.x0)/drag.k,dy=(e.clientY-drag.y0)/drag.k;if(Math.abs(dx)+Math.abs(dy)>.8)drag.moved=true;
+  drag.im.dataset.x=Math.round((drag.dx+dx)*10)/10;drag.im.dataset.y=Math.round((drag.dy+dy)*10)/10;posFloats()});
+ const endDrag=()=>{if(!drag)return;const d=drag;drag=null;if(d.moved){changed();d.im._moved=Date.now()}};doc.addEventListener('pointerup',endDrag);doc.addEventListener('pointercancel',endDrag);
+ /* imagen nueva (firma, logo): libre, a la altura del cursor y centrada; después se arrastra */
+ const insertFloat=(src,wmm,alt)=>{const {mg,pw}=geom();let host=doc,ref=null;if(saved){const n=saved.startContainer;const e2=n.nodeType===1?n:n.parentElement;if(e2&&doc.contains(e2)){host=e2.closest('section.wpg')||doc;ref=e2.closest('p,h1,h2,h3,li,td,div,blockquote')}}
+  const z=st.view==='sheet'?(parseFloat(page.style.zoom)||1):1,k=pxPerMm(host)*z;const hr=host.getBoundingClientRect(),cs=getComputedStyle(doc);
+  const oy=host===doc?(parseFloat(cs.paddingTop)||0)*z:0;let y=mg.t+10;if(ref&&ref!==host){y=mg.t+(ref.getBoundingClientRect().top-hr.top-oy)/k}
+  const {ph}=geom();y=Math.min(Math.max(mg.t,y),ph-mg.b-wmm*.5);/* siempre adentro de la hoja */
+  /* que no caiga encima de otra imagen libre de la misma hoja */const xN=(pw-wmm)/2,hN=wmm*.5;for(let t=0;t<6;t++){const hit=[...host.querySelectorAll('img.wfl')].filter(o=>hostOf(o)===host).find(o=>{const ox=+o.dataset.x||0,oy=+o.dataset.y||0,ow=+o.dataset.w||40,oh=ow*((o.naturalHeight||1)/(o.naturalWidth||2));return xN<ox+ow&&xN+wmm>ox&&y<oy+oh&&y+hN>oy});if(!hit)break;const oh=(+hit.dataset.w||40)*((hit.naturalHeight||1)/(hit.naturalWidth||2));y=(+hit.dataset.y)-hN-4;if(y<mg.t){y=(+hit.dataset.y)+oh+4}}
+  const im=document.createElement('img');im.className='wfl';im.alt=alt||'';im.src=src;im.dataset.w=wmm;im.dataset.x=Math.round((pw-wmm)/2*10)/10;im.dataset.y=Math.round(y*10)/10;host.appendChild(im);posFloats();changed();try{im.scrollIntoView({block:'center',behavior:'smooth'})}catch(e){}
+  setTimeout(()=>{im.click();toast('Arrastrala con el dedo hasta donde va',3500)},60)};
  const drawBar=()=>{bar.innerHTML=ribbons(st)[tab];$$('.wd-tabs [data-tab]',el).forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===tab)));const pn=bar.querySelector('[data-k="pnum"]');if(pn)pn.classList.toggle('on',st.pnum);const sp=bar.querySelector('[data-k="spell"]');if(sp)sp.classList.toggle('on',doc.spellcheck)};
  /* selección: se guarda para no perderla al tocar los botones o las listas */
  let saved=null;const onSel=()=>{if(!doc.isConnected){document.removeEventListener('selectionchange',onSel);return}const s=getSelection();if(s.rangeCount&&doc.contains(s.anchorNode))saved=s.getRangeAt(0).cloneRange()};document.addEventListener('selectionchange',onSel);
@@ -201,7 +279,7 @@ __mods.uiWord=function(el){
  let tSave=0;const status=t=>{const s=$('.wd-saved',el);if(s)s.textContent=t};
  const save=()=>{try{localStorage.setItem(KEY,JSON.stringify({name:st.name,html:doc.innerHTML,st,at:Date.now()}));status('Borrador guardado')}catch(e){status('Borrador muy grande: guardalo en Word o PDF')}};
  const changed=()=>{clearTimeout(tSave);tSave=setTimeout(save,1200);status('')};doc.addEventListener('input',changed);
- const open=(html,name)=>{doc.innerHTML=sanitizeHtml(html)||'<p><br></p>';doc.querySelectorAll('hr.wpb').forEach(h=>h.setAttribute('contenteditable','false'));st.name=name||st.name;$('.wd-name',el).value=st.name;$('.wd-start',el).hidden=true;app.hidden=false;drawBar();layout();changed();setTimeout(layout,60)};
+ const open=(html,name)=>{doc.innerHTML=sanitizeHtml(html)||'<p><br></p>';if(doc.querySelector('img.wfl')&&st.view!=='sheet'){st.view='sheet';setTimeout(()=>toast('Vista de hoja: los logos, el sello y la firma quedan en su lugar. Tocalos para moverlos.',4500),400)}doc.querySelectorAll('hr.wpb').forEach(h=>h.setAttribute('contenteditable','false'));st.name=name||st.name;$('.wd-name',el).value=st.name;$('.wd-start',el).hidden=true;app.hidden=false;drawBar();layout();changed();setTimeout(layout,60)};
  el._wd.open=open;
  filePicker($('.fp',el),{accept:'.pdf,application/pdf,.docx',multi:false,label:'Abrir PDF o Word',onChange:files=>{const f=files[0];if(!f)return;withBusy(async()=>{const nm=f.name.replace(/\.[^.]+$/,''),ab=await f.arrayBuffer();
    if(/\.docx$/i.test(f.name)){busy('Abriendo el Word…');open(await WD.docxToHtml(ab),nm)}
@@ -223,12 +301,12 @@ __mods.uiWord=function(el){
   if(k==='color')exec('foreColor',v);if(k==='hilite')exec('hiliteColor',v);
   if(k==='lh'){restore();const bs=blocksInSel();(bs.length?bs:[doc]).forEach(n=>n.style.lineHeight=v);changed()}
   if(k==='sym'&&v){exec('insertText',v);e.target.value=''}
-  if(k==='img'){const f=e.target.files[0];e.target.value='';if(!f)return;const src=await imgToData(f);insertHTML('<img src="'+src+'" alt="" style="width:40%">');}
+  if(k==='img'){const f=e.target.files[0];e.target.value='';if(!f)return;const src=await imgToData(f);insertFloat(src,40,'Imagen')}
   if(k==='page'||k==='orient'||k==='margin'){st[k]=v;layout();changed()}});
  bar.addEventListener('click',async e=>{const b=e.target.closest('button[data-k]');if(!b)return;const k=b.dataset.k;
   const CMD=['undo','redo','bold','italic','underline','strikeThrough','justifyLeft','justifyCenter','justifyRight','justifyFull','insertUnorderedList','insertOrderedList','outdent','indent','removeFormat'];
   if(CMD.includes(k)){exec(k);return}
-  if(k==='sign'){const png=await signatureSheet();if(png)insertHTML('<img src="'+png+'" alt="Firma" style="width:32%">');return}
+  if(k==='sign'){const png=await signatureSheet();if(png)insertFloat(png,55,'Firma');return}
   if(k==='date'){exec('insertText',new Date().toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'}));return}
   if(k==='pb'){insertHTML('<hr class="wpb" contenteditable="false"><p><br></p>');return}
   if(k==='hr'){exec('insertHorizontalRule');return}
@@ -244,11 +322,20 @@ __mods.uiWord=function(el){
   if(k==='newdoc'){if(!confirm('¿Empezar un documento nuevo? El actual se pierde si no lo guardaste en Word o PDF.'))return;try{localStorage.removeItem(KEY)}catch(er){}open('<p><br></p>','Documento');return}});
  /* imagen o tabla tocada: panel con sus opciones */
  doc.addEventListener('click',e=>{const img=e.target.closest('img'),td=e.target.closest('td,th');
+  if(img&&img.classList.contains('wfl')){closeCtx();img.classList.add('wsel');const {pw}=geom();
+   ctx.innerHTML='<b>Imagen libre</b><label class="wd-rng">Tamaño <input type="range" min="8" max="'+Math.round(pw)+'" value="'+Math.round(+img.dataset.w||40)+'" data-c="fw"></label><button type="button" class="btn sm" data-c="fc">Centrar</button><button type="button" class="btn sm" data-c="fi">Poner en el texto</button><button type="button" class="btn sm" data-c="del">Quitar</button><button type="button" class="btn sm" data-c="ok">Listo</button><span class="muted wd-tip">Arrastrala con el dedo</span>';ctx.hidden=false;
+   ctx.oninput=ev=>{if(ev.target.dataset.c==='fw'){const ow=+img.dataset.w||40,nw=+ev.target.value;img.dataset.x=Math.round(((+img.dataset.x||0)+(ow-nw)/2)*10)/10;img.dataset.w=nw;posFloats();changed()}};
+   ctx.onclick=ev=>{const q=ev.target.closest('[data-c]');if(!q)return;const a=q.dataset.c;
+    if(a==='fc'){img.dataset.x=Math.round((pw-(+img.dataset.w||40))/2*10)/10;posFloats();changed()}
+    if(a==='fi'){const {mg}=geom();const pct=Math.min(100,Math.round((+img.dataset.w||40)/(pw-mg.l-mg.r)*100));img.classList.remove('wfl','wsel');['x','y','w'].forEach(k=>delete img.dataset[k]);img.removeAttribute('contenteditable');img.style.cssText='width:'+pct+'%';closeCtx();changed()}
+    if(a==='del'){img.remove();closeCtx();changed()}if(a==='ok')closeCtx()};return}
   if(img){closeCtx();img.classList.add('wsel');const w=parseFloat(img.style.width)||Math.round(img.getBoundingClientRect().width/doc.clientWidth*100);
-   ctx.innerHTML='<b>Imagen</b><label class="wd-rng">Tamaño <input type="range" min="8" max="100" value="'+Math.round(w)+'" data-c="w"></label>'+btn('il','',ICO.al,'A la izquierda')+btn('ic','',ICO.ac,'Al centro')+btn('ir','',ICO.ar,'A la derecha')+'<button type="button" class="btn sm" data-c="del">Quitar</button><button type="button" class="btn sm" data-c="ok">Listo</button>';ctx.hidden=false;
+   ctx.innerHTML='<b>Imagen</b><label class="wd-rng">Tamaño <input type="range" min="8" max="100" value="'+Math.round(w)+'" data-c="w"></label>'+btn('il','',ICO.al,'A la izquierda')+btn('ic','',ICO.ac,'Al centro')+btn('ir','',ICO.ar,'A la derecha')+'<button type="button" class="btn sm" data-c="free">Mover libre</button><button type="button" class="btn sm" data-c="del">Quitar</button><button type="button" class="btn sm" data-c="ok">Listo</button>';ctx.hidden=false;
    ctx.oninput=ev=>{if(ev.target.dataset.c==='w'){img.style.width=ev.target.value+'%';changed()}};
    ctx.onclick=ev=>{const q=ev.target.closest('[data-k],[data-c]');if(!q)return;const a=q.dataset.k||q.dataset.c;
     if(a==='il'||a==='ic'||a==='ir'){img.style.display='block';img.style.marginLeft=a==='il'?'0':'auto';img.style.marginRight=a==='ir'?'0':'auto';changed()}
+    if(a==='free'){const {mg,pw}=geom();const host=img.closest('section.wpg')||doc,z=st.view==='sheet'?(parseFloat(page.style.zoom)||1):1,k=pxPerMm(host)*z,hr=host.getBoundingClientRect(),ir=img.getBoundingClientRect(),cs=getComputedStyle(doc);
+     const ox=host===doc?(parseFloat(cs.paddingLeft)||0)*z:0,oy=host===doc?(parseFloat(cs.paddingTop)||0)*z:0;const wmm=Math.round(ir.width/k*10)/10;img.style.cssText='';img.className='wfl';img.dataset.w=wmm;img.dataset.x=Math.round((mg.l+(ir.left-hr.left-ox)/k)*10)/10;img.dataset.y=Math.round((mg.t+(ir.top-hr.top-oy)/k)*10)/10;if(img.parentElement!==host)host.appendChild(img);closeCtx();posFloats();changed();toast('Ahora la podés arrastrar con el dedo');return}
     if(a==='del'){img.remove();closeCtx();changed()}if(a==='ok')closeCtx()};return}
   if(td){const tb=td.closest('table');closeCtx();ctx.innerHTML='<b>Tabla</b>'+['+ Fila','+ Columna','− Fila','− Columna','Bordes','Quitar tabla'].map((n,i)=>'<button type="button" class="btn sm" data-c="t'+i+'">'+n+'</button>').join('')+'<button type="button" class="btn sm" data-c="ok">Listo</button>';ctx.hidden=false;
    ctx.oninput=null;ctx.onclick=ev=>{const q=ev.target.closest('[data-c]');if(!q)return;const a=q.dataset.c,tr=td.closest('tr'),ci=[...tr.children].indexOf(td);
