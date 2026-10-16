@@ -90,7 +90,8 @@ TX.freeBlocks=function(free,scale,hrules){const out=[];
   const sp=gs.length?gs[Math.floor(gs.length*.3)]:cw*.5,gapS=Math.max(sp*1.8,cw*.75),gapT=Math.max(cw*2.4,hh*.9);
   const phr=(L,gap)=>{const ph=[];for(const w of L.ws){const P=ph[ph.length-1];if(P&&w.x0-P.x1<gap*Math.max(1,(w.y1-w.y0)/hh)){P.t+=' '+w.t;P.x1=Math.max(P.x1,w.x1);P.b=P.b&&!!w.b;P.ws.push(w)}else ph.push({t:w.t,x0:w.x0,x1:w.x1,b:!!w.b,ws:[w]})}return ph};
   for(const L of lines){L.ph=phr(L,gapS);L.big=phr(L,gapT).length}
-  const textLine=L=>out.push({kind:'text',y:L.y0,rows:[[{v:phr(L,gapT).map(p=>p.t).join('   '),b:L.ws.every(w=>w.b),x:L.ws[0].x0}]],merges:[],widths:[]});
+  /* x1 y h (alto de letra) los usa el Editor de Word (v84) para detectar centrado y títulos; el Excel no los usa */
+  const textLine=L=>out.push({kind:'text',y:L.y0,rows:[[{v:phr(L,gapT).map(p=>p.t).join('   '),b:L.ws.every(w=>w.b),x:L.ws[0].x0,x1:Math.max(...L.ws.map(w=>w.x1)),h:med(L.ws.map(w=>w.y1-w.y0))}]],merges:[],widths:[]});
   const pitch=med(lines.slice(1).map((l,i)=>l.cy-lines[i].cy))||hh*1.4;
   let i=0;while(i<lines.length){const L=lines[i];
     if(L.ph.length<2){textLine(L);i++;continue}
@@ -219,7 +220,7 @@ TX.fromPdf=async function(ab,{ocr='auto',onProg}={}){
   for(let i=1;i<=pdf.numPages;i++){onProg&&onProg('Página '+i+'/'+pdf.numPages);const page=await pdf.getPage(i);const base=page.getViewport({scale:1});const sc=Math.min(3,Math.max(1.5,2200/Math.max(base.width,base.height)));const vp=page.getViewport({scale:sc});
     const c=document.createElement('canvas');c.width=Math.round(vp.width);c.height=Math.round(vp.height);const x=c.getContext('2d',{willReadFrequently:true});x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);await page.render({canvasContext:x,viewport:vp}).promise;
     let words=await TX.pdfWords(page,vp,c);const chars=words.reduce((s,w)=>s+w.t.length,0);const needOcr=ocr==='si'||(ocr==='auto'&&chars<25);
-    pages.push({blocks:await TX.analyzeCanvas(c,{words:needOcr?null:words,ocr:needOcr,scale:sc,onProg}),ocr:needOcr,scale:sc});c.width=c.height=1}
+    pages.push({blocks:await TX.analyzeCanvas(c,{words:needOcr?null:words,ocr:needOcr,scale:sc,onProg}),ocr:needOcr,scale:sc,W:c.width,H:c.height});c.width=c.height=1}
   return pages};
 TX.fromImages=async function(srcs,{onProg}={}){const pages=[];let n=0;for(const s of srcs){n++;onProg&&onProg('Imagen '+n+'/'+srcs.length);const img=s instanceof HTMLCanvasElement?s:await loadImg(s);
   const k=Math.min(2.2,Math.max(1,2400/Math.max(img.naturalWidth||img.width,img.naturalHeight||img.height)));const c=document.createElement('canvas');c.width=Math.round((img.naturalWidth||img.width)*k);c.height=Math.round((img.naturalHeight||img.height)*k);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.imageSmoothingQuality='high';x.drawImage(img,0,0,c.width,c.height);

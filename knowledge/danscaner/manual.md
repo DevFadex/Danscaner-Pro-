@@ -155,3 +155,12 @@ Ajustes → **Seguridad y accesos** → **Ingreso con huella y PIN**. Elegí un 
 
 ## Girar la foto al revisarla (v83)
 Cuando la cámara te muestra la foto grande («¿Sirve así?»), tenés **Girar** a la izquierda y a la derecha, arriba de Repetir, Seguir y Listo. Si sacás con el teléfono acostado sobre la hoja, la app la endereza mirando el texto.
+
+## Editor de Word (v84)
+Herramientas → **Editor de Word**. Abrí un PDF (si es escaneado se lee con OCR) o un Word, o empezá uno en blanco. Editalo como en Word:
+- **Inicio**: letra, tamaño, negrita, colores, alineación, listas e interlineado.
+- **Insertar**: imagen o logo, tu firma, la fecha, tablas, salto de página y símbolos.
+- **Diseño**: hoja A4 u oficio, márgenes (incluye «Judicial»), números de página.
+- **Revisar**: buscar y reemplazar, contar palabras.
+
+Tocá una imagen para cambiarle el tamaño o centrarla, y una tabla para sumarle filas o columnas. Arriba, **Word** o **PDF** lo guardan. El borrador queda en el teléfono y podés seguirlo después.
