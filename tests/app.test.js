@@ -1535,6 +1535,70 @@ await test('Ingreso con huella (v80): se registra con el sensor, desbloquea con 
   await pg.evaluate(()=>{delete S.lock;saveS()});
 });
 
+await test('Editor de Word (v84): PDF → documento editable, formato, imagen, firma, tabla, lista, buscar y reemplazar, Word y PDF de salida y borrador',async pg=>{
+  /* PDF ficticio: título centrado, párrafo con sangría, tabla con bordes y fecha a la derecha */
+  const pdfB64=await pg.evaluate(async()=>{await loadLib('pdflib');const {PDFDocument,StandardFonts,rgb}=PDFLib;const d=await PDFDocument.create(),F=await d.embedFont(StandardFonts.TimesRoman),FB=await d.embedFont(StandardFonts.TimesRomanBold);const p=d.addPage([595,842]);
+    const T='INFORME DE PRUEBA';p.drawText(T,{x:(595-FB.widthOfTextAtSize(T,18))/2,y:770,size:18,font:FB});
+    const par='Por medio de la presente se informa que el interno de prueba fue trasladado a la audiencia fijada por el juzgado interviniente, conforme lo ordenado en los autos de referencia y sin novedades.';
+    let line='',y=720,first=true;const L=[];for(const w of par.split(' ')){const t=line?line+' '+w:w;if(F.widthOfTextAtSize(t,12)>(first?440:475)&&line){L.push([line,first]);line=w;first=false}else line=t}L.push([line,first]);for(const [l,f] of L){p.drawText(l,{x:f?95:60,y,size:12,font:F});y-=15}
+    p.drawText('Segundo parrafo corto.',{x:60,y:y-12,size:12,font:F});
+    const xs=[60,200,330,535],ty=600;[['Nombre','DNI'],['PRUEBA UNO','11.111.111'],['PRUEBA DOS','22.222.222']].forEach((r,i)=>r.forEach((t,j)=>p.drawText(t,{x:xs[j]+4,y:ty-(i+1)*20+6,size:11,font:i?F:FB})));
+    for(let i=0;i<=3;i++)p.drawLine({start:{x:60,y:ty-i*20},end:{x:330,y:ty-i*20},thickness:.8,color:rgb(0,0,0)});[60,200,330].forEach(x=>p.drawLine({start:{x,y:ty},end:{x,y:ty-60},thickness:.8,color:rgb(0,0,0)}));
+    const D='San Miguel de Tucuman, 16 de octubre de 2026';p.drawText(D,{x:535-F.widthOfTextAtSize(D,12),y:480,size:12,font:F});
+    const u8=await d.save();let s='';for(let i=0;i<u8.length;i+=8192)s+=String.fromCharCode.apply(null,u8.subarray(i,i+8192));return btoa(s)});
+  assert.ok(await pg.evaluate(()=>TOOLS.some(t=>t.name==='Editor de Word')),'falta la herramienta');
+  await pg.evaluate(()=>{localStorage.removeItem('ds_word_draft');openTool(TOOLS.findIndex(t=>t.name==='Editor de Word'))});await W(600);
+  await pg.evaluate(async()=>{for(let k=0;k<3&&Nav.top()!=='toolScreen';k++)await Nav.back()});await pg.waitForSelector('#tMain .wd-start input[type=file]',{state:'attached'});
+  await pg.setInputFiles('#tMain .wd-start input[type=file]',{name:'informe.pdf',mimeType:'application/pdf',buffer:Buffer.from(pdfB64,'base64')});
+  await pg.waitForFunction(()=>$('#tMain .wd-app')&&!$('#tMain .wd-app').hidden,null,{timeout:60000});
+  const conv=await pg.evaluate(()=>{const d=$('#tMain .wd-doc');return {h:(d.querySelector('h1,h2,h3')||{}).outerHTML||'',ind:!!d.querySelector('p[style*="text-indent"]'),tbl:d.querySelectorAll('table.wtb td').length,right:[...d.querySelectorAll('p')].some(p=>/right/.test(p.style.textAlign)&&/16 de octubre/.test(p.textContent)),name:$('#tMain .wd-name').value}});
+  assert.match(conv.h,/text-align:\s*center/);assert.match(conv.h,/INFORME DE PRUEBA/);assert.ok(conv.ind,'falta la sangría del párrafo');assert.equal(conv.tbl,6);assert.ok(conv.right,'la fecha tiene que quedar a la derecha');assert.equal(conv.name,'informe');
+  /* negrita y tamaño sobre «Segundo» con los botones de la cinta */
+  const selectWord=w=>pg.evaluate(w=>{const d=$('#tMain .wd-doc');const tw=document.createTreeWalker(d,NodeFilter.SHOW_TEXT);let n;while(n=tw.nextNode()){const i=n.nodeValue.indexOf(w);if(i>=0){const r=document.createRange();r.setStart(n,i);r.setEnd(n,i+w.length);d.focus();const s=getSelection();s.removeAllRanges();s.addRange(r);return true}}return false},w);
+  assert.ok(await selectWord('Segundo'));await W(100);await pg.click('#tMain .wd-bar [data-k="bold"]');
+  await selectWord('Segundo');await W(100);await pg.selectOption('#tMain .wd-bar select[data-k="size"]','18');
+  const fmt=await pg.evaluate(()=>{const d=$('#tMain .wd-doc');const all=[...d.querySelectorAll('b,strong,span,font')].filter(e=>/Segundo/.test(e.textContent));return {bold:all.some(e=>/^(B|STRONG)$/.test(e.tagName)||/bold|700/.test(e.style.fontWeight)),size:all.some(e=>e.style.fontSize==='18pt')}});
+  assert.deepEqual(fmt,{bold:true,size:true});
+  /* insertar: imagen (logo), firma, fecha, tabla, lista y salto de página al final */
+  const caretEnd=()=>pg.evaluate(()=>{const d=$('#tMain .wd-doc');const p=document.createElement('p');p.innerHTML='<br>';d.appendChild(p);const r=document.createRange();r.setStart(p,0);r.collapse(true);d.focus();const s=getSelection();s.removeAllRanges();s.addRange(r)});
+  await pg.click('#tMain .wd-tabs [data-tab="insertar"]');await caretEnd();
+  const logo=await pg.evaluate(()=>{const c=canvas(240,120),x=c.getContext('2d');x.fillStyle='#2E3FAD';x.fillRect(0,0,240,120);x.fillStyle='#fff';x.font='bold 40px Arial';x.fillText('LOGO',60,75);return c.toDataURL('image/png').split(',')[1]});
+  await pg.setInputFiles('#tMain .wd-bar input[data-k="img"]',{name:'logo.png',mimeType:'image/png',buffer:Buffer.from(logo,'base64')});await pg.waitForFunction(()=>$('#tMain .wd-doc img'),null,{timeout:10000});
+  await pg.evaluate(()=>{window.signatureSheet=()=>Promise.resolve((()=>{const c=canvas(300,100),x=c.getContext('2d');x.strokeStyle='#0d3fa6';x.lineWidth=4;x.beginPath();x.moveTo(10,80);x.bezierCurveTo(80,0,160,120,290,20);x.stroke();return c.toDataURL('image/png')})())});
+  await caretEnd();await pg.click('#tMain .wd-bar [data-k="sign"]');await pg.waitForFunction(()=>$$('#tMain .wd-doc img').length===2,null,{timeout:10000});
+  await caretEnd();await pg.click('#tMain .wd-bar [data-k="date"]');
+  await caretEnd();await pg.click('#tMain .wd-bar [data-k="table"]');await pg.waitForSelector('#wdTOk');await pg.fill('#wdR','2');await pg.fill('#wdC','2');await pg.click('#wdTOk');await pg.waitForFunction(()=>$$('#tMain .wd-doc table').length===2);
+  await caretEnd();await pg.click('#tMain .wd-bar [data-k="pb"]');
+  await pg.click('#tMain .wd-tabs [data-tab="inicio"]');await caretEnd();await pg.evaluate(()=>document.execCommand('insertText',false,'Primer punto'));await pg.click('#tMain .wd-bar [data-k="insertOrderedList"]');
+  /* la imagen se agranda y se centra desde su panel */
+  await pg.click('#tMain .wd-doc img');await pg.waitForSelector('#tMain .wd-ctx:not([hidden]) input[type=range]');
+  await pg.$eval('#tMain .wd-ctx input[type=range]',e=>{e.value=50;e.dispatchEvent(new Event('input',{bubbles:true}))});await pg.click('#tMain .wd-ctx [data-k="ic"]');
+  assert.deepEqual(await pg.evaluate(()=>{const i=$('#tMain .wd-doc img');return [i.style.width,i.style.marginLeft,i.style.marginRight]}),['50%','auto','auto']);await pg.click('#tMain .wd-ctx [data-c="ok"]');
+  /* revisar: reemplazar y contar */
+  await pg.click('#tMain .wd-tabs [data-tab="revisar"]');await pg.click('#tMain .wd-bar [data-k="find"]');await pg.waitForSelector('#wfQ');await pg.fill('#wfQ','prueba');await pg.fill('#wfR','EJEMPLO');await pg.click('#wfAll');
+  assert.match(await pg.textContent('#wfMsg'),/Se reemplazó 4 veces/);await pg.evaluate(()=>Nav.back());
+  /* diseño: números de página */
+  await pg.click('#tMain .wd-tabs [data-tab="diseno"]');await pg.click('#tMain .wd-bar [data-k="pnum"]');
+  /* Word de salida: se revisa por dentro y se vuelve a abrir */
+  const out=await pg.evaluate(async()=>{const W=$('#tMain')._wd;const blob=await W.toDocx();await loadLib('jszip');const z=await JSZip.loadAsync(blob);const x=await z.file('word/document.xml').async('string');
+    const media=Object.keys(z.files).filter(f=>/^word\/media\/.+/.test(f)).length;await loadLib('mammoth');const back=(await mammoth.convertToHtml({arrayBuffer:await blob.arrayBuffer()})).value;
+    const pdf=await W.toPdf();const pd=await openPdfjs(await pdf.arrayBuffer());
+    return {center:/<w:jc w:val="center"\/>/.test(x),right:/<w:jc w:val="right"\/>/.test(x),bold:/<w:b\/>/.test(x),size:/<w:sz w:val="36"\/>/.test(x),tables:(x.match(/<w:tbl>/g)||[]).length,drawings:(x.match(/<w:drawing>/g)||[]).length,media,
+      pageBreak:/<w:br w:type="page"\/>/.test(x),list:/<w:numId w:val="2"\/>/.test(x),footer:!!z.file('word/footer1.xml'),ind:/w:firstLine/.test(x),back:/EJEMPLO UNO/.test(back)&&/<table>/.test(back)&&/INFORME DE EJEMPLO/.test(back),pdf:pdf.size>2000,pages:pd.numPages}});
+  assert.deepEqual(out,{center:true,right:true,bold:true,size:true,tables:2,drawings:2,media:2,pageBreak:true,list:true,footer:true,ind:true,back:true,pdf:true,pages:2});
+  /* borrador: al volver a entrar se ofrece seguir */
+  await W(1500);await pg.evaluate(async()=>{await Nav.back();openTool(TOOLS.findIndex(t=>t.name==='Editor de Word'))});await W(600);await pg.evaluate(async()=>{for(let k=0;k<3&&Nav.top()!=='toolScreen';k++)await Nav.back()});
+  await pg.waitForSelector('#wdDraft');assert.match(await pg.textContent('#wdDraft'),/Seguir con «informe»/);await pg.click('#wdDraft');
+  assert.match(await pg.evaluate(()=>$('#tMain .wd-doc').textContent),/INFORME DE EJEMPLO/);
+  /* un Word (.docx) también se abre para editar */
+  const docx=await pg.evaluate(async()=>{const b=await $('#tMain')._wd.toDocx();const u8=new Uint8Array(await b.arrayBuffer());let s='';for(let i=0;i<u8.length;i+=8192)s+=String.fromCharCode.apply(null,u8.subarray(i,i+8192));return btoa(s)});
+  await pg.evaluate(async()=>{localStorage.removeItem('ds_word_draft');await Nav.back();openTool(TOOLS.findIndex(t=>t.name==='Editor de Word'))});await W(600);await pg.evaluate(async()=>{for(let k=0;k<3&&Nav.top()!=='toolScreen';k++)await Nav.back()});
+  await pg.setInputFiles('#tMain .wd-start input[type=file]',{name:'copia.docx',mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',buffer:Buffer.from(docx,'base64')});
+  await pg.waitForFunction(()=>$('#tMain .wd-app')&&!$('#tMain .wd-app').hidden,null,{timeout:30000});
+  assert.deepEqual(await pg.evaluate(()=>{const d=$('#tMain .wd-doc');return [/EJEMPLO DOS/.test(d.textContent),d.querySelectorAll('table').length>=1,d.querySelectorAll('img').length]}),[true,true,2]);
+  await pg.evaluate(()=>localStorage.removeItem('ds_word_draft'));
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();

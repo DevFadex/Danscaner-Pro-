@@ -734,3 +734,26 @@ Todo va dentro de `@media (min-width:1024px)`; el celular no cambia.
 - **Por qué se giraba sola:** con el teléfono casi acostado sobre la hoja, una inclinación chica (~15°) alcanzaba para que la app creyera que estaba de costado o al revés. Ahora:
   - el sensor solo cuenta si el teléfono está bien levantado (≥ ~40°);
   - si al sacar la foto está acostado sobre la hoja, no se usa una posición vieja: la hoja se endereza mirando el texto.
+
+## v84 · Editor de Word
+Herramienta nueva **Editor de Word** (en «Editar PDF»), con su propio módulo `mod/word.js` que se carga solo al usarla.
+
+- **Abrir:**
+  - **PDF**: usa el lector de `mod/tabla.js` (texto real del PDF o, si es escaneado, OCR). Reconoce:
+    - párrafos, que se unen cuando el renglón llega al margen;
+    - títulos por tamaño de letra;
+    - negritas;
+    - centrado, derecha y justificado;
+    - sangría de primera línea;
+    - tablas con sus celdas combinadas.
+  - **Word (.docx)**: con mammoth (MIT, ya en `libs/`).
+  - **Documento en blanco**, o **seguir con el borrador** (se guarda solo en el teléfono).
+- **Cinta como Word:**
+  - **Inicio**: deshacer y rehacer; estilo (Normal, Título 1–3, Cita); letra; tamaño; negrita, cursiva, subrayado, tachado; color y resaltado; las 4 alineaciones; viñetas y numeración; sangría; interlineado; borrar formato.
+  - **Insertar**: imagen o logo, firma (la de la app), fecha, tabla, salto de página, línea, símbolos (N°, °, §, « », —).
+  - **Diseño**: hoja A4, Oficio o Carta; vertical u horizontal; márgenes Normal, **Judicial (izq. 3 cm)** o Estrecho; números de página; vista edición u hoja.
+  - **Revisar**: buscar y reemplazar, contar palabras, ortografía.
+- **Imagen tocada**: tamaño, alineación (izquierda, centro, derecha) o quitar. **Tabla tocada**: agregar o quitar filas y columnas, bordes, quitar tabla.
+- **Word de salida (.docx propio)**: párrafos con alineación, interlineado y sangrías; letra, tamaño, negrita, cursiva, subrayado, tachado, color y resaltado; títulos con estilos; listas con viñetas y numeradas (cada lista numerada reinicia en 1); tablas con celdas combinadas y bordes; imágenes en su tamaño; saltos de página; hoja y márgenes; pie con número de página.
+- **PDF de salida**: html2pdf con la hoja, los márgenes, los saltos de página y los números elegidos. El PDF es imagen: el texto no se puede seleccionar. Para eso, pasalo después por «OCR PDF».
+- **Celular**: la vista «edición» muestra la letra a tamaño legible; la vista «hoja» muestra la página real con sus márgenes. En la PC arranca en «hoja».

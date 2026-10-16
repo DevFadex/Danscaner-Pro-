@@ -3452,7 +3452,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 4.5',APP_VER='83';
+const NEXA_VER='Nexa 4.5',APP_VER='84';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3570,7 +3570,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='83 · 13/10/2026';
+const BUILD='84 · 16/10/2026';
 /* Versión que ven los usuarios: se cambia a mano solo cuando se decide publicar una versión nueva para todos.
    El administrador ve la versión interna (BUILD) con cada cambio. */
 const PUBLIC_VER='1.2';
@@ -6561,6 +6561,38 @@ async function camRotateReview(p,deg,img){if(!p)return;p.rot=(((p.rot||0)+deg)%3
 document.head.insertAdjacentHTML('beforeend','<style id="v83Css">'+
  '.rv-rot{display:flex;gap:12px;justify-content:center;flex:none}.rv-rot button{display:flex;align-items:center;gap:6px;min-height:44px;padding:8px 16px;border-radius:14px;background:#ffffff26;color:#fff;font-weight:700;font-size:14.5px}'+
  '.rv-rot button svg{width:20px;height:20px;position:static}.rv-rot button:focus-visible{outline:3px solid #fff;outline-offset:2px}.rv-rot button:disabled{opacity:.5}'+
+ '</style>');
+
+/* ===== v84 · Editor de Word: PDF o Word → documento editable (letra, tablas, logos, firma) → Word o PDF ===== */
+function uiWord(el){el.innerHTML='<div class="muted" style="padding:20px;text-align:center">Cargando el editor…</div>';lazyMod('word').then(()=>__mods.uiWord(el)).catch(e=>{el.innerHTML='<div class="hint">'+esc(e.message)+'</div>'})}
+(function(){const i=TOOLS.findIndex(t=>t.name==='Editar PDF');const base=TOOLS[i>=0?i:0];
+ TOOLS.splice(i>=0?i+1:TOOLS.length,0,{...base,name:'Editor de Word',fa:'fa-solid fa-file-word',ic:'📝',desc:'Convertí un PDF o un Word en un documento editable: letra, tablas, logos y tu firma. Después lo guardás en Word o en PDF.',ui:uiWord,direct:null});
+ try{TOOL_ICO['Editor de Word']='word'}catch(e){}try{renderTools()}catch(e){}})();
+document.head.insertAdjacentHTML('beforeend','<style id="v84Css">'+
+ '.wd-start{display:flex;flex-direction:column;gap:10px}.wd-lead{font-size:16px;line-height:1.5;margin:0}.wd-note{margin:2px 0 0;font-size:13px}'+
+ '.wd-app{display:flex;flex-direction:column;gap:8px}.wd-app[hidden]{display:none}.wd-start[hidden]{display:none}'+
+ '.wd-top{display:flex;gap:8px;align-items:center}.wd-name{flex:1;min-width:0;font-size:16px;font-weight:700;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--bg2);color:var(--tx)}'+
+ '.wd-tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}.wd-tabs button{padding:10px 14px;font-weight:700;font-size:15px;color:var(--tx2);border-bottom:3px solid transparent;margin-bottom:-1px;white-space:nowrap;background:none}'+
+ '.wd-tabs button[aria-selected="true"]{color:var(--tinta,var(--ac,#2E3FAD));border-bottom-color:currentColor}'+
+ '.wd-bar{display:flex;gap:6px;overflow-x:auto;padding:4px 28px 8px 2px;align-items:center;position:sticky;top:0;z-index:5;background:var(--bg);scrollbar-width:none;-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 36px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 36px),transparent)}.wd-bar::-webkit-scrollbar{display:none}'+
+ '.wd-tabs .wd-saved{margin-left:auto;align-self:center;font-size:12px;color:var(--tx2);padding:0 4px 0 10px;white-space:nowrap}'+
+ '.wd-b{flex:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:44px;height:44px;padding:0 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg2);color:var(--tx);font-size:15px;cursor:pointer}'+
+ '.wd-b span{white-space:nowrap}.wd-b.on{background:var(--tinta,var(--ac,#2E3FAD));color:#fff;border-color:transparent}.wd-b:active{transform:translateY(1px)}'+
+ '.wd-b:focus-visible,.wd-s select:focus-visible,.wd-tabs button:focus-visible,.wd-name:focus-visible{outline:3px solid var(--tinta,var(--ac,#2E3FAD));outline-offset:2px}'+
+ '.wd-s{flex:none}.wd-s select{height:44px;border-radius:10px;border:1px solid var(--line);padding:0 8px;font-size:14px;background:var(--bg2);color:var(--tx);max-width:190px}'+
+ '.wd-sep{flex:none;width:1px;height:28px;background:var(--line);margin:0 2px}.wd-col{position:relative;overflow:hidden}.wd-col input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}'+
+ '.wd-cl{font-weight:800;border-bottom:4px solid var(--c);line-height:1.1;padding:0 3px}'+
+ '.wd-ctx{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:var(--bg2)}.wd-ctx[hidden]{display:none}.wd-rng{display:flex;align-items:center;gap:6px;font-size:14px}.wd-rng input{width:120px}'+
+ '.wd-desk{background:var(--bg3,#E3E7ED);border-radius:14px;padding:14px 10px 22px;overflow:auto}'+
+ '.wd-page{position:relative;background:#fff;margin:0 auto;box-shadow:0 1px 2px rgba(20,30,70,.16),0 10px 28px rgba(20,30,70,.12)}'+
+ '.wd-mk{position:absolute;width:14px;height:14px;border:0 solid var(--tinta,var(--ac,#2E3FAD));pointer-events:none}.wd-mk.tl{left:-7px;top:-7px;border-left-width:3px;border-top-width:3px}.wd-mk.tr{right:-7px;top:-7px;border-right-width:3px;border-top-width:3px}.wd-mk.bl{left:-7px;bottom:-7px;border-left-width:3px;border-bottom-width:3px}.wd-mk.br{right:-7px;bottom:-7px;border-right-width:3px;border-bottom-width:3px}'+
+ '.wd-doc{min-height:58vh;padding:22px 18px;color:#111;background-color:#fff;outline:none;line-height:1.15;overflow-wrap:break-word;caret-color:#2E3FAD}'+
+ '.wd-sheet .wd-doc{min-height:inherit;box-sizing:border-box}.wd-doc p,.wd-doc h1,.wd-doc h2,.wd-doc h3,.wd-doc blockquote,.wd-doc li{margin:0 0 6pt}.wd-doc h1{font-size:16pt}.wd-doc h2{font-size:14pt}.wd-doc h3{font-size:12pt}.wd-doc blockquote{margin-left:10mm;font-style:italic}'+
+ '.wd-doc table{border-collapse:collapse;width:100%;margin:6pt 0}.wd-doc td,.wd-doc th{border:1px solid #000;padding:3pt 5pt;vertical-align:top;min-width:2em}.wd-doc table.wtb-nb td,.wd-doc table.wtb-nb th{border:1px dashed #b9c0cf}'+
+ '.wd-doc img{max-width:100%;height:auto}.wd-doc img.wsel{outline:3px solid #2E3FAD;outline-offset:2px}'+
+ '.wd-doc hr.wpb{border:0;border-top:2px dashed #9aa3b5;margin:18px 0;position:relative;overflow:visible}.wd-doc hr.wpb::after{content:"Salto de página";position:absolute;left:50%;top:-10px;transform:translateX(-50%);background:#fff;color:#5d6577;font:12px/20px system-ui,sans-serif;padding:0 8px}'+
+ '.wd-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}.wd-stats div{display:flex;flex-direction:column;padding:12px;border:1px solid var(--line);border-radius:12px}.wd-stats b{font-size:24px}.wd-stats span{color:var(--tx2);font-size:13px}'+
+ '[data-theme="dark"] .wd-desk{background:#1d2129}'+
  '</style>');
 </script>
 </body>
