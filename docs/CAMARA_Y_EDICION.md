@@ -822,3 +822,11 @@ Comparación de dos videos con la misma hoja. En CamScanner se sigue sacando sin
    - se agrega una **copia** (la original queda);
    - la birome negra no se puede separar de lo impreso;
    - los sellos y firmas de color también se van, y se avisa antes.
+
+## v89 · Individual igual que Lote y nombre editable
+- **Individual**: en «¿Quedó bien la foto?» la imagen se achica para que entren siempre los botones (Girar, y en una fila Repetir · Agregar más · Listo), igual que la revisión del lote. Antes «Listo» quedaba afuera de la pantalla.
+- **Nombre editable donde se guarda o se comparte**:
+  - en «Documento listo» el nombre es un campo (`#fnName`);
+  - en 📤 (Comprimir y enviar) también (`#sndName`): el archivo sale con el nombre escrito (`_nameSwap` ajusta el nombre en `download`, `share` y `shareWhatsApp`);
+  - en la vista hoja por hoja el título se edita ahí mismo;
+  - si ya lo cambiaste vos, el nombre automático no lo pisa (`DOC._userNamed`).

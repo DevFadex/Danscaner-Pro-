@@ -189,3 +189,7 @@ Tocá una imagen para cambiarle el tamaño o centrarla, y una tabla para sumarle
 - **A Word y Firmar en la cámara**: elegilos en la barra de arriba (junto a Documento). Al tocar Listo se abre directo el Editor de Word o la firma.
 - **Nombre automático**: el documento toma el título de la primera hoja (por ejemplo «Oficio N° 55-2026»). Se hace en el teléfono, sin internet. Lo cambiás con ✏️.
 - **Quitar escritura a mano**: borra lo escrito con birome de color (azul, violeta, roja, verde) en una copia de la hoja. Lo escrito en negro no se puede quitar. También se van los sellos de color.
+
+## Novedades v89
+- **Individual**: después de la foto siempre se ven Repetir, Agregar más y **Listo**.
+- **Cambiar el nombre al guardar o compartir**: en «Documento listo», en 📤 y arriba en la vista hoja por hoja tocás el nombre y le agregás lo que quieras. El nombre automático no pisa lo que escribiste.
