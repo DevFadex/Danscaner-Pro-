@@ -790,3 +790,14 @@ Herramienta nueva **Editor de Word** (en «Editar PDF»), con su propio módulo 
   - en el resultado de cualquier herramienta, **«Seguir con otra herramienta»**.
 
   El archivo entra directo en la herramienta elegida (`openTool(i,[archivo])`), sin volver a buscarlo, así se encadenan pasos antes de compartir o descargar.
+
+## v87 · Cámara como CamScanner: el lote no se frena
+Comparación de dos videos con la misma hoja. En CamScanner se sigue sacando sin esperar y la foto aparece chiquita en una esquina. En Danscanner, después de cada foto la pantalla quedaba negra unos 10 s («Procesando la foto…») y después pedía revisarla.
+- **Lote sin frenar**:
+  - la vista de fábrica pasa a ser `mini`: la foto aparece en una miniatura abajo a la derecha, con número y un indicador mientras se procesa en segundo plano, y el disparador queda libre al instante;
+  - al tocar la miniatura se ve grande (con girar, repetir, seguir);
+  - se migra una vez (`S.v87rev`): «primera» y «todas» pasan a `mini`, y se pueden volver a elegir en ⚙️ → «Ver la foto al sacarla».
+- **Sombra**:
+  - se medía comparando toda la imagen, y una mesa oscura con la hoja blanca daba siempre «Sombra sobre el documento»;
+  - ahora se mide solo dentro de la hoja (el papel de cada celda, sin las letras) y tiene que repetirse unos 2 s.
+- **Aviso corto**: «Buscando documento…»; lo de «usá un fondo que contraste» aparece recién si pasan 4 s sin encontrar la hoja.

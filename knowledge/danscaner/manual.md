@@ -178,3 +178,7 @@ Tocá una imagen para cambiarle el tamaño o centrarla, y una tabla para sumarle
   - avisa si la foto salió movida;
   - procesa más rápido.
 - **Seguir con otra herramienta**: al terminar un escaneo («Documento listo»), en la pantalla del documento (botón Herramientas) o en el resultado de cualquier herramienta, elegís la siguiente (por ejemplo PDF a Word, firmar o comprimir) y el archivo entra solo. El documento queda guardado en la app.
+
+## Novedades v87
+- **Lote más rápido**: después de cada foto ya no hay que esperar. La foto aparece chiquita en la esquina mientras se procesa y podés seguir sacando. Tocala para verla grande. Si preferís verla grande cada vez: ⚙️ → «Ver la foto al sacarla».
+- **Menos avisos falsos**: «Sombra sobre el documento» aparece solo si de verdad hay una sombra sobre la hoja.

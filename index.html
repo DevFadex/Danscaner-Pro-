@@ -3257,7 +3257,7 @@ const CamPro={flash:S.flashMode||'off',ev:0,caps:null,timer:null,level:null,lowL
   this.timer=setInterval(()=>{if(!Nav.isOpen('camera')||!v.videoWidth){return}x.drawImage(v,0,0,48,64);const d=x.getImageData(0,0,48,64).data;
    const cells=[];for(let cy=0;cy<4;cy++)for(let cx=0;cx<3;cx++){let s=0,n=0;for(let y=cy*16+2;y<cy*16+14;y+=2)for(let xx=cx*16+2;xx<cx*16+14;xx+=2){const i=(y*48+xx)*4;s+=d[i]*.299+d[i+1]*.587+d[i+2]*.114;n++}cells.push(s/n)}
    cells.sort((a,b)=>a-b);const mean=cells.reduce((a,b)=>a+b,0)/cells.length,spread=cells[cells.length-2]-cells[1];
-   this.lowLight=mean<70;let msg='';if(this.lowLight)msg=this.flash==='auto'?'💡 Poca luz: flash automático encendido':'💡 Poca luz: activá el flash o acercate a una ventana';else if(spread>70)msg='⚠️ Sombra sobre el documento: mové la luz o el teléfono';
+   this.lowLight=mean<70;let msg='';if(this.lowLight)msg=this.flash==='auto'?'💡 Poca luz: flash automático encendido':'💡 Poca luz: activá el flash o acercate a una ventana';else if((typeof camShadowNow==='function'?camShadowNow(v):spread>70))msg='⚠️ Sombra sobre el documento: mové la luz o el teléfono';
    if(this.flash==='auto')this.torch(typeof camAutoTorch==='function'?camAutoTorch(this.lowLight):this.lowLight);
    const lv=this.level;if(!msg&&lv&&Math.max(Math.abs(lv.b),Math.abs(lv.g))>12)msg='📐 Poné el teléfono paralelo al documento';
    const w=$('#camWarn');if(w){w.textContent=msg;w.hidden=!msg}},700)},
@@ -3457,7 +3457,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 4.5',APP_VER='86';
+const NEXA_VER='Nexa 4.5',APP_VER='87';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3575,7 +3575,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='86 · 16/10/2026';
+const BUILD='87 · 23/10/2026';
 /* Versión que ven los usuarios: se cambia a mano solo cuando se decide publicar una versión nueva para todos.
    El administrador ve la versión interna (BUILD) con cada cambio. */
 const PUBLIC_VER='1.2';
@@ -6725,6 +6725,51 @@ document.head.insertAdjacentHTML('beforeend','<style id="v86Css">'
  +'.ch-file{display:flex;align-items:center;gap:8px;overflow:hidden}.ch-file b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ch-file svg{width:18px;height:18px;flex:none}'
  +'.fn-saved{display:flex;align-items:center;gap:6px;margin:4px 0 8px;font-weight:700;color:#15803d}.fn-saved svg{width:18px;height:18px}'
  +'html[data-theme="dark"] .fn-saved{color:#4ade80}'
+ +'</style>');
+
+/* ===================== v87 · cámara como CamScanner ===================== */
+/* ---- 1) sombra: se mide solo adentro de la hoja. Antes comparaba toda la imagen y una mesa oscura con la hoja blanca parecía «sombra» ---- */
+function camShadowNow(v){const q=Cam._lastQuad;if(!q||!v||!v.videoWidth)return false;const xs=q.map(p=>p.x),ys=q.map(p=>p.y);let x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
+ const dx=(x1-x0)*.18,dy=(y1-y0)*.18;x0+=dx;x1-=dx;y0+=dy;y1-=dy;if(x1-x0<.1||y1-y0<.1)return false;const W=36,H=48,c=camShadowNow._c||(camShadowNow._c=canvas(W,H)),x=c.getContext('2d',{willReadFrequently:true});
+ x.drawImage(v,x0*v.videoWidth,y0*v.videoHeight,(x1-x0)*v.videoWidth,(y1-y0)*v.videoHeight,0,0,W,H);const d=x.getImageData(0,0,W,H).data;const cells=[];
+ for(let cy=0;cy<4;cy++)for(let cx=0;cx<3;cx++){const L=[];for(let y=cy*12+1;y<cy*12+11;y+=2)for(let xx=cx*12+1;xx<cx*12+11;xx+=2){const i=(y*W+xx)*4;L.push(d[i]*.299+d[i+1]*.587+d[i+2]*.114)}L.sort((a,b)=>a-b);cells.push(L[(L.length*.8)|0])}/* el papel de cada celda (sin las letras) */
+ cells.sort((a,b)=>a-b);const sh=cells[cells.length-1]-cells[0]>60&&cells[0]<cells[cells.length-1]*.6;
+ /* solo si persiste: tres lecturas seguidas (≈2 s) */
+ camShadowNow._n=sh?(camShadowNow._n||0)+1:0;return camShadowNow._n>=3}
+/* ---- 2) aviso corto: «Buscando documento…»; lo del fondo que contraste recién si pasan 4 s sin encontrar la hoja ---- */
+{const _d=Cam.detect;Cam.detect=function(){const r=_d.apply(this,arguments);try{const h=$('#camHint'),t=performance.now();if(this._lastQuad)this._noQT=0;else if(!this._noQT)this._noQT=t;
+  if(h&&/^Buscando documento… usá un fondo que contraste/.test(h.textContent)&&this._noQT&&t-this._noQT<4000)h.textContent=h.textContent.replace('Buscando documento… usá un fondo que contraste','Buscando documento…')}catch(e){}return r}}
+/* ---- 3) lote sin frenar: la foto aparece chiquita en la esquina y se procesa sola mientras seguís sacando (tocala para verla grande) ---- */
+if(!S.v87rev){S.v87rev=true;if(!S.camRevMode||S.camRevMode==='first'||S.camRevMode==='all')S.camRevMode='mini';saveS()}
+CAM_REV_L.mini='Chiquita en la esquina, sin frenar';
+$('#camera').addEventListener('click',e=>{const t=e.target.closest('#camPanel [data-crv]');if(!t)return;e.stopPropagation();e.preventDefault();const n={mini:'first',first:'all',all:'no',no:'mini'}[camRevMode()]||'mini';S.camRevMode=n;saveS();
+ toast('Ver la foto: '+CAM_REV_L[n].toLowerCase());const P=$('#camPanel');P._ck='';camPanelRender()},true);
+{const _r=camPanelRender;camPanelRender=function(){const r=_r.apply(this,arguments);try{const b=$('#camPanel [data-crv] .cq-or');if(b&&camRevMode()==='mini')b.textContent='◲'}catch(e){}return r}}
+(function(){const st=$('#camera .cam-stage');if(!st||$('#camMini'))return;st.insertAdjacentHTML('beforeend','<button class="cam-mini" id="camMini" hidden aria-label="Ver la última foto"><img alt=""><span class="cm-spin" aria-hidden="true"></span><b class="cm-n"></b></button>');
+ $('#camMini').onclick=async e=>{e.stopPropagation();const m=$('#camMini');const p=m._p;if(!p){toast('Todavía se está procesando…',1400);return}m.hidden=true;clearTimeout(m._t);await camShowRev2(p)}})();
+function camSnap(){const v=$('#camVideo');if(!v||!v.videoWidth)return null;const q=Cam._lastQuad;let sx=0,sy=0,sw=v.videoWidth,sh=v.videoHeight;
+ if(q){const xs=q.map(p=>p.x),ys=q.map(p=>p.y);sx=Math.max(0,Math.min(...xs))*v.videoWidth;sy=Math.max(0,Math.min(...ys))*v.videoHeight;sw=Math.min(1,Math.max(...xs))*v.videoWidth-sx;sh=Math.min(1,Math.max(...ys))*v.videoHeight-sy}
+ if(sw<8||sh<8)return null;const W=180,H=Math.round(180*sh/sw),c=canvas(W,Math.max(8,H));c.getContext('2d').drawImage(v,sx,sy,sw,sh,0,0,c.width,c.height);return c.toDataURL('image/jpeg',.7)}
+function camMiniShow(src,n){const m=$('#camMini');if(!m)return;clearTimeout(m._t);m._n=n;m._p=null;const im=m.querySelector('img');if(src)im.src=src;else im.removeAttribute('src');
+ m.querySelector('.cm-n').textContent=String((Cam.batch.length||0)+(Cam._pend||0));m.classList.add('busy');m.hidden=false;m.classList.remove('pop');void m.offsetWidth;m.classList.add('pop')}
+function camMiniDone(p,n){const m=$('#camMini');if(!m||m._n!==n||!Nav.isOpen('camera'))return;m.classList.remove('busy');if(p){m._p=p;if(p.thumb)m.querySelector('img').src=p.thumb}
+ m.querySelector('.cm-n').textContent=String((Cam.batch.length||0)+(Cam._pend||0));clearTimeout(m._t);m._t=setTimeout(()=>{if(m._n===n)m.hidden=true},2600)}
+{const _sh=Cam.shoot;Cam.shoot=async function(){const mini=this.mode==='batch'&&!this.replaceId&&!!this.stream&&camRevMode()==='mini'&&!(typeof bookAutoOn==='function'&&bookAutoOn());
+ let snap=null;if(mini){try{snap=camSnap()}catch(e){}}const n0=this._seq,len0=this.batch.length;const r=await _sh.apply(this,arguments);
+ if(mini&&this._seq>n0&&Nav.isOpen('camera')){const n=this._seq,sid=this._sid;camMiniShow(snap,n);
+  (this._q||Promise.resolve()).then(()=>{if(this._sid!==sid)return;const p=this.batch[this.batch.length-1];camMiniDone(p&&!p._miniSeen?(p._miniSeen=true,p):null,n)})}
+ return r}}
+{const _st=Cam.stop;Cam.stop=function(){const m=$('#camMini');if(m){m.hidden=true;clearTimeout(m._t);m._p=null}return _st.apply(this,arguments)}}
+document.head.insertAdjacentHTML('beforeend','<style id="v87Css">'
+ +'.cam-mini{position:absolute;right:14px;bottom:96px;z-index:4;width:76px;aspect-ratio:3/4;padding:0;border:3px solid #fff;border-radius:10px;overflow:hidden;background:#111;box-shadow:0 6px 20px rgba(0,0,0,.55)}'
+ +'.cam-mini[hidden]{display:none}.cam-mini img{width:100%;height:100%;object-fit:cover;display:block}'
+ +'.cam-mini .cm-n{position:absolute;top:3px;right:3px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:#22c55e;color:#04210f;font:800 12px/20px system-ui,sans-serif}'
+ +'.cam-mini .cm-spin{display:none;position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;border:3px solid rgba(255,255,255,.35);border-top-color:#fff;animation:cmspin .8s linear infinite}'
+ +'.cam-mini.busy .cm-spin{display:block}.cam-mini.busy img{filter:brightness(.7)}'
+ +'.cam-mini.pop{animation:cmpop .42s cubic-bezier(.2,.9,.3,1.2)}'
+ +'.cam-mini:focus-visible{outline:3px solid #22d3ee;outline-offset:2px}'
+ +'@keyframes cmspin{to{transform:rotate(360deg)}}@keyframes cmpop{0%{transform:translate(-38vw,-30vh) scale(2.6);opacity:.2}100%{transform:none;opacity:1}}'
+ +'@media (prefers-reduced-motion:reduce){.cam-mini.pop{animation:none}.cam-mini .cm-spin{animation-duration:2s}}'
  +'</style>');
 
 </script>
