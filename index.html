@@ -680,7 +680,7 @@ html[data-skin="aqua"] .tb{border-radius:14px}
 <input type="file" id="inAny" accept="image/*,application/pdf,.pdf" multiple hidden>
 <input type="file" id="inCam" accept="image/*" capture="environment" hidden>
 <div class="screen" id="docScreen">
-  <div class="shead"><button class="ib" data-back>←</button><div class="t" id="docName"></div><button class="ib" id="docRename" title="Renombrar"><i data-ico="pencil">✏️</i></button><button class="ib" id="docShare" title="Compartir"><i data-ico="share">📤</i></button><button class="ib pri" id="docDone" title="Terminar"><i data-ico="check">✓</i></button></div>
+  <div class="shead"><button class="ib" data-back>←</button><div class="t" id="docName"></div><button class="ib" id="docView" title="Ver hoja por hoja"><i data-ico="expand">⤢</i></button><button class="ib" id="docRename" title="Renombrar"><i data-ico="pencil">✏️</i></button><button class="ib" id="docShare" title="Compartir"><i data-ico="share">📤</i></button><button class="ib pri" id="docDone" title="Terminar"><i data-ico="check">✓</i></button></div>
   <div class="sbody"><div class="muted" id="docInfo" style="margin-bottom:10px"></div><div class="pages" id="pageGrid"></div></div>
   <div class="sfoot">
     <button class="tb" id="docAdd"><b data-ico="plus">➕</b>Agregar</button>
@@ -3457,7 +3457,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 4.5',APP_VER='87';
+const NEXA_VER='Nexa 4.5',APP_VER='88';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3575,7 +3575,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='87 · 23/10/2026';
+const BUILD='88 · 23/10/2026';
 /* Versión que ven los usuarios: se cambia a mano solo cuando se decide publicar una versión nueva para todos.
    El administrador ve la versión interna (BUILD) con cada cambio. */
 const PUBLIC_VER='1.2';
@@ -6770,6 +6770,118 @@ document.head.insertAdjacentHTML('beforeend','<style id="v87Css">'
  +'.cam-mini:focus-visible{outline:3px solid #22d3ee;outline-offset:2px}'
  +'@keyframes cmspin{to{transform:rotate(360deg)}}@keyframes cmpop{0%{transform:translate(-38vw,-30vh) scale(2.6);opacity:.2}100%{transform:none;opacity:1}}'
  +'@media (prefers-reduced-motion:reduce){.cam-mini.pop{animation:none}.cam-mini .cm-spin{animation-duration:2s}}'
+ +'</style>');
+
+/* ===================== v88 · lo que suma de CamScanner ===================== */
+/* ---- 1) ver hoja por hoja (deslizando) con volver a sacar, girar, filtro, recortar, quitar escritura y ✓ ---- */
+document.body.insertAdjacentHTML('beforeend','<div class="screen" id="pgView"><div class="shead"><button class="ib" data-back aria-label="Volver">←</button><div class="t" id="pvTitle"></div>'
+ +'<button class="ib" id="pvEdit" title="Editar a fondo" aria-label="Editar a fondo">'+icoSvg('pencil')+'</button><button class="ib pri" id="pvDone" title="Terminar" aria-label="Terminar">'+icoSvg('check')+'</button></div>'
+ +'<div class="pv-stage" id="pvStage"><div class="pv-track" id="pvTrack"></div><button class="pv-cmp" id="pvCmp" aria-label="Mantené apretado para ver la foto original">◐ Comparar</button><div class="pv-num"><button id="pvPrev" aria-label="Hoja anterior">‹</button><span id="pvNum"></span><button id="pvNext" aria-label="Hoja siguiente">›</button></div></div>'
+ +'<div class="pv-filters" id="pvFilters" hidden role="toolbar" aria-label="Filtro de la hoja"></div>'
+ +'<div class="sfoot pv-bar"><button class="tb" data-pv="retake"><b>'+icoSvg('camera')+'</b>Volver a sacar</button><button class="tb" data-pv="rot"><b>'+icoSvg('rotr')+'</b>Girar</button><button class="tb" data-pv="filter"><b>'+icoSvg('palette')+'</b>Filtro</button><button class="tb" data-pv="crop"><b>'+icoSvg('crop')+'</b>Recortar</button><button class="tb" data-pv="ink"><b>'+icoSvg('eraser')+'</b>Quitar escritura</button></div></div>');
+const PV={i:0,hi:new Map(),orig:new Map(),
+ get p(){return DOC&&DOC.pages[this.i]},
+ open(i){if(!DOC||!DOC.pages.length)return;this.i=Math.max(0,Math.min(DOC.pages.length-1,i||0));if(!Nav.isOpen('pgView'))Nav.push('pgView',()=>{this.free()});this.draw();requestAnimationFrame(()=>this.go(this.i,true))},
+ free(){for(const m of [this.hi,this.orig])for(const u of m.values())try{URL.revokeObjectURL(u.url)}catch(e){}this.hi.clear();this.orig.clear()},
+ key(p){try{return JSON.stringify(p,(k,v)=>k==='thumb'||k==='orig'?undefined:v)+'|'+String(p.orig||'').length}catch(e){return Math.random()+''}},
+ draw(){$('#pvTitle').textContent=DOC.name;$('#pvTrack').innerHTML=DOC.pages.map((p,i)=>'<div class="pv-pg" data-i="'+i+'"><img alt="Hoja '+(i+1)+'" src="'+(p.thumb||'')+'"></div>').join('');this.num()},
+ num(){$('#pvNum').textContent=(this.i+1)+' / '+DOC.pages.length;$('#pvPrev').disabled=this.i<=0;$('#pvNext').disabled=this.i>=DOC.pages.length-1;
+  $$('#pvFilters [data-f]').forEach(b=>b.classList.toggle('on',!!this.p&&b.dataset.f===this.p.filter))},
+ go(i,instant){const t=$('#pvTrack');i=Math.max(0,Math.min(DOC.pages.length-1,i));this.i=i;t.scrollTo({left:i*t.clientWidth,behavior:instant?'auto':'smooth'});this.num();this.hiRes(i)},
+ async hiRes(i){const p=DOC&&DOC.pages[i];if(!p)return;const k=this.key(p),h=this.hi.get(p);const img=$('#pvTrack .pv-pg[data-i="'+i+'"] img');if(!img)return;if(h&&h.k===k){img.src=h.url;return}
+  try{const c=await renderPage(p,{maxSide:1400});const b=await canvasBlob(c,'image/jpeg',.88);c.width=c.height=1;if(h)URL.revokeObjectURL(h.url);const url=URL.createObjectURL(b);this.hi.set(p,{k,url});const im=$('#pvTrack .pv-pg[data-i="'+i+'"] img');if(im&&DOC.pages[i]===p)im.src=url}catch(e){}},
+ async refresh(work){const p=this.p,st=$('#pvStage');if(!p)return;st.classList.add('scanning');try{if(work)await work(p);await makeThumb(p);saveDoc();const im=$('#pvTrack .pv-pg[data-i="'+this.i+'"] img');if(im)im.src=p.thumb;await this.hiRes(this.i)}finally{st.classList.remove('scanning')}try{if(Nav.isOpen('docScreen'))renderDocScreen()}catch(e){}}};
+$('#pvFilters').innerHTML=FILTERS.map(([k,n])=>'<button class="chip" data-f="'+k+'">'+esc(n)+'</button>').join('');
+$('#pvTrack').addEventListener('scroll',()=>{const t=$('#pvTrack');clearTimeout(t._t);t._t=setTimeout(()=>{const i=Math.round(t.scrollLeft/Math.max(1,t.clientWidth));if(i!==PV.i&&DOC&&i<DOC.pages.length){PV.i=i;PV.num();PV.hiRes(i)}},90)},{passive:true});
+$('#pvPrev').onclick=()=>PV.go(PV.i-1);$('#pvNext').onclick=()=>PV.go(PV.i+1);
+$('#pvEdit').onclick=()=>{const i=PV.i;Ed.open(i)};
+$('#pvDone').onclick=async()=>{await Nav.back();if(!Nav.isOpen('docScreen')&&DOC)openDocScreen();finishSheet()};
+$('#pvFilters').onclick=e=>{const b=e.target.closest('[data-f]');if(!b||!PV.p)return;const f=b.dataset.f;PV.refresh(p=>{p.filter=f}).then(()=>PV.num())};
+$('#docView').onclick=()=>PV.open(0);
+/* ---- 2) comparar: mantené apretado y ves la foto original (sin filtro ni limpieza) ---- */
+{const cmp=$('#pvCmp');let on=false;
+ const show=async()=>{const p=PV.p;if(!p)return;on=true;cmp.classList.add('on');let o=PV.orig.get(p);const k=PV.key(p);
+  if(!o||o.k!==k){try{const c=await renderPage({...p,filter:'original',bright:0,contrast:0},{maxSide:1400,noOverlays:true,noClean:true,noArt:true});const b=await canvasBlob(c,'image/jpeg',.85);c.width=c.height=1;if(o)URL.revokeObjectURL(o.url);o={k,url:URL.createObjectURL(b)};PV.orig.set(p,o)}catch(e){return}}
+  if(!on)return;const im=$('#pvTrack .pv-pg[data-i="'+PV.i+'"] img');if(im){im._was=im._was||im.src;im.src=o.url}};
+ const hide=()=>{on=false;cmp.classList.remove('on');const im=$('#pvTrack .pv-pg[data-i="'+PV.i+'"] img');if(im&&im._was){im.src=im._was;im._was=null}};
+ cmp.addEventListener('pointerdown',e=>{e.preventDefault();try{cmp.setPointerCapture(e.pointerId)}catch(_){}show()});['pointerup','pointercancel','pointerleave'].forEach(t=>cmp.addEventListener(t,hide));
+ cmp.addEventListener('keydown',e=>{if((e.key===' '||e.key==='Enter')&&!on){e.preventDefault();show()}});cmp.addEventListener('keyup',e=>{if(e.key===' '||e.key==='Enter')hide()});
+ cmp.addEventListener('contextmenu',e=>e.preventDefault())}
+/* ---- 6) quitar lo escrito a mano en tinta de color (azul, violeta, roja, verde): se agrega una copia, la original queda ---- */
+function inkRemove(c){const w=c.width,h=c.height,x=c.getContext('2d',{willReadFrequently:true}),id=x.getImageData(0,0,w,h),d=id.data,n=w*h,m=new Uint8Array(n);let cnt=0;
+ for(let i=0,j=0;i<n;i++,j+=4){const r=d[j],g=d[j+1],b=d[j+2],mx=Math.max(r,g,b),mn=Math.min(r,g,b);if(mx-mn<34||mn>225)continue;
+  if((b>=r&&b>g+14)||(r>g+45&&r>b+25)||(g>r+25&&g>b+12)){m[i]=1;cnt++}}
+ if(!cnt)return 0;const mm=new Uint8Array(n);for(let y=1;y<h-1;y++)for(let xx=1;xx<w-1;xx++){const i=y*w+xx;if(m[i]||m[i-1]||m[i+1]||m[i-w]||m[i+w])mm[i]=1}
+ /* color del papel por bloques (lo claro que no es tinta), para rellenar sin dejar manchas */
+ const B=24,bw=Math.ceil(w/B),bh=Math.ceil(h/B),pr=new Float32Array(bw*bh*3),pc=new Uint32Array(bw*bh);let gr=0,gg=0,gb=0,gn=0;
+ for(let y=0;y<h;y+=2)for(let xx=0;xx<w;xx+=2){const i=y*w+xx,j=i*4;if(mm[i])continue;const l=d[j]*.3+d[j+1]*.59+d[j+2]*.11;if(l<150)continue;const k=((y/B)|0)*bw+((xx/B)|0);pr[k*3]+=d[j];pr[k*3+1]+=d[j+1];pr[k*3+2]+=d[j+2];pc[k]++;gr+=d[j];gg+=d[j+1];gb+=d[j+2];gn++}
+ const G=gn?[gr/gn,gg/gn,gb/gn]:[245,245,245];
+ for(let i=0;i<n;i++){if(!mm[i])continue;const y=(i/w)|0,xx=i-y*w,k=((y/B)|0)*bw+((xx/B)|0),j=i*4;if(pc[k]>=6){d[j]=pr[k*3]/pc[k];d[j+1]=pr[k*3+1]/pc[k];d[j+2]=pr[k*3+2]/pc[k]}else{d[j]=G[0];d[j+1]=G[1];d[j+2]=G[2]}}
+ x.putImageData(id,0,0);return cnt/n}
+async function pvInk(){const p=PV.p;if(!p)return;const ok=await sheetAsk('Quitar escritura a mano','<p>Se borra lo escrito con <b>birome de color</b> (azul, violeta, roja o verde) y se agrega una <b>copia</b> de la hoja. La original queda igual.</p><p class="muted">Lo escrito en negro no se puede separar de lo impreso. Ojo: también se van los sellos y firmas de color.</p><button class="btn pri block" id="inkGo">'+icoSvg('eraser')+' Hacer la copia sin escritura</button>',e=>e.target.closest('#inkGo')?true:undefined);if(!ok)return;
+ const st=$('#pvStage');st.classList.add('scanning');let np=null,fr=0;
+ try{const c=await renderPage({...p,filter:'original',bright:0,contrast:0},{maxSide:2400,noOverlays:true});fr=inkRemove(c);
+  if(!fr){c.width=c.height=1;toast('No encontré escritura de color en esta hoja',3200);return}
+  np=await makePage(c.toDataURL('image/jpeg',.93),{auto:false,filter:p.filter});c.width=c.height=1;np.overlays=JSON.parse(JSON.stringify(p.overlays||[]));np.noInk=true;await makeThumb(np)}
+ catch(e){toast('No se pudo: '+e.message,3500);return}finally{st.classList.remove('scanning')}
+ const at=DOC.pages.indexOf(p)+1;DOC.pages.splice(at,0,np);saveDoc();PV.draw();PV.go(at,true);try{if(Nav.isOpen('docScreen'))renderDocScreen()}catch(e){}toast('✓ Copia sin escritura agregada como hoja '+(at+1),3200)}
+$('#pgView .pv-bar').onclick=async e=>{const b=e.target.closest('[data-pv]');const p=PV.p;if(!b||!p)return;const k=b.dataset.pv;
+ if(k==='rot')return PV.refresh(q=>{q.rot=((q.rot||0)+90)%360});
+ if(k==='filter'){const f=$('#pvFilters');f.hidden=!f.hidden;b.classList.toggle('on',!f.hidden);PV.num();return}
+ if(k==='crop'){if(await cropPage(p))await PV.refresh();return}
+ if(k==='ink')return pvInk();
+ if(k==='retake'){if(!camSecure()||S.camNative){Ed.i=PV.i;return replacePagePhoto()}Ed.i=PV.i;Cam.replaceId=p.id;Cam.open('single')}};
+{const _rw=replaceWithPage;replaceWithPage=async function(){const r=await _rw.apply(this,arguments);try{if(Nav.isOpen('pgView')){PV.draw();await PV.refresh()}}catch(e){}return r}}
+
+/* ---- 3) en la cámara: «A Word» y «Firmar»: sacás las fotos y sigue solo ---- */
+(function(){const k=$('#camKinds');if(!k||k.querySelector('[data-kind="word"]'))return;
+ k.insertAdjacentHTML('beforeend','<button data-kind="word">A Word</button><button data-kind="sign">Firmar</button>');
+ k.addEventListener('click',e=>{const b=e.target.closest('[data-kind="word"],[data-kind="sign"]');if(!b)return;e.stopImmediatePropagation();Cam.kind=b.dataset.kind;Cam.updUI();
+  toast(Cam.kind==='word'?'📝 A Word: sacá las fotos y tocá Listo; se abre el Editor de Word':'✍️ Firmar: sacá las fotos y tocá Listo; se abre la firma',3200)},true)})();
+/* ---- 4) nombre automático: lee el título de la primera hoja (en el teléfono, sin internet) ---- */
+const DOC_KEYS=/\b(OFICIO|NOTA|ACTA|C[EÉ]DULA|RESOLUCI[OÓ]N|DECRETO|AUTO|SENTENCIA|INFORME|PLANILLA|CERTIFICADO|CONSTANCIA|EXPEDIENTE|EXPTE|SOLICITUD|DISPOSICI[OÓ]N|MEMOR[AÁ]NDUM|MEMORANDO|CIRCULAR|PARTE|DENUNCIA|NOTIFICACI[OÓ]N|RECIBO|FACTURA|CONTRATO|PROVIDENCIA|HABEAS|LEGAJO)\b/i;
+function docTitleFrom(text){const L=String(text||'').split(/\n+/).map(l=>l.replace(/[|_~"“”«»<>{}\[\]\\]+/g,' ').replace(/\s+/g,' ').trim()).filter(l=>l.length>=4).slice(0,18);
+ const ok=l=>!/\d{7,}|\d{1,2}\.\d{3}\.\d{3}/.test(l)&&(l.match(/[A-Za-zÁÉÍÓÚÑáéíóúñ]/g)||[]).length>=4;/* sin DNI ni números largos */
+ const nice=l=>{l=l.replace(/\b[Nn](?:ro\.?|o\.|[°º*'´`^])?\s*(?=\d)/g,'N° ')/* el OCR suele leer «°» como «*» o «'» */.replace(/\s*[:.,;]+\s*$/,'').replace(/\//g,'-').replace(/[^\wÁÉÍÓÚÑÜáéíóúñü°º.\- ]+/g,' ').replace(/\s+/g,' ').trim();if(l.length>52)l=l.slice(0,52).replace(/\s+\S*$/,'');
+  const up=(l.match(/[A-ZÁÉÍÓÚÑ]/g)||[]).length,lo=(l.match(/[a-záéíóúñ]/g)||[]).length;
+  if(up>lo)l=l.split(' ').map((w,i)=>/\d/.test(w)||/^N(°|º|RO\.?|o\.)$/i.test(w)||/^([A-ZÁÉÍÓÚÑ]\.){2,}[A-ZÁÉÍÓÚÑ]?\.?$/.test(w)||/^[A-Z]{2,4}$/.test(w)&&i>0&&/\d|-/.test(l)?w:(i===0?w.charAt(0)+w.slice(1).toLowerCase():w.toLowerCase())).join(' ');
+  return l.length>=4?l:null};
+ for(const l of L){if(DOC_KEYS.test(l)&&ok(l)){const m=l.match(DOC_KEYS);const from=l.slice(l.search(DOC_KEYS));const t=nice(from.length>=m[0].length+2?from:l);if(t)return t}}
+ for(const l of L.slice(0,6)){const up=(l.match(/[A-ZÁÉÍÓÚÑ]/g)||[]).length,al=(l.match(/[A-Za-zÁÉÍÓÚÑáéíóúñ]/g)||[]).length;if(ok(l)&&al>=8&&up/al>.7&&l.split(' ').length>=2&&l.split(' ').length<=8){const t=nice(l);if(t)return t}}
+ return null}
+const isAutoName=n=>/^\S+ \d\d-\d\d-\d{4} \d\d\.\d\d$/.test(String(n||''));
+async function docAutoName(d){if(S.autoName===false||!d||!d.pages.length||!isAutoName(d.name)||d._naming)return null;d._naming=true;const before=d.name;let title=null;
+ try{await loadLib('tess');const p=d.pages[0];const c=await renderPage(p,{maxSide:1600,noOverlays:true});const H=Math.round(c.height*.42),t=canvas(c.width,H);t.getContext('2d').drawImage(c,0,0,c.width,H,0,0,c.width,H);c.width=c.height=1;
+  const w=await Tesseract.createWorker(S.lang||'spa',1);try{try{await w.setParameters({tessedit_pageseg_mode:'3'})}catch(e){}const r=await w.recognize(prepOcr?prepOcr(t):t);title=docTitleFrom(r.data&&r.data.text)}finally{t.width=t.height=1;await w.terminate()}}
+ catch(e){console.warn('nombre automático',e)}finally{d._naming=false}
+ if(!title||d.name!==before)return null;d.name=title;if(DOC===d){saveDoc(true);try{if(Nav.isOpen('docScreen'))renderDocScreen();if(Nav.isOpen('pgView'))$('#pvTitle').textContent=title}catch(e){}}else{try{d.updated=Date.now();await DB.putDoc(d)}catch(e){}}
+ try{refreshLists()}catch(e){}toast('📄 Nombre: '+title+' (lo cambiás con ✏️)',3800);return title}
+
+/* después de la cámara: A Word / Firmar siguen solos; el lote se ve hoja por hoja; y se pone el nombre */
+{const _st=Cam.stop;Cam.stop=function(){const k=this.kind;if(!this.replaceId&&!(typeof _srcHook!=='undefined'&&_srcHook))this._afterCam={t:Date.now(),kind:k};return _st.apply(this,arguments)}}
+{const _o=Cam.open;Cam.open=function(){this._afterCam=null;return _o.apply(this,arguments)}}
+{const _ap=addPages;addPages=async function(pages,single){const a=typeof Cam!=='undefined'&&Cam._afterCam&&Date.now()-Cam._afterCam.t<10*60e3&&!(typeof _srcHook!=='undefined'&&_srcHook)?Cam._afterCam:null;
+ if(!a||!pages||!pages.length)return _ap.apply(this,arguments);Cam._afterCam=null;const k=a.kind;
+ if(k==='word'||k==='sign'){Cam.kind='doc';const r=await _ap.call(this,pages,false);const d=DOC;
+  setTimeout(async()=>{const f=await docAsFile();if(!f)return;const i=toolIdx(k==='word'?'Editor de Word':'Firmar PDF');if(i>=0)chainOpen(i,f);docAutoName(d)},350);return r}
+ const r=await _ap.apply(this,arguments);const d=DOC;
+ if(!single&&S.pgView!==false){const i=DOC?DOC.pages.indexOf(pages[0]):0;setTimeout(()=>{if(DOC===d&&Nav.top()==='docScreen')PV.open(Math.max(0,i))},300)}
+ setTimeout(()=>docAutoName(d),900);return r}}
+
+document.head.insertAdjacentHTML('beforeend','<style id="v88Css">'
+ +'#pgView{background:#0f1115;color:#fff}#pgView .shead{background:#16181d;color:#fff;border-color:#2a2d34}#pgView .shead .ib{color:#fff}'
+ +'.pv-stage{flex:1;min-height:0;position:relative;overflow:hidden}'
+ +'.pv-track{position:absolute;inset:0;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}.pv-track::-webkit-scrollbar{display:none}'
+ +'.pv-pg{flex:0 0 100%;scroll-snap-align:center;display:grid;place-items:center;padding:14px 18px 64px}.pv-pg img{max-width:100%;max-height:100%;object-fit:contain;background:#fff;box-shadow:0 8px 28px rgba(0,0,0,.5);border-radius:2px}'
+ +'.pv-cmp{position:absolute;top:12px;right:12px;z-index:3;min-height:40px;padding:0 14px;border-radius:20px;background:rgba(0,0,0,.6);color:#fff;font-weight:700;border:1px solid rgba(255,255,255,.25);touch-action:none;user-select:none;-webkit-user-select:none}.pv-cmp.on{background:#22d3ee;color:#04222a}'
+ +'.pv-num{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);display:flex;align-items:center;gap:6px;z-index:3;background:rgba(0,0,0,.6);border-radius:22px;padding:2px}.pv-num span{min-width:64px;text-align:center;font-weight:700;font-size:15px}.pv-num button{width:40px;height:40px;border-radius:50%;color:#fff;font-size:24px;line-height:1}.pv-num button:disabled{opacity:.3}'
+ +'.pv-filters{display:flex;gap:6px;overflow-x:auto;padding:8px 10px;background:#16181d;scrollbar-width:none}.pv-filters[hidden]{display:none}.pv-filters .chip{flex:none;min-height:40px;padding:0 14px;font-weight:700}.pv-filters .chip.on{background:var(--ac);color:#fff;border-color:transparent}'
+ +'#pgView .pv-bar{background:#16181d;border-color:#2a2d34}#pgView .pv-bar .tb{color:#e5e7eb}#pgView .pv-bar .tb.on{color:#22d3ee}#pgView .pv-bar .tb b svg{width:24px;height:24px}'
+ +'#pgView button:focus-visible{outline:3px solid #22d3ee;outline-offset:2px}'
+ /* 5) animación de escaneo: una línea que recorre la hoja mientras se mejora */
+ +'.pv-stage.scanning::after,.cam-mini.busy::after,.ed-stage:has(#edSpin:not([hidden]))::after{content:"";position:absolute;left:0;right:0;height:22%;top:-22%;z-index:2;pointer-events:none;background:linear-gradient(to bottom,rgba(34,211,238,0),rgba(34,211,238,.28) 80%,rgba(34,211,238,.95));animation:dsscan 1.3s linear infinite}'
+ +'.cam-mini.busy .cm-spin{display:none}'
+ +'@keyframes dsscan{to{top:100%}}@media (prefers-reduced-motion:reduce){.pv-stage.scanning::after,.cam-mini.busy::after,.ed-stage:has(#edSpin:not([hidden]))::after{animation-duration:3.5s}}'
  +'</style>');
 
 </script>

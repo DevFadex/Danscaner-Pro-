@@ -801,3 +801,24 @@ Comparación de dos videos con la misma hoja. En CamScanner se sigue sacando sin
   - se medía comparando toda la imagen, y una mesa oscura con la hoja blanca daba siempre «Sombra sobre el documento»;
   - ahora se mide solo dentro de la hoja (el papel de cada celda, sin las letras) y tiene que repetirse unos 2 s.
 - **Aviso corto**: «Buscando documento…»; lo de «usá un fondo que contraste» aparece recién si pasan 4 s sin encontrar la hoja.
+
+## v88 · Lo que suma de CamScanner
+1. **Hoja por hoja** (`#pgView`, objeto `PV`):
+   - al guardar un lote de la cámara (o con ⤢ en el documento) las hojas se ven grandes y se pasan deslizando;
+   - abajo: Volver a sacar (cámara de la app con `Cam.replaceId`), Girar, Filtro (fila de filtros), Recortar (`cropPage`) y Quitar escritura;
+   - ✓ abre «Documento listo» y ✏️ abre el editor completo;
+   - la vista grande se arma solo para la hoja que se mira (1400 px).
+2. **Comparar**: con «◐ Comparar» apretado se ve la foto original de esa hoja (filtro `original`, sin limpieza ni ajustes); al soltar vuelve.
+3. **«A Word» y «Firmar» en la cámara**: al terminar (individual o lote) el documento se guarda y se abre directo en el Editor de Word o en Firmar PDF (`chainOpen`).
+4. **Nombre automático**:
+   - si el documento tiene el nombre de fábrica («Escaneo dd-mm-aaaa hh.mm»), se lee con Tesseract en el teléfono el 42 % de arriba de la primera hoja;
+   - `docTitleFrom` busca la línea con una palabra de documento (Oficio, Nota, Acta, Cédula, Resolución, Planilla, Expte…) o un título en mayúsculas;
+   - descarta líneas con DNI o números largos;
+   - corrige el «°» que el OCR lee como «*»;
+   - se desactiva con `S.autoName=false`.
+5. **Animación de escaneo**: una línea celeste recorre la hoja mientras se mejora (visor, miniatura del lote y editor). Con «reducir movimiento» va más lenta.
+6. **Quitar escritura a mano**:
+   - `inkRemove` borra la tinta de color (azul, violeta, roja o verde por croma y tono), con dilatación de 1 px, y rellena con el color del papel de cada bloque de 24 px;
+   - se agrega una **copia** (la original queda);
+   - la birome negra no se puede separar de lo impreso;
+   - los sellos y firmas de color también se van, y se avisa antes.

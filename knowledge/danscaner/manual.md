@@ -182,3 +182,10 @@ Tocá una imagen para cambiarle el tamaño o centrarla, y una tabla para sumarle
 ## Novedades v87
 - **Lote más rápido**: después de cada foto ya no hay que esperar. La foto aparece chiquita en la esquina mientras se procesa y podés seguir sacando. Tocala para verla grande. Si preferís verla grande cada vez: ⚙️ → «Ver la foto al sacarla».
 - **Menos avisos falsos**: «Sombra sobre el documento» aparece solo si de verdad hay una sombra sobre la hoja.
+
+## Novedades v88
+- **Hoja por hoja**: al terminar un lote, las hojas se ven grandes y se pasan deslizando. Abajo: Volver a sacar, Girar, Filtro, Recortar y Quitar escritura. También desde el botón ⤢ del documento.
+- **Comparar**: mantené apretado «◐ Comparar» para ver la foto original. Sirve para chequear que la limpieza no borró un sello o una firma.
+- **A Word y Firmar en la cámara**: elegilos en la barra de arriba (junto a Documento). Al tocar Listo se abre directo el Editor de Word o la firma.
+- **Nombre automático**: el documento toma el título de la primera hoja (por ejemplo «Oficio N° 55-2026»). Se hace en el teléfono, sin internet. Lo cambiás con ✏️.
+- **Quitar escritura a mano**: borra lo escrito con birome de color (azul, violeta, roja, verde) en una copia de la hoja. Lo escrito en negro no se puede quitar. También se van los sellos de color.

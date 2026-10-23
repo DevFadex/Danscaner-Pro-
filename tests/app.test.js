@@ -1049,7 +1049,7 @@ await test('Resumen del documento y tarjeta personal a contacto (sin nube)',asyn
 
 await test('Cámara estilo Adobe: barra de modos con guías, marco de cuatro puntos, panel compacto y carga giratoria',async pg=>{
   await pg.evaluate(()=>{S.autoCapture=false;Cam.open('single')});await pg.waitForFunction(()=>Cam.stream&&$('#camVideo').videoWidth>0,null,{timeout:15000});
-  assert.deepEqual(await pg.$$eval('#camKinds [data-kind]',b=>b.map(x=>x.dataset.kind)),['board','book','doc','cert','id','card']);
+  assert.deepEqual(await pg.$$eval('#camKinds [data-kind]',b=>b.map(x=>x.dataset.kind)),['board','book','doc','cert','id','card','word','sign']);/* v88: se sumaron «A Word» y «Firmar» */
   await pg.click('#camKinds [data-kind="book"]');assert.equal(await pg.evaluate(()=>$('#camGuide').hidden||$('#camGuide').dataset.k),'book');
   await pg.click('#camBookSwap');assert.equal(await pg.evaluate(()=>S.bookSwap),true);await pg.click('#camBookSwap');
   await pg.click('#camKinds [data-kind="card"]');assert.deepEqual(await pg.evaluate(()=>[Cam.kind,$('#camGuide').dataset.k,$('#camGuide').hidden]),['card','card',false]);
@@ -1719,6 +1719,41 @@ await test('v87: en lote la cámara no se frena (la foto aparece chiquita en la 
     Cam._lastQuad=[{x:.2,y:.15},{x:.8,y:.15},{x:.8,y:.85},{x:.2,y:.85}];camShadowNow._n=0;const flat=[1,2,3,4].map(()=>camShadowNow(mk(false)));camShadowNow._n=0;const half=[1,2,3].map(()=>camShadowNow(mk(true)));
     Cam._lastQuad=null;const noq=camShadowNow(mk(true));return {flat,half,noq}});
   assert.deepEqual(sh.flat,[false,false,false,false],'marcó sombra en una hoja pareja');assert.deepEqual(sh.half,[false,false,true],'no detectó la sombra que persiste');assert.equal(sh.noq,false);
+});
+
+await test('v88: hoja por hoja con comparar, quitar escritura de color, A Word / Firmar desde la cámara y nombre automático',async pg=>{
+  /* 4) título: palabra clave del documento; sin DNI */
+  const tt=await pg.evaluate(()=>[docTitleFrom('SERVICIO PENITENCIARIO DE TUCUMÁN\nMINISTERIO DE SEGURIDAD\nOFICIO N° 55/2026\nSe informa'),docTitleFrom('PLANILLA DE ASISTENCIA SEGURIDAD\nFecha ENTRADA SALIDA'),docTitleFrom('Juan Pérez DNI 30.123.456\n12/10/2026'),isAutoName('Escaneo 23-10-2026 08.29'),isAutoName('Oficio 55')]);
+  assert.deepEqual(tt,['Oficio N° 55-2026','Planilla de asistencia seguridad',null,true,false]);
+  /* 1) y 2) visor hoja por hoja después de un lote de la cámara */
+  const v=await pg.evaluate(async()=>{S.autoName=false;const mk=(t,blue)=>{const c=canvas(600,800),x=c.getContext('2d');x.fillStyle='#fafafa';x.fillRect(0,0,600,800);x.fillStyle='#111';x.font='bold 34px Arial';x.fillText(t,60,100);x.font='24px Arial';for(let i=0;i<12;i++)x.fillText('Renglón impreso número '+i,60,170+i*40);
+      if(blue){x.strokeStyle='rgb(30,60,200)';x.lineWidth=5;x.beginPath();x.moveTo(80,700);x.bezierCurveTo(200,620,300,760,520,660);x.stroke()}return c.toDataURL('image/jpeg',.92)};
+    const a=await makePage(mk('HOJA UNO',true),{auto:false,filter:'original'}),b=await makePage(mk('HOJA DOS'),{auto:false,filter:'original'});
+    DOC=newDoc();openDocScreen();Cam._afterCam={t:Date.now(),kind:'doc'};await addPages([a,b],false);for(let i=0;i<30&&Nav.top()!=='pgView';i++)await new Promise(r=>setTimeout(r,100));
+    const r={top:Nav.top(),num:$('#pvNum').textContent};$('#pvNext').click();await new Promise(r=>setTimeout(r,500));r.num2=$('#pvNum').textContent;$('#pvPrev').click();await new Promise(r=>setTimeout(r,500));
+    $('#pgView [data-pv="rot"]').click();for(let i=0;i<40&&$('#pvStage').classList.contains('scanning');i++)await new Promise(r=>setTimeout(r,100));r.rot=DOC.pages[0].rot;
+    $('#pgView [data-pv="filter"]').click();r.fopen=!$('#pvFilters').hidden;$('#pvFilters [data-f="bn"]').click();for(let i=0;i<5;i++)await new Promise(r=>setTimeout(r,100));for(let i=0;i<40&&$('#pvStage').classList.contains('scanning');i++)await new Promise(r=>setTimeout(r,100));r.filter=DOC.pages[0].filter;
+    await new Promise(r=>setTimeout(r,600));const img=$('#pvTrack .pv-pg[data-i="0"] img');const before=img.src;const cmp=$('#pvCmp');cmp.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,pointerId:1}));
+    for(let i=0;i<40&&img.src===before;i++)await new Promise(r=>setTimeout(r,100));r.cmpChanged=img.src!==before;r.cmpOn=cmp.classList.contains('on');cmp.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,pointerId:1}));r.restored=img.src===before;
+    /* 6) quitar escritura: copia nueva sin el trazo azul; la original queda */
+    $('#pgView [data-pv="ink"]').click();await new Promise(r=>setTimeout(r,400));$('#inkGo').click();for(let i=0;i<80&&DOC.pages.length<3;i++)await new Promise(r=>setTimeout(r,100));
+    r.pages=DOC.pages.length;r.pos=$('#pvNum').textContent;const np=DOC.pages[1];r.noInk=!!np.noInk;
+    const blueOf=async p=>{const c=await renderPage({...p,filter:'original'},{maxSide:600,noOverlays:true});const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let n=0,k=0;for(let j=0;j<d.length;j+=4){if(d[j+2]>d[j]+40&&d[j+2]>d[j+1]+30)n++;if(d[j]<90&&d[j+1]<90&&d[j+2]<90)k++}return {n,k}};
+    r.orig=await blueOf(DOC.pages[0]);r.copy=await blueOf(np);await Nav.back();return r});
+  assert.equal(v.top,'pgView','el lote no abrió la vista hoja por hoja');assert.equal(v.num,'1 / 2');assert.equal(v.num2,'2 / 2');assert.equal(v.rot,90);assert.ok(v.fopen);assert.equal(v.filter,'bn');
+  assert.ok(v.cmpChanged&&v.cmpOn,'Comparar no mostró el original');assert.ok(v.restored,'al soltar no volvió');
+  assert.equal(v.pages,3);assert.equal(v.pos,'2 / 3');assert.ok(v.noInk);assert.ok(v.orig.n>300,'la original perdió la tinta azul: '+v.orig.n);assert.ok(v.copy.n<v.orig.n*.05,'quedó tinta azul: '+v.copy.n+' de '+v.orig.n);assert.ok(v.copy.k>v.orig.k*.8,'se borró lo impreso en negro');
+  /* 3) cámara «A Word»: al terminar se abre el Editor de Word con el documento */
+  const w=await pg.evaluate(async()=>{const kinds=[...document.querySelectorAll('#camKinds [data-kind]')].map(b=>b.dataset.kind);await seedPagePromise();
+    async function seedPagePromise(){}const c=canvas(500,700),x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,500,700);x.fillStyle='#000';x.font='30px Arial';x.fillText('NOTA 12',40,80);
+    const p=await makePage(c.toDataURL('image/jpeg',.9),{auto:false});for(let k=0;k<4&&Nav.top();k++)await Nav.back();DOC=null;Cam._afterCam={t:Date.now(),kind:'word'};Source.lastFP=null;await addPages([p],true);
+    for(let i=0;i<80&&Nav.top()!=='toolScreen';i++)await new Promise(r=>setTimeout(r,100));await new Promise(r=>setTimeout(r,500));
+    return {kinds,top:Nav.top(),title:$('#toolTitle').textContent}});
+  assert.ok(w.kinds.includes('word')&&w.kinds.includes('sign'),'faltan A Word / Firmar: '+w.kinds);assert.equal(w.top,'toolScreen');assert.equal(w.title,'Editor de Word');
+  /* 4) nombre automático con el OCR del teléfono */
+  const an=await pg.evaluate(async()=>{for(let k=0;k<5&&Nav.top();k++)await Nav.back();S.autoName=true;const c=canvas(1200,1600),x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,1200,1600);x.fillStyle='#000';x.font='bold 64px Arial';x.fillText('OFICIO N° 55/2026',220,200);x.font='36px Arial';for(let i=0;i<8;i++)x.fillText('Texto de la nota que sigue abajo '+i,120,420+i*60);
+    const p=await makePage(c.toDataURL('image/jpeg',.92),{auto:false,filter:'original'});const d=newDoc();d.pages.push(p);DOC=d;const t=await docAutoName(d);return {t,name:d.name}});
+  assert.match(String(an.t),/^Oficio N. 55-2026$/,'título: '+an.t);assert.equal(an.name,an.t);
 });
 
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
