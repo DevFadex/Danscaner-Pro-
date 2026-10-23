@@ -1,0 +1,323 @@
+{
+ "version": "2026-10-05",
+ "leyes": [
+  {
+   "id": "cp",
+   "nombre": "Código Penal de la Nación",
+   "norma": "Ley 11.179 (texto actualizado)",
+   "abrev": "CP",
+   "fuente": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/15000-19999/16546/texact.htm",
+   "descargado": "2026-10-05",
+   "alias": [
+    "cp",
+    "codigo penal",
+    "código penal",
+    "c.p."
+   ],
+   "archivo": "cp.json",
+   "total": 389
+  },
+  {
+   "id": "cppf",
+   "nombre": "Código Procesal Penal Federal",
+   "norma": "Ley 27.063, texto ordenado por Decreto 118/2019 (Anexo I)",
+   "abrev": "CPPF",
+   "fuente": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/315000-319999/319681/norma.htm",
+   "descargado": "2026-10-05",
+   "alias": [
+    "cppf",
+    "cpp",
+    "codigo procesal penal",
+    "código procesal penal",
+    "procesal penal federal"
+   ],
+   "archivo": "cppf.json",
+   "total": 397
+  },
+  {
+   "id": "cppn",
+   "nombre": "Código Procesal Penal de la Nación (anterior)",
+   "norma": "Ley 23.984",
+   "abrev": "CPPN",
+   "fuente": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/383/texact.htm",
+   "descargado": "2026-10-05",
+   "alias": [
+    "cppn",
+    "codigo procesal penal de la nacion",
+    "código procesal penal de la nación",
+    "23984",
+    "23.984"
+   ],
+   "archivo": "cppn.json",
+   "total": 572
+  },
+  {
+   "id": "ep",
+   "nombre": "Ley de Ejecución de la Pena Privativa de la Libertad",
+   "norma": "Ley 24.660 (texto actualizado)",
+   "abrev": "Ley 24.660",
+   "fuente": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/35000-39999/37872/texact.htm",
+   "descargado": "2026-10-05",
+   "alias": [
+    "24660",
+    "24.660",
+    "ejecucion de la pena",
+    "ejecución de la pena",
+    "ley de ejecucion",
+    "ley de ejecución"
+   ],
+   "archivo": "ep.json",
+   "total": 242
+  },
+  {
+   "id": "l27375",
+   "nombre": "Ley 27.375 (reforma de la Ley de Ejecución)",
+   "norma": "Ley 27.375 (B.O. 28/07/2017): modifica la Ley 24.660 y el artículo 14 del Código Penal",
+   "abrev": "Ley 27.375",
+   "fuente": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/275000-279999/277449/norma.htm",
+   "descargado": "2026-10-05",
+   "alias": [
+    "27375",
+    "27.375",
+    "ley 27375",
+    "ley 27.375",
+    "reforma de la 24660",
+    "reforma de la ley de ejecucion"
+   ],
+   "archivo": "l27375.json",
+   "total": 42
+  },
+  {
+   "id": "d18",
+   "nombre": "Reglamento de Disciplina para los Internos",
+   "norma": "Decreto 18/97, Anexo I (reglamenta el Capítulo IV, Disciplina, de la Ley 24.660). Texto original: puede tener modificaciones posteriores",
+   "abrev": "Dto. 18/97",
+   "fuente": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/40000-44999/41366/norma.htm",
+   "descargado": "2026-10-05",
+   "alias": [
+    "decreto 18",
+    "dto 18",
+    "dec 18",
+    "18/97",
+    "18 97",
+    "decreto 18/97",
+    "reglamento de disciplina para los internos",
+    "reglamento de disciplina federal",
+    "disciplina federal"
+   ],
+   "archivo": "d18.json",
+   "total": 69
+  },
+  {
+   "id": "d1136",
+   "nombre": "Reglamento de Comunicaciones de los Internos",
+   "norma": "Decreto 1136/97, Anexo I (reglamenta el Capítulo XI, Relaciones familiares y sociales, arts. 158 a 167 de la Ley 24.660). Texto original: puede tener modificaciones posteriores",
+   "abrev": "Dto. 1136/97",
+   "fuente": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/45000-49999/47102/norma.htm",
+   "descargado": "2026-10-05",
+   "alias": [
+    "1136",
+    "decreto 1136",
+    "dto 1136",
+    "1136/97",
+    "1136 97",
+    "reglamento de comunicaciones",
+    "reglamento de visitas",
+    "comunicaciones de los internos"
+   ],
+   "archivo": "d1136.json",
+   "total": 149
+  },
+  {
+   "id": "d303",
+   "nombre": "Reglamento General de Procesados",
+   "norma": "Decreto 303/96, Anexo I (procesados alojados en el Servicio Penitenciario Federal). Texto original: tiene modificaciones posteriores (t.o. 1997)",
+   "abrev": "Dto. 303/96",
+   "fuente": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/35000-39999/35551/norma.htm",
+   "descargado": "2026-10-05",
+   "alias": [
+    "decreto 303",
+    "dto 303",
+    "303/96",
+    "303 96",
+    "reglamento general de procesados",
+    "reglamento de procesados"
+   ],
+   "archivo": "d303.json",
+   "total": 165
+  },
+  {
+   "id": "d140",
+   "nombre": "Reglamentación de Educación de la Ley 24.660",
+   "norma": "Decreto 140/2015, Anexo I (reglamenta el Capítulo VIII, Educación, arts. 133 a 142 de la Ley 24.660, según la Ley 26.695)",
+   "abrev": "Dto. 140/15",
+   "fuente": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/240000-244999/241914/norma.htm",
+   "descargado": "2026-10-05",
+   "alias": [
+    "decreto 140",
+    "dto 140",
+    "140/2015",
+    "140/15",
+    "140 2015",
+    "reglamento de educacion",
+    "reglamentacion de educacion",
+    "reglamento del estimulo educativo"
+   ],
+   "archivo": "d140.json",
+   "total": 10
+  },
+  {
+   "id": "d1139",
+   "nombre": "Reglamento de Recompensas",
+   "norma": "Decreto 1139/2000, Anexo II (reglamenta el Capítulo VI, Recompensas, de la Ley 24.660)",
+   "abrev": "Dto. 1139/00",
+   "fuente": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/65000-69999/65267/norma.htm",
+   "descargado": "2026-10-05",
+   "alias": [
+    "1139",
+    "decreto 1139",
+    "dto 1139",
+    "1139/2000",
+    "1139/00",
+    "1139 2000",
+    "reglamento de recompensas"
+   ],
+   "archivo": "d1139.json",
+   "total": 15
+  },
+  {
+   "id": "est",
+   "nombre": "Ley de Estupefacientes",
+   "norma": "Ley 23.737 (texto actualizado)",
+   "abrev": "Ley 23.737",
+   "fuente": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/138/texact.htm",
+   "descargado": "2026-10-05",
+   "alias": [
+    "23737",
+    "23.737",
+    "ley 23737",
+    "ley 23.737",
+    "ley de estupefacientes",
+    "ley de drogas",
+    "estupefacientes"
+   ],
+   "archivo": "est.json",
+   "total": 48
+  },
+  {
+   "id": "cn",
+   "nombre": "Constitución de la Nación Argentina",
+   "norma": "Texto oficial ordenado por la Ley 24.430 (reforma de 1994)",
+   "abrev": "CN",
+   "fuente": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/804/norma.htm",
+   "descargado": "2026-10-05",
+   "alias": [
+    "constitucion",
+    "constitución",
+    "constitucion nacional",
+    "constitución nacional",
+    "constitucion argentina",
+    "constitucion de la nacion",
+    "cn",
+    "c.n."
+   ],
+   "archivo": "cn.json",
+   "total": 147
+  },
+  {
+   "id": "sppt",
+   "nombre": "Régimen del Servicio Penitenciario de Tucumán",
+   "norma": "Ley 9.914 (ratifica el Decreto Acuerdo 7/7 (MS) del 26/08/2025; deroga la Ley 4.611)",
+   "abrev": "Ley 9.914",
+   "fuente": "https://boletin.tucuman.gob.ar",
+   "descargado": "2025-09-19",
+   "origen": "Boletín Oficial de Tucumán (Ley 9.914 y su Anexo, copia escaneada provista por el usuario). Transcripción: verificar contra el original ante cualquier duda.",
+   "alias": [
+    "9914",
+    "9.914",
+    "ley 9914",
+    "ley 9.914",
+    "servicio penitenciario de tucuman",
+    "servicio penitenciario provincial",
+    "ley del servicio penitenciario",
+    "ley organica del servicio penitenciario",
+    "ley organica penitenciaria"
+   ],
+   "archivo": "sppt.json",
+   "total": 193
+  },
+  {
+   "id": "rd905",
+   "nombre": "Reglamento de sumarios disciplinarios de internos (SPPT)",
+   "norma": "Resolución 905/19 DGSPPT (17/07/2019), Anexo 1",
+   "abrev": "Res. 905/19",
+   "fuente": "",
+   "descargado": "2019-07-17",
+   "origen": "Resolución 905/19 de la Dirección General del Servicio Penitenciario de Tucumán (copia escaneada provista por el usuario). Transcripción: verificar contra el original ante cualquier duda.",
+   "alias": [
+    "905",
+    "905/19",
+    "resolucion 905",
+    "res 905",
+    "reglamento disciplinario",
+    "reglamento de disciplina",
+    "reglamento de sumarios",
+    "sumarios disciplinarios",
+    "sumario disciplinario",
+    "disciplina de internos"
+   ],
+   "archivo": "rd905.json",
+   "total": 44
+  },
+  {
+   "id": "r972",
+   "nombre": "Protocolo para la prevención y solución de conflictos disciplinarios y fomento de la mediación en contexto de encierro (SPPT)",
+   "norma": "Resolución 972/21 DGSPPT (17/09/2021), Anexo 1",
+   "abrev": "Res. 972/21",
+   "fuente": "",
+   "descargado": "2021-09-17",
+   "origen": "Resolución 972/21 de la Dirección General del Servicio Penitenciario de Tucumán (copia escaneada provista por el usuario). Transcripción: verificar contra el original ante cualquier duda.",
+   "alias": [
+    "972",
+    "972/21",
+    "resolucion 972",
+    "res 972",
+    "protocolo de conflicto",
+    "protocolo de conflictos",
+    "protocolo conflicto",
+    "protocolo de mediacion",
+    "mediacion",
+    "protocolo de prevencion y solucion de conflictos",
+    "solucion de conflictos",
+    "conflictos disciplinarios"
+   ],
+   "archivo": "r972.json",
+   "total": 22
+  },
+  {
+   "id": "d396",
+   "nombre": "Reglamento de las Modalidades Básicas de la Ejecución",
+   "norma": "Decreto 396/99 (reglamenta la progresividad y el programa de prelibertad de la Ley 24.660), Anexo I, texto actualizado",
+   "abrev": "Dto. 396/99",
+   "fuente": "",
+   "descargado": "2026-10-05",
+   "origen": "Decreto 396/99, Anexo I, texto actualizado de InfoLeg (incluye el Decreto 1139/2000 y la fe de erratas), PDF provisto por el usuario. Verificar la vigencia en InfoLeg ante cualquier duda.",
+   "alias": [
+    "396/99",
+    "396 99",
+    "decreto 396",
+    "dto 396",
+    "dec 396",
+    "decreto 396/99",
+    "modalidades basicas",
+    "modalidades básicas",
+    "reglamento de modalidades basicas",
+    "reglamento de las modalidades basicas de la ejecucion",
+    "reglamento de la progresividad",
+    "reglamentacion de la 24660"
+   ],
+   "archivo": "d396.json",
+   "total": 115
+  }
+ ]
+}
