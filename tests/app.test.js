@@ -1756,6 +1756,29 @@ await test('v88: hoja por hoja con comparar, quitar escritura de color, A Word /
   assert.match(String(an.t),/^Oficio N. 55-2026$/,'título: '+an.t);assert.equal(an.name,an.t);
 });
 
+await test('v89: en Individual se ven Repetir, Agregar más y Listo en una fila; el nombre se escribe al guardar, al compartir y en hoja por hoja',async pg=>{
+  await pg.evaluate(()=>{S.camFast=true;S.autoCapture=false;S.autoName=false;Cam.open('single')});await pg.waitForFunction(()=>Cam.stream&&$('#camVideo').videoWidth>0,null,{timeout:15000});await W(500);
+  await pg.evaluate(()=>{Cam.shoot()});await pg.waitForFunction(()=>!$('#camRev').hidden&&$('#camRevImg').naturalWidth>0,null,{timeout:20000});await W(400);
+  const rv=await pg.evaluate(()=>{const st=$('#camera .cam-stage').getBoundingClientRect();const r=['rvAgain','rvMore','rvOk'].map(id=>$('#'+id).getBoundingClientRect());return {tops:r.map(x=>Math.round(x.top)),bottom:Math.max(...r.map(x=>x.bottom)),right:Math.max(...r.map(x=>x.right)),stB:st.bottom,stR:st.right,ok:$('#rvOk').textContent.trim()}});
+  assert.equal(new Set(rv.tops).size,1,'los botones no están en una fila: '+rv.tops);assert.ok(rv.bottom<=rv.stB&&rv.right<=rv.stR+1,'«Listo» queda afuera: '+JSON.stringify(rv));assert.match(rv.ok,/Listo/);
+  await pg.click('#rvOk');await W(1500);
+  /* «Documento listo»: el nombre es un campo y el PDF sale con ese nombre */
+  const r=await pg.evaluate(async()=>{for(let i=0;i<30&&!Nav.isOpen('docScreen');i++)await new Promise(r=>setTimeout(r,100));for(let k=0;k<3&&Nav.top()!=='docScreen';k++)await Nav.back();
+    const names=[];const _ck=HTMLAnchorElement.prototype.click;HTMLAnchorElement.prototype.click=function(){if(this.download){names.push(this.download);return}return _ck.apply(this,arguments)};
+    finishSheet();await new Promise(r=>setTimeout(r,400));const inp=$('#fnName');const had=!!inp;inp.value='Planilla semana 43';inp.dispatchEvent(new Event('input',{bubbles:true}));const n1=DOC.name;
+    $('#fnSave').click();for(let i=0;i<60&&!names.length;i++)await new Promise(r=>setTimeout(r,100));await Nav.back();await new Promise(r=>setTimeout(r,300));
+    /* compartir rápido (📤): también se cambia el nombre */
+    $('#docShare').click();await new Promise(r=>setTimeout(r,500));const si=$('#sndName');const had2=!!si;si.value='Planilla firmada';si.dispatchEvent(new Event('input',{bubbles:true}));
+    for(let i=0;i<80&&/calculando/.test($('#sheetBody').textContent);i++)await new Promise(r=>setTimeout(r,100));$('#sndSave').click();for(let i=0;i<60&&names.length<2;i++)await new Promise(r=>setTimeout(r,100));
+    const n2=DOC.name;await new Promise(r=>setTimeout(r,300));
+    /* hoja por hoja: el título se edita ahí */
+    PV.open(0);await new Promise(r=>setTimeout(r,400));const t=$('#pvTitle');const v0=t.value;t.value='Planilla final';t.dispatchEvent(new Event('input',{bubbles:true}));const n3=DOC.name;await Nav.back();
+    HTMLAnchorElement.prototype.click=_ck;return {had,n1,had2,n2,v0,n3,names,doc:$('#docName').textContent}});
+  assert.ok(r.had,'falta el campo de nombre en «Documento listo»');assert.equal(r.n1,'Planilla semana 43');assert.equal(r.names[0],'Planilla semana 43.pdf');
+  assert.ok(r.had2,'falta el campo de nombre al compartir');assert.equal(r.n2,'Planilla firmada');assert.equal(r.names[1],'Planilla firmada.pdf');
+  assert.equal(r.v0,'Planilla firmada');assert.equal(r.n3,'Planilla final');assert.equal(r.doc,'Planilla final');
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();

@@ -3457,7 +3457,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 4.5',APP_VER='88';
+const NEXA_VER='Nexa 4.5',APP_VER='89';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3575,7 +3575,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='88 · 23/10/2026';
+const BUILD='89 · 23/10/2026';
 /* Versión que ven los usuarios: se cambia a mano solo cuando se decide publicar una versión nueva para todos.
    El administrador ve la versión interna (BUILD) con cada cambio. */
 const PUBLIC_VER='1.2';
@@ -6774,7 +6774,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="v87Css">'
 
 /* ===================== v88 · lo que suma de CamScanner ===================== */
 /* ---- 1) ver hoja por hoja (deslizando) con volver a sacar, girar, filtro, recortar, quitar escritura y ✓ ---- */
-document.body.insertAdjacentHTML('beforeend','<div class="screen" id="pgView"><div class="shead"><button class="ib" data-back aria-label="Volver">←</button><div class="t" id="pvTitle"></div>'
+document.body.insertAdjacentHTML('beforeend','<div class="screen" id="pgView"><div class="shead"><button class="ib" data-back aria-label="Volver">←</button><input class="pv-name" id="pvTitle" aria-label="Nombre del documento" autocomplete="off" enterkeyhint="done">'
  +'<button class="ib" id="pvEdit" title="Editar a fondo" aria-label="Editar a fondo">'+icoSvg('pencil')+'</button><button class="ib pri" id="pvDone" title="Terminar" aria-label="Terminar">'+icoSvg('check')+'</button></div>'
  +'<div class="pv-stage" id="pvStage"><div class="pv-track" id="pvTrack"></div><button class="pv-cmp" id="pvCmp" aria-label="Mantené apretado para ver la foto original">◐ Comparar</button><div class="pv-num"><button id="pvPrev" aria-label="Hoja anterior">‹</button><span id="pvNum"></span><button id="pvNext" aria-label="Hoja siguiente">›</button></div></div>'
  +'<div class="pv-filters" id="pvFilters" hidden role="toolbar" aria-label="Filtro de la hoja"></div>'
@@ -6784,7 +6784,7 @@ const PV={i:0,hi:new Map(),orig:new Map(),
  open(i){if(!DOC||!DOC.pages.length)return;this.i=Math.max(0,Math.min(DOC.pages.length-1,i||0));if(!Nav.isOpen('pgView'))Nav.push('pgView',()=>{this.free()});this.draw();requestAnimationFrame(()=>this.go(this.i,true))},
  free(){for(const m of [this.hi,this.orig])for(const u of m.values())try{URL.revokeObjectURL(u.url)}catch(e){}this.hi.clear();this.orig.clear()},
  key(p){try{return JSON.stringify(p,(k,v)=>k==='thumb'||k==='orig'?undefined:v)+'|'+String(p.orig||'').length}catch(e){return Math.random()+''}},
- draw(){$('#pvTitle').textContent=DOC.name;$('#pvTrack').innerHTML=DOC.pages.map((p,i)=>'<div class="pv-pg" data-i="'+i+'"><img alt="Hoja '+(i+1)+'" src="'+(p.thumb||'')+'"></div>').join('');this.num()},
+ draw(){$('#pvTitle').value=DOC.name;$('#pvTrack').innerHTML=DOC.pages.map((p,i)=>'<div class="pv-pg" data-i="'+i+'"><img alt="Hoja '+(i+1)+'" src="'+(p.thumb||'')+'"></div>').join('');this.num()},
  num(){$('#pvNum').textContent=(this.i+1)+' / '+DOC.pages.length;$('#pvPrev').disabled=this.i<=0;$('#pvNext').disabled=this.i>=DOC.pages.length-1;
   $$('#pvFilters [data-f]').forEach(b=>b.classList.toggle('on',!!this.p&&b.dataset.f===this.p.filter))},
  go(i,instant){const t=$('#pvTrack');i=Math.max(0,Math.min(DOC.pages.length-1,i));this.i=i;t.scrollTo({left:i*t.clientWidth,behavior:instant?'auto':'smooth'});this.num();this.hiRes(i)},
@@ -6854,7 +6854,7 @@ async function docAutoName(d){if(S.autoName===false||!d||!d.pages.length||!isAut
  try{await loadLib('tess');const p=d.pages[0];const c=await renderPage(p,{maxSide:1600,noOverlays:true});const H=Math.round(c.height*.42),t=canvas(c.width,H);t.getContext('2d').drawImage(c,0,0,c.width,H,0,0,c.width,H);c.width=c.height=1;
   const w=await Tesseract.createWorker(S.lang||'spa',1);try{try{await w.setParameters({tessedit_pageseg_mode:'3'})}catch(e){}const r=await w.recognize(prepOcr?prepOcr(t):t);title=docTitleFrom(r.data&&r.data.text)}finally{t.width=t.height=1;await w.terminate()}}
  catch(e){console.warn('nombre automático',e)}finally{d._naming=false}
- if(!title||d.name!==before)return null;d.name=title;if(DOC===d){saveDoc(true);try{if(Nav.isOpen('docScreen'))renderDocScreen();if(Nav.isOpen('pgView'))$('#pvTitle').textContent=title}catch(e){}}else{try{d.updated=Date.now();await DB.putDoc(d)}catch(e){}}
+ if(!title||d.name!==before)return null;d.name=title;if(DOC===d){saveDoc(true);try{if(Nav.isOpen('docScreen'))renderDocScreen();if(Nav.isOpen('pgView'))$('#pvTitle').value=title}catch(e){}}else{try{d.updated=Date.now();await DB.putDoc(d)}catch(e){}}
  try{refreshLists()}catch(e){}toast('📄 Nombre: '+title+' (lo cambiás con ✏️)',3800);return title}
 
 /* después de la cámara: A Word / Firmar siguen solos; el lote se ve hoja por hoja; y se pone el nombre */
@@ -6883,6 +6883,42 @@ document.head.insertAdjacentHTML('beforeend','<style id="v88Css">'
  +'.cam-mini.busy .cm-spin{display:none}'
  +'@keyframes dsscan{to{top:100%}}@media (prefers-reduced-motion:reduce){.pv-stage.scanning::after,.cam-mini.busy::after,.ed-stage:has(#edSpin:not([hidden]))::after{animation-duration:3.5s}}'
  +'</style>');
+
+/* ===================== v89 ===================== */
+/* ---- 1) Individual igual que Lote: la foto se achica y los tres botones (Repetir · Agregar más · Listo) siempre entran en una fila ---- */
+document.head.insertAdjacentHTML('beforeend','<style id="v89Css">'
+ +'#camRev{justify-content:space-between;gap:12px;padding:14px 10px;background:#000e;overflow:hidden}'
+ +'#camRev>small{flex:none;font-size:15px;font-weight:700;color:#fff}'
+ +'#camRevImg{flex:1 1 0;min-height:0;max-height:none;max-width:96%;width:auto;object-fit:contain;background:transparent;box-shadow:none}'
+ +'#camRev>.rv-rot,#camRev>.rv-b{flex:none}'
+ +'#camRev .rv-b,#camRev2 .rv-b{flex-wrap:nowrap;width:100%;max-width:520px;gap:8px}'
+ +'#camRev .rv-b button,#camRev2 .rv-b button{flex:1 1 0;justify-content:center;min-height:50px;padding:10px 6px;font-size:15px;white-space:nowrap}'
+ +'#camRev .rv-b button:focus-visible{outline:3px solid #fff;outline-offset:2px}'
+ +'.pv-name{flex:1;min-width:0;background:transparent;border:1px solid transparent;border-radius:10px;color:inherit;font:700 16px/1.2 inherit;padding:8px 10px;text-overflow:ellipsis}'
+ +'.pv-name:hover{border-color:#ffffff33}.pv-name:focus{outline:none;border-color:#22d3ee;background:#ffffff12}'
+ +'.nm-edit{display:flex;align-items:center;gap:6px;width:100%}.nm-edit input{flex:1;min-width:0;font-weight:700;font-size:16px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--tx)}'
+ +'.nm-edit input:focus{outline:2px solid var(--ac);outline-offset:1px}.nm-edit .ext{color:var(--tx2);font-weight:600}'
+ +'</style>');
+/* ---- 2) el nombre se puede cambiar al guardar o compartir (y en la vista hoja por hoja) ---- */
+function docRenameTo(v){if(!DOC)return;v=String(v||'').replace(/\s+/g,' ').trim();if(!v||v===DOC.name)return;DOC.name=v;DOC._userNamed=true;saveDoc();try{if(Nav.isOpen('docScreen'))renderDocScreen()}catch(e){}try{const t=$('#pvTitle');if(t&&document.activeElement!==t)t.value=v}catch(e){}}
+function nameField(id,val,ext){return '<label class="nm-edit"><input id="'+id+'" value="'+esc(val)+'" aria-label="Nombre del archivo" autocomplete="off" enterkeyhint="done">'+(ext?'<span class="ext">'+esc(ext)+'</span>':'')+'</label>'}
+function wireName(inp,onSet){if(!inp)return;inp.addEventListener('focus',()=>{try{inp.select()}catch(e){}});inp.addEventListener('input',()=>onSet(inp.value));inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();inp.blur()}});inp.addEventListener('blur',()=>{if(!inp.value.trim()&&DOC)inp.value=DOC.name})}
+/* vista hoja por hoja: el título es el nombre y se edita ahí mismo */
+wireName($('#pvTitle'),v=>docRenameTo(v));
+/* «Documento listo»: el nombre arriba es un campo */
+{const _fs=finishSheet;finishSheet=function(){const r=_fs.apply(this,arguments);try{const b=$('#sheetBody');const nb=b&&b.firstElementChild&&b.firstElementChild.querySelector('b');if(nb&&DOC&&!$('#fnName',b)){nb.outerHTML=nameField('fnName',DOC.name,'.pdf');wireName($('#fnName',b),v=>docRenameTo(v))}}catch(e){console.warn('nombre',e)}return r}}
+/* compartir rápido (📤 del documento): el nombre también se edita; el archivo sale con el nombre nuevo */
+let _nameSwap=null;
+const _swapName=n=>{const w=_nameSwap;if(!w||typeof n!=='string')return n;const to=safeName(w.get());return to&&n.startsWith(w.from)?to+n.slice(w.from.length):n};
+{const _d=download;download=function(b,n){return _d.call(this,b,_swapName(n))}}
+{const _s=share;share=function(b,n){return _s.apply(this,[b,_swapName(n)].concat([].slice.call(arguments,2)))}}
+{const _w=shareWhatsApp;shareWhatsApp=function(b,n){return _w.apply(this,[b,_swapName(n)].concat([].slice.call(arguments,2)))}}
+{const _so=sendOptimizedSheet;sendOptimizedSheet=function(pages,name,title){const r=_so.apply(this,arguments);try{const b=$('#sheetBody');const nb=b&&b.querySelector('.sndhead b');
+  if(nb){const from=safeName(name);nb.outerHTML=nameField('sndName',name,'.pdf');const inp=$('#sndName',b);const isDoc=DOC&&DOC.name===name;
+   const sw={from,get:()=>inp.value.trim()||name};_nameSwap=sw;wireName(inp,v=>{if(isDoc)docRenameTo(v)});
+   const top=Nav.stack[Nav.stack.length-1];const oc=top&&top.onClose;if(top)top.onClose=function(){setTimeout(()=>{if(_nameSwap===sw)_nameSwap=null},4000);return oc&&oc.apply(this,arguments)}}}catch(e){console.warn('nombre',e)}return r}}
+/* si el nombre automático llega con «Documento listo» abierto, se actualiza el campo (salvo que ya lo estés escribiendo) */
+{const _an=docAutoName;docAutoName=async function(d){if(d&&d._userNamed)return null;const r=await _an.apply(this,arguments);try{if(r&&DOC===d)for(const id of ['fnName','sndName']){const i=document.getElementById(id);if(i&&document.activeElement!==i)i.value=r}}catch(e){}return r}}
 
 </script>
 </body>
