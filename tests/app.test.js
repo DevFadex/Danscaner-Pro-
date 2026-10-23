@@ -1703,6 +1703,24 @@ await test('v86: la cámara encuentra la hoja sobre madera clara con tablilla, l
   assert.equal(dc.title,'Comprimir PDF');assert.deepEqual(dc.files,['Planilla prueba.pdf']);assert.ok(dc.sheet,'el botón Herramientas no abrió la lista');assert.ok(dc.inDb,'el documento no quedó en la app');
 });
 
+await test('v87: en lote la cámara no se frena (la foto aparece chiquita en la esquina y se procesa sola) y la sombra se mide solo dentro de la hoja',async pg=>{
+  assert.equal(await pg.evaluate(()=>camRevMode()),'mini','la vista chiquita debería venir de fábrica');
+  await pg.evaluate(()=>{S.camFast=true;S.autoCapture=false;const _mp=makePage;window.makePage=async function(){await new Promise(r=>setTimeout(r,1500));return _mp.apply(this,arguments)};Cam.open('batch')});
+  await pg.waitForFunction(()=>Cam.stream&&$('#camVideo').videoWidth>0,null,{timeout:15000});await W(600);
+  const r=await pg.evaluate(async()=>{await Cam.shoot();const m=$('#camMini');const during={mini:!m.hidden,busyIcon:m.classList.contains('busy'),camBusy:!!Cam.busy,rev:!$('#camRev2').hidden,pend:Cam._pend};
+    await Cam.shoot();const during2={camBusy:!!Cam.busy,pend:Cam._pend};
+    await Cam._q;await new Promise(r=>setTimeout(r,200));const after={busyIcon:m.classList.contains('busy'),ready:!!m._p,n:m.querySelector('.cm-n').textContent,batch:Cam.batch.length};
+    m.click();await new Promise(r=>setTimeout(r,800));after.big=!$('#camRev2').hidden;$('#rv2Go').click();return {during,during2,after}});
+  assert.ok(r.during.mini&&r.during.busyIcon,'no apareció la foto chiquita');assert.equal(r.during.camBusy,false,'la cámara quedó frenada');assert.equal(r.during.rev,false,'apareció la revisión grande que frena');
+  assert.equal(r.during2.camBusy,false);assert.ok(r.during2.pend>=1);
+  assert.equal(r.after.batch,2);assert.ok(r.after.ready&&!r.after.busyIcon,'la miniatura no terminó');assert.equal(r.after.n,'2');assert.ok(r.after.big,'al tocarla no se vio grande');
+  /* sombra: una hoja pareja sobre una mesa oscura NO es sombra; una mano tapando media hoja sí (si persiste) */
+  const sh=await pg.evaluate(()=>{const mk=half=>{const c=canvas(300,400),x=c.getContext('2d');x.fillStyle='#111';x.fillRect(0,0,300,400);x.fillStyle='#eee';x.fillRect(60,60,180,280);if(half){x.fillStyle='#555';x.fillRect(60,200,180,140)}c.videoWidth=300;c.videoHeight=400;return c};
+    Cam._lastQuad=[{x:.2,y:.15},{x:.8,y:.15},{x:.8,y:.85},{x:.2,y:.85}];camShadowNow._n=0;const flat=[1,2,3,4].map(()=>camShadowNow(mk(false)));camShadowNow._n=0;const half=[1,2,3].map(()=>camShadowNow(mk(true)));
+    Cam._lastQuad=null;const noq=camShadowNow(mk(true));return {flat,half,noq}});
+  assert.deepEqual(sh.flat,[false,false,false,false],'marcó sombra en una hoja pareja');assert.deepEqual(sh.half,[false,false,true],'no detectó la sombra que persiste');assert.equal(sh.noq,false);
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();
