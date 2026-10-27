@@ -3457,7 +3457,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 4.5',APP_VER='90';
+const NEXA_VER='Nexa 4.5',APP_VER='91';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3575,7 +3575,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='90 · 27/10/2026';
+const BUILD='91 · 27/10/2026';
 /* Versión que ven los usuarios: se cambia a mano solo cuando se decide publicar una versión nueva para todos.
    El administrador ve la versión interna (BUILD) con cada cambio. */
 const PUBLIC_VER='1.2';
@@ -6602,14 +6602,42 @@ document.head.insertAdjacentHTML('beforeend','<style id="v84Css">'+
 /* ===== v85 · compartir y guardar resultados, firma en la página abierta de Editar PDF, cámara: hoja entera, vertical y al derecho ===== */
 /* ---- 1) orientación forzada (vertical por defecto): se gira hacia el lado en que el texto queda al derecho ---- */
 if(!S.v85cam){if(!S.camOrient||S.camOrient==='phone')S.camOrient='port';S.v85cam=true;try{saveS()}catch(e){}}
+/* v91: ¿la hoja quedó al revés? Las letras (palos arriba y abajo) fallan en planillas, tablas y MAYÚSCULAS:
+ * se lee un pedazo del centro con el OCR del teléfono derecho y dado vuelta, y gana el que se lee mejor. Si no se puede leer, decide pageOrient. */
+let _upW=null,_upT=0;
+async function upWorker(){clearTimeout(_upT);_upT=setTimeout(()=>{const w=_upW;_upW=null;if(w)w.then(x=>x.terminate()).catch(()=>{})},60000);
+ if(!_upW)_upW=(async()=>{await loadLib('tess');const w=await Tesseract.createWorker(S.lang||'spa',1);try{await w.setParameters({tessedit_pageseg_mode:'6'})}catch(e){}return w})();
+ try{return await _upW}catch(e){_upW=null;throw e}}
+/* gris con contraste estirado; sin agrandar de más (Tesseract no lee bien recortes enormes) */
+function ocrPrep(c){const x=c.getContext('2d',{willReadFrequently:true}),id=x.getImageData(0,0,c.width,c.height),d=id.data;let lo=255,hi=0;const g=new Uint8Array(d.length/4);for(let i=0,j=0;j<d.length;i++,j+=4){const v=(d[j]*77+d[j+1]*150+d[j+2]*29)>>8;g[i]=v;if(v<lo)lo=v;if(v>hi)hi=v}const sp=Math.max(1,hi-lo);for(let i=0,j=0;j<d.length;i++,j+=4){const v=(g[i]-lo)*255/sp;d[j]=d[j+1]=d[j+2]=v}x.putImageData(id,0,0);return c}
+async function ocrScore(c){const w=await upWorker();const r=await w.recognize(c);let s=0;const words=(r.data&&r.data.words)||[];
+ for(const x of words){const t=String(x.text||'').replace(/[^A-Za-zÁÉÍÓÚÑáéíóúñ0-9]/g,'');if(t.length>=3&&/[A-Za-zÁÉÍÓÚÑáéíóúñ]{2}/.test(t))s+=Math.max(0,(x.confidence||0)-40)*Math.min(t.length,8)}return s}
+async function uprightFlip(c){const fb=()=>pageOrient(c).rot===180;if(S.ocrOrient===false)return fb();
+ try{const L=Math.max(c.width,c.height),k=1600/L,W=Math.round(c.width*k),H=Math.round(c.height*k);
+  const cw=Math.round(W*.8),chh=Math.round(H*.5),A=canvas(cw,chh),ax=A.getContext('2d');ax.fillStyle='#fff';ax.fillRect(0,0,cw,chh);ax.drawImage(c,(c.width-cw/k)/2,(c.height-chh/k)/2,cw/k,chh/k,0,0,cw,chh);
+  const B=canvas(cw,chh),bx=B.getContext('2d');bx.translate(cw,chh);bx.rotate(Math.PI);bx.drawImage(A,0,0);
+  const sa=await ocrScore(ocrPrep(A)),sb=await ocrScore(ocrPrep(B));A.width=B.width=1;
+  if(Math.max(sa,sb)<60||Math.abs(sa-sb)<Math.max(sa,sb)*.25)return fb();return sb>sa}catch(e){console.warn('orientación OCR',e);return fb()}}
+/* las cuatro posiciones: se lee el centro derecho, dado vuelta y de costado para cada lado. Devuelve cuánto girar (0/90/180/270) o null si no se puede decidir */
+async function ocrBestRot(p,c){if(S.ocrOrient===false)return null;
+ try{const crop=(src,fl)=>{const L=Math.max(src.width,src.height),k=1600/L,W=Math.round(src.width*k),H=Math.round(src.height*k),cw=Math.round(W*.8),chh=Math.round(H*.5),A=canvas(cw,chh),x=A.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,cw,chh);
+   if(fl){x.translate(cw,chh);x.rotate(Math.PI)}x.drawImage(src,(src.width-cw/k)/2,(src.height-chh/k)/2,cw/k,chh/k,0,0,cw,chh);return ocrPrep(A)};
+  const c90=await renderPage({...p,rot:((p.rot||0)+90)%360},{maxSide:1000,noOverlays:true});const sc={};
+  sc[0]=await ocrScore(crop(c,false));sc[180]=await ocrScore(crop(c,true));sc[90]=await ocrScore(crop(c90,false));sc[270]=await ocrScore(crop(c90,true));c90.width=c90.height=1;
+  const o=Object.entries(sc).sort((a,b)=>b[1]-a[1]);if(o[0][1]<60||o[0][1]<o[1][1]*1.25)return null;return +o[0][0]}catch(e){console.warn('orientación OCR',e);return null}}
 async function camForceOrient(p,o){const c=await renderPage(p,{maxSide:1000,noOverlays:true});const isL=c.width>c.height*1.02,isP=c.height>c.width*1.02;
  /* «Horizontal» (v72): siempre apaisada, como se pidió */
  if(o==='land'){c.width=c.height=1;if(isP){p.rot=((p.rot||0)+270)%360;return true}return false}
  try{const ax=camTextAxis(c);
+  /* v91: si el texto no es claramente horizontal, decide la lectura (sirve igual para planillas apaisadas y hojas de costado) */
+  if(o==='port'&&ax!=='h'&&(isL||isP)&&pageOrient(c).why!=='poca tinta'){const r=await ocrBestRot(p,c);if(r!=null){if(r){p.rot=((p.rot||0)+r)%360;return true}return false}}
   if(o==='port'&&isL){if(ax==='h'){const po=pageOrient(c);if(po.rot===180){p.rot=((p.rot||0)+180)%360;return true}return false}/* texto horizontal: hoja apaisada de verdad, no se fuerza */
    /* texto de costado (o no se sabe): se gira 90° y, si el texto queda al revés, 180° más */
-   const r1=((p.rot||0)+90)%360;const c2=await renderPage({...p,rot:r1},{maxSide:1000,noOverlays:true});const p2=pageOrient(c2);c2.width=c2.height=1;p.rot=(r1+(p2.rot===180?180:0))%360;return true}
-  const po=pageOrient(c);if(po.rot===180){p.rot=((p.rot||0)+180)%360;return true}return false}finally{c.width=c.height=1}}
+   const r1=((p.rot||0)+90)%360;const c2=await renderPage({...p,rot:r1},{maxSide:1000,noOverlays:true});const up=await uprightFlip(c2);c2.width=c2.height=1;p.rot=(r1+(up?180:0))%360;return true}
+  const po=pageOrient(c);if(po.rot===180){p.rot=((p.rot||0)+180)%360;return true}
+  /* v91: hoja apaisada (una planilla, una tabla) sacada con el teléfono parado: el texto queda de costado. Se gira 90° y, si quedó al revés, 180° más */
+  if(o==='port'&&isP&&ax!=='h'&&(po.rot===90||po.rot===270)){const r1=((p.rot||0)+90)%360;const c2=await renderPage({...p,rot:r1},{maxSide:1000,noOverlays:true});const up=await uprightFlip(c2);c2.width=c2.height=1;p.rot=(r1+(up?180:0))%360;return true}
+  return false}finally{c.width=c.height=1}}
 if(typeof CAM_ORIENT_L!=='undefined'){CAM_ORIENT_L.port='Vertical (al derecho)'}
 /* dirección de los renglones: con renglones horizontales hay filas en blanco entre ellos (y casi ninguna columna en blanco); con renglones verticales, al revés */
 function camTextAxis(c){const k=Math.min(1,800/Math.max(c.width,c.height)),W=Math.max(1,Math.round(c.width*k)),H=Math.max(1,Math.round(c.height*k)),t=canvas(W,H),x=t.getContext('2d',{willReadFrequently:true});x.drawImage(c,0,0,W,H);

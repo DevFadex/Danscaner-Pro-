@@ -196,3 +196,6 @@ Tocá una imagen para cambiarle el tamaño o centrarla, y una tabla para sumarle
 
 ## Novedades v90
 - **Sombras sin raya negra**: si al sacar la foto quedó la sombra del teléfono, de la mano o de otra hoja, el PDF ya no muestra una raya o mancha negra en el borde de esa sombra.
+
+## Novedades v91
+- **Planillas y tablas apaisadas**: aunque las saques con el teléfono parado, quedan derechas y apaisadas. La app lee un pedacito en el teléfono, sin internet, para saber hacia dónde va el texto. Puede tardar unos segundos más en esas hojas.

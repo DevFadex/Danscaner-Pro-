@@ -1791,6 +1791,18 @@ await test('v90: el borde de una sombra marcada no queda como raya negra en el P
   for(const [f,v] of Object.entries(r)){assert.ok(v.edge<0.01,f+': raya negra en el borde de la sombra ('+v.edge.toFixed(3)+')');assert.ok(v.ink>0.02,f+': se perdió el texto dentro de la sombra')}
 });
 
+await test('v91: una planilla apaisada sacada con el teléfono parado queda derecha (se decide leyendo con el OCR del teléfono)',async pg=>{
+  const r=await pg.evaluate(async()=>{const W=1600,H=1000,t=canvas(W,H),x=t.getContext('2d');x.fillStyle='#fdfdfb';x.fillRect(0,0,W,H);x.fillStyle='#111';x.font='bold 38px Times New Roman';x.fillText('PLANILLA DE PRUEBA - SECTOR CINCO',360,70);
+    const cols=[60,140,420,760,1000,1220,1540];x.strokeStyle='#222';x.lineWidth=2;for(let i=0;i<=15;i++){x.beginPath();x.moveTo(60,110+i*55);x.lineTo(1540,110+i*55);x.stroke()}for(const cx of cols){x.beginPath();x.moveTo(cx,110);x.lineTo(cx,935);x.stroke()}
+    x.font='bold 24px Arial';['N°','APELLIDO','NOMBRES','FECHA','EDAD','CONTROL'].forEach((h,i)=>x.fillText(h,cols[i]+10,147));
+    const ap=['PEREYRA','GOMEZ','LUNA','SOSA','DIAZ','ROMERO','MOLINA','TORRES','ACOSTA','MEDINA','HERRERA','AGUIRRE','CASTRO','RIOS'],no=['MARTIN ARIEL','JUAN PABLO','LUCAS DAVID','PEDRO TOMAS','NICOLAS IVAN','DIEGO RAMON','PABLO ESTEBAN','RAUL MARIO','HUGO ALBERTO','OMAR DARIO','ANGEL RUBEN','JORGE LUIS','CARLOS JAVIER','MARIO CESAR'];
+    x.font='22px Arial';for(let i=0;i<14;i++){const y=147+(i+1)*55;x.fillText(String(i+1).padStart(2,'0'),cols[0]+12,y);x.fillText(ap[i],cols[1]+10,y);x.fillText(no[i],cols[2]+10,y);x.fillText('1'+(i%9)+'/0'+(1+i%8)+'/2006',cols[3]+10,y);x.fillText('20 años',cols[4]+10,y);x.fillText('visto',cols[5]+10,y)}
+    const side=(deg)=>{const c=canvas(H,W),y=c.getContext('2d');y.translate(H/2,W/2);y.rotate(deg*Math.PI/180);y.drawImage(t,-W/2,-H/2);return c.toDataURL('image/jpeg',.9)};
+    const out={};for(const [k,src] of [['cw',side(90)],['ccw',side(-90)],['upright',t.toDataURL('image/jpeg',.9)]]){const p=await makePage(src,{auto:false,filter:'original'});await camForceOrient(p,'port');out[k]=p.rot||0}return out});
+  /* la foto girada 90° a la derecha se endereza con 270°, la girada a la izquierda con 90°, y la que ya está derecha no se toca */
+  assert.deepEqual(r,{cw:270,ccw:90,upright:0});
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();
