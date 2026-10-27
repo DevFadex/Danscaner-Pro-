@@ -836,3 +836,11 @@ Comparación de dos videos con la misma hoja. En CamScanner se sigue sacando sin
 - **La causa**: `flatField` estima el color del papel por bloques. El suavizado final subía ese fondo del lado oscuro del borde, y al dividir por un fondo demasiado claro quedaba una franja negra.
 - **El arreglo**: el fondo de cada bloque es el menor entre lo suavizado y el mínimo de los bloques vecinos (+4). El lado de la sombra se aclara entero y el lado del papel queda blanco.
 - Aplica a los filtros que usan `flatField`: Magia Pro, Mejorar, Aclarar, Gris y Color en hojas de documento, Sin sombras, B/N y Ahorro.
+
+## v91 · Planillas apaisadas derechas
+- **El problema**: una planilla o tabla apaisada sacada con el teléfono parado salía de costado dentro de una hoja vertical. `pageOrient` decide por los palos de las letras (arriba o abajo del renglón), y en tablas y MAYÚSCULAS no sirve: los renglones se pegan con las líneas de la tabla y no hay letras con palo abajo.
+- **El arreglo**: en el modo de cámara «Vertical (al derecho)», si el texto no es claramente horizontal (`camTextAxis` ≠ `h`), se lee un recorte del centro con Tesseract **en el teléfono** en las 4 posiciones (`ocrBestRot`) y gana la que se lee mejor, con al menos un 25 % de ventaja.
+  - Una planilla apaisada queda apaisada y derecha; una hoja de costado se endereza; una que ya estaba bien no se toca.
+  - Si no se puede leer, sigue la regla anterior.
+- El recorte va en gris con contraste estirado (`ocrPrep`), sin agrandar ×4: con recortes enormes Tesseract no devolvía nada.
+- `S.ocrOrient=false` lo desactiva.
