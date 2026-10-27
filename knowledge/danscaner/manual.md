@@ -193,3 +193,6 @@ Tocá una imagen para cambiarle el tamaño o centrarla, y una tabla para sumarle
 ## Novedades v89
 - **Individual**: después de la foto siempre se ven Repetir, Agregar más y **Listo**.
 - **Cambiar el nombre al guardar o compartir**: en «Documento listo», en 📤 y arriba en la vista hoja por hoja tocás el nombre y le agregás lo que quieras. El nombre automático no pisa lo que escribiste.
+
+## Novedades v90
+- **Sombras sin raya negra**: si al sacar la foto quedó la sombra del teléfono, de la mano o de otra hoja, el PDF ya no muestra una raya o mancha negra en el borde de esa sombra.

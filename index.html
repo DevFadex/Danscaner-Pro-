@@ -2087,7 +2087,7 @@ function flatField(d,w,h){const B=Math.max(4,Math.round(Math.max(w,h)/220)),sw=M
  const blur=a=>{for(let p=0;p<2;p++){for(let y=0;y<sh;y++)for(let x=0;x<sw;x++){let s=0,c=0;for(let k=-1;k<=1;k++){const xx=x+k;if(xx>=0&&xx<sw){s+=a[y*sw+xx];c++}}tmp[y*sw+x]=s/c}
   for(let y=0;y<sh;y++)for(let x=0;x<sw;x++){let s=0,c=0;for(let k=-1;k<=1;k++){const yy=y+k;if(yy>=0&&yy<sh){s+=tmp[yy*sw+x];c++}}a[y*sw+x]=s/c}}};
  const lv=new Float32Array(n);for(let k=0;k<n;k++)lv[k]=bg[0][k]*.299+bg[1][k]*.587+bg[2][k]*.114;const srt=Float32Array.from(lv).sort(),paper=Math.max(60,srt[Math.floor(n*.9)]);
- for(const a of bg){morph(a,true);morph(a,false);blur(a);for(let k=0;k<n;k++)a[k]=Math.max(a[k],paper*.3,12)}
+ for(const a of bg){morph(a,true);morph(a,false);/* v90: en el borde de una sombra marcada (el teléfono, otra hoja, un doblez) el suavizado subía el fondo del lado oscuro y dejaba una raya negra: se usa el menor entre lo suavizado y el mínimo de los bloques vecinos */const mn=new Float32Array(n);for(let y=0;y<sh;y++)for(let x=0;x<sw;x++){let v=255;for(let yy=Math.max(0,y-1);yy<=Math.min(sh-1,y+1);yy++)for(let xx=Math.max(0,x-1);xx<=Math.min(sw-1,x+1);xx++){const t=a[yy*sw+xx];if(t<v)v=t}mn[y*sw+x]=v}blur(a);for(let k=0;k<n;k++)a[k]=Math.max(Math.min(a[k],mn[k]+4),paper*.3,12)}
  for(let y=0;y<h;y++){const fy=Math.max(0,Math.min(sh-1,(y+.5)/B-.5)),y0=fy|0,y1=Math.min(sh-1,y0+1),wy=fy-y0;
   for(let x=0;x<w;x++){const fx=Math.max(0,Math.min(sw-1,(x+.5)/B-.5)),x0=fx|0,x1=Math.min(sw-1,x0+1),wx=fx-x0,i=(y*w+x)*4,a=y0*sw+x0,b=y0*sw+x1,c=y1*sw+x0,e=y1*sw+x1;
    for(let ch=0;ch<3;ch++){const g=bg[ch],v=(g[a]*(1-wx)+g[b]*wx)*(1-wy)+(g[c]*(1-wx)+g[e]*wx)*wy;d[i+ch]=Math.min(255,d[i+ch]*255/v)}}}}
@@ -3457,7 +3457,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 4.5',APP_VER='89';
+const NEXA_VER='Nexa 4.5',APP_VER='90';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3575,7 +3575,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='89 · 23/10/2026';
+const BUILD='90 · 27/10/2026';
 /* Versión que ven los usuarios: se cambia a mano solo cuando se decide publicar una versión nueva para todos.
    El administrador ve la versión interna (BUILD) con cada cambio. */
 const PUBLIC_VER='1.2';

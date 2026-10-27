@@ -1779,6 +1779,18 @@ await test('v89: en Individual se ven Repetir, Agregar más y Listo en una fila;
   assert.equal(r.v0,'Planilla firmada');assert.equal(r.n3,'Planilla final');assert.equal(r.doc,'Planilla final');
 });
 
+await test('v90: el borde de una sombra marcada no queda como raya negra en el PDF (Magia Pro, Sin sombras, B/N)',async pg=>{
+  const r=await pg.evaluate(async()=>{const W=1200,H=1700,c=canvas(W,H),x=c.getContext('2d');x.fillStyle='rgb(222,220,214)';x.fillRect(0,0,W,H);
+    x.fillStyle='#222';x.font='30px Times New Roman';for(let i=0;i<30;i++)x.fillText('Texto impreso de prueba en la hoja '+i,80,100+i*50);
+    const id=x.getImageData(0,0,W,H),d=id.data;for(let y=0;y<H;y++)for(let xx=0;xx<W;xx++){if(y>1150+xx*0.15){const i=(y*W+xx)*4;d[i]*=.55;d[i+1]*=.55;d[i+2]*=.57}}x.putImageData(id,0,0);
+    const src=c.toDataURL('image/jpeg',.93),out={};
+    for(const f of ['magia','sinsombra','bn']){const k=await renderPage({id:'t',orig:src,quad:null,rot:0,filter:f,bright:0,contrast:0,overlays:[]},{maxSide:1700});const dd=k.getContext('2d').getImageData(0,0,k.width,k.height).data;
+      let dark=0,n=0,ink=0,ni=0;for(let xx=700;xx<k.width;xx+=2)for(let o=-12;o<=12;o++){const y=Math.round(1150+xx*0.15+o);if(y<0||y>=k.height)continue;const i=(y*k.width+xx)*4;n++;if(dd[i]+dd[i+1]+dd[i+2]<540)dark++}
+      for(let y=1476;y<1504;y++)for(let xx=80;xx<500;xx++){const i=(y*k.width+xx)*4;ni++;if(dd[i]+dd[i+1]+dd[i+2]<300)ink++}
+      out[f]={edge:dark/n,ink:ink/ni}}return out});
+  for(const [f,v] of Object.entries(r)){assert.ok(v.edge<0.01,f+': raya negra en el borde de la sombra ('+v.edge.toFixed(3)+')');assert.ok(v.ink>0.02,f+': se perdió el texto dentro de la sombra')}
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();

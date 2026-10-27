@@ -830,3 +830,9 @@ Comparación de dos videos con la misma hoja. En CamScanner se sigue sacando sin
   - en 📤 (Comprimir y enviar) también (`#sndName`): el archivo sale con el nombre escrito (`_nameSwap` ajusta el nombre en `download`, `share` y `shareWhatsApp`);
   - en la vista hoja por hoja el título se edita ahí mismo;
   - si ya lo cambiaste vos, el nombre automático no lo pisa (`DOC._userNamed`).
+
+## v90 · Sin raya negra en el borde de las sombras
+- **El problema**: cuando la foto tiene una sombra marcada (el teléfono, la mano, otra hoja o un doblez), en el PDF el borde de la sombra salía como una **raya o cuña negra**. En la foto de la app se veía solo una sombra gris.
+- **La causa**: `flatField` estima el color del papel por bloques. El suavizado final subía ese fondo del lado oscuro del borde, y al dividir por un fondo demasiado claro quedaba una franja negra.
+- **El arreglo**: el fondo de cada bloque es el menor entre lo suavizado y el mínimo de los bloques vecinos (+4). El lado de la sombra se aclara entero y el lado del papel queda blanco.
+- Aplica a los filtros que usan `flatField`: Magia Pro, Mejorar, Aclarar, Gris y Color en hojas de documento, Sin sombras, B/N y Ahorro.
