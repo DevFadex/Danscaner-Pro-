@@ -1063,7 +1063,8 @@ await test('Cámara estilo Adobe: barra de modos con guías, marco de cuatro pun
   await pg.click('#camPanel [data-cp="grid"]');assert.equal(await pg.evaluate(()=>!!S.grid),true);assert.ok(await pg.$('#camPanel .cq'),'se fue del panel compacto');
   await pg.click('#camPanel [data-cq="more"]');await pg.waitForSelector('#camPanel [data-cp4]');await pg.click('#camPanel [data-cq="less"]');await pg.waitForSelector('#camPanel .cq');
   /* carga giratoria azul */
-  assert.equal(await pg.evaluate(()=>{busy('Procesando…');const c=getComputedStyle($('#busy .spin')).borderTopColor;busy(false);return c}),'rgb(20, 115, 230)');
+  /* v92: con el diseño Neumórfico (de fábrica) la marca del indicador es el azul principal #2563EB; con los anteriores, el azul #1473E6 */
+  assert.equal(await pg.evaluate(()=>{busy('Procesando…');const c=getComputedStyle($('#busy .spin')).borderTopColor;busy(false);return c}),await pg.evaluate(()=>document.documentElement.classList.contains('look-neu'))?'rgb(37, 99, 235)':'rgb(20, 115, 230)');
   await pg.evaluate(()=>{while(Nav.stack.length)Nav._pop()});
 });
 
@@ -1275,11 +1276,13 @@ await test('Escáner v73: recorte con calidad OCR (≥ 2000 px) y filtros CLAHE,
 });
 
 await test('Diseño Expediente: tinta de sello, letra Atkinson, inicio como hoja con marcas de encuadre y vuelta a Celeste',async pg=>{
+  /* v92: el de fábrica pasó a «Neumórfico»; Expediente sigue disponible en Diseño */
+  await pg.evaluate(()=>{Object.assign(D(),JSON.parse(JSON.stringify(PRESETS.expediente)));delete D().label;saveS();applyDesign()});await W(500);/* deja terminar la transición del cambio de diseño */
   const r=await pg.evaluate(async()=>{go('home');await document.fonts.ready;const h=document.documentElement,hero=$('#v-home .hero'),cs=getComputedStyle(hero),bf=getComputedStyle(hero,'::before');
     return {look:h.classList.contains('look-exp'),font:getComputedStyle(document.body).fontFamily,loaded:document.fonts.check('700 16px "Atkinson Hyperlegible"'),tinta:getComputedStyle(h).getPropertyValue('--tinta').trim(),
       marks:bf.backgroundImage.split('linear-gradient').length-1,big:getComputedStyle($('#btn-camara')).backgroundColor,sub:$('#v-home .hero-s').textContent,
       metricsGap:getComputedStyle($('#homeMetrics')).columnGap,catUpper:false}});
-  assert.equal(r.look,true,'el diseño nuevo debe estar activo por defecto');assert.match(r.font,/Atkinson Hyperlegible/);assert.ok(r.loaded,'la letra Atkinson no cargó (debe venir de libs/fonts)');
+  assert.equal(r.look,true,'el diseño Expediente debe activarse al elegirlo');assert.match(r.font,/Atkinson Hyperlegible/);assert.ok(r.loaded,'la letra Atkinson no cargó (debe venir de libs/fonts)');
   assert.equal(r.tinta.toUpperCase(),'#2E3FAD');assert.equal(r.marks,8,'faltan las marcas de encuadre del inicio');assert.equal(r.big,'rgb(46, 63, 173)');
   assert.ok(!/·/.test(r.sub),'el subtítulo no debe ser una lista con puntos');
   /* quien quiera el diseño anterior lo elige en Diseño → Celeste Pro */
@@ -1336,7 +1339,8 @@ await test('A Excel tal cual: PDF con bordes y combinadas, PDF sin bordes, Word 
 
 await test('Herramientas: PDF a EXCEL, WORD a EXCEL y Foto a Excel con vista previa; accesos en el inicio',async pg=>{
   const r=await pg.evaluate(()=>({names:TOOLS.map(t=>t.name).filter(n=>/EXCEL|Excel/.test(n)),quick:[...document.querySelectorAll('#quickTools .tool')].map(b=>b.textContent.trim())}));
-  assert.deepEqual(r.names.filter(n=>n!=='EXCEL a PDF'),['PDF a EXCEL','WORD a EXCEL','Foto a Excel']);assert.ok(r.quick.includes('PDF a EXCEL')&&r.quick.includes('WORD a EXCEL'),'faltan en el inicio: '+r.quick);
+  /* v92: se sumaron EXCEL a WORD y EXCEL a JPG (desde Excel, no hacia Excel) */
+  assert.deepEqual(r.names.filter(n=>!/^EXCEL a /.test(n)),['PDF a EXCEL','WORD a EXCEL','Foto a Excel']);assert.ok(r.quick.includes('PDF a EXCEL')&&r.quick.includes('WORD a EXCEL'),'faltan en el inicio: '+r.quick);
   await pg.evaluate(()=>openTool(TOOLS.findIndex(t=>t.name==='WORD a EXCEL')));await pg.waitForSelector('#txRun');assert.ok(await pg.$('#txCam'),'falta escanear con la cámara');
   /* un Word de prueba por el selector de archivos */
   const b64=await pg.evaluate(async()=>{await loadLib('jszip');const W='xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"';const z=new JSZip();
@@ -1801,6 +1805,59 @@ await test('v91: una planilla apaisada sacada con el teléfono parado queda dere
     const out={};for(const [k,src] of [['cw',side(90)],['ccw',side(-90)],['upright',t.toDataURL('image/jpeg',.9)]]){const p=await makePage(src,{auto:false,filter:'original'});await camForceOrient(p,'port');out[k]=p.rot||0}return out});
   /* la foto girada 90° a la derecha se endereza con 270°, la girada a la izquierda con 90°, y la que ya está derecha no se toca */
   assert.deepEqual(r,{cw:270,ccw:90,upright:0});
+});
+
+await test('v92: diseño Neumórfico de fábrica (colores, relieve, presionado, herramientas con descripción) sin perder funciones',async pg=>{
+  const r=await pg.evaluate(async()=>{go('home');const h=document.documentElement,cs=getComputedStyle(h),tool=$('#v-home .tool'),hero=$('#v-home .hero');
+    const o={look:h.classList.contains('look-neu'),exp:h.classList.contains('look-exp'),bg:getComputedStyle(document.body).backgroundColor,ac:cs.getPropertyValue('--neu-blue').trim(),
+      toolSh:getComputedStyle(tool).boxShadow,heroSh:getComputedStyle(hero).boxShadow,navOn:getComputedStyle($('.nav.nav2 button.on')).boxShadow,preset:!!PRESETS.neumorfico};
+    go('tools');await new Promise(r=>setTimeout(r,300));const it=[...document.querySelectorAll('#v-tools .mitem[data-tool]')];o.items=it.length;o.withDesc=it.filter(b=>b.querySelector('.mi-d')&&b.querySelector('.mi-d').textContent.length>8).length;
+    /* las herramientas siguen abriendo */
+    const unir=it.find(b=>/Unir PDF/.test(b.textContent));unir.click();await new Promise(r=>setTimeout(r,500));o.opened=$('#toolTitle').textContent;for(let k=0;k<4&&Nav.top();k++)await Nav.back();
+    return o});
+  assert.ok(r.look&&!r.exp,'Neumórfico debe venir de fábrica');assert.equal(r.bg,'rgb(233, 238, 245)');assert.equal(r.ac,'#2563EB');assert.ok(r.preset);
+  assert.ok(/inset/.test(r.heroSh),'el inicio debe verse hundido (bandeja del escáner)');assert.ok(/rgb\(255, 255, 255\)/.test(r.toolSh)&&!/inset/.test(r.toolSh),'las tarjetas deben verse en relieve: '+r.toolSh);
+  assert.ok(/inset/.test(r.navOn),'la sección actual de la barra debe verse presionada');
+  assert.ok(r.items>30&&r.withDesc>=r.items-3,'faltan descripciones: '+r.withDesc+'/'+r.items);assert.equal(r.opened,'Unir PDF');
+  /* se puede volver a Expediente y otra vez a Neumórfico */
+  const sw=await pg.evaluate(()=>{const set=k=>{Object.assign(D(),JSON.parse(JSON.stringify(PRESETS[k])));delete D().label;saveS();applyDesign();const c=document.documentElement.classList;return [c.contains('look-neu'),c.contains('look-exp')]};return [set('expediente'),set('neumorfico')]});
+  assert.deepEqual(sw,[[false,true],[true,false]]);
+});
+
+await test('v92: Excel a PDF, Word y JPG tal cual (colores, bordes, combinadas, logo, configuración de página) y se acomoda arrastrando',async pg=>{
+  const r=await pg.evaluate(async()=>{await loadLib('exceljs');const wb=new ExcelJS.Workbook(),ws=wb.addWorksheet('Planilla');
+    ws.columns=[{width:6},{width:22},{width:14},{width:12}];ws.mergeCells('A1:D1');const t=ws.getCell('A1');t.value='PLANILLA DE PRUEBA';t.font={bold:true,size:14,color:{argb:'FFFFFFFF'}};t.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF2563EB'}};t.alignment={horizontal:'center',vertical:'middle'};ws.getRow(1).height=30;
+    const hd=ws.getRow(2);['N°','Nombre','Fecha','Monto'].forEach((h,i)=>{const c=hd.getCell(i+1);c.value=h;c.font={bold:true};c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFE7E6E6'}};c.border={top:{style:'thin'},left:{style:'thin'},bottom:{style:'medium'},right:{style:'thin'}}});
+    for(let i=0;i<60;i++){const row=ws.getRow(3+i);row.getCell(1).value=i+1;row.getCell(2).value='Persona de prueba '+(i+1);row.getCell(3).value='10/10/2026';row.getCell(4).value=1000+i*25.5;row.getCell(4).numFmt='#,##0.00';for(let c=1;c<=4;c++)row.getCell(c).border={left:{style:'thin'},right:{style:'thin'},bottom:{style:'hair'}}}
+    const lc=canvas(120,60),lx=lc.getContext('2d');lx.fillStyle='#DC2626';lx.fillRect(0,0,120,60);const png=lc.toDataURL('image/png');const id=wb.addImage({base64:png,extension:'png'});ws.addImage(id,{tl:{col:3.1,row:0.1},ext:{width:60,height:30}});
+    ws.pageSetup={orientation:'landscape',paperSize:9,fitToPage:true,fitToWidth:1,fitToHeight:0,printTitlesRow:'2:2',margins:{left:.4,right:.4,top:.5,bottom:.5,header:.3,footer:.3},horizontalCentered:true};
+    const buf=await wb.xlsx.writeBuffer();const file=new File([buf],'planilla prueba.xlsx',{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});window._xf=file;
+    await lazyMod('excel');const X=__mods.xl;const book=await X.load(file);const sh=book.sheets[0];const c11=sh.cells.get('1,1');
+    const o={sheet:'Planilla',size:'a4',land:true,fit:'ancho',zoom:100,margin:10,range:'',rep:1,grid:false,center:true,vcenter:false,num:false,dx:0,dy:0};const P=X.paginate(sh,o);
+    const pe=X.pageEl(sh,P,P.pages[0],0,{...o,_total:P.pages.length});const html=pe.innerHTML;
+    const docx=await X.toDocx([{sh,P}],o);await loadLib('jszip');const z=await JSZip.loadAsync(docx);const xml=await z.file('word/document.xml').async('string');const media=Object.keys(z.files).filter(n=>/^word\/media\/.+/.test(n));
+    await loadLib('mammoth');const mm=await mammoth.convertToHtml({arrayBuffer:await docx.arrayBuffer()});
+    /* mover la planilla corre la tabla de todas las hojas */
+    const P2=X.paginate(sh,{...o,dx:15,dy:5});
+    return {styled:book.styled,merges:sh.merges.length,b:c11.s.b,bg:c11.s.bg,fc:c11.s.fc,ha:c11.s.ha,w2:sh.cols[2].w,imgs:sh.images.length,setup:sh.setup,pages:P.pages.length,rep2:P.pages[1]&&P.pages[1].rows[0],
+      html:{colspan:/colspan="4"/.test(html),bg:/background:#2563EB/i.test(html),img:/<img class="xq-img"/.test(html),num:/1\.025,50/.test(html)},
+      docx:{span:/<w:gridSpan w:val="4"\/>/.test(xml),fill:/w:fill="2563EB"/.test(xml),bold:/<w:b\/>/.test(xml),hdr:/<w:tblHeader\/>/.test(xml),land:/w:orient="landscape"/.test(xml),draw:/<wp:anchor/.test(xml),media:media.length,tbl:/<table>/.test(mm.value)&&/PLANILLA DE PRUEBA/.test(mm.value)},
+      move:[Math.round(P2.pages[0].offX-P.pages[0].offX),Math.round(P2.pages[1].offY-P.pages[1].offY)]}});
+  assert.equal(r.styled,true);assert.equal(r.merges,1);assert.ok(r.b&&r.bg==='2563EB'&&r.fc==='FFFFFF'&&r.ha==='center','estilo del título: '+JSON.stringify(r));assert.equal(r.w2,159);assert.equal(r.imgs,1);
+  assert.ok(r.setup.land&&r.setup.size==='a4'&&r.setup.fit==='ancho'&&r.setup.center&&r.setup.margin===10,'configuración de página: '+JSON.stringify(r.setup));
+  assert.ok(r.pages>=2,'60 filas en horizontal deberían ocupar más de una hoja');assert.equal(r.rep2,1,'la fila de título se repite arriba de cada hoja');
+  for(const [k,v] of Object.entries(r.html))assert.ok(v,'vista previa sin '+k);for(const [k,v] of Object.entries(r.docx))assert.ok(v,'Word sin '+k);
+  assert.deepEqual(r.move,[57,19]);
+  /* la pantalla: Excel a WORD abre con Word elegido, se arrastra la planilla y sale el .docx */
+  await pg.evaluate(()=>openTool(TOOLS.findIndex(t=>t.name==='EXCEL a WORD'),[window._xf]));await W(2500);
+  const u=await pg.evaluate(()=>({fmt:($('.xq-fmt .on')||{}).textContent,run:$('.run').textContent,or:($('.xq-or .on')||{}).textContent,pages:document.querySelectorAll('.xq-hold').length,info:$('.xq-info').textContent}));
+  assert.equal(u.fmt,'Word');assert.equal(u.run,'Generar Word');assert.equal(u.or,'Horizontal');assert.ok(u.pages>=2,JSON.stringify(u));
+  const inn=await pg.$('.xq-hold .xq-in');const bb=await inn.boundingBox();await pg.mouse.move(bb.x+40,bb.y+20);await pg.mouse.down();await pg.mouse.move(bb.x+90,bb.y+60,{steps:6});await pg.mouse.up();await W(600);
+  const moved=await pg.evaluate(()=>parseFloat($('.xq-hold .xq-in').style.left));assert.ok(moved>bb.x-1000&&moved>0,'no se movió');
+  await pg.click('.run');await pg.waitForSelector('.result [data-dl]',{timeout:20000});assert.match(await pg.textContent('.result'),/\.docx/);
+  /* JPG: una imagen por hoja */
+  await pg.click('.xq-fmt [data-v="jpg"]');assert.equal(await pg.textContent('.run'),'Generar JPG');await pg.click('.run');await pg.waitForFunction(()=>/\.jpg/.test($('.result').textContent),null,{timeout:30000});
+  assert.ok(await pg.evaluate(()=>document.querySelectorAll('.result [data-dl]').length)>=2,'una imagen por hoja');
 });
 
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));

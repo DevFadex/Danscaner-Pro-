@@ -844,3 +844,19 @@ Comparación de dos videos con la misma hoja. En CamScanner se sigue sacando sin
   - Si no se puede leer, sigue la regla anterior.
 - El recorte va en gris con contraste estirado (`ocrPrep`), sin agrandar ×4: con recortes enormes Tesseract no devolvía nada.
 - `S.ocrOrient=false` lo desactiva.
+
+## v92 · Diseño Neumórfico y Excel a PDF, Word o JPG «tal cual»
+- **Diseño** (`html.look-neu`, preset «Neumórfico»):
+  - **Colores**: fondo #E9EEF5, superficies #F5F7FA, azul #2563EB y #60A5FA, texto #172033 y #64748B; además verde, naranja y rojo para los estados. La versión oscura usa fondo #1C2230.
+  - **Relieve**: luz desde arriba a la izquierda. Las tarjetas y los botones sobresalen; lo presionado o elegido (la sección de la barra inferior, los chips, las opciones) se hunde.
+  - **Inicio**: es una «bandeja de escáner» hundida, con una pasada de luz al abrir la app (se apaga con «reducir movimiento» o sin animaciones).
+  - **Herramientas**: cada una muestra para qué sirve en una línea.
+  - **Alcance**: aplica a toda la app (inicio, documentos, herramientas, ajustes, hojas modales, editor, pantallas de herramientas, avisos y espera) solo con CSS; no cambia ninguna función. La cámara queda oscura a propósito, para ver bien la foto.
+  - Es el diseño de fábrica para quien tenía «Expediente» sin tocar (`S.v92neu`). Se vuelve a Expediente o Celeste desde Ajustes → Diseño.
+- **Excel** (`mod/excel.js`, reescrito):
+  - **Lectura**: con ExcelJS, que trae colores, letras, bordes, celdas combinadas, anchos, altos, logos, área de impresión y la configuración de página del archivo (orientación, papel, ajuste, márgenes, centrado, filas de título). Los números salen con el formato de la celda y separadores argentinos. Los .xls, .csv y .ods van por SheetJS, solo con los datos.
+  - **Antes de convertir**: formato (PDF, Word o JPG), hoja, tamaño, orientación, escala, rango, márgenes, filas de título que se repiten, cuadrícula, centrado, numeración y **arrastrar la planilla** en la vista previa (corre todas las hojas igual).
+  - **Word**: tabla con los mismos anchos, colores, bordes y combinadas, más el logo anclado en su lugar.
+  - **JPG**: una imagen por hoja.
+  - Herramientas nuevas: **EXCEL a WORD** y **EXCEL a JPG**.
+- Las herramientas que se cargan aparte (Excel, Word) ahora reciben el archivo que llega con «Seguir con otra herramienta».
