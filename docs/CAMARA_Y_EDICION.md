@@ -860,3 +860,17 @@ Comparación de dos videos con la misma hoja. En CamScanner se sigue sacando sin
   - **JPG**: una imagen por hoja.
   - Herramientas nuevas: **EXCEL a WORD** y **EXCEL a JPG**.
 - Las herramientas que se cargan aparte (Excel, Word) ahora reciben el archivo que llega con «Seguir con otra herramienta».
+
+## v93 · Sello de recibido, Foliar expediente, temporizador y pantalla encendida
+- **Sello de recibido** (`uiSello`):
+  - recuadro con «RECIBIDO» (el texto se puede cambiar), fecha, hora, la oficina (se recuerda en `S.selloOfi`) y un renglón para firmar opcional;
+  - va en una de las cuatro esquinas, en la primera, la última o todas las páginas, y en azul, negro, rojo o violeta;
+  - la vista previa usa el mismo cálculo que el PDF (`selloBox`);
+  - es texto real del PDF (pdf-lib), no una imagen.
+- **Foliar expediente** (`uiFoliar`):
+  - número de foja desde el que elijas, como «7», «Fs. 7» o «Foja 7», sin marco, con recuadro o con círculo, arriba a la derecha (o donde elijas);
+  - con «doble faz» se folia solo el frente de cada hoja (las páginas impares).
+- **Cámara**:
+  - **temporizador** de 3 o 5 s en ⚙️ («Temporizador»). Muestra la cuenta en pantalla, el teléfono vibra en cada segundo, y si tocás el disparador durante la cuenta se cancela;
+  - **pantalla encendida** mientras la cámara está abierta (Screen Wake Lock, si el navegador lo permite).
+- Las vistas previas que se arman de forma asíncrona usan un turno (`tok`): una vieja no pisa a la nueva.
