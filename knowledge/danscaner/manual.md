@@ -199,3 +199,7 @@ Tocá una imagen para cambiarle el tamaño o centrarla, y una tabla para sumarle
 
 ## Novedades v91
 - **Planillas y tablas apaisadas**: aunque las saques con el teléfono parado, quedan derechas y apaisadas. La app lee un pedacito en el teléfono, sin internet, para saber hacia dónde va el texto. Puede tardar unos segundos más en esas hojas.
+
+## Novedades v92
+- **Diseño nuevo «Neumórfico»**: superficies claras con relieve suave y azul para lo importante; lo que tocás se ve hundido. Si preferís el anterior: Ajustes → Diseño → Expediente.
+- **Excel a PDF, Word o JPG tal cual**: respeta colores, bordes, celdas combinadas, logos y la configuración de impresión del archivo. Antes de convertir elegís hoja, tamaño, orientación, escala y márgenes, y podés arrastrar la planilla para acomodarla en la hoja.

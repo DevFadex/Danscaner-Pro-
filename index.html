@@ -1931,7 +1931,7 @@ function adminSheet(){return modCall('admin','adminSheet',this,arguments)}
 function showText(){return modCall('texto','showText',this,arguments)}
 function pptxRender(){return modCall('pptx','pptxRender',this,arguments)}
 function designSheet(){return modCall('diseno','designSheet',this,arguments)}
-function uiExcelPdf(el){el.innerHTML='<div class="muted" style="padding:20px;text-align:center">Cargando…</div>';lazyMod('excel').then(()=>__mods.uiExcelPdf(el)).catch(e=>{el.innerHTML='<div class="hint">'+esc(e.message)+'</div>'})}
+function uiExcelPdf(el,fmt){el.innerHTML='<div class="muted" style="padding:20px;text-align:center">Cargando…</div>';lazyMod('excel').then(()=>__mods.uiExcelPdf(el,typeof fmt==='string'?fmt:undefined)).catch(e=>{el.innerHTML='<div class="hint">'+esc(e.message)+'</div>'})}
 
 
 /* ============================================================
@@ -3457,7 +3457,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 4.5',APP_VER='91';
+const NEXA_VER='Nexa 4.5',APP_VER='92';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3575,7 +3575,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='91 · 27/10/2026';
+const BUILD='92 · 04/11/2026';
 /* Versión que ven los usuarios: se cambia a mano solo cuando se decide publicar una versión nueva para todos.
    El administrador ve la versión interna (BUILD) con cada cambio. */
 const PUBLIC_VER='1.2';
@@ -6947,6 +6947,119 @@ const _swapName=n=>{const w=_nameSwap;if(!w||typeof n!=='string')return n;const 
    const top=Nav.stack[Nav.stack.length-1];const oc=top&&top.onClose;if(top)top.onClose=function(){setTimeout(()=>{if(_nameSwap===sw)_nameSwap=null},4000);return oc&&oc.apply(this,arguments)}}}catch(e){console.warn('nombre',e)}return r}}
 /* si el nombre automático llega con «Documento listo» abierto, se actualiza el campo (salvo que ya lo estés escribiendo) */
 {const _an=docAutoName;docAutoName=async function(d){if(d&&d._userNamed)return null;const r=await _an.apply(this,arguments);try{if(r&&DOC===d)for(const id of ['fnName','sndName']){const i=document.getElementById(id);if(i&&document.activeElement!==i)i.value=r}}catch(e){}return r}}
+
+/* ===================== v92 · Excel a PDF, Word o JPG «tal cual», acomodando la planilla en la hoja (mod/excel.js) ===================== */
+(function(){const i=TOOLS.findIndex(t=>t.name==='EXCEL a PDF');if(i<0)return;const base=TOOLS[i];
+ TOOLS[i]={...base,desc:'La planilla a PDF tal cual: colores, letras, bordes, celdas combinadas y logos. Antes de convertir la acomodás en la hoja.',ui:el=>uiExcelPdf(el,'pdf')};
+ TOOLS.splice(i+1,0,{...base,name:'EXCEL a WORD',desc:'La planilla a Word como una tabla igual a la original, lista para editar. Elegís hoja, escala y márgenes antes.',ui:el=>uiExcelPdf(el,'docx')},
+  {...base,name:'EXCEL a JPG',desc:'Cada hoja de la planilla como imagen JPG, para mandar por WhatsApp. Se acomoda en la hoja antes de convertir.',ui:el=>uiExcelPdf(el,'jpg')});
+ try{TOOL_ICO['EXCEL a WORD']='word';TOOL_ICO['EXCEL a JPG']='image'}catch(e){}
+ try{CHAIN_ACC['EXCEL a PDF']=CHAIN_ACC['EXCEL a WORD']=CHAIN_ACC['EXCEL a JPG']='.xlsx,.xls,.xlsm,.csv,.ods'}catch(e){}
+ try{renderTools()}catch(e){}})();
+/* las herramientas que se cargan aparte (Excel, Word…) arman su selector de archivos un momento después: el archivo que llega de otra herramienta espera a que aparezca */
+{const _ot=openTool;openTool=function(i,pre){const r=_ot.apply(this,arguments);if(pre&&pre.length&&!Source.lastFP){const t0=Date.now();const iv=setInterval(()=>{const fp=Source.lastFP;
+  if(fp&&Nav.isOpen('toolScreen')){clearInterval(iv);if(fp.files.length)return;const ok=pre.filter(f=>acceptOk(f,fp.accept));if(ok.length)fp.add(fp.multi?ok:[ok[0]])}else if(Date.now()-t0>8000||!Nav.isOpen('toolScreen'))clearInterval(iv)},80)}return r}}
+/* ===================== v92 · diseño «Neumórfico» ===================== *
+ * Look nuevo como clase html.look-neu (igual que look-exp): solo presentación; no cambia ninguna función.
+ * Luz desde arriba a la izquierda: cada superficie levanta con una sombra clara arriba-izquierda y una oscura abajo-derecha;
+ * lo presionado o elegido se hunde (sombra interior). Lo memorable: el inicio es una «bandeja de escáner» hundida con una pasada de luz al abrir. */
+PRESETS.neumorfico={label:'Neumórfico',skin:'aqua',look:'neu',color:'#2563EB',shape:'round',ico:22,stroke:1.9,iconStyle:'line',anim:true,uifont:'atk',density:'normal',zoom:1,bg:'plano',contrast:false,docView:'list'};
+Object.assign(DESIGN_DEF,{look:'neu',color:'#2563EB',uifont:'atk',stroke:1.9});
+{const _ad=applyDesign;applyDesign=function(){const r=_ad.apply(this,arguments);try{const d=D(),on=d.look==='neu'&&d.skin==='aqua',h=document.documentElement;h.classList.toggle('look-neu',on);if(on)h.classList.remove('look-exp')}catch(e){}return r}}
+/* una sola vez: quien tenía el diseño de fábrica «Expediente» sin tocar pasa al nuevo; quien lo personalizó lo conserva (vuelve desde Ajustes → Diseño) */
+(function(){try{if(S.v92neu!==true){const d=D();if(d.skin==='aqua'&&d.look==='exp'&&(d.color||'')==='#2E3FAD'){d.look='neu';d.color='#2563EB'}S.v92neu=true;saveS()}applyDesign()}catch(e){console.warn('diseño v92',e)}})();
+/* herramientas: cada una muestra para qué sirve en una línea */
+const toolShort=t=>{let d=String(t&&t.desc||'').replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim();const m=d.match(/^(.{10,90}?[.:;])(\s|$)/);d=m?m[1]:d.slice(0,80);return d.replace(/[.:;]$/,'')};
+function toolDescs(){try{$$('#v-tools .mitem[data-tool]').forEach(b=>{if(b.querySelector('.mi-d'))return;const t=TOOLS[+b.dataset.tool];const d=toolShort(t);if(!d)return;const sp=b.querySelector('span:not(.ic)');if(sp)sp.insertAdjacentHTML('beforeend','<small class="mi-d">'+esc(d)+'</small>')})}catch(e){}}
+{const _rt=renderTools;renderTools=function(){const r=_rt.apply(this,arguments);toolDescs();return r}}toolDescs();
+document.head.insertAdjacentHTML('beforeend','<style id="v92Css">'
+/* tokens */
++'html.look-neu{--neu-bg:#E9EEF5;--neu-sf:#F5F7FA;--neu-hi:#FFFFFF;--neu-lo:#C3CCDA;--neu-lo2:#D3DAE5;--neu-blue:#2563EB;--neu-blue2:#60A5FA;--neu-tx:#172033;--neu-tx2:#64748B;--neu-ok:#16A34A;--neu-warn:#F59E0B;--neu-err:#DC2626;'
+ +'--neu-up:6px 6px 14px var(--neu-lo),-6px -6px 14px var(--neu-hi);--neu-up-s:3px 3px 8px var(--neu-lo),-3px -3px 8px var(--neu-hi);--neu-in:inset 4px 4px 9px var(--neu-lo),inset -4px -4px 9px var(--neu-hi);--neu-in-s:inset 2px 2px 5px var(--neu-lo),inset -2px -2px 5px var(--neu-hi);'
+ +'--bg:#E9EEF5;--bg2:#F5F7FA;--bg-principal:#F5F7FA;--bg3:#E3E9F1;--bg4:#D3DAE5;--line:#D6DDE7;--tx:#172033;--texto-principal:#172033;--tx2:#64748B;--stage:#E3E9F1;--soft:#E3ECFD;--soft-line:#BFD3FB;--tinta:#2563EB;--tinta-suave:#E3ECFD;--ac:#2563EB;--color-primario:#2563EB}'
++'html.look-neu[data-theme="dark"]{--neu-bg:#1C2230;--neu-sf:#222A3A;--neu-hi:#28324A;--neu-lo:#121722;--neu-lo2:#171D2A;--neu-blue:#60A5FA;--neu-blue2:#93C5FD;--neu-tx:#E6EBF3;--neu-tx2:#9AA6BA;'
+ +'--bg:#1C2230;--bg2:#222A3A;--bg-principal:#222A3A;--bg3:#262F41;--bg4:#2E3850;--line:#2E3850;--tx:#E6EBF3;--texto-principal:#E6EBF3;--tx2:#9AA6BA;--stage:#161B26;--soft:#1E3157;--soft-line:#2E4C80;--tinta:#60A5FA;--tinta-suave:#1E3157;--ac:#60A5FA;--color-primario:#60A5FA!important}'
++'html.look-neu[data-skin] body{background:var(--neu-bg)!important;background-image:none!important;color:var(--neu-tx)}'
++'html.look-neu body,html.look-neu button,html.look-neu input,html.look-neu select,html.look-neu textarea{font-family:var(--ui-font)}'
+/* barra superior y pantallas: superficie levantada apenas */
++'html.look-neu[data-skin] .top,html.look-neu[data-skin] .shead{background:var(--neu-bg)!important;-webkit-backdrop-filter:none;backdrop-filter:none;border-bottom:0!important;box-shadow:0 6px 14px -10px var(--neu-lo)!important;color:var(--neu-tx)}'
++'html.look-neu[data-skin] #topTitle{font-weight:700;letter-spacing:-.01em;color:var(--neu-tx)}'
++'html.look-neu[data-skin] .screen{background:var(--neu-bg)}'
++'html.look-neu[data-skin] .shead .ib,html.look-neu[data-skin] .top .ib{background:var(--neu-bg);color:var(--neu-tx);box-shadow:var(--neu-up-s);border-radius:14px;border:0}'
++'html.look-neu[data-skin] .shead .ib.pri,html.look-neu[data-skin] .ib.pri{background:var(--neu-blue);color:#fff;box-shadow:var(--neu-up-s),inset 0 1px 0 rgba(255,255,255,.25)}'
++'html.look-neu[data-skin] .nx-top{background:var(--neu-bg)!important;color:var(--neu-blue)!important;box-shadow:var(--neu-up-s)!important;border:0!important}'
+/* lo memorable: el inicio es la bandeja del escáner, hundida, con una pasada de luz al abrir la app */
++'html.look-neu[data-skin] .hero{position:relative;overflow:hidden;background:var(--neu-bg);border:0;border-radius:28px;box-shadow:var(--neu-in);padding:28px 22px 24px}'
++'html.look-neu[data-skin] .hero::before{content:"";position:absolute;left:0;right:0;top:0;height:46%;pointer-events:none;inset:auto 0 auto 0;border-radius:0;width:auto;transform:translateY(-110%);filter:none;opacity:1;'
+ +'background:linear-gradient(to bottom,transparent,color-mix(in srgb,var(--neu-blue2) 22%,transparent) 82%,var(--neu-blue2) 99%,transparent);animation:neuScan 1.6s .35s cubic-bezier(.45,.05,.4,1) 1 forwards}'
++'@keyframes neuScan{0%{transform:translateY(-110%)}100%{transform:translateY(230%)}}'
++'html.look-neu[data-skin] .hero::after{content:none!important;display:none!important}'
++'html.look-neu[data-skin] .hero-t{font-size:28px;line-height:1.1;font-weight:700;letter-spacing:-.02em;color:var(--neu-tx);max-width:15ch;position:relative}'
++'html.look-neu[data-skin] .hero-s{font-size:15px;line-height:1.45;color:var(--neu-tx2);max-width:34ch;margin-top:8px;position:relative}'
++'html.look-neu[data-skin] .hero-btns{position:relative;gap:12px}'
++'html.look-neu[data-skin] .hbtn{background:var(--neu-bg);border:0;box-shadow:var(--neu-up);border-radius:18px;color:var(--neu-tx);transition:box-shadow .18s,transform .18s}'
++'html.look-neu[data-skin] .hbtn i,html.look-neu[data-skin] .hbtn [data-ico]{color:var(--neu-blue)}'
++'html.look-neu[data-skin] .hbtn span{font-weight:700}html.look-neu[data-skin] .hbtn small{color:var(--neu-tx2)}'
++'html.look-neu[data-skin] .hbtn.big{background:linear-gradient(145deg,#3B74F0,#1F55D6);color:#fff;box-shadow:var(--neu-up),inset 0 1px 0 rgba(255,255,255,.28)}'
++'html.look-neu[data-skin] .hbtn.big small{color:#DCE7FF}html.look-neu[data-skin] .hbtn.big .icono-camara{background:#fff}'
++'html.look-neu[data-skin][data-theme="dark"] .hbtn.big{background:linear-gradient(145deg,#3B82F6,#2563EB)}'
+/* tarjetas: asistente, números, herramientas, documentos */
++'html.look-neu[data-skin] .aicard,html.look-neu[data-skin] .metrics,html.look-neu[data-skin] #docList .item,html.look-neu[data-skin] .set-list,html.look-neu[data-skin] .set-prof{background:var(--neu-bg)!important;border:0!important;box-shadow:var(--neu-up)!important;border-radius:20px!important}'
++'html.look-neu[data-skin] .aicard-ic{background:var(--neu-bg)!important;color:var(--neu-blue)!important;box-shadow:var(--neu-in-s)!important}'
++'html.look-neu[data-skin] .aicard-btn{background:var(--neu-bg)!important;color:var(--neu-blue)!important;border:0!important;box-shadow:var(--neu-up-s)!important;border-radius:14px!important;font-weight:700}'
++'html.look-neu[data-skin] .metrics{gap:0!important;overflow:hidden}html.look-neu[data-skin] .metric{background:transparent!important;border:0!important;box-shadow:none!important}'
++'html.look-neu[data-skin] .metric+.metric{border-left:1px solid var(--neu-lo2)!important}'
++'html.look-neu[data-skin] .metric strong{color:var(--neu-tx)!important;font-weight:700;font-variant-numeric:tabular-nums}html.look-neu[data-skin] .metric span{color:var(--neu-tx2)!important}'
++'html.look-neu[data-skin] .sec{font-size:18px;font-weight:700;letter-spacing:-.01em;color:var(--neu-tx)}html.look-neu[data-skin] .sec a{background:none;color:var(--neu-blue);font-weight:700;font-size:14px}'
++'html.look-neu[data-skin] .catt,html.look-neu[data-skin] .cph{text-transform:none!important;letter-spacing:0!important;font-size:15px!important;font-weight:700!important;color:var(--neu-tx)!important}'
++'html.look-neu[data-skin] .tool{background:var(--neu-bg);border:0;border-radius:20px;box-shadow:var(--neu-up);color:var(--neu-tx);transition:box-shadow .18s,transform .18s}'
++'html.look-neu[data-skin] .tool .ic,html.look-neu[data-skin] .mitem .ic,html.look-neu[data-skin] .set-ic{background:var(--neu-bg)!important;color:var(--neu-blue)!important;box-shadow:var(--neu-in-s)!important;border-radius:14px}'
++'html.look-neu[data-skin] .tool .ic svg,html.look-neu[data-skin] .mitem .ic svg,html.look-neu[data-skin] .set-ic svg{color:var(--neu-blue);stroke:currentColor}'
++'html.look-neu[data-skin] .mitem{background:var(--neu-bg);border:0;border-radius:18px;box-shadow:var(--neu-up-s);margin:0 0 12px;padding:10px 12px;color:var(--neu-tx);transition:box-shadow .18s}'
++'html.look-neu[data-skin] .mitem>span:not(.ic){display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;font-weight:700}'
++'html.look-neu .mi-d{font-weight:400;font-size:13px;line-height:1.3;color:var(--neu-tx2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}'
++'html.look-neu[data-skin] #docList .item{padding:10px;margin-bottom:12px}'
++'html.look-neu[data-skin] .set-sec{text-transform:none;letter-spacing:0;font-size:14px;color:var(--neu-tx2);font-weight:700}'
++'html.look-neu[data-skin] .set-row{background:transparent;border-color:var(--neu-lo2)!important}html.look-neu .sp-av{background:var(--neu-blue);color:#fff}'
+/* estados: se hunde al tocar o al estar elegido; deshabilitado queda plano */
++'html.look-neu[data-skin] :is(.tool,.mitem,.hbtn,.aicard-btn,.btn,.chip,.ib,.tb,.set-row,.cptog,.src-opt,.compopt,.sndopt,#docList .item):active{box-shadow:var(--neu-in-s)!important;transform:scale(.985)}'
++'html.look-neu[data-skin] :is(.btn,.chip,.ib,.tb,.hbtn,.tool,.mitem):disabled{box-shadow:none!important;opacity:.5}'
+/* barra inferior: una bandeja levantada; la sección actual se hunde; el botón de escanear sobresale en azul */
++'html.look-neu[data-skin] .nav.nav2{background:var(--neu-bg)!important;border-top:0!important;box-shadow:0 -6px 16px -8px var(--neu-lo)!important}'
++'html.look-neu[data-skin] .nav.nav2 button{color:var(--neu-tx2);border-radius:16px;transition:box-shadow .18s,color .18s}'
++'html.look-neu[data-skin] .nav.nav2 button.on{color:var(--neu-blue);box-shadow:var(--neu-in-s);background:var(--neu-bg)}'
++'html.look-neu[data-skin] .fab.fabcam{background:linear-gradient(145deg,#3B74F0,#1F55D6)!important;box-shadow:0 0 0 7px var(--neu-bg),6px 8px 16px var(--neu-lo),-4px -4px 12px var(--neu-hi)!important;color:#fff}'
+/* botones, chips, campos */
++'html.look-neu[data-skin] .btn{background:var(--neu-bg);border:0!important;box-shadow:var(--neu-up-s);border-radius:16px;color:var(--neu-tx);font-weight:700;transition:box-shadow .18s,transform .18s}'
++'html.look-neu[data-skin] .btn.pri{background:linear-gradient(145deg,#3B74F0,#1F55D6);color:#fff;box-shadow:var(--neu-up-s),inset 0 1px 0 rgba(255,255,255,.25)}'
++'html.look-neu[data-skin][data-theme="dark"] .btn.pri{background:linear-gradient(145deg,#3B82F6,#2563EB);color:#fff}'
++'html.look-neu[data-skin] .btn.red{background:var(--neu-bg);color:var(--neu-err)}'
++'html.look-neu[data-skin] .chip{background:var(--neu-bg);color:var(--neu-tx);border:0;box-shadow:var(--neu-up-s);border-radius:999px}'
++'html.look-neu[data-skin] .chip.on{background:var(--neu-bg);color:var(--neu-blue);box-shadow:var(--neu-in-s);font-weight:700}'
++'html.look-neu[data-skin] :is(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=file]),select,textarea){background:var(--neu-bg)!important;border:0!important;box-shadow:var(--neu-in-s)!important;border-radius:14px!important;color:var(--neu-tx)!important}'
++'html.look-neu[data-skin] :is(input,select,textarea):focus{outline:2px solid color-mix(in srgb,var(--neu-blue) 65%,transparent)!important;outline-offset:2px}'
++'html.look-neu[data-skin] input[type=range]{accent-color:var(--neu-blue)}html.look-neu[data-skin] input[type=checkbox],html.look-neu[data-skin] input[type=radio]{accent-color:var(--neu-blue)}'
+/* pantallas de herramientas y hojas modales */
++'html.look-neu[data-skin] .sheet{background:var(--neu-bg)!important;border:0;box-shadow:0 -10px 30px -12px rgba(23,32,51,.35)!important;border-radius:26px 26px 0 0}'
++'html.look-neu[data-skin] .sh-grab i{background:var(--neu-lo)}'
++'html.look-neu[data-skin] #sheet .shh [data-back]{background:var(--neu-bg);box-shadow:var(--neu-up-s)}'
++'html.look-neu[data-skin] :is(.drop,.src-opt,.compopt,.sndopt,.cptog,.frow,.rcard,.opt,.tdesc,.hint){background:var(--neu-bg)!important;border:0!important;box-shadow:var(--neu-up-s)!important;border-radius:18px!important}'
++'html.look-neu[data-skin] .drop{box-shadow:var(--neu-in)!important;border-radius:22px!important}'
++'html.look-neu[data-skin] :is(.compopt,.sndopt,.src-opt).on{box-shadow:var(--neu-in-s)!important;color:var(--neu-blue)}'
++'html.look-neu[data-skin] .tdesc{box-shadow:none!important;background:transparent!important;color:var(--neu-tx2)}'
++'html.look-neu[data-skin] .sfoot{background:var(--neu-bg)!important;border-top:0!important;box-shadow:0 -6px 16px -8px var(--neu-lo)}'
++'html.look-neu[data-skin] .sfoot .tb{background:var(--neu-bg);border-radius:16px;box-shadow:var(--neu-up-s);color:var(--neu-tx)}'
++'html.look-neu[data-skin] .sfoot .tb b,html.look-neu[data-skin] .sfoot .tb svg{color:var(--neu-blue)}'
++'html.look-neu[data-skin] .pages .pg,html.look-neu[data-skin] .pages>*{border-radius:16px}'
+/* avisos y espera: tarjeta levantada; el indicador de proceso es un anillo hundido con la marca azul */
++'html.look-neu #toast{background:var(--neu-tx);color:#fff;border-radius:16px;box-shadow:0 10px 24px -10px rgba(23,32,51,.5)}'
++'html.look-neu #busy .bx{background:var(--neu-bg);color:var(--neu-tx);border-radius:22px;box-shadow:var(--neu-up)}'
++'html.look-neu #busy .spin{border-color:var(--neu-lo2);border-top-color:var(--neu-blue);box-shadow:var(--neu-in-s)}'
+/* foco visible con teclado y movimiento reducido */
++'html.look-neu :focus-visible{outline:3px solid color-mix(in srgb,var(--neu-blue) 70%,transparent);outline-offset:3px}'
++'@media (prefers-reduced-motion:reduce){html.look-neu *{transition:none!important}html.look-neu[data-skin] .hero::before{animation:none;display:none}}'
++'html.look-neu.no-anim[data-skin] .hero::before{animation:none;display:none}'
++'</style>');
 
 </script>
 </body>
