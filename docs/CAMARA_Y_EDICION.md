@@ -874,3 +874,12 @@ Comparación de dos videos con la misma hoja. En CamScanner se sigue sacando sin
   - **temporizador** de 3 o 5 s en ⚙️ («Temporizador»). Muestra la cuenta en pantalla, el teléfono vibra en cada segundo, y si tocás el disparador durante la cuenta se cancela;
   - **pantalla encendida** mientras la cámara está abierta (Screen Wake Lock, si el navegador lo permite).
 - Las vistas previas que se arman de forma asíncrona usan un turno (`tok`): una vieja no pisa a la nueva.
+
+## v94 · «Neumórfico Premium»
+- Capa sobre el look `look-neu`, con el estilo que trajo el usuario:
+  - fondo #E8EDF4, texto #0F172A, superficies blancas (#F7F9FC) que sobresalen, relieve un poco más marcado y azul en degradé #3B82F6 → #1D4ED8;
+  - números grandes y más aire entre secciones;
+  - el botón redondo de escanear mide 64 px en el celular.
+- El inicio queda con **Lote, Galería e Importar**; el botón grande de escanear se oculta (hace lo mismo que el botón redondo de la barra, y en la PC está el botón ancho del costado).
+- Nexa se muestra como insignia «Nexa AI · solo admin» (el botón ya lo ve solo el administrador).
+- No se pegó el código tal cual: el JavaScript volvía a declarar `toolShort` (error que frena la app), y el CSS reemplazaba estilos de ventanas, pies de pantalla, opciones y estados deshabilitados que no traía. Se sumaron solo las diferencias.

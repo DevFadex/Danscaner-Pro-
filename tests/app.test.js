@@ -1815,7 +1815,7 @@ await test('v92: diseño Neumórfico de fábrica (colores, relieve, presionado, 
     /* las herramientas siguen abriendo */
     const unir=it.find(b=>/Unir PDF/.test(b.textContent));unir.click();await new Promise(r=>setTimeout(r,500));o.opened=$('#toolTitle').textContent;for(let k=0;k<4&&Nav.top();k++)await Nav.back();
     return o});
-  assert.ok(r.look&&!r.exp,'Neumórfico debe venir de fábrica');assert.equal(r.bg,'rgb(233, 238, 245)');assert.equal(r.ac,'#2563EB');assert.ok(r.preset);
+  assert.ok(r.look&&!r.exp,'Neumórfico debe venir de fábrica');assert.equal(r.bg,'rgb(232, 237, 244)');/* v94 «Premium»: fondo #E8EDF4 (antes #E9EEF5) */assert.equal(r.ac,'#2563EB');assert.ok(r.preset);
   assert.ok(/inset/.test(r.heroSh),'el inicio debe verse hundido (bandeja del escáner)');assert.ok(/rgb\(255, 255, 255\)/.test(r.toolSh)&&!/inset/.test(r.toolSh),'las tarjetas deben verse en relieve: '+r.toolSh);
   assert.ok(/inset/.test(r.navOn),'la sección actual de la barra debe verse presionada');
   assert.ok(r.items>30&&r.withDesc>=r.items-3,'faltan descripciones: '+r.withDesc+'/'+r.items);assert.equal(r.opened,'Unir PDF');
@@ -1882,6 +1882,17 @@ await test('v93: Sello de recibido y Foliar expediente en el PDF; cámara con te
   assert.ok(c1.vis&&c1.n==='3','debe contar: '+JSON.stringify(c1));assert.equal(c1.seq,s0,'no tiene que sacar al instante');
   await pg.waitForFunction(s0=>Cam._seq>s0,s0,{timeout:8000});assert.equal(await pg.evaluate(()=>$('#camCount').hidden),true);
   assert.ok(await pg.evaluate(()=>window._wl)>=1,'no pidió la pantalla encendida');
+});
+
+await test('v94: Neumórfico Premium (superficies blancas, Nexa como insignia solo admin, escanear desde el botón redondo)',async pg=>{
+  const r=await pg.evaluate(async()=>{go('home');await new Promise(r=>setTimeout(r,900));const h=document.documentElement,tool=$('#v-home .tool'),nx=$('#btnNexa');
+    return {look:h.classList.contains('look-neu'),label:PRESETS.neumorfico.label,tool:getComputedStyle(tool).backgroundColor,big:getComputedStyle($('#btn-camara')).display,
+      hbtns:[...document.querySelectorAll('#v-home .hero-btns .hbtn')].filter(b=>getComputedStyle(b).display!=='none').map(b=>b.querySelector(':scope > span').textContent),
+      nx:nx?nx.querySelector(':scope > .nx-nm').textContent+'|'+getComputedStyle(nx.querySelector('.nx-adm')).display+'|'+nx.querySelector('.nx-adm').textContent:null,fab:getComputedStyle($('.fab.fabcam')).width}});
+  assert.ok(r.look);assert.equal(r.label,'Neumórfico Premium');assert.equal(r.tool,'rgb(247, 249, 252)');assert.equal(r.big,'none');assert.deepEqual(r.hbtns,['Lote','Galería','Importar']);
+  assert.equal(r.nx,'Nexa AI|block|solo admin');assert.equal(r.fab,'64px');
+  /* el botón redondo abre la cámara igual que el grande */
+  await pg.click('.fab.fabcam');await pg.waitForFunction(()=>Nav.isOpen('camera'),null,{timeout:8000});
 });
 
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
