@@ -213,3 +213,7 @@ Tocá una imagen para cambiarle el tamaño o centrarla, y una tabla para sumarle
 
 ## Novedades v94
 - **Neumórfico Premium**: superficies blancas con relieve y azul más vivo. Para escanear, tocá el botón azul redondo de abajo (en el inicio quedan Lote, Galería e Importar).
+
+## Novedades v95
+- **Recortar y Censurar**: si tocás el botón sin marcar nada, te dicen qué hacer.
+- **Traductor**: sin internet te avisa enseguida (es la única herramienta que necesita conexión y que manda el texto afuera; antes de usarla te pide permiso).

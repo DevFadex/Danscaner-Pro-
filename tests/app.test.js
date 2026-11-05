@@ -1895,6 +1895,21 @@ await test('v94: Neumórfico Premium (superficies blancas, Nexa como insignia so
   await pg.click('.fab.fabcam');await pg.waitForFunction(()=>Nav.isOpen('camera'),null,{timeout:8000});
 });
 
+await test('v95: avisos claros en Recortar y Censurar sin marcar nada, y el Traductor sin internet avisa en vez de quedarse esperando',async pg=>{
+  await pg.evaluate(async()=>{await loadLib('pdflib');const d=await PDFLib.PDFDocument.create();d.addPage([595,842]).drawText('Hoja',{x:60,y:760,size:20});window._pf=new File([await d.save()],'n.pdf',{type:'application/pdf'});
+    window._toasts=[];const _t=toast;toast=function(m){window._toasts.push(String(m));return _t.apply(this,arguments)}});
+  for(const [n,re] of [['Recortar PDF',/marcá el área que querés conservar/],['Censurar PDF',/tapá lo que querés censurar/]]){
+    await pg.evaluate(async n=>{for(let k=0;k<5&&Nav.top();k++)await Nav.back();window._toasts=[];openTool(TOOLS.findIndex(t=>t.name===n),[window._pf])},n);await W(2500);
+    await pg.click('#toolBody .run');await W(600);assert.ok((await pg.evaluate(()=>window._toasts)).some(t=>re.test(t)),n+': '+(await pg.evaluate(()=>window._toasts)).join(' | '))}
+  /* sin conexión: error claro al instante */
+  const tr=await pg.evaluate(async()=>{Object.defineProperty(navigator,'onLine',{get:()=>false,configurable:true});try{await translateText('hola mundo','es','en');return 'tradujo'}catch(e){return e.message}});
+  assert.match(tr,/Sin conexión: el traductor necesita internet/);
+  /* con señal mala: no espera para siempre */
+  const slow=await pg.evaluate(async()=>{Object.defineProperty(navigator,'onLine',{get:()=>true,configurable:true});const _f=window.fetch;window.fetch=(u,o)=>new Promise((res,rej)=>{o&&o.signal&&o.signal.addEventListener('abort',()=>rej(new DOMException('abort','AbortError')))});
+    const t0=Date.now();try{await fetchT('https://example.invalid/x',300);return 'respondió'}catch(e){return (Date.now()-t0<2000)+'|'+e.message}finally{window.fetch=_f}});
+  assert.match(slow,/^true\|No se pudo conectar con el traductor/);
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();
