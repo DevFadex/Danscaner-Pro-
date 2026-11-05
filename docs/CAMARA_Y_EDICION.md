@@ -883,3 +883,14 @@ Comparación de dos videos con la misma hoja. En CamScanner se sigue sacando sin
 - El inicio queda con **Lote, Galería e Importar**; el botón grande de escanear se oculta (hace lo mismo que el botón redondo de la barra, y en la PC está el botón ancho del costado).
 - Nexa se muestra como insignia «Nexa AI · solo admin» (el botón ya lo ve solo el administrador).
 - No se pegó el código tal cual: el JavaScript volvía a declarar `toolShort` (error que frena la app), y el CSS reemplazaba estilos de ventanas, pies de pantalla, opciones y estados deshabilitados que no traía. Se sumaron solo las diferencias.
+
+## v95 · Revisión completa de la app
+- **Qué se revisó**:
+  - las 9 pantallas principales (inicio, documentos, herramientas, ajustes, diseño, Nexa, cámara, editor, hoja por hoja, documento listo) y las 44 herramientas abiertas una por una: ninguna da error;
+  - 28 herramientas corridas con un archivo real, de punta a punta: todas dan resultado;
+  - los archivos para usar sin internet (service worker, librerías, íconos): no falta ninguno;
+  - la suite completa de pruebas.
+- **Arreglos**:
+  - **Recortar PDF** y **Censurar PDF**, si se tocaba el botón sin marcar nada, decían «Agregá al menos un elemento»; ahora explican qué hacer.
+  - **Traductor**: sin internet avisa al instante, y con señal mala corta a los 20 s con un aviso claro (`fetchT`), en vez de quedarse en «Traduciendo…».
+  - **Licencias**: 8 librerías de `libs/` no tenían su aviso de licencia al lado. Se agregaron `libs/LICENCIAS-TERCEROS.md` y `libs/LICENSE-Apache-2.0.txt`. Todas son compatibles (MIT, Apache 2.0, BSD).
