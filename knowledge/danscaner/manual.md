@@ -203,3 +203,10 @@ Tocá una imagen para cambiarle el tamaño o centrarla, y una tabla para sumarle
 ## Novedades v92
 - **Diseño nuevo «Neumórfico»**: superficies claras con relieve suave y azul para lo importante; lo que tocás se ve hundido. Si preferís el anterior: Ajustes → Diseño → Expediente.
 - **Excel a PDF, Word o JPG tal cual**: respeta colores, bordes, celdas combinadas, logos y la configuración de impresión del archivo. Antes de convertir elegís hoja, tamaño, orientación, escala y márgenes, y podés arrastrar la planilla para acomodarla en la hoja.
+
+## Novedades v93
+- **Sello de recibido**: Herramientas → Editar PDF → Sello de recibido. Pone el sello con fecha, hora y tu oficina donde quieras. Antes lo ves en la vista previa.
+- **Foliar expediente**: numera las fojas siguiendo el número del expediente (por ejemplo, desde la 7). Si escaneaste doble faz, numera solo el frente.
+- **Cámara**:
+  - temporizador de 3 o 5 segundos en ⚙️, para sacar con el teléfono quieto;
+  - la pantalla ya no se apaga sola mientras escaneás.

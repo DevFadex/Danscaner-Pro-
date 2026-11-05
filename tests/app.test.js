@@ -1058,7 +1058,7 @@ await test('Cámara estilo Adobe: barra de modos con guías, marco de cuatro pun
   const f=await pg.evaluate(()=>{clearInterval(Cam.timer);const svg=$('#camSvg');svg.innerHTML='<polygon points="80,150 300,170 320,520 60,500" stroke="#22d3ee"/>';camFrameDraw();return [svg.querySelectorAll('circle.cf-d').length,svg.querySelectorAll('polygon.cf-l').length]});
   assert.deepEqual(f,[4,1]);
   /* panel compacto: interruptores y «Más ajustes» */
-  await pg.click('#camCfg');await pg.waitForSelector('#camPanel .cq');assert.equal(await pg.$$eval('#camPanel .cq-row',x=>x.length),10);/* v77: + «Ver la foto al sacarla» */
+  await pg.click('#camCfg');await pg.waitForSelector('#camPanel .cq');assert.equal(await pg.$$eval('#camPanel .cq-row',x=>x.length),11);/* v77: + «Ver la foto al sacarla»; v93: + «Temporizador» */
   await pg.click('#camPanel [data-cq="snd"]');assert.equal(await pg.evaluate(()=>S.camSound),true);
   await pg.click('#camPanel [data-cp="grid"]');assert.equal(await pg.evaluate(()=>!!S.grid),true);assert.ok(await pg.$('#camPanel .cq'),'se fue del panel compacto');
   await pg.click('#camPanel [data-cq="more"]');await pg.waitForSelector('#camPanel [data-cp4]');await pg.click('#camPanel [data-cq="less"]');await pg.waitForSelector('#camPanel .cq');
@@ -1858,6 +1858,30 @@ await test('v92: Excel a PDF, Word y JPG tal cual (colores, bordes, combinadas, 
   /* JPG: una imagen por hoja */
   await pg.click('.xq-fmt [data-v="jpg"]');assert.equal(await pg.textContent('.run'),'Generar JPG');await pg.click('.run');await pg.waitForFunction(()=>/\.jpg/.test($('.result').textContent),null,{timeout:30000});
   assert.ok(await pg.evaluate(()=>document.querySelectorAll('.result [data-dl]').length)>=2,'una imagen por hoja');
+});
+
+await test('v93: Sello de recibido y Foliar expediente en el PDF; cámara con temporizador y pantalla encendida',async pg=>{
+  const mk=n=>pg.evaluate(async n=>{await loadLib('pdflib');const d=await PDFLib.PDFDocument.create();for(let i=0;i<n;i++)d.addPage([595,842]).drawText('Hoja '+(i+1),{x:60,y:700,size:20});window._pf=new File([await d.save()],'nota.pdf',{type:'application/pdf'})},n);
+  const textOf=()=>pg.evaluate(async()=>{const a=[...document.querySelectorAll('.result [data-dl]')];const b=window._lastBlob;const pdf=await openPdfjs(await b.arrayBuffer());const out=[];for(let i=1;i<=pdf.numPages;i++){const tc=await (await pdf.getPage(i)).getTextContent();out.push(tc.items.map(x=>x.str).join(' '))}return out});
+  await pg.evaluate(()=>{const _sr=showResults;showResults=function(el,outs){window._lastBlob=outs[0].blob;return _sr.apply(this,arguments)}});
+  /* sello: oficina recordada, solo en la primera página */
+  await mk(2);await pg.evaluate(()=>openTool(TOOLS.findIndex(t=>t.name==='Sello de recibido'),[window._pf]));await pg.waitForSelector('.v93-pv canvas',{timeout:15000});
+  await pg.fill('.sl-da','03/11/2026');await pg.fill('.sl-hr','09:45');await pg.fill('.sl-of','Mesa de Entradas');await pg.click('.run');await pg.waitForSelector('.result [data-dl]',{timeout:15000});
+  const tx=await textOf();assert.match(tx[0],/RECIBIDO/);assert.match(tx[0],/03\/11\/2026/);assert.match(tx[0],/09:45/);assert.match(tx[0],/Mesa de Entradas/);assert.doesNotMatch(tx[1],/RECIBIDO/);
+  assert.equal(await pg.evaluate(()=>S.selloOfi),'Mesa de Entradas');
+  /* foliar: doble faz, desde la foja 7 → hojas 1 y 3 llevan 7 y 8; las 2 y 4 (dorsos) nada */
+  await pg.evaluate(async()=>{for(let k=0;k<4&&Nav.top();k++)await Nav.back()});await mk(4);
+  await pg.evaluate(()=>openTool(TOOLS.findIndex(t=>t.name==='Foliar expediente'),[window._pf]));await pg.waitForSelector('.v93-pv canvas',{timeout:15000});
+  await pg.fill('.fo-st','7');await pg.selectOption('.fo-fm','Fs. {n}');await pg.selectOption('.fo-bx','circulo');await pg.check('.fo-od');await pg.waitForFunction(()=>/fojas 7 a 8/.test($('.fo-inf').textContent),null,{timeout:8000}).catch(()=>{});assert.match(await pg.textContent('.fo-inf'),/fojas 7 a 8/);
+  await pg.click('.run');await pg.waitForSelector('.result [data-dl]',{timeout:15000});const fx=await textOf();
+  assert.match(fx[0],/Fs\. 7/);assert.doesNotMatch(fx[1],/Fs\./);assert.match(fx[2],/Fs\. 8/);assert.doesNotMatch(fx[3],/Fs\./);
+  /* cámara: con el temporizador no dispara al instante; cuenta 3, 2, 1 y saca. Pide la pantalla encendida */
+  await pg.evaluate(async()=>{for(let k=0;k<4&&Nav.top();k++)await Nav.back();window._wl=0;try{Object.defineProperty(navigator,'wakeLock',{value:{request:async()=>{window._wl++;return {release:async()=>{},addEventListener(){}}}},configurable:true})}catch(e){}
+    S.camTimer=3;S.camFast=true;S.autoCapture=false;Cam.open('batch')});await pg.waitForFunction(()=>Cam.stream&&$('#camVideo').videoWidth>0,null,{timeout:15000});await W(500);
+  const s0=await pg.evaluate(()=>Cam._seq);await pg.click('#camShot');await W(400);const c1=await pg.evaluate(()=>({n:$('#camCount').textContent,vis:!$('#camCount').hidden,seq:Cam._seq}));
+  assert.ok(c1.vis&&c1.n==='3','debe contar: '+JSON.stringify(c1));assert.equal(c1.seq,s0,'no tiene que sacar al instante');
+  await pg.waitForFunction(s0=>Cam._seq>s0,s0,{timeout:8000});assert.equal(await pg.evaluate(()=>$('#camCount').hidden),true);
+  assert.ok(await pg.evaluate(()=>window._wl)>=1,'no pidió la pantalla encendida');
 });
 
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
