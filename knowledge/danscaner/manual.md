@@ -210,3 +210,6 @@ Tocá una imagen para cambiarle el tamaño o centrarla, y una tabla para sumarle
 - **Cámara**:
   - temporizador de 3 o 5 segundos en ⚙️, para sacar con el teléfono quieto;
   - la pantalla ya no se apaga sola mientras escaneás.
+
+## Novedades v94
+- **Neumórfico Premium**: superficies blancas con relieve y azul más vivo. Para escanear, tocá el botón azul redondo de abajo (en el inicio quedan Lote, Galería e Importar).
