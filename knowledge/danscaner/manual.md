@@ -217,3 +217,9 @@ Tocá una imagen para cambiarle el tamaño o centrarla, y una tabla para sumarle
 ## Novedades v95
 - **Recortar y Censurar**: si tocás el botón sin marcar nada, te dicen qué hacer.
 - **Traductor**: sin internet te avisa enseguida (es la única herramienta que necesita conexión y que manda el texto afuera; antes de usarla te pide permiso).
+
+## Novedades v96
+- **La foto aparece enseguida**: si hay que enderezar una planilla, se endereza sola un momento después.
+- **Cámara más clara**: fondo oscuro con letras y botones bien visibles.
+- **Todas las herramientas en la foto**: tocá **«Todas»** (primer botón de abajo en el editor) o **«Herramientas»** en la vista hoja por hoja. Las de texto aparecen primero.
+- **Texto en la foto**: además de letra, color, negrita y cursiva, ahora hay subrayado, alineación, tamaño, cualquier color, resaltado y fondo blanco para tapar.

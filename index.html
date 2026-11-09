@@ -3459,7 +3459,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 4.5',APP_VER='95';
+const NEXA_VER='Nexa 4.5',APP_VER='96';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3577,7 +3577,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='95 · 05/11/2026';
+const BUILD='96 · 09/11/2026';
 /* Versión que ven los usuarios: se cambia a mano solo cuando se decide publicar una versión nueva para todos.
    El administrador ve la versión interna (BUILD) con cada cambio. */
 const PUBLIC_VER='1.2';
@@ -6625,6 +6625,7 @@ async function ocrBestRot(p,c){if(S.ocrOrient===false)return null;
  try{const crop=(src,fl)=>{const L=Math.max(src.width,src.height),k=1600/L,W=Math.round(src.width*k),H=Math.round(src.height*k),cw=Math.round(W*.8),chh=Math.round(H*.5),A=canvas(cw,chh),x=A.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,cw,chh);
    if(fl){x.translate(cw,chh);x.rotate(Math.PI)}x.drawImage(src,(src.width-cw/k)/2,(src.height-chh/k)/2,cw/k,chh/k,0,0,cw,chh);return ocrPrep(A)};
   const c90=await renderPage({...p,rot:((p.rot||0)+90)%360},{maxSide:1000,noOverlays:true});const sc={};
+  /* v96: se leen las 4 posiciones (Tesseract lee bastante bien hasta el texto de costado, así que no se puede acortar); igual no hace esperar: va en segundo plano */
   sc[0]=await ocrScore(crop(c,false));sc[180]=await ocrScore(crop(c,true));sc[90]=await ocrScore(crop(c90,false));sc[270]=await ocrScore(crop(c90,true));c90.width=c90.height=1;
   const o=Object.entries(sc).sort((a,b)=>b[1]-a[1]);if(o[0][1]<60||o[0][1]<o[1][1]*1.25)return null;return +o[0][0]}catch(e){console.warn('orientación OCR',e);return null}}
 async function camForceOrient(p,o){const c=await renderPage(p,{maxSide:1000,noOverlays:true});const isL=c.width>c.height*1.02,isP=c.height>c.width*1.02;
@@ -6632,7 +6633,8 @@ async function camForceOrient(p,o){const c=await renderPage(p,{maxSide:1000,noOv
  if(o==='land'){c.width=c.height=1;if(isP){p.rot=((p.rot||0)+270)%360;return true}return false}
  try{const ax=camTextAxis(c);
   /* v91: si el texto no es claramente horizontal, decide la lectura (sirve igual para planillas apaisadas y hojas de costado) */
-  if(o==='port'&&ax!=='h'&&(isL||isP)&&pageOrient(c).why!=='poca tinta'){const r=await ocrBestRot(p,c);if(r!=null){if(r){p.rot=((p.rot||0)+r)%360;return true}return false}}
+  /* v96: leer para enderezar tardaba 4-5 s por foto: ahora se decide al toque con la forma de los renglones y la lectura corrige después, en segundo plano */
+  if(o==='port'&&ax!=='h'&&(isL||isP)&&pageOrient(c).why!=='poca tinta'&&S.ocrOrient!==false)_ocrWant.add(p);
   if(o==='port'&&isL){if(ax==='h'){const po=pageOrient(c);if(po.rot===180){p.rot=((p.rot||0)+180)%360;return true}return false}/* texto horizontal: hoja apaisada de verdad, no se fuerza */
    /* texto de costado (o no se sabe): se gira 90° y, si el texto queda al revés, 180° más */
    const r1=((p.rot||0)+90)%360;const c2=await renderPage({...p,rot:r1},{maxSide:1000,noOverlays:true});const up=await uprightFlip(c2);c2.width=c2.height=1;p.rot=(r1+(up?180:0))%360;return true}
@@ -7126,11 +7128,11 @@ function uiFoliar(el){let file=null,tmr=0;
 
 /* ---- 3) cámara: temporizador (3 o 5 s, para sacar con el teléfono quieto) y pantalla siempre encendida mientras está abierta ---- */
 const CAM_TMR_L={0:'Apagado',3:'3 segundos',5:'5 segundos'};
-(function(){const st=$('#camera .cam-stage');if(st&&!$('#camCount'))st.insertAdjacentHTML('beforeend','<div class="cam-count" id="camCount" hidden aria-live="assertive"></div>')})();
-function camCountdown(){const sec=+S.camTimer||0;if(!sec)return false;const box=$('#camCount');let n=sec;Cam._counting=true;box.hidden=false;box.textContent=n;navigator.vibrate&&navigator.vibrate(20);
+(function(){const st=$('#camera .cam-stage');if(st&&!$('#camTimerBox'))st.insertAdjacentHTML('beforeend','<div class="cam-count" id="camTimerBox" hidden aria-live="assertive"></div>')})();
+function camCountdown(){const sec=+S.camTimer||0;if(!sec)return false;const box=$('#camTimerBox');let n=sec;Cam._counting=true;box.hidden=false;box.textContent=n;navigator.vibrate&&navigator.vibrate(20);
  Cam._countT=setInterval(()=>{n--;if(n>0){box.textContent=n;navigator.vibrate&&navigator.vibrate(20);box.classList.remove('tick');void box.offsetWidth;box.classList.add('tick');return}
   camCountStop();if(Nav.isOpen('camera')&&Cam.stream)Cam.shoot()},1000);return true}
-function camCountStop(){clearInterval(Cam._countT);Cam._counting=false;const b=$('#camCount');if(b)b.hidden=true}
+function camCountStop(){clearInterval(Cam._countT);Cam._counting=false;const b=$('#camTimerBox');if(b)b.hidden=true}
 $('#camShot').addEventListener('click',e=>{if(!(+S.camTimer)||!Nav.isOpen('camera')||!Cam.stream)return;e.stopImmediatePropagation();e.preventDefault();if(Cam._counting){camCountStop();toast('Temporizador cancelado',1400);return}camCountdown()},true);
 {const _st=Cam.stop;Cam.stop=function(){camCountStop();camWake(false);return _st.apply(this,arguments)}}
 {const _r=camPanelRender;camPanelRender=function(){const r=_r.apply(this,arguments);try{const P=$('#camPanel');if(!P||P.hidden)return r;const m=P.querySelector('.cq .cq-more');
@@ -7187,6 +7189,87 @@ document.head.insertAdjacentHTML('beforeend','<style id="v94Css">'
 /* ===================== v95 · revisión completa ===================== */
 /* el traductor es lo único que necesita internet: sin conexión se avisa antes de pedir permiso para mandar el texto */
 {const _tr=translateText;translateText=async function(){if(navigator.onLine===false)throw new Error('Sin conexión: el traductor necesita internet. Conectate y probá de nuevo.');return _tr.apply(this,arguments)}}
+
+/* ===================== v96 · foto rápida, cámara legible y todas las herramientas en la foto ===================== */
+/* ---- 1) enderezar leyendo el texto, en segundo plano: la foto aparece enseguida y, si hacía falta girarla, se gira sola un momento después ---- */
+const OcrOrient={q:Promise.resolve(),n:0};var _ocrWant=new WeakSet();
+function ocrOrientLater(p){OcrOrient.n++;OcrOrient.q=OcrOrient.q.then(async()=>{try{await sleep(250);const c=await renderPage(p,{maxSide:1000,noOverlays:true});const r=await ocrBestRot(p,c);c.width=c.height=1;
+  if(r){p.rot=((p.rot||0)+r)%360;await makeThumb(p);try{const f=Cam._flags&&Cam._flags.get(p);if(f)f.rot=r}catch(e){}
+   if(typeof DOC!=='undefined'&&DOC&&DOC.pages.includes(p)){saveDoc();try{if(Nav.isOpen('docScreen'))renderDocScreen();if(Nav.isOpen('pgView'))PV.draw();if(Nav.isOpen('editor')&&Ed.p===p)Ed.preview(true)}catch(e){}}
+   try{const m=$('#camMini');if(m&&m._p===p)m.querySelector('img').src=p.thumb}catch(e){}toast('↻ Hoja enderezada leyendo el texto',2200)}}catch(e){console.warn('orientación en segundo plano',e)}finally{OcrOrient.n--}});return OcrOrient.q}
+function ocrOrientIdle(){return OcrOrient.q}
+/* la lectura arranca recién cuando terminó la decisión rápida (si no, las dos giraban la misma hoja a la vez) */
+{const _cf=camForceOrient;camForceOrient=async function(p){_ocrWant.delete(p);try{return await _cf.apply(this,arguments)}finally{if(_ocrWant.has(p)){_ocrWant.delete(p);ocrOrientLater(p)}}}}
+
+/* ---- 2) cámara oscura y legible con cualquier diseño: botones claros sobre fondo oscuro y una franja suave detrás de los de arriba ---- */
+document.head.insertAdjacentHTML('beforeend','<style id="v96CamCss">'
+ +'#camera{--bg:#05070C;--bg2:#0E1320;--bg3:#1A2132;--tx:#F8FAFC;--tx2:#CBD5E1;--line:#2A3346;background:#000!important;color:#F8FAFC}'
+ +'html[data-skin] #camera.screen{background:#000!important}'
+ +'#camera .cam-top{background:linear-gradient(to bottom,rgba(0,0,0,.78),rgba(0,0,0,.35) 75%,transparent)!important;box-shadow:none!important;border:0!important}'
+ +'#camera .cam-top .ib{background:rgba(15,23,42,.62)!important;color:#fff!important;box-shadow:none!important;border:1.5px solid rgba(255,255,255,.28)!important;width:46px;height:46px;border-radius:50%!important}'
+ +'#camera .cam-top .ib.on,#camera .cam-top .ib[aria-pressed="true"]{background:#2563EB!important;border-color:#93C5FD!important;color:#fff!important}'
+ +'#camera .cam-top .ib .ico{color:#fff;stroke:#fff}'
+ +'#camera .cam-kinds,#camera .cam-modes,#camera .cam-bot,#camera .campanel{background:#05070C!important;box-shadow:none!important}'
+ +'#camera .cam-kinds button{color:#E2E8F0!important;font-weight:700;font-size:14px!important}#camera .cam-kinds button.on{color:#7DB4FF!important}#camera .cam-kinds button.on::after{background:#7DB4FF!important}'
+ +'#camera .cam-modes button{color:#E2E8F0!important;background:rgba(255,255,255,.08)!important;box-shadow:none!important;border:1px solid rgba(255,255,255,.14)!important;font-weight:700;min-height:40px}'
+ +'#camera .cam-modes button.on{background:#2563EB!important;color:#fff!important;border-color:#2563EB!important}'
+ +'#camera .cam-modes .camchip{color:#fff!important}#camera .cam-modes .camchip b{color:#93C5FD!important}'
+ +'#camera .cam-bot>button:not(.shutter){color:#fff!important;background:none!important;box-shadow:none!important}#camera .cam-bot small{color:#F1F5F9!important;font-size:12.5px!important;font-weight:700}'
+ +'#camera .cam-bot .ico{color:#fff;stroke:#fff}'
+ +'#camera .shutter{box-shadow:0 0 0 4px #fff,0 0 0 8px rgba(37,99,235,.9)!important}'
+ +'#camera .cam-hint{background:rgba(2,6,23,.78)!important;color:#fff!important;font-weight:600;border:1px solid rgba(255,255,255,.18)}'
+ +'#camera :focus-visible{outline:3px solid #93C5FD!important;outline-offset:2px}'
+ +'</style>');
+
+/* ---- 3) en la foto, todas las herramientas a la vista: un botón «Todas» con las herramientas agrupadas (las de texto primero) ---- */
+const ED_GROUPS=[['Texto',['fix','text','date','sign','ocr']],['Mejorar la imagen',['enh','art','adj','clean','mark','clear','all','anal']],['La hoja',['crop','rotl','rotr','paper','replace','del']]];
+function edToolsSheet(onPick){const foot=$('#editor .sfoot');if(!foot)return;const btns=[...foot.querySelectorAll('[data-ed]')].filter(b=>b.dataset.ed!=='__all');const used=new Set();
+ const cell=b=>{used.add(b.dataset.ed);return '<button class="edt-cell" data-pick="'+esc(b.dataset.ed)+'">'+b.innerHTML+'</button>'};
+ let h='';for(const [g,keys] of ED_GROUPS){const bs=keys.map(k=>btns.find(b=>b.dataset.ed===k)).filter(Boolean);if(bs.length)h+='<div class="cph">'+g+'</div><div class="edt-grid">'+bs.map(cell).join('')+'</div>'}
+ const rest=btns.filter(b=>!used.has(b.dataset.ed));if(rest.length)h+='<div class="cph">Más</div><div class="edt-grid">'+rest.map(cell).join('')+'</div>';
+ const sh=openSheet('Herramientas de la foto',h);sh.onclick=async e=>{const c=e.target.closest('[data-pick]');if(!c)return;const k=c.dataset.pick;await Nav.back();onPick(k)}}
+const edRun=k=>{const b=$('#editor .sfoot [data-ed="'+k+'"]');if(b)b.click()};
+(function(){const foot=$('#editor .sfoot');if(!foot||foot.querySelector('[data-ed="__all"]'))return;
+ foot.insertAdjacentHTML('afterbegin','<button class="tb edt-all" data-ed="__all" aria-label="Ver todas las herramientas"><b>'+icoSvg('apps')+'</b>Todas</button>');
+ foot.querySelector('[data-ed="__all"]').addEventListener('click',e=>{e.stopImmediatePropagation();edToolsSheet(edRun)},true)})();
+/* en la vista hoja por hoja también: abre la hoja en el editor con la herramienta elegida */
+(function(){const bar=$('#pgView .pv-bar');if(!bar||bar.querySelector('[data-pv="tools"]'))return;bar.insertAdjacentHTML('afterbegin','<button class="tb" data-pv="tools"><b>'+icoSvg('apps')+'</b>Herramientas</button>');
+ bar.addEventListener('click',e=>{const b=e.target.closest('[data-pv="tools"]');if(!b)return;e.stopImmediatePropagation();edToolsSheet(async k=>{Ed.open(PV.i);await sleep(450);edRun(k)})},true)})();
+
+/* ---- 4) Texto en la foto con todas las opciones: letra, tamaño, negrita, cursiva, subrayado, alineación, cualquier color, resaltado y recuadro ---- */
+{const _tp=textToPng;textToPng=function(text,o){o=o||{};if(!o.under&&!o.align&&!o.bg&&!o.scale)return _tp.apply(this,arguments);
+ const lines=String(text).split('\n'),fs=(o.size||40)*2*(o.scale||1),ff=o.font||'Arial, Helvetica, sans-serif',font=(o.italic?'italic ':'')+(o.bold!==false?'700 ':'')+fs+'px '+ff;const m=canvas(10,10).getContext('2d');m.font=font;
+ const ws=lines.map(l=>m.measureText(l).width),pad=fs*.3,w=Math.max(...ws)+pad*2,lh=fs*1.25,h=lh*lines.length+fs*.4;const c=canvas(w,h),x=c.getContext('2d');
+ if(o.bg){x.fillStyle=o.bg;x.fillRect(0,0,w,h)}x.font=font;x.fillStyle=o.color||'#000';x.textBaseline='top';
+ lines.forEach((l,i)=>{const lx=o.align==='center'?(w-ws[i])/2:o.align==='right'?w-pad-ws[i]:pad,ly=fs*.2+i*lh+fs*.05;x.fillText(l,lx,ly);if(o.under&&ws[i]>0){x.fillRect(lx,ly+fs*1.02,ws[i],Math.max(2,fs/16))}});
+ if(o.box){x.strokeStyle=o.color||'#000';x.lineWidth=Math.max(3,fs/12);x.strokeRect(x.lineWidth/2,x.lineWidth/2,w-x.lineWidth,h-x.lineWidth)}return c.toDataURL('image/png')}}
+textStampSheet=function(){return new Promise(res=>{let result=null;const st={col:'#000000',b:true,i:false,u:false,al:'left',bg:'',box:false,sc:1};
+ const COLS=[['#000000','Negro'],['#0d3fa6','Azul'],['#c62828','Rojo'],['#1b5e20','Verde']];
+ const tg=(k,l,t)=>'<button type="button" class="chip tsx-t'+(st[k]?' on':'')+'" data-tstg="'+k+'" aria-pressed="'+!!st[k]+'" title="'+t+'">'+l+'</button>';
+ const b=openSheet('Texto en la foto','<label class="opt"><span>Texto</span><textarea id="tsT" rows="3" placeholder="Ej.: RECIBIDO"></textarea></label>'
+  +'<div class="row">'+opt('Tipo de letra',sel('tsF',FONTS))+opt('Tamaño',sel('tsZ',[['0.75','Chico'],['1','Normal'],['1.4','Grande'],['1.9','Muy grande']]))+'</div>'
+  +'<div class="cph">Estilo</div><div class="chips tsx-row">'+tg('b','<b>N</b>','Negrita')+tg('i','<i>C</i>','Cursiva')+tg('u','<u>S</u>','Subrayado')+tg('box','▢ Recuadro','Recuadro tipo sello')+'</div>'
+  +'<div class="cph">Alineación</div><div class="chips tsx-row">'+[['left','Izquierda'],['center','Centro'],['right','Derecha']].map(([v,n])=>'<button type="button" class="chip'+(v==='left'?' on':'')+'" data-tsal="'+v+'">'+n+'</button>').join('')+'</div>'
+  +'<div class="cph">Color</div><div class="chips tsx-row">'+COLS.map(([c,n],i)=>'<button type="button" class="chip'+(i?'':' on')+'" data-tscol="'+c+'"><span class="tsx-sw" style="background:'+c+'"></span>'+n+'</button>').join('')+'<label class="chip tsx-pick">Otro <input type="color" id="tsC" value="#000000" aria-label="Elegir otro color"></label></div>'
+  +'<div class="cph">Fondo</div><div class="chips tsx-row">'+[['','Sin fondo'],['#FFF176','Resaltado'],['#FFFFFF','Blanco (tapa)']].map(([v,n],i)=>'<button type="button" class="chip'+(i?'':' on')+'" data-tsbg="'+v+'">'+n+'</button>').join('')+'</div>'
+  +'<div class="sigprev"><img id="tsPrev" alt="Vista previa del texto" style="max-height:120px;max-width:100%;background:repeating-conic-gradient(#eee 0 25%,#fff 0 50%) 0 0/16px 16px;border-radius:6px"></div><button class="btn pri block" id="tsOk">'+icoSvg('check')+' Continuar</button>',()=>res(result));
+ const O=()=>({color:st.col,bold:st.b,italic:st.i,under:st.u,box:st.box,align:st.al,bg:st.bg||null,scale:+$('.tsZ',b).value||1,font:fontOf($('.tsF',b).value)});
+ const prev=()=>{const t=$('#tsT').value.trim()||'Ejemplo de texto';$('#tsPrev').src=textToPng(t,{...O(),under:st.u||false,align:st.al,scale:+$('.tsZ',b).value||1})};
+ prev();b.oninput=e=>{if(e.target.id==='tsC'){st.col=e.target.value;$$('[data-tscol]',b).forEach(x=>x.classList.remove('on'));e.target.closest('.tsx-pick').classList.add('on')}prev()};b.onchange=prev;
+ b.onclick=e=>{const t=e.target.closest('[data-tstg]');if(t){const k=t.dataset.tstg;st[k]=!st[k];t.classList.toggle('on',st[k]);t.setAttribute('aria-pressed',st[k]);prev();return}
+  const a=e.target.closest('[data-tsal]');if(a){st.al=a.dataset.tsal;$$('[data-tsal]',b).forEach(x=>x.classList.toggle('on',x===a));prev();return}
+  const c=e.target.closest('[data-tscol]');if(c){st.col=c.dataset.tscol;$$('[data-tscol]',b).forEach(x=>x.classList.toggle('on',x===c));const pk=$('.tsx-pick',b);if(pk)pk.classList.remove('on');prev();return}
+  const g=e.target.closest('[data-tsbg]');if(g){st.bg=g.dataset.tsbg;$$('[data-tsbg]',b).forEach(x=>x.classList.toggle('on',x===g));prev();return}
+  if(e.target.closest('#tsOk')){const tx=$('#tsT').value.trim();if(!tx)return toast('Escribí un texto');result=textToPng(tx,{...O(),under:st.u||false,align:st.al,scale:+$('.tsZ',b).value||1});Nav.back()}}})};
+document.head.insertAdjacentHTML('beforeend','<style id="v96Css">.edt-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:6px 0 14px}'
+ +'.edt-cell{display:flex;flex-direction:column;align-items:center;gap:6px;min-height:76px;padding:10px 4px;border-radius:16px;background:var(--bg2);color:var(--tx);font-size:12.5px;font-weight:700;line-height:1.15;text-align:center}'
+ +'.edt-cell b{display:grid;place-items:center;font-size:22px}.edt-cell .ico{width:24px;height:24px;color:var(--tinta,#2563EB)}'
+ +'html.look-neu .edt-cell{background:var(--neu-sf);box-shadow:var(--neu-up-s)}html.look-neu .edt-cell:active{box-shadow:var(--neu-in-s)}'
+ +'#editor .sfoot .edt-all b,#editor .sfoot .edt-all .ico{color:var(--tinta,#2563EB)}'
+ +'#editor .sfoot{-webkit-mask-image:linear-gradient(to right,#000 88%,transparent);mask-image:linear-gradient(to right,#000 88%,transparent)}'
+ +'.tsx-row{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 10px}.tsx-row .chip{min-height:42px;min-width:44px;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:14px}'
+ +'.tsx-sw{width:14px;height:14px;border-radius:50%;border:1px solid rgba(0,0,0,.25)}.tsx-pick{position:relative;cursor:pointer}.tsx-pick input{width:28px;height:24px;border:0;padding:0;background:none}'
+ +'@media (max-width:380px){.edt-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}</style>');
 
 </script>
 </body>

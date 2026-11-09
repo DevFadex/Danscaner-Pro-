@@ -894,3 +894,25 @@ Comparación de dos videos con la misma hoja. En CamScanner se sigue sacando sin
   - **Recortar PDF** y **Censurar PDF**, si se tocaba el botón sin marcar nada, decían «Agregá al menos un elemento»; ahora explican qué hacer.
   - **Traductor**: sin internet avisa al instante, y con señal mala corta a los 20 s con un aviso claro (`fetchT`), en vez de quedarse en «Traduciendo…».
   - **Licencias**: 8 librerías de `libs/` no tenían su aviso de licencia al lado. Se agregaron `libs/LICENCIAS-TERCEROS.md` y `libs/LICENSE-Apache-2.0.txt`. Todas son compatibles (MIT, Apache 2.0, BSD).
+
+## v96 · Foto rápida, cámara legible y todas las herramientas en la foto
+- **Demora**:
+  - desde la v91, en hojas con tabla o con renglones cortos se leía el texto en 4 posiciones con Tesseract **antes** de mostrar la foto: unos 4,5 s por foto en la PC (bastante más en el celular);
+  - ahora la decisión rápida (forma de los renglones) se aplica al toque, y la lectura corre **en segundo plano** (`ocrOrientLater`, una cola). Si hacía falta girar, la hoja se gira sola un momento después y lo avisa;
+  - el procesado de la foto bajó de ≈5,6 s a ≈0,6 s en la PC;
+  - la lectura arranca recién cuando terminó la decisión rápida, para que no giren las dos a la vez.
+- **Cámara**:
+  - el diseño Neumórfico (v92) aclaraba también la pantalla de la cámara y los textos blancos quedaban sobre gris claro;
+  - ahora la cámara es siempre oscura: textos claros (contraste ≥ 7:1), botones de arriba con una franja oscura detrás, el modo elegido en azul y el disparador blanco.
+- **Temporizador**: la cuenta usaba el mismo id que el contador de fotos (`#camCount`) y lo pisaba; ahora tiene su propio recuadro (`#camTimerBox`).
+- **Herramientas en la foto**:
+  - el editor tiene **«Todas»** al principio de la barra: abre todas las herramientas agrupadas, Texto (Editar texto, Texto, Fecha/hora, Firmar, OCR), Mejorar la imagen y La hoja;
+  - en la vista hoja por hoja, **«Herramientas»** abre la hoja en el editor con la herramienta elegida;
+  - la barra del editor se desvanece a la derecha para mostrar que hay más.
+- **Texto en la foto**:
+  - letra, tamaño, negrita, cursiva, **subrayado**, **alineación**, **cualquier color**, **fondo** (resaltado o blanco que tapa) y recuadro tipo sello;
+  - los botones usan `data-ts*`, porque `data-bg` ya existía en `<html>` (lo pone el diseño) y se confundía.
+- **Investigación de otras apps**:
+  - las cámaras profesionales usan controles claros sobre fondo oscuro y una franja translúcida detrás de los botones superiores;
+  - Adobe Scan marca las esquinas en azul y muestra «Capturando… quedate quieto» (Danscanner ya lo hace);
+  - Genius Scan recomienda fondo que contraste y las 4 esquinas a la vista.
