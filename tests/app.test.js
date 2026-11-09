@@ -1802,7 +1802,7 @@ await test('v91: una planilla apaisada sacada con el teléfono parado queda dere
     const ap=['PEREYRA','GOMEZ','LUNA','SOSA','DIAZ','ROMERO','MOLINA','TORRES','ACOSTA','MEDINA','HERRERA','AGUIRRE','CASTRO','RIOS'],no=['MARTIN ARIEL','JUAN PABLO','LUCAS DAVID','PEDRO TOMAS','NICOLAS IVAN','DIEGO RAMON','PABLO ESTEBAN','RAUL MARIO','HUGO ALBERTO','OMAR DARIO','ANGEL RUBEN','JORGE LUIS','CARLOS JAVIER','MARIO CESAR'];
     x.font='22px Arial';for(let i=0;i<14;i++){const y=147+(i+1)*55;x.fillText(String(i+1).padStart(2,'0'),cols[0]+12,y);x.fillText(ap[i],cols[1]+10,y);x.fillText(no[i],cols[2]+10,y);x.fillText('1'+(i%9)+'/0'+(1+i%8)+'/2006',cols[3]+10,y);x.fillText('20 años',cols[4]+10,y);x.fillText('visto',cols[5]+10,y)}
     const side=(deg)=>{const c=canvas(H,W),y=c.getContext('2d');y.translate(H/2,W/2);y.rotate(deg*Math.PI/180);y.drawImage(t,-W/2,-H/2);return c.toDataURL('image/jpeg',.9)};
-    const out={};for(const [k,src] of [['cw',side(90)],['ccw',side(-90)],['upright',t.toDataURL('image/jpeg',.9)]]){const p=await makePage(src,{auto:false,filter:'original'});await camForceOrient(p,'port');out[k]=p.rot||0}return out});
+    const out={};for(const [k,src] of [['cw',side(90)],['ccw',side(-90)],['upright',t.toDataURL('image/jpeg',.9)]]){const p=await makePage(src,{auto:false,filter:'original'});await camForceOrient(p,'port');await ocrOrientIdle();out[k]=p.rot||0}return out});
   /* la foto girada 90° a la derecha se endereza con 270°, la girada a la izquierda con 90°, y la que ya está derecha no se toca */
   assert.deepEqual(r,{cw:270,ccw:90,upright:0});
 });
@@ -1878,9 +1878,9 @@ await test('v93: Sello de recibido y Foliar expediente en el PDF; cámara con te
   /* cámara: con el temporizador no dispara al instante; cuenta 3, 2, 1 y saca. Pide la pantalla encendida */
   await pg.evaluate(async()=>{for(let k=0;k<4&&Nav.top();k++)await Nav.back();window._wl=0;try{Object.defineProperty(navigator,'wakeLock',{value:{request:async()=>{window._wl++;return {release:async()=>{},addEventListener(){}}}},configurable:true})}catch(e){}
     S.camTimer=3;S.camFast=true;S.autoCapture=false;Cam.open('batch')});await pg.waitForFunction(()=>Cam.stream&&$('#camVideo').videoWidth>0,null,{timeout:15000});await W(500);
-  const s0=await pg.evaluate(()=>Cam._seq);await pg.click('#camShot');await W(400);const c1=await pg.evaluate(()=>({n:$('#camCount').textContent,vis:!$('#camCount').hidden,seq:Cam._seq}));
+  const s0=await pg.evaluate(()=>Cam._seq);await pg.click('#camShot');await W(400);const c1=await pg.evaluate(()=>({n:$('#camTimerBox').textContent,vis:!$('#camTimerBox').hidden,seq:Cam._seq}));/* v96: la cuenta tiene su propio recuadro (antes pisaba el contador de fotos #camCount) */
   assert.ok(c1.vis&&c1.n==='3','debe contar: '+JSON.stringify(c1));assert.equal(c1.seq,s0,'no tiene que sacar al instante');
-  await pg.waitForFunction(s0=>Cam._seq>s0,s0,{timeout:8000});assert.equal(await pg.evaluate(()=>$('#camCount').hidden),true);
+  await pg.waitForFunction(s0=>Cam._seq>s0,s0,{timeout:8000});assert.equal(await pg.evaluate(()=>$('#camTimerBox').hidden),true);assert.equal(await pg.evaluate(()=>$('#camCount').hidden),false,'el contador de fotos tiene que seguir a la vista');
   assert.ok(await pg.evaluate(()=>window._wl)>=1,'no pidió la pantalla encendida');
 });
 
@@ -1908,6 +1908,34 @@ await test('v95: avisos claros en Recortar y Censurar sin marcar nada, y el Trad
   const slow=await pg.evaluate(async()=>{Object.defineProperty(navigator,'onLine',{get:()=>true,configurable:true});const _f=window.fetch;window.fetch=(u,o)=>new Promise((res,rej)=>{o&&o.signal&&o.signal.addEventListener('abort',()=>rej(new DOMException('abort','AbortError')))});
     const t0=Date.now();try{await fetchT('https://example.invalid/x',300);return 'respondió'}catch(e){return (Date.now()-t0<2000)+'|'+e.message}finally{window.fetch=_f}});
   assert.match(slow,/^true\|No se pudo conectar con el traductor/);
+});
+
+await test('v96: la foto se procesa rápido (enderezar leyendo va en segundo plano), cámara legible, todas las herramientas en la foto y texto completo',async pg=>{
+  /* una planilla con tabla (el caso que antes leía 4 veces antes de mostrar la foto) */
+  const sp=await pg.evaluate(async()=>{const W=2000,H=2800,c=canvas(W,H),x=c.getContext('2d');x.fillStyle='#4a3826';x.fillRect(0,0,W,H);x.fillStyle='#f4f3ef';x.fillRect(150,150,1700,2500);x.strokeStyle='#222';x.lineWidth=3;
+    for(let i=0;i<=22;i++){x.beginPath();x.moveTo(250,450+i*90);x.lineTo(1750,450+i*90);x.stroke()}for(const cx of [250,450,850,1250,1750]){x.beginPath();x.moveTo(cx,450);x.lineTo(cx,2430);x.stroke()}
+    x.fillStyle='#111';x.font='bold 44px Arial';x.fillText('PLANILLA DE CONTROL',600,380);x.font='32px Arial';for(let i=0;i<21;i++){x.fillText(String(i+1),280,515+i*90);x.fillText('Apellido '+i,470,515+i*90)}
+    await Cam.open('batch');await new Promise(r=>setTimeout(r,600));const p=await makePage(c.toDataURL('image/jpeg',.9));const t0=performance.now();await camPostProcess([p],'doc');const ms=performance.now()-t0;await ocrOrientIdle();await Nav.back();return {ms}});
+  assert.ok(sp.ms<2500,'el procesado de la foto volvió a tardar: '+Math.round(sp.ms)+' ms');
+  /* cámara: fondo oscuro, letras claras, disparador blanco */
+  await pg.evaluate(()=>{S.camFast=true;Cam.open('batch')});await pg.waitForFunction(()=>Cam.stream&&$('#camVideo').videoWidth>0,null,{timeout:15000});
+  const cam=await pg.evaluate(()=>{const lum=c=>{const m=c.match(/\d+(\.\d+)?/g).map(Number);const f=v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)};return .2126*f(m[0])+.7152*f(m[1])+.0722*f(m[2])};
+    const cr=(a,b)=>{const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05)};const bg='rgb(5, 7, 12)';
+    return {bg:getComputedStyle($('#camera')).backgroundColor,kinds:cr(getComputedStyle($('#camKinds button:not(.on)')).color,bg),modes:cr(getComputedStyle($('#camera .cam-modes button:not(.on)')).color,bg),
+      gal:cr(getComputedStyle($('#camGallery small')).color,bg),done:cr(getComputedStyle($('#camDone small')).color,bg),shutter:getComputedStyle($('#camShot')).backgroundColor}});
+  assert.equal(cam.bg,'rgb(0, 0, 0)');for(const k of ['kinds','modes','gal','done'])assert.ok(cam[k]>=7,k+': contraste '+cam[k].toFixed(1));assert.equal(cam.shutter,'rgb(255, 255, 255)');
+  /* editor: «Todas» con las de texto primero, y elegir una la usa */
+  const ed=await pg.evaluate(async()=>{await Nav.back();const c=canvas(500,700),x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,500,700);x.fillStyle='#000';x.font='30px Arial';x.fillText('Hoja',40,80);
+    const p=await makePage(c.toDataURL('image/jpeg',.9),{auto:false});DOC=newDoc();DOC.pages.push(p);openDocScreen();Ed.open(0);await new Promise(r=>setTimeout(r,800));
+    $('#editor .sfoot [data-ed="__all"]').click();await new Promise(r=>setTimeout(r,500));const groups=[...$$('#sheetBody .cph')].map(x=>x.textContent);const texto=[...$$('#sheetBody .edt-grid')[0].querySelectorAll('[data-pick]')].map(x=>x.dataset.pick);
+    const rot0=DOC.pages[0].rot||0;$('#sheetBody [data-pick="rotr"]').click();await new Promise(r=>setTimeout(r,1200));return {groups,texto,rot:(DOC.pages[0].rot||0)-rot0}});
+  assert.deepEqual(ed.groups.slice(0,3),['Texto','Mejorar la imagen','La hoja']);assert.deepEqual(ed.texto,['fix','text','date','sign','ocr']);assert.equal(Math.abs(ed.rot)%360,90,'elegir «Girar der.» desde Todas no giró');
+  /* texto: subrayado, centrado, resaltado y color propio */
+  const tx=await pg.evaluate(async()=>{const pr=textStampSheet();await new Promise(r=>setTimeout(r,400));$('#tsT').value='RECIBIDO\nMesa';$('#tsT').dispatchEvent(new Event('input',{bubbles:true}));
+    $('[data-tstg="u"]').click();$('[data-tsal="center"]').click();$('[data-tsbg="#FFF176"]').click();const ci=$('#tsC');ci.value='#7c3aed';ci.dispatchEvent(new Event('input',{bubbles:true}));$('#tsOk').click();const url=await pr;
+    const im=await loadImg(url);const c=canvas(im.naturalWidth,im.naturalHeight),x=c.getContext('2d');x.drawImage(im,0,0);const d=x.getImageData(0,0,c.width,c.height).data;let yel=0,vio=0;
+    for(let i=0;i<d.length;i+=4){if(d[i]>240&&d[i+1]>230&&d[i+2]<140)yel++;if(d[i]>90&&d[i]<150&&d[i+1]<90&&d[i+2]>200)vio++}return {yel,vio}});
+  assert.ok(tx.yel>500,'sin resaltado');assert.ok(tx.vio>100,'no usó el color elegido');
 });
 
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
