@@ -17,6 +17,8 @@ PWA de escaneo de documentos para una oficina judicial penitenciaria (Unidad 5, 
   - `FW`: Worker de filtros. Copia funciones por nombre: una función nueva que se use dentro de un filtro tiene que agregarse a su lista y no depender de variables externas.
   - `Nexa`: asistente IA, solo para administrador mientras está en desarrollo.
 - `sw.js` cachea la app para usarla sin internet; agregá ahí los archivos nuevos de `mod/`.
+  - Desde la v98 los archivos de `SHELL` se sirven primero de la copia guardada: **una versión nueva solo llega si cambia `VERSION`**.
+- **Cámara (v98)**: `Cam.open`, `Cam.stop`, `Cam.detect`, `makePage`, `camPostProcess` y `camGrab` están cada una en una sola pieza con pasos comentados. Un cambio ahí se hace dentro del paso que corresponde, no con un envoltorio nuevo.
 
 ## Reglas que no se negocian
 - **Privacidad**: nada de datos personales reales (internos, DNI, expedientes) en el código, en las pruebas ni en commits. Las capturas o PDF que comparta el usuario son solo referencia visual.

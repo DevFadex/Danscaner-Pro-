@@ -1146,7 +1146,6 @@ const t=e.target.closest('[data-cp]');if(t){const k=t.dataset.cp;if(k==='hd')$('
 const m=e.target.closest('[data-mc]');if(m){S.maxCap=+m.dataset.mc;saveS()}camPanelRender()};
 $('#camCfg').onclick=()=>{const P=$('#camPanel');P.hidden=!P.hidden;$('#camCfg').classList.toggle('on',!P.hidden);camPanelRender()};
 {const _u=Cam.updUI;Cam.updUI=function(){_u.call(this);camPanelRender()}}
-{const _stop=Cam.stop;Cam.stop=function(){$('#camPanel').hidden=true;$('#camCfg').classList.remove('on');return _stop.call(this)}}
 
 /* ---------- Firma: cargar desde el dispositivo con ajuste de fondo ---------- */
 
@@ -1875,14 +1874,6 @@ function replacePagePhoto(){const p=Ed.p;if(!p)return;const appCam=camSecure();
    if(!np)return toast('No se pudo leer la foto',4000);await replaceWithPage(p.id,np)});
   inp.addEventListener('cancel',cleanup);window.addEventListener('focus',()=>setTimeout(()=>{if(!done&&!inp.files.length)cleanup()},1500),{once:true});
   inp.click();Nav.back()}}
-{const _stop=Cam.stop;Cam.stop=function(){const r=_stop.apply(this,arguments);if(!this._shooting)this.replaceId=null;return r}}
-Cam.shoot=async function(){if(!this.stream){const m=this.mode;NativeCam.open(m);Nav.back();return}if(this.busy)return;this.busy=true;const fl=$('#camera .flash');fl.classList.remove('go');void fl.offsetWidth;fl.classList.add('go');
- try{let src=null;if(S.hd&&'ImageCapture' in window){try{const blob=await Promise.race([hiResPhoto(this.track),sleep(8000).then(()=>null)]);if(blob&&blob.size>1000)src=await imageBlobToSrc(blob)}catch(e){}}
- if(!src){const v=$('#camVideo');if(!v.videoWidth)throw new Error('La cámara no está lista');const c=canvas(v.videoWidth,v.videoHeight);c.getContext('2d').drawImage(v,0,0);src=c.toDataURL('image/jpeg',.95)}
- $('#camHint').textContent='Procesando…';const p=await makePage(src);if(src.startsWith('blob:')){URL.revokeObjectURL(src);_imgCache.delete(src)}navigator.vibrate&&navigator.vibrate(40);
- if(this.replaceId){const rid=this.replaceId;this._shooting=true;this.busy=false;await Nav.back();this._shooting=false;this.replaceId=null;await replaceWithPage(rid,p);return}
- if(this.mode==='single'){this.busy=false;await Nav.back();await addPages([p],true);return}
- this.batch.push(p);this.updUI()}catch(e){toast('Error al capturar: '+e.message)}this.busy=false};
 $('#camShot').onclick=()=>Cam.shoot();
 
 /* ---------- 4. OCR: respeta los párrafos ---------- */
@@ -2567,7 +2558,6 @@ document.head.insertAdjacentHTML('beforeend','<style id="nexaCss">'
 const SRC_OPTS={appcam:['📷','Cámara de la app','Encuadre automático, perspectiva y B/N'],natcam:['📱','Cámara del celular','La app de cámara del teléfono'],gallery:['🖼️','Galería del dispositivo','Fotos, PDF u otros archivos del teléfono'],saved:['📁','Documentos de la app','Lo que ya escaneaste y guardaste acá']};
 let _srcHook=null;
 {const _ap=addPages;addPages=async function(pages,single){if(_srcHook){const h=_srcHook;_srcHook=null;h(pages);return}return _ap(pages,single)}}
-{const _cs=Cam.stop;Cam.stop=function(){const had=this.batch&&this.batch.length;const r=_cs.apply(this,arguments);if(_srcHook&&!had)setTimeout(()=>{if(_srcHook){const h=_srcHook;_srcHook=null;h(null)}},400);return r}}
 const acceptOk=(f,accept)=>{if(!accept)return true;const n=(f.name||'').toLowerCase(),t=(f.type||'').toLowerCase();return accept.split(',').map(a=>a.trim().toLowerCase()).filter(Boolean).some(a=>a.startsWith('.')?n.endsWith(a):a.endsWith('/*')?t.startsWith(a.slice(0,-1)):t===a)};
 const acceptsPdf=a=>!a||acceptOk({name:'x.pdf',type:'application/pdf'},a);
 const acceptsImg=a=>!a||acceptOk({name:'x.jpg',type:'image/jpeg'},a);
@@ -3271,9 +3261,6 @@ const CamPro={flash:S.flashMode||'off',ev:0,caps:null,timer:null,level:null,lowL
  stop(){clearInterval(this.timer);this.timer=null},
  levelOn(){if(this._lv)return;this._lv=e=>{if(e.beta==null)return;this.level={b:e.beta,g:e.gamma};const el=$('#camLevel');if(!el)return;el.hidden=false;const ok=Math.abs(e.beta)<5&&Math.abs(e.gamma)<5;el.classList.toggle('ok',ok);el.firstChild.style.transform='translate('+Math.max(-18,Math.min(18,e.gamma))+'px,'+Math.max(-18,Math.min(18,e.beta))+'px)'};window.addEventListener('deviceorientation',this._lv)}};
 (function(){const st=$('#camera .cam-stage');if(st&&!$('#camWarn'))st.insertAdjacentHTML('beforeend','<div class="cam-warn" id="camWarn" hidden></div><div class="cam-level" id="camLevel" hidden><i></i></div>')})();
-{const _open=Cam.open.bind(Cam);Cam.open=async function(mode){try{if(window.DeviceOrientationEvent&&typeof DeviceOrientationEvent.requestPermission==='function')DeviceOrientationEvent.requestPermission().then(r=>{if(r==='granted')CamPro.levelOn()}).catch(()=>{});else CamPro.levelOn()}catch(e){}
-  const r=await _open(mode);let k=0;const wait=setInterval(()=>{if(Cam.track||++k>40){clearInterval(wait);if(Cam.track)CamPro.setup()}},150);return r}}
-{const _stop=Cam.stop;Cam.stop=function(){CamPro.stop();const w=$('#camWarn');if(w)w.hidden=true;return _stop.apply(this,arguments)}}
 /* flash: apagado → encendido → automático */
 {const tb=$('#camTorch');if(tb){const paint=()=>{tb.classList.toggle('on',CamPro.flash!=='off');tb.title='Flash: '+{off:'apagado',on:'encendido',auto:'automático'}[CamPro.flash];let b=tb.querySelector('.fl-a');if(CamPro.flash==='auto'){if(!b)tb.insertAdjacentHTML('beforeend','<b class="fl-a">A</b>')}else if(b)b.remove()};
  tb.onclick=async()=>{CamPro.flash={off:'on',on:'auto',auto:'off'}[CamPro.flash];S.flashMode=CamPro.flash;saveS();if(CamPro.flash==='on')await CamPro.torch(true);else if(CamPro.flash==='off')await CamPro.torch(false);else await CamPro.torch(CamPro.lowLight);paint();toast(tb.title)};paint()}}
@@ -3364,7 +3351,6 @@ function refineQuad(src,q){try{if(!q)return q;const W0=src.naturalWidth||src.wid
  const out=[];for(let i=0;i<4;i++){const A=lines[(i+3)%4],B=lines[i],den=A.dx*B.dy-A.dy*B.dx;if(Math.abs(den)<1e-6)return q;const t=((B.mx-A.mx)*B.dy-(B.my-A.my)*B.dx)/den;const p={x:A.mx+A.dx*t,y:A.my+A.dy*t};
   if(Math.hypot(p.x-P[i].x,p.y-P[i].y)>R*1.6)return q;out.push({x:Math.max(0,Math.min(1,p.x/w)),y:Math.max(0,Math.min(1,p.y/h))})}
  return out}catch(e){console.warn('refineQuad',e);return q}}
-{const _mp=makePage;makePage=function(src,o={}){return (async()=>{const p=await _mp(src,o);if(p&&p.quad&&(o.auto??S.autoCrop)!==false){try{const img=await loadImg(p.orig);const r=refineQuad(img,p.quad);if(r!==p.quad){p.quad=r;await makeThumb(p)}}catch(e){}}return p})()}}
 $('#crAuto').onclick=async()=>{const img=await loadImg(Crop.p.orig);let q=detectQuad(img);if(q){Crop.q=refineQuad(img,q);cropLayout();toast('Bordes detectados')}else toast('No se detectaron bordes claros, ajustá a mano')};
 
 /* ---- recorte: manijas en la mitad de cada lado (mueven el lado entero) ---- */
@@ -3392,7 +3378,6 @@ Cam.kind='doc';
   if(k==='id'){await Nav.back();dniMode();return}
   Cam.kind=k;Cam.updUI();toast(k==='book'?'📖 Libro: encuadrá las dos páginas abiertas; se separan solas':k==='board'?'🧑‍🏫 Pizarra: fondo limpio y trazos nítidos':'📄 Documento',2600)}})();
 {const _u=Cam.updUI;Cam.updUI=function(){_u.apply(this,arguments);$$('#camKinds [data-kind]').forEach(b=>b.classList.toggle('on',b.dataset.kind===this.kind))}}
-{const _o=Cam.open;Cam.open=function(mode){if(!this.replaceId)this.kind=this.kind==='book'||this.kind==='board'?this.kind:'doc';return _o.apply(this,arguments)}}
 
 /* ---- captura: foto completa, filtro según el tipo, Libro separa en dos ---- */
 Cam.shoot=async function(){if(!this.stream){const m=this.mode;NativeCam.open(m);Nav.back();return}if(this.busy)return;this.busy=true;const fl=$('#camera .flash');fl.classList.remove('go');void fl.offsetWidth;fl.classList.add('go');$('#camShot').classList.remove('arming');
@@ -3422,7 +3407,6 @@ Cam.detect=function(){const v=$('#camVideo');if(!v.videoWidth||this.busy)return;
  /* después de una auto-captura espera otra hoja: que el marco desaparezca o cambie bastante, para no repetir la misma página */
  if(this._shotQ){if(!q||q.reduce((s2,p,i)=>s2+Math.hypot(p.x-this._shotQ[i].x,p.y-this._shotQ[i].y),0)>0.25)this._shotQ=null;else if(auto){shot.classList.remove('arming');hint.textContent='✓ Capturada · poné la hoja siguiente'+cnt;return}}
  if(q&&auto&&this._stable>=CAM_STEADY&&!this._cool){this._stable=0;this._cool=true;this._shotQ=q;setTimeout(()=>{this._cool=false},1500);toast('📸 Auto-captura',1200);this.shoot()}};
-{const _st=Cam.stop;Cam.stop=function(){this._shotQ=null;$('#camShot').classList.remove('arming');return _st.apply(this,arguments)}}
 
 document.head.insertAdjacentHTML('beforeend','<style id="cam2Css">.cam-stage video{object-fit:cover}'
 +'.cam-kinds{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding:6px 10px 0;justify-content:safe center}.cam-kinds button{flex:none;padding:6px 12px;border-radius:16px;color:#cbd5e1;font-size:12.5px;font-weight:600;letter-spacing:.02em}.cam-kinds button.on{color:#22d3ee;background:#22d3ee1f}'
@@ -3464,7 +3448,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 4.5',APP_VER='97';
+const NEXA_VER='Nexa 4.5',APP_VER='98';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3582,7 +3566,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='97 · 10/11/2026';
+const BUILD='98 · 11/11/2026';
 /* Versión que ven los usuarios: se cambia a mano solo cuando se decide publicar una versión nueva para todos.
    El administrador ve la versión interna (BUILD) con cada cambio. */
 const PUBLIC_VER='1.2';
@@ -4502,8 +4486,6 @@ function paperLbl(){const l=$('#editor [data-ed="paper"] .pp-l');if(l&&Ed.p)l.te
 CAM_KINDS.splice(2,0,['cert','Certificado']);
 (function(){const k=$('#camKinds');if(!k||k.querySelector('[data-kind="cert"]'))return;const ref=k.querySelector('[data-kind="id"]');const b=document.createElement('button');b.dataset.kind='cert';b.textContent='Certificado';if(ref)ref.before(b);else k.appendChild(b);
  k.addEventListener('click',e=>{const x=e.target.closest('[data-kind="cert"]');if(!x)return;e.stopImmediatePropagation();Cam.kind='cert';Cam.updUI();toast('Certificado: sale en su tamaño real, centrado en una hoja A4 blanca',3200)},true)})();
-{const _o=Cam.open;Cam.open=function(mode){const k=this.kind;const r=_o.apply(this,arguments);if(k==='cert'&&!this.replaceId)this.kind='cert';this.updUI&&this.updUI();return r}}
-{const _mp=makePage;makePage=function(src,o){return _mp.apply(this,arguments).then(p=>{if(p&&typeof Cam!=='undefined'&&Cam.kind==='cert'&&Nav.isOpen('camera')&&!p.paper)p.paper='a5';return p})}}
 
 /* ---- cámara: borrar la foto que salió mal ---- */
 document.head.insertAdjacentHTML('beforeend','<style id="v43Css">.cam-undo{position:absolute;left:12px;bottom:118px;z-index:4;display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:20px;background:#000a;color:#fff;font-size:13px;font-weight:600}.cam-undo .ico{width:17px;height:17px}.cam-undo[hidden]{display:none}'
@@ -4521,7 +4503,6 @@ document.head.insertAdjacentHTML('beforeend','<style id="v43Css">.cam-undo{posit
 {const _sh=Cam.shoot;Cam.shoot=async function(){if(this.mode!=='single'||this.replaceId||!this.stream)return _sh.apply(this,arguments);
   this.mode='batch';const n0=this.batch.length;try{await _sh.apply(this,arguments)}finally{this.mode='single'}
   const got=this.batch.splice(n0);this.updUI();if(!got.length)return;this.review=got;this.busy=true;const im=$('#camRevImg');im.src=got[0].thumb||'';if(!got[0].thumb)renderPage(got[0],{maxSide:900}).then(c=>{im.src=c.toDataURL('image/jpeg',.85)}).catch(()=>{});$('#camRev').hidden=false}}
-{const _st=Cam.stop;Cam.stop=function(){if(this.review){this.batch.push(...this.review);this.review=null}$('#camRev')&&($('#camRev').hidden=true);this.busy=false;return _st.apply(this,arguments)}}
 
 /* enderezado: en hojas casi vacías o sin renglones claros no se inventa una inclinación (antes una hoja en blanco se giraba 6° y cambiaba de proporción) */
 {const _da=deskewAngle;deskewAngle=function(c){const a=_da.apply(this,arguments);if(!a)return 0;try{const w=c.width,h=c.height,s=Math.min(1,500/Math.max(w,h)),W=Math.max(20,Math.round(w*s)),H=Math.max(20,Math.round(h*s));const t=canvas(W,H);t.getContext('2d').drawImage(c,0,0,W,H);const d=t.getContext('2d',{willReadFrequently:true}).getImageData(0,0,W,H).data,g=new Uint8Array(W*H);let sum=0;for(let i=0,k=0;i<d.length;i+=4,k++){g[k]=d[i]*.299+d[i+1]*.587+d[i+2]*.114;sum+=g[k]}const mean=sum/(W*H);let dark=0;for(let k=0;k<g.length;k++)if(g[k]<mean*.8)dark++;if(dark/g.length<.004)return 0;
@@ -4535,7 +4516,6 @@ PAPER_NAMES.cert='Certificado (centrado en A4)';PAGE_MM.cert=[210,297];
  const land=w>h;let [pw,ph]=PAGE_SIZES.a4,[bw,bh]=PAGE_SIZES.a5;if(land){[pw,ph]=[ph,pw];[bw,bh]=[bh,bw]}
  const s=Math.min(bw/Math.max(1,w),bh/Math.max(1,h));return {k:'cert',pw,ph,fill:false,dw:w*s,dh:h*s}}}
 /* la cámara en modo Certificado marca la página así (las páginas viejas en A5 quedan como estaban) */
-{const _mp=makePage;makePage=function(src,o){return _mp.apply(this,arguments).then(p=>{if(p&&p.paper==='a5'&&typeof Cam!=='undefined'&&Cam.kind==='cert'&&Nav.isOpen('camera'))p.paper='cert';return p})}}
 /* opción en la hoja de «Tamaño de la hoja» del editor y en Ajustes / Exportar */
 new MutationObserver(()=>{const g=document.querySelector('[data-pp="a5"]');if(g&&!document.querySelector('[data-pp="cert"]')){const b=g.cloneNode(true);b.dataset.pp='cert';b.textContent='Certificado centrado en hoja A4';b.classList.toggle('on',!!(Ed.p&&Ed.p.paper==='cert'));g.before(b)}
  for(const sel of document.querySelectorAll('.sSize,#exSize'))if(sel.querySelector('option[value="a5"]')&&!sel.querySelector('option[value="cert"]')){const o=document.createElement('option');o.value='cert';o.textContent='Certificado centrado en hoja A4';sel.querySelector('option[value="a5"]').before(o);if(sel.classList.contains('sSize')&&S.size==='cert')sel.value='cert'}}).observe(document.body,{childList:true,subtree:true});
@@ -5096,14 +5076,8 @@ if(S.v58cam!==true){camApplyProfile('lote',true);S.v58cam=true;S.v58hello=true;t
 /* el marco en vivo, llevado a la foto: el video suele ser un recorte centrado del sensor con otra proporción */
 function camMapHint(h,W,H){if(!h||!h.q||!h.vw||!h.vh||!W||!H)return null;const av=h.vw/h.vh,ap=W/H;if((av>1)!==(ap>1)&&Math.abs(av-1)>.05&&Math.abs(ap-1)>.05)return null;
  return h.q.map(p=>{let x=p.x,y=p.y;if(av>ap)y=.5+(y-.5)*ap/av;else if(av<ap)x=.5+(x-.5)*av/ap;return {x:Math.max(0,Math.min(1,x)),y:Math.max(0,Math.min(1,y))}})}
-{const _mp=makePage;makePage=function(src,o){if(!o||!o.hint)return _mp.apply(this,arguments);const h=o.hint,o2=Object.assign({},o);delete o2.hint;
- return _mp(src,o2).then(async p=>{try{if(!p||(o2.auto??S.autoCrop)===false)return p;const img=await loadImg(p.orig),hq=camMapHint(h,img.naturalWidth,img.naturalHeight);if(!hq)return p;
-  const dist=p.quad?p.quad.reduce((s2,c,i)=>s2+Math.hypot(c.x-hq[i].x,c.y-hq[i].y),0)/4:1;
-  const ar=q=>Math.abs(q.reduce((s3,c,i)=>{const n=q[(i+1)%4];return s3+c.x*n.y-n.x*c.y},0))/2;
-  if(!p.quad||(dist>.035&&ar(p.quad)<ar(hq)*.6)){p.quad=refineQuad(img,hq);p.hinted=true;await makeThumb(p)}}catch(e){console.warn('marco en vivo',e)}return p})}}
 Cam._hintNow=function(){const v=$('#camVideo');return this._lastQuad&&v&&v.videoWidth?{q:this._lastQuad.map(p=>({x:p.x,y:p.y})),vw:v.videoWidth,vh:v.videoHeight}:null};
 /* también en «Individual» y al reemplazar una página */
-{const _mp=makePage;makePage=function(src,o){if(typeof Cam!=='undefined'&&Cam._shotHint&&Nav.isOpen('camera')&&!(o&&o.hint)){const h=Cam._shotHint;Cam._shotHint=null;return _mp.call(this,src,Object.assign({},o||{},{hint:h}))}return _mp.apply(this,arguments)}}
 
 /* captura: foto del sensor (HD) o cuadro del video (ultrarrápido) */
 async function camGrab(){const v=$('#camVideo');
@@ -5114,9 +5088,6 @@ async function camGrab(){const v=$('#camVideo');
 
 /* lote: el procesado va en una cola; el disparador se libera apenas la foto está tomada */
 Cam._q=Promise.resolve();Cam._pend=0;Cam._sid=0;Cam._late=[];Cam._jobs=[];Cam._cancel=new Set();Cam._seq=0;
-{const _o=Cam.open;Cam.open=async function(mode){if(mode==='single'&&!this.replaceId&&!(typeof _srcHook!=='undefined'&&_srcHook)&&this._fromMain&&S.camPrefMode==='batch')mode='batch';this._fromMain=false;this._sid++;
- const r=await _o.call(this,mode);if(this.timer&&this.stream){clearInterval(this.timer);this.timer=setInterval(()=>this.detect(),240)}
- if(S.v58hello&&Nav.isOpen('camera')){S.v58hello=false;saveS();toast('📸 Perfil recomendado: Lote automático. Lo cambiás en ⚙️ → Perfil',4500)}return r}}
 {const _sh=Cam.shoot;Cam.shoot=async function(){
  if(!this.replaceId&&this.stream)this._shotHint=this._hintNow();
  if(this.mode!=='batch'||this.replaceId||!this.stream)return _sh.apply(this,arguments);
@@ -5132,10 +5103,6 @@ Cam._q=Promise.resolve();Cam._pend=0;Cam._sid=0;Cam._late=[];Cam._jobs=[];Cam._c
   if(this._closing)busy(this._pend?'Terminando de procesar '+this._pend+' foto(s)…':'Guardando…');this.updUI();await sleep(0)};
  this._q=this._q.then(job,job)}}
 /* al terminar con fotos todavía en proceso: se apaga la cámara, se esperan y se entregan todas juntas, en orden */
-{const _st=Cam.stop;Cam.stop=function(){if(!this._pend)return _st.apply(this,arguments);const args=arguments;
- clearInterval(this.timer);try{this.stream&&this.stream.getTracks().forEach(t=>t.stop())}catch(e){}
- const have=this.batch;this.batch=[];this._late=[];this._sid++;this._closing=true;busy('Terminando de procesar '+this._pend+' foto(s)…');
- this._q.then(()=>{this._closing=false;busy(false);this.batch=have.concat(this._late);this._late=[];_st.apply(this,args)})}}
 $('#camDone').onclick=async()=>{if(!Cam.batch.length&&!Cam._pend)return toast('Todavía no sacaste fotos');await Nav.back()};
 $('#camUndo').onclick=()=>{if(Cam._jobs.length){const n=Cam._jobs.pop();Cam._cancel.add(n);Cam._pend--;Cam.updUI();toast('Foto borrada');return}if(!Cam.batch.length)return;Cam.batch.pop();Cam.updUI();toast('Foto borrada')};
 {const _u=Cam.updUI;Cam.updUI=function(){const r=_u.apply(this,arguments);const pend=this._pend||0,c=$('#camCount');if(c)c.textContent=this.batch.length+pend;const d=$('#camDone');if(d)d.classList.toggle('working',pend>0);
@@ -5198,8 +5165,6 @@ function camAnalyze(){const v=$('#camVideo');if(!v||!v.videoWidth||Cam.busy||!Na
  if(S.camFast&&q&&Cam._stable>=1&&Cam._tick%2===0){Cam._buf=Cam._buf||[];Cam._bi=((Cam._bi||0)+1)%2;let b=Cam._buf[Cam._bi];if(!b||b.c.width!==vw||b.c.height!==vh)b=Cam._buf[Cam._bi]={c:canvas(vw,vh)};
   b.c.getContext('2d').drawImage(v,0,0);b.s=camSharpCenter(b.c,vw,vh);b.t=performance.now()}
  if(!q)Cam._glare=false;else if(Cam._tick%2===1)Cam._glare=camGlareOf(v,q,vw,vh).glare;const el=$('#camGlare');if(el)el.hidden=!Cam._glare}
-{const _d=Cam.detect;Cam.detect=function(){const r=_d.apply(this,arguments);try{camAnalyze()}catch(e){}return r}}
-{const _o=Cam.open;Cam.open=function(){this._sharpHist=[];this._buf=[];this._glare=false;const g=$('#camGlare');if(g)g.hidden=true;return _o.apply(this,arguments)}}
 
 /* captura: la más nítida de una ráfaga (ultrarrápido) o la foto HD verificada, con una segunda toma automática */
 {const _g=camGrab;camGrab=async function(){const v=$('#camVideo'),ref=camSharpRef();
@@ -5247,7 +5212,6 @@ async function camPostProcess(pages,kind){for(const p of pages){const f={};try{l
   const sig=pageSig(c);let bs=0,bp=null;for(const e of Cam._sigs){const s=sigSim(sig,e.sig);if(s>bs){bs=s;bp=e.p}}if(bp&&bs>=CAM_DUP){f.dup=bp;f.dupSim=bs}Cam._sigs.push({p,sig});if(Cam._sigs.length>80)Cam._sigs.shift();c.width=c.height=1}catch(e){console.warn('revisión',e)}
  if(!p.quad)f.nob=true;Cam._flags.set(p,f);
  if(f.dup)toast('⚠️ Esta hoja parece repetida: la vas a ver marcada al terminar',3200);else if(f.rot)toast('↻ Hoja enderezada ('+(f.rot===180?'estaba al revés':'estaba de costado')+')',2200)}}
-{const _o=Cam.open;Cam.open=function(){if(!this.replaceId)this._sigs=[];return _o.apply(this,arguments)}}
 
 /* revisión del lote al tocar «Listo» */
 function camReviewSheet(){const pages=Cam.batch,del=new Set();const lbl=p=>{const f=Cam._flags.get(p)||{},t=[];if(f.dup){const k=pages.indexOf(f.dup);t.push('<span class="rv-w">⚠️ Repetida'+(k>=0?' de la '+(k+1):'')+'</span>')}if(f.rot)t.push('<span class="rv-i">↻ Enderezada</span>');if(f.nob)t.push('<span class="rv-w">✂️ Sin bordes</span>');if(f.fg)t.push('<span class="rv-i">🧽 Sin dedos</span>');if(f.dw)t.push('<span class="rv-i">📖 Aplanada</span>');return t.join('')};
@@ -5334,7 +5298,6 @@ function camCaps(){const tr=Cam.track;if(!tr)return {};if(Cam._caps&&Cam._capsTr
 function camFollowFocus(){const tr=Cam.track;if(!tr||S.camFollow===false)return;const c=camQuadCenter();if(!c)return;const t=performance.now();
  if(t-(Cam._tapT||0)<4000||t-(Cam._poiT||0)<1200||Cam._locking)return;const p=Cam._poi;if(p&&Math.hypot(p.x-c.x,p.y-c.y)<.08)return;
  if(!('pointsOfInterest' in camCaps()))return;Cam._poi=c;Cam._poiT=t;tr.applyConstraints({advanced:[{pointsOfInterest:[c]}]}).catch(()=>{})}
-{const _d=Cam.detect;Cam.detect=function(){const r=_d.apply(this,arguments);try{camFollowFocus()}catch(e){}return r}}
 (function(){const st=$('#camera .cam-stage');if(st)st.addEventListener('click',e=>{if(e.target.id==='camVideo'||e.target.closest('#camSvg'))Cam._tapT=performance.now()},true)})();
 /* antes de la foto HD: si el cuadro no está nítido, enfoca una vez sobre la hoja y espera el punto de máxima nitidez (sin demora si ya estaba enfocado) */
 const CAM_FOCUS_MS=900;
@@ -5344,8 +5307,6 @@ async function camFocusLock(){const tr=Cam.track,v=$('#camVideo');if(!tr||!v||!v
  Cam._locking=true;try{await tr.applyConstraints({advanced:[adv]})}catch(e){Cam._locking=false;return false}
  let best=s0,still=0;const t0=performance.now();while(performance.now()-t0<CAM_FOCUS_MS){await sleep(90);const s=sharp();if(s>best*1.03){best=s;still=0}else if(++still>=2&&(!ref||best>=ref*.8))break}
  return true}
-{const _g=camGrab;camGrab=async function(){let lk=false;if(S.hd&&!S.camFast&&S.camFocusLock!==false){try{lk=await camFocusLock()}catch(e){}}
- try{return await _g.apply(this,arguments)}finally{if(lk){const tr=Cam.track;Cam._locking=false;setTimeout(()=>{if(tr&&Cam.track===tr&&camCaps().focusMode&&camCaps().focusMode.includes('continuous'))tr.applyConstraints({advanced:[{focusMode:'continuous'}]}).catch(()=>{})},300)}}}}
 
 /* opciones en el panel ⚙️ */
 {const _r=camPanelRender;camPanelRender=function(){const r=_r.apply(this,arguments);const P=$('#camPanel');if(!P||P.hidden||P.querySelector('[data-cp4]'))return r;const g=P.querySelector('.cpgrid');
@@ -5464,10 +5425,6 @@ async function pageAutoClean(p,{dewarp=true,finger=true}={}){const k=pageKey(p),
 /* en la cámara: después de enderezar y revisar repetidas */
 /* v72: orientación de las hojas de la cámara: horizontal (por defecto), vertical o automática. Se gira acá, antes de limpiar, para que la limpieza use la hoja ya girada */
 const camOrient=()=>S.camOrient||'port';
-{const _pp=camPostProcess;camPostProcess=async function(pages,kind){const r=await _pp.apply(this,arguments);const o=camOrient();if(o==='auto'||o==='phone')return r;
- for(const p of pages){try{if(await camForceOrient(p,o)){await makeThumb(p);const f=Cam._flags.get(p);if(f)f.orient=o}}catch(e){console.warn('orientación',e)}}return r}}
-{const _pp=camPostProcess;camPostProcess=async function(pages,kind){const r=await _pp.apply(this,arguments);for(const p of pages){try{const o=await pageAutoClean(p,{dewarp:kind!=='board'});const f=Cam._flags.get(p)||{};if(o.dw)f.dw=true;if(o.fg)f.fg=true;Cam._flags.set(p,f);
-  if(o.fg)toast('🧽 Se borró un dedo del borde de la hoja',2200);else if(o.dw)toast('📖 Hoja curva aplanada',2000)}catch(e){console.warn('limpiar',e)}}return r}}
 
 /* editor: «Limpiar» — dedos, aplanar y borrar manchas con el dedo */
 async function cleanSheet(){const p=Ed.p;if(!p)return;const k=pageKey(p);const dwOn=!!(p.dw&&p.dw.k===k&&p.dw.on!==false),fgOn=!!(p.fg&&p.fg.k===k&&p.fg.on!==false);
@@ -5505,7 +5462,6 @@ function camPanelOpen(){const P=$('#camPanel');return !!(P&&!P.hidden)}
  let key='';try{key=JSON.stringify(S)+'|'+Cam.torch+'|'+(Cam.track&&Cam.track.label)+'|'+Cam.mode+'|'+(typeof CamPro!=='undefined'?CamPro.flash+'|'+CamPro.ev:'')}catch(e){}
  if(Cam._inUpd&&key&&P._key===key&&P.childElementCount)return;
  const st=P.scrollTop,r=_r.apply(this,arguments);P._key=key;P.scrollTop=st;return r}}
-{const _d=Cam.detect;Cam.detect=function(){if(camPanelOpen()){const s=$('#camSvg');if(s)s.innerHTML='';this._stable=0;this._lastQuad=null;const h=$('#camHint');if(h)h.textContent='⏸ Cámara en pausa mientras configurás';return}return _d.apply(this,arguments)}}
 function camPanelClose(){const P=$('#camPanel');if(!P||P.hidden)return false;P.hidden=true;const b=$('#camCfg');if(b)b.classList.remove('on');return true}
 (function(){const st=$('#camera .cam-stage');if(st)st.addEventListener('click',e=>{if(camPanelOpen()){e.stopImmediatePropagation();e.preventDefault();camPanelClose()}},true);
  const sh=$('#camShot');if(sh)sh.addEventListener('click',()=>camPanelClose(),true)})();
@@ -5642,7 +5598,6 @@ function camGuideUpd(){const g=$('#camGuide');if(!g)return;const k=Cam.kind;g.hi
 {const _ap=addPages;addPages=async function(pages,open){const card=typeof Cam!=='undefined'&&Cam.kind==='card';const r=await _ap.apply(this,arguments);if(card&&open!==false){Cam.kind='doc';setTimeout(()=>{if(DOC&&DOC.pages.length)cardSheet()},450)}return r}}
 
 /* ---- marco de cuatro puntos (Adobe Scan) ---- */
-{const _d=Cam.detect;Cam.detect=function(){const r=_d.apply(this,arguments);try{camFrameDraw()}catch(e){}return r}}
 function camFrameDraw(){if(S.camFrame==='lineas')return;const svg=$('#camSvg');if(!svg)return;const pg=svg.querySelector('polygon');
  if(!pg){if(svg.querySelector('.cf'))svg.innerHTML='';return}
  const pts=(pg.getAttribute('points')||'').trim().split(/\s+/).map(s=>s.split(',').map(Number));if(pts.length!==4||pts.some(p=>p.length!==2||!isFinite(p[0])))return;
@@ -5650,7 +5605,6 @@ function camFrameDraw(){if(S.camFrame==='lineas')return;const svg=$('#camSvg');i
  svg.innerHTML='<polygon class="cf cf-l'+(steady?' ok':'')+'" points="'+pts.map(p=>p.join(',')).join(' ')+'"/>'+pts.map(p=>'<circle class="cf cf-d'+(steady?' ok':'')+'" cx="'+p[0]+'" cy="'+p[1]+'" r="11"/>').join('')}
 /* píldora "Capturando, un momento…" y sonido de obturador opcional */
 let _camAC=null;function camClick(){if(S.camSound!==true)return;try{_camAC=_camAC||new (window.AudioContext||window.webkitAudioContext)();const a=_camAC,n=a.createBuffer(1,a.sampleRate*.06,a.sampleRate),d=n.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,3);const s=a.createBufferSource(),g=a.createGain();g.gain.value=.35;s.buffer=n;s.connect(g).connect(a.destination);s.start()}catch(e){}}
-{const _g=camGrab;camGrab=async function(){const h=$('#camHint');if(h){h.textContent='Capturando, un momento…';h.classList.add('cap')}camClick();try{return await _g.apply(this,arguments)}finally{if(h)h.classList.remove('cap')}}}
 
 /* ---- panel ⚙️ compacto (CamScanner) con «Más ajustes» para el panel completo ---- */
 {const _r=camPanelRender;camPanelRender=function(){const P=$('#camPanel');if(!P||P.hidden||P._full){const r=_r.apply(this,arguments);if(P&&!P.hidden&&P._full&&!P.querySelector('[data-cq="less"]'))P.insertAdjacentHTML('afterbegin','<button class="cq-back" data-cq="less">‹ Ajustes rápidos</button>');return r}
@@ -5667,7 +5621,6 @@ $('#camPanel').addEventListener('click',e=>{const t=e.target.closest('[data-cq]'
  saveS();P._ck='';camPanelRender()},true);
 function camLevelUpd(){const c=$('#camera');if(c)c.classList.toggle('nolevel',S.camLevel===false)}
 camLevelUpd();
-{const _o=Cam.open;Cam.open=function(){const P=$('#camPanel');if(P){P._full=false;P._ck=''}camLevelUpd();return _o.apply(this,arguments)}}
 
 /* ---- carga giratoria (anillo azul, como Adobe Scan) ---- */
 document.head.insertAdjacentHTML('beforeend','<style id="v65Css">'+
@@ -5848,15 +5801,6 @@ const BK_MOVE=10,BK_STILL=2.6,BK_TICKS=4;
 function camMotion(v){const W=64,H=48;const c=Cam._mc||(Cam._mc=canvas(W,H)),x=c.getContext('2d',{willReadFrequently:true});x.drawImage(v,0,0,W,H);const d=x.getImageData(0,0,W,H).data,g=new Uint8Array(W*H);for(let i=0,j=0;i<g.length;i++,j+=4)g[i]=(d[j]*77+d[j+1]*150+d[j+2]*29)>>8;
  const p=Cam._mprev;Cam._mprev=g;if(!p)return null;let s=0;for(let i=0;i<g.length;i++)s+=Math.abs(g[i]-p[i]);return s/g.length}
 function bookAutoOn(){return Cam.kind==='book'&&Cam.mode==='batch'&&S.bookAuto!==false&&!Cam.replaceId&&!(typeof camPanelOpen==='function'&&camPanelOpen())}
-{const _d=Cam.detect;Cam.detect=function(){if(!bookAutoOn())return _d.apply(this,arguments);
- /* en libro automático manda el movimiento de la página, no la captura automática común */
- const ac=S.autoCapture;S.autoCapture=false;let r;try{r=_d.apply(this,arguments)}finally{S.autoCapture=ac}
- try{const v=$('#camVideo');if(!v||!v.videoWidth||this.busy)return r;const m=camMotion(v);if(m==null)return r;
-  if(m>BK_MOVE){this._bkArmed=true;this._bkStill=0}else if(m<BK_STILL)this._bkStill=(this._bkStill||0)+1;else this._bkStill=0;
-  const h=$('#camHint');if(h&&!h.classList.contains('cap'))h.textContent=this._bkArmed?(this._bkStill?'📖 Quieto… ':'📖 Pasá la página')+' · '+(this.batch.length+(this._pend||0))+' foto(s)':'📖 Pasá la página para la siguiente foto';
-  if(this._bkArmed&&this._bkStill>=BK_TICKS){this._bkArmed=false;this._bkStill=0;navigator.vibrate&&navigator.vibrate(30);this.shoot()}}catch(e){}
- return r}}
-{const _o=Cam.open;Cam.open=function(){this._bkArmed=true;this._bkStill=0;this._mprev=null;return _o.apply(this,arguments)}}
 (function(){const g=$('#camGuide');if(!g||$('#camBookAuto'))return;g.insertAdjacentHTML('beforeend','<button class="cg-auto" id="camBookAuto"></button>');
  const upd=()=>{const b=$('#camBookAuto');b.classList.toggle('on',S.bookAuto!==false);b.textContent=S.bookAuto!==false?'⚡ Automático':'✋ Manual'};upd();
  $('#camBookAuto').onclick=e=>{e.stopPropagation();S.bookAuto=S.bookAuto===false;saveS();upd();if(S.bookAuto!==false&&Cam.mode!=='batch'){Cam.mode='batch';Cam.updUI()}Cam._bkArmed=true;toast(S.bookAuto!==false?'📖 Pasá las páginas: saco cada foto sola cuando la hoja queda quieta':'Libro manual: tocá el disparador en cada página',3000)}})();
@@ -6062,8 +6006,6 @@ const VisionEngine={w:null,ok:null,active:false,busy:false,seq:0,last:null,lastA
   svg.querySelectorAll('circle').forEach((c,i)=>{if(i<4){c.setAttribute('cx',X(q[i]));c.setAttribute('cy',Y(q[i]))}});
   const ln=svg.querySelector('line');if(ln){const a={x:(q[0].x+q[1].x)/2,y:(q[0].y+q[1].y)/2},b={x:(q[3].x+q[2].x)/2,y:(q[3].y+q[2].y)/2};ln.setAttribute('x1',X(a));ln.setAttribute('y1',Y(a));ln.setAttribute('x2',X(b));ln.setAttribute('y2',Y(b))}}};
 function camQuadNow(v){const q=VisionEngine.quad();return q===undefined?detectQuad(v):q}
-{const _o=Cam.open;Cam.open=async function(){const r=await _o.apply(this,arguments);let k=0;const go=()=>{const v=$('#camVideo');if(this.stream&&v&&v.videoWidth)VisionEngine.start(v);else if(++k<60&&Nav.isOpen('camera'))setTimeout(go,150)};go();return r}}
-{const _st=Cam.stop;Cam.stop=function(){VisionEngine.stop();return _st.apply(this,arguments)}}
 
 /* Pilar 4: enfoque y flash automáticos con los datos del Worker */
 function autoFocusFlash(r){const C=VisionEngine.cfg(),t=performance.now(),V=self.DSVision;if(!V||!Cam.track)return;
@@ -6077,8 +6019,6 @@ function autoFocusFlash(r){const C=VisionEngine.cfg(),t=performance.now(),V=self
  Cam._refocusN=(Cam._refocusN||0)+1;tr.applyConstraints({advanced:[adv]}).catch(()=>{});if(adv.focusMode==='single-shot')setTimeout(()=>{if(Cam.track===tr&&fm.includes('continuous'))tr.applyConstraints({advanced:[{focusMode:'continuous'}]}).catch(()=>{})},1500)}
 function camAutoTorch(fallback){const r=VisionEngine.fresh(),V=self.DSVision;return r&&V?V.torchDecision(r.luma,!!Cam.torch,VisionEngine.cfg()):fallback}
 /* no se auto-dispara con la imagen movida o desenfocada (varianza del laplaciano baja); a mano se puede igual */
-{const _d=Cam.detect;Cam.detect=function(){const r=VisionEngine.fresh(),V=self.DSVision;const blocked=!!(r&&r.quad&&V&&S.autoCapture&&!this.replaceId&&!V.captureAllowed(r,VisionEngine.cfg()));if(blocked)this._stable=Math.min(this._stable||0,0);
- const out=_d.apply(this,arguments);if(blocked&&this._lastQuad){this._stable=0;const h=$('#camHint');if(h&&!/Capturada/.test(h.textContent))h.textContent='📷 Imagen movida o desenfocada: quedate quieto';const s=$('#camShot');if(s)s.classList.remove('arming')}return out}}
 
 /* Pilar 2: corrección de perspectiva con salida de calidad OCR (lado mayor ≥ 2000 px cuando la foto lo permite) */
 function correctPerspective(src,q,maxSide){return warp(src,q,maxSide)}
@@ -6250,12 +6190,14 @@ const CamTilt={rot:null,on:false,h:null,
   this.h=e=>{const g=e.accelerationIncludingGravity;if(!g)return;const r=this.fromGravity(g.x,g.y,typeof IS_IOS!=='undefined'&&IS_IOS);if(r!==null){this.rot=r;this.flat=false}else if(g.x!=null&&Math.hypot(g.x,g.y)<4)this.flat=true};
   try{if(typeof DeviceMotionEvent!=='undefined'&&typeof DeviceMotionEvent.requestPermission==='function')DeviceMotionEvent.requestPermission().then(s=>{if(s==='granted'&&this.on)addEventListener('devicemotion',this.h)}).catch(()=>{});else addEventListener('devicemotion',this.h)}catch(e){}},
  stop(){if(this.h)removeEventListener('devicemotion',this.h);this.on=false;this.h=null}};
-{const _o=Cam.open;Cam.open=function(){try{CamTilt.start()}catch(e){}return _o.apply(this,arguments)}}
-{const _st=Cam.stop;Cam.stop=function(){CamTilt.stop();return _st.apply(this,arguments)}}
 Cam._tiltOf=new Map();
-{const _g=camGrab;camGrab=async function(){/* v83: con el teléfono acostado sobre la hoja no se usa una posición vieja: endereza el texto */const rot=CamTilt.flat?null:CamTilt.rot;const src=await _g.apply(this,arguments);if(typeof src==='string')Cam._tiltOf.set(src,rot);return src}}
-{const _mp=makePage;makePage=function(src,o){const has=typeof src==='string'&&Cam._tiltOf.has(src),rot=has?Cam._tiltOf.get(src):null;if(has)Cam._tiltOf.delete(src);
- return _mp.apply(this,arguments).then(async p=>{if(p&&has&&camOrient()==='phone'){p.camRot=rot;if(rot){p.rot=((p.rot||0)+rot)%360;await makeThumb(p)}}return p})}}
+/* v98: lo que rodea a la toma en una sola pieza (antes 3 capas): posición del teléfono → aviso «Capturando» → enfocar la hoja → foto */
+{const grabPhoto=camGrab;camGrab=async function(){const rot=CamTilt.flat?null:CamTilt.rot;   /* acostado sobre la hoja no se usa una posición vieja: endereza el texto */
+ const h=$('#camHint');if(h){h.textContent='Capturando, un momento…';h.classList.add('cap')}camClick();let src;
+ try{let lk=false;if(S.hd&&!S.camFast&&S.camFocusLock!==false){try{lk=await camFocusLock()}catch(e){}}
+  try{src=await grabPhoto.apply(this,arguments)}finally{if(lk){const tr=Cam.track;Cam._locking=false;setTimeout(()=>{if(tr&&Cam.track===tr&&camCaps().focusMode&&camCaps().focusMode.includes('continuous'))tr.applyConstraints({advanced:[{focusMode:'continuous'}]}).catch(()=>{})},300)}}}
+ finally{if(h)h.classList.remove('cap')}
+ if(typeof src==='string')Cam._tiltOf.set(src,rot);return src}}
 /* con la posición del teléfono clara no se adivina por el texto (era lo que a veces dejaba la hoja dada vuelta) */
 let _v77noAutoRot=false;
 {const _po=pageOrient;pageOrient=function(c){if(_v77noAutoRot)return {rot:0};return _po.apply(this,arguments)}}
@@ -6284,10 +6226,6 @@ async function camEdgeTrim(p){if(!p||!p.quad||p.quad.length!==4||S.camEdgeTrim==
  const nq=[{x:L[0],y:T[0]},{x:1-R[0],y:T[1]},{x:1-R[1],y:1-B[1]},{x:L[1],y:1-B[0]}];
  const hm=homography([{x:0,y:0},{x:1,y:0},{x:1,y:1},{x:0,y:1}],p.quad),map=q=>{const den=hm[6]*q.x+hm[7]*q.y+1;return {x:(hm[0]*q.x+hm[1]*q.y+hm[2])/den,y:(hm[3]*q.x+hm[4]*q.y+hm[5])/den}};
  p.quad=nq.map(map).map(q=>({x:Math.max(0,Math.min(1,q.x)),y:Math.max(0,Math.min(1,q.y))}));p.trim=true;return true}
-{const _pp=camPostProcess;camPostProcess=async function(pages,kind){
- for(const p of pages){try{if(kind!=='board'&&await camEdgeTrim(p))await makeThumb(p)}catch(e){console.warn('recorte parejo',e)}}
- _v77noAutoRot=camOrient()==='phone'&&pages.length>0&&pages.every(p=>p.camRot!=null);
- try{return await _pp.apply(this,arguments)}finally{_v77noAutoRot=false}}}
 
 /* ---- 3) la primera foto del lote se muestra grande para decidir si sirve (como CamScanner) ---- */
 const CAM_REV_L={first:'La primera, grande',all:'Todas, grandes',no:'No mostrar'};
@@ -6311,7 +6249,6 @@ async function camShowRev2(p){const box=$('#camRev2');if(!box||!p)return;Cam._re
  if(want&&this._seq>n0&&Nav.isOpen('camera')){const box=$('#camRev2');if(box){this.busy=true;this._rev2='…';$('#rv2Msg').textContent='Procesando la foto…';$('#rv2Img').removeAttribute('src');box.classList.add('loading');box.hidden=false}
   const sid=this._sid;await this._q;if(this._sid!==sid||!Nav.isOpen('camera'))return r;const p=this.batch[this.batch.length-1];if(p)await camShowRev2(p);else{box&&(box.hidden=true);this._rev2=null;this.busy=false}}
  return r}}
-{const _st=Cam.stop;Cam.stop=function(){if(this._rev2){$('#camRev2')&&($('#camRev2').hidden=true);this._rev2=null;this.busy=false}return _st.apply(this,arguments)}}
 {const _r=camPanelRender;camPanelRender=function(){const r=_r.apply(this,arguments);const P=$('#camPanel');if(!P||P.hidden)return r;const m=P.querySelector('.cq .cq-more');
  if(m&&!P.querySelector('[data-crv]'))m.insertAdjacentHTML('beforebegin','<button class="cq-row on" data-crv="1"><span><b>Ver la foto al sacarla</b><small>'+CAM_REV_L[camRevMode()]+'</small></span><i class="cq-or">'+(camRevMode()==='no'?'–':camRevMode()==='all'?'∞':'1')+'</i></button>');return r}}
 $('#camPanel').addEventListener('click',e=>{const t=e.target.closest('[data-crv]');if(!t)return;e.stopImmediatePropagation();const n={first:'all',all:'no',no:'first'}[camRevMode()];S.camRevMode=n;saveS();
@@ -6672,7 +6609,6 @@ async function camWholeSheet(p){await lazyMod('vision-core');const V=self.DSVisi
  if(quadArea(big)<quadArea(small)*1.2||quadCover(small,big)<.85)return false;
  const ringL=quadLuma(g,w,h,big,small),inL=quadLuma(g,w,h,small,null);if(ringL<Math.max(110,inL-45))return false;/* lo que se suma tiene que ser papel, no la mesa */
  p.quad=big;p.whole=true;return true}
-{const _mp=makePage;makePage=function(src,o){return _mp.apply(this,arguments).then(async p=>{try{if(p&&p.quad&&((o&&o.auto)??S.autoCrop)!==false&&typeof Cam!=='undefined'&&Nav.isOpen('camera')&&await camWholeSheet(p))await makeThumb(p)}catch(e){console.warn('hoja entera',e)}return p})}}
 /* ---- 3) Editar PDF: en la página abierta (Corregir) también se agrega firma, texto, fecha, imagen o se tapa ---- */
 (function(){const msg=$('#fxMsg');if(!msg||$('#fxTools'))return;msg.insertAdjacentHTML('afterend','<div class="fx-tools" id="fxTools" hidden role="toolbar" aria-label="Agregar a la página">'
   +[['sig','sign','Firma'],['txt','type','Texto'],['date','clock','Fecha'],['img','image','Imagen'],['white','eraser','Tapar']].map(([k,ic,n])=>'<button class="chip" data-ft="'+k+'">'+icoSvg(ic)+' '+n+'</button>').join('')+'</div>');
@@ -6709,8 +6645,28 @@ document.head.insertAdjacentHTML('beforeend','<style id="v85Css">'+
 /* ---- 1) cámara: la miniatura se arma una sola vez al final (antes se rehacía en cada ajuste del recorte) ---- */
 let _thHold=0;const _thPend=new Set();
 {const _mt=makeThumb;makeThumb=function(p){if(_thHold>0&&p){_thPend.add(p);return Promise.resolve()}return _mt.apply(this,arguments)};
- const _mp=makePage;makePage=function(src,o){if(typeof Cam==='undefined'||!Nav.isOpen('camera'))return _mp.apply(this,arguments);_thHold++;
-  return _mp.apply(this,arguments).finally(async()=>{if(--_thHold>0)return;const L=[..._thPend];_thPend.clear();for(const q of L){try{await _mt(q)}catch(e){}}})}}
+ /* v98: makePage en una sola pieza (antes 8 capas). Pasos, en orden: foto → recorte fino → tamaño de certificado → marco en vivo → posición del teléfono → hoja entera */
+ const baseMake=makePage;
+ const quadAreaN=q=>Math.abs(q.reduce((s3,c,i)=>{const n=q[(i+1)%4];return s3+c.x*n.y-n.x*c.y},0))/2;
+ async function makePageSteps(src,o){
+  /* cómo estaba el teléfono al disparar (solo vale para esta foto) */
+  const hasTilt=typeof src==='string'&&Cam._tiltOf.has(src),tilt=hasTilt?Cam._tiltOf.get(src):null;if(hasTilt)Cam._tiltOf.delete(src);
+  /* el marco que se veía en vivo al disparar */
+  let o1=o;if(typeof Cam!=='undefined'&&Cam._shotHint&&Nav.isOpen('camera')&&!(o&&o.hint)){const h=Cam._shotHint;Cam._shotHint=null;o1=Object.assign({},o||{},{hint:h})}
+  let hint=null,o2=o1;if(o1&&o1.hint){hint=o1.hint;o2=Object.assign({},o1);delete o2.hint}
+  const o3=o2===undefined?{}:o2;
+  const p=await baseMake(src,o3);                                                                  /* reduce la foto, detecta la hoja y arma la página */
+  if(p&&p.quad&&(o3.auto??S.autoCrop)!==false){try{const img=await loadImg(p.orig);const r=refineQuad(img,p.quad);if(r!==p.quad){p.quad=r;await makeThumb(p)}}catch(e){}}   /* bordes precisos */
+  if(p&&typeof Cam!=='undefined'&&Cam.kind==='cert'&&Nav.isOpen('camera')&&!p.paper)p.paper='a5';
+  if(p&&p.paper==='a5'&&typeof Cam!=='undefined'&&Cam.kind==='cert'&&Nav.isOpen('camera'))p.paper='cert';
+  if(hint){try{if(p&&(o2.auto??S.autoCrop)!==false){const img=await loadImg(p.orig),hq=camMapHint(hint,img.naturalWidth,img.naturalHeight);
+    if(hq){const dist=p.quad?p.quad.reduce((s2,c,i)=>s2+Math.hypot(c.x-hq[i].x,c.y-hq[i].y),0)/4:1;
+     if(!p.quad||(dist>.035&&quadAreaN(p.quad)<quadAreaN(hq)*.6)){p.quad=refineQuad(img,hq);p.hinted=true;await makeThumb(p)}}}}catch(e){console.warn('marco en vivo',e)}}   /* si el recorte quedó mucho más chico que el marco, vale el marco */
+  if(p&&hasTilt&&camOrient()==='phone'){p.camRot=tilt;if(tilt){p.rot=((p.rot||0)+tilt)%360;await makeThumb(p)}}
+  try{if(p&&p.quad&&((o&&o.auto)??S.autoCrop)!==false&&typeof Cam!=='undefined'&&Nav.isOpen('camera')&&await camWholeSheet(p))await makeThumb(p)}catch(e){console.warn('hoja entera',e)}   /* la hoja entera, no un recuadro de adentro */
+  return p}
+ makePage=function(src,o){if(typeof Cam==='undefined'||!Nav.isOpen('camera'))return makePageSteps(src,o);_thHold++;   /* con la cámara abierta la miniatura se arma una sola vez, al final */
+  return makePageSteps(src,o).finally(async()=>{if(--_thHold>0)return;const Lq=[..._thPend];_thPend.clear();for(const q of Lq){try{await _mt(q)}catch(e){}}})}}
 
 /* el revisado de cada foto (enderezar, orientación, limpieza) pedía la misma vista de 1000 px dos veces: se reusa mientras la página no cambie */
 let _rpMemo=null;
@@ -6719,7 +6675,16 @@ let _rpMemo=null;
   const dup=c=>{const d=canvas(c.width,c.height);d.getContext('2d').drawImage(c,0,0);return d};
   const hit=_rpMemo.get(p);if(hit&&hit.key===key)return Promise.resolve(dup(hit.c));
   return _rp.apply(this,arguments).then(c=>{if(_rpMemo&&c&&c.width>1)_rpMemo.set(p,{key,c:dup(c)});return c})}}
-{const _pp=camPostProcess;camPostProcess=async function(){const own=!_rpMemo;if(own)_rpMemo=new Map();try{return await _pp.apply(this,arguments)}finally{if(own){for(const v of _rpMemo.values())v.c.width=v.c.height=1;_rpMemo=null}}}}
+/* v98: el revisado de cada foto en una sola pieza (antes 5 capas). Pasos: emparejar bordes → enderezar y marcar repetidas → orientación elegida → aplanar y borrar dedos */
+{const basePost=camPostProcess;camPostProcess=async function(pages,kind){const own=!_rpMemo;if(own)_rpMemo=new Map();   /* la vista de 1000 px se reusa mientras la página no cambie */
+ try{for(const p of pages){try{if(kind!=='board'&&await camEdgeTrim(p))await makeThumb(p)}catch(e){console.warn('recorte parejo',e)}}
+  _v77noAutoRot=camOrient()==='phone'&&pages.length>0&&pages.every(p=>p.camRot!=null);   /* si ya se sabe cómo estaba el teléfono, no se gira por el texto */
+  try{const r=await basePost.call(this,pages,kind);
+   const o=camOrient();if(o!=='auto'&&o!=='phone'){for(const p of pages){try{if(await camForceOrient(p,o)){await makeThumb(p);const f=Cam._flags.get(p);if(f)f.orient=o}}catch(e){console.warn('orientación',e)}}}
+   for(const p of pages){try{const c=await pageAutoClean(p,{dewarp:kind!=='board'});const f=Cam._flags.get(p)||{};if(c.dw)f.dw=true;if(c.fg)f.fg=true;Cam._flags.set(p,f);
+     if(c.fg)toast('🧽 Se borró un dedo del borde de la hoja',2200);else if(c.dw)toast('📖 Hoja curva aplanada',2000)}catch(e){console.warn('limpiar',e)}}
+   return r}finally{_v77noAutoRot=false}}
+ finally{if(own){for(const v of _rpMemo.values())v.c.width=v.c.height=1;_rpMemo=null}}}}
 
 /* ---- 2) seguir con otra herramienta: el resultado (o el documento escaneado) entra directo en la herramienta elegida ---- */
 const CHAIN_P='.pdf,application/pdf';
@@ -6774,8 +6739,29 @@ function camShadowNow(v){const q=Cam._lastQuad;if(!q||!v||!v.videoWidth)return f
  /* solo si persiste: tres lecturas seguidas (≈2 s) */
  camShadowNow._n=sh?(camShadowNow._n||0)+1:0;return camShadowNow._n>=3}
 /* ---- 2) aviso corto: «Buscando documento…»; lo del fondo que contraste recién si pasan 4 s sin encontrar la hoja ---- */
-{const _d=Cam.detect;Cam.detect=function(){const r=_d.apply(this,arguments);try{const h=$('#camHint'),t=performance.now();if(this._lastQuad)this._noQT=0;else if(!this._noQT)this._noQT=t;
-  if(h&&/^Buscando documento… usá un fondo que contraste/.test(h.textContent)&&this._noQT&&t-this._noQT<4000)h.textContent=h.textContent.replace('Buscando documento… usá un fondo que contraste','Buscando documento…')}catch(e){}return r}}
+/* v98: la detección en vivo en una sola pieza (antes 8 capas). Cada vuelta: ¿imagen movida? → marco de la hoja → nitidez y reflejos → enfoque → dibujo → modo Libro → avisos */
+{const baseDetect=Cam.detect;
+ /* el marco y todo lo que lo acompaña; con el panel de ajustes abierto, la cámara queda en pausa */
+ function detectFrame(args){let r;
+  if(camPanelOpen()){const s=$('#camSvg');if(s)s.innerHTML='';this._stable=0;this._lastQuad=null;const h=$('#camHint');if(h)h.textContent='⏸ Cámara en pausa mientras configurás'}
+  else{r=baseDetect.apply(this,args);try{camAnalyze()}catch(e){}try{camFollowFocus()}catch(e){}}
+  try{camFrameDraw()}catch(e){}return r}
+ Cam.detect=function(){
+  /* no se auto-dispara con la imagen movida o desenfocada; a mano se puede igual */
+  const fr=VisionEngine.fresh(),V=self.DSVision;const blocked=!!(fr&&fr.quad&&V&&S.autoCapture&&!this.replaceId&&!V.captureAllowed(fr,VisionEngine.cfg()));if(blocked)this._stable=Math.min(this._stable||0,0);
+  let out;
+  if(!bookAutoOn())out=detectFrame.call(this,arguments);
+  else{/* en libro automático manda el movimiento de la página, no la captura automática común */
+   const ac=S.autoCapture;S.autoCapture=false;try{out=detectFrame.call(this,arguments)}finally{S.autoCapture=ac}
+   try{const v=$('#camVideo');if(v&&v.videoWidth&&!this.busy){const m=camMotion(v);if(m!=null){
+     if(m>BK_MOVE){this._bkArmed=true;this._bkStill=0}else if(m<BK_STILL)this._bkStill=(this._bkStill||0)+1;else this._bkStill=0;
+     const h=$('#camHint');if(h&&!h.classList.contains('cap'))h.textContent=this._bkArmed?(this._bkStill?'📖 Quieto… ':'📖 Pasá la página')+' · '+(this.batch.length+(this._pend||0))+' foto(s)':'📖 Pasá la página para la siguiente foto';
+     if(this._bkArmed&&this._bkStill>=BK_TICKS){this._bkArmed=false;this._bkStill=0;navigator.vibrate&&navigator.vibrate(30);this.shoot()}}}}catch(e){}}
+  if(blocked&&this._lastQuad){this._stable=0;const h=$('#camHint');if(h&&!/Capturada/.test(h.textContent))h.textContent='📷 Imagen movida o desenfocada: quedate quieto';const s=$('#camShot');if(s)s.classList.remove('arming')}
+  /* aviso corto: lo del fondo que contraste, recién si pasan 4 s sin encontrar la hoja */
+  try{const h=$('#camHint'),t=performance.now();if(this._lastQuad)this._noQT=0;else if(!this._noQT)this._noQT=t;
+   if(h&&/^Buscando documento… usá un fondo que contraste/.test(h.textContent)&&this._noQT&&t-this._noQT<4000)h.textContent=h.textContent.replace('Buscando documento… usá un fondo que contraste','Buscando documento…')}catch(e){}
+  return out}}
 /* ---- 3) lote sin frenar: la foto aparece chiquita en la esquina y se procesa sola mientras seguís sacando (tocala para verla grande) ---- */
 if(!S.v87rev){S.v87rev=true;if(!S.camRevMode||S.camRevMode==='first'||S.camRevMode==='all')S.camRevMode='mini';saveS()}
 CAM_REV_L.mini='Chiquita en la esquina, sin frenar';
@@ -6796,7 +6782,6 @@ function camMiniDone(p,n){const m=$('#camMini');if(!m||m._n!==n||!Nav.isOpen('ca
  if(mini&&this._seq>n0&&Nav.isOpen('camera')){const n=this._seq,sid=this._sid;camMiniShow(snap,n);
   (this._q||Promise.resolve()).then(()=>{if(this._sid!==sid)return;const p=this.batch[this.batch.length-1];camMiniDone(p&&!p._miniSeen?(p._miniSeen=true,p):null,n)})}
  return r}}
-{const _st=Cam.stop;Cam.stop=function(){const m=$('#camMini');if(m){m.hidden=true;clearTimeout(m._t);m._p=null}return _st.apply(this,arguments)}}
 document.head.insertAdjacentHTML('beforeend','<style id="v87Css">'
  +'.cam-mini{position:absolute;right:14px;bottom:96px;z-index:4;width:76px;aspect-ratio:3/4;padding:0;border:3px solid #fff;border-radius:10px;overflow:hidden;background:#111;box-shadow:0 6px 20px rgba(0,0,0,.55)}'
  +'.cam-mini[hidden]{display:none}.cam-mini img{width:100%;height:100%;object-fit:cover;display:block}'
@@ -6895,8 +6880,6 @@ async function docAutoName(d){if(S.autoName===false||!d||!d.pages.length||!isAut
  try{refreshLists()}catch(e){}toast('📄 Nombre: '+title+' (lo cambiás con ✏️)',3800);return title}
 
 /* después de la cámara: A Word / Firmar siguen solos; el lote se ve hoja por hoja; y se pone el nombre */
-{const _st=Cam.stop;Cam.stop=function(){const k=this.kind;if(!this.replaceId&&!(typeof _srcHook!=='undefined'&&_srcHook))this._afterCam={t:Date.now(),kind:k};return _st.apply(this,arguments)}}
-{const _o=Cam.open;Cam.open=function(){this._afterCam=null;return _o.apply(this,arguments)}}
 {const _ap=addPages;addPages=async function(pages,single){const a=typeof Cam!=='undefined'&&Cam._afterCam&&Date.now()-Cam._afterCam.t<10*60e3&&!(typeof _srcHook!=='undefined'&&_srcHook)?Cam._afterCam:null;
  if(!a||!pages||!pages.length)return _ap.apply(this,arguments);Cam._afterCam=null;const k=a.kind;
  if(k==='word'||k==='sign'){Cam.kind='doc';const r=await _ap.call(this,pages,false);const d=DOC;
@@ -7139,14 +7122,56 @@ function camCountdown(){const sec=+S.camTimer||0;if(!sec)return false;const box=
   camCountStop();if(Nav.isOpen('camera')&&Cam.stream)Cam.shoot()},1000);return true}
 function camCountStop(){clearInterval(Cam._countT);Cam._counting=false;const b=$('#camTimerBox');if(b)b.hidden=true}
 $('#camShot').addEventListener('click',e=>{if(!(+S.camTimer)||!Nav.isOpen('camera')||!Cam.stream)return;e.stopImmediatePropagation();e.preventDefault();if(Cam._counting){camCountStop();toast('Temporizador cancelado',1400);return}camCountdown()},true);
-{const _st=Cam.stop;Cam.stop=function(){camCountStop();camWake(false);return _st.apply(this,arguments)}}
+/* ===== v98 · cámara: abrir y cerrar en una sola pieza =====
+ * Antes eran 13 capas (cerrar) y 12 (abrir) agregadas versión por versión. Hacen lo mismo y en el mismo orden; cada paso dice de qué se ocupa. */
+{const baseStop=Cam.stop,baseOpen=Cam.open;
+ /* lo que queda por cerrar cuando ya no hay fotos procesándose */
+ function camStopRest(args){
+  if(this.review){this.batch.push(...this.review);this.review=null}const rv=$('#camRev');if(rv)rv.hidden=true;this.busy=false;      /* revisión de Individual: lo revisado se entrega */
+  this._shotQ=null;$('#camShot').classList.remove('arming');                                                                       /* auto-captura */
+  CamPro.stop();const w=$('#camWarn');if(w)w.hidden=true;                                                                           /* avisos de luz y nivel */
+  const had=this.batch&&this.batch.length;
+  $('#camPanel').hidden=true;$('#camCfg').classList.remove('on');                                                                   /* panel de ajustes */
+  const r=baseStop.apply(this,args);                                                                                                /* apaga la cámara y entrega las fotos */
+  if(!this._shooting)this.replaceId=null;
+  if(_srcHook&&!had)setTimeout(()=>{if(_srcHook){const h=_srcHook;_srcHook=null;h(null)}},400);                                     /* una herramienta esperaba fotos y no hubo */
+  return r}
+ Cam.stop=function(){
+  camCountStop();camWake(false);                                                                                                    /* temporizador y pantalla encendida */
+  if(!this.replaceId&&!(typeof _srcHook!=='undefined'&&_srcHook))this._afterCam={t:Date.now(),kind:this.kind};                      /* qué hacer al guardar (A Word, Firmar, hoja por hoja) */
+  const m=$('#camMini');if(m){m.hidden=true;clearTimeout(m._t);m._p=null}                                                           /* miniatura del lote */
+  if(this._rev2){const b=$('#camRev2');if(b)b.hidden=true;this._rev2=null;this.busy=false}                                          /* revisión del lote */
+  CamTilt.stop();VisionEngine.stop();                                                                                               /* sensores y detector */
+  if(!this._pend)return camStopRest.call(this,arguments);
+  /* quedan fotos en proceso: se apaga la cámara, se esperan y se entregan todas juntas, en orden */
+  const args=arguments;clearInterval(this.timer);try{this.stream&&this.stream.getTracks().forEach(t=>t.stop())}catch(e){}
+  const have=this.batch;this.batch=[];this._late=[];this._sid++;this._closing=true;busy('Terminando de procesar '+this._pend+' foto(s)…');
+  this._q.then(()=>{this._closing=false;busy(false);this.batch=have.concat(this._late);this._late=[];camStopRest.call(this,args)})};
+ Cam.open=async function(mode){
+  /* estado limpio de la sesión de cámara */
+  this._afterCam=null;try{CamTilt.start()}catch(e){}
+  this._bkArmed=true;this._bkStill=0;this._mprev=null;                                                                               /* modo Libro */
+  const P=$('#camPanel');if(P){P._full=false;P._ck=''}camLevelUpd();
+  if(!this.replaceId)this._sigs=[];                                                                                                  /* firmas para detectar hojas repetidas */
+  this._sharpHist=[];this._buf=[];this._glare=false;const g=$('#camGlare');if(g)g.hidden=true;                                       /* nitidez y reflejos */
+  if(mode==='single'&&!this.replaceId&&!(typeof _srcHook!=='undefined'&&_srcHook)&&this._fromMain&&S.camPrefMode==='batch')mode='batch';this._fromMain=false;this._sid++;
+  const kind0=this.kind;if(!this.replaceId)this.kind=this.kind==='book'||this.kind==='board'?this.kind:'doc';
+  try{if(window.DeviceOrientationEvent&&typeof DeviceOrientationEvent.requestPermission==='function')DeviceOrientationEvent.requestPermission().then(r=>{if(r==='granted')CamPro.levelOn()}).catch(()=>{});else CamPro.levelOn()}catch(e){}
+  const opening=baseOpen.call(this,mode);                                                                                            /* pide la cámara y muestra la pantalla */
+  if(kind0==='cert'&&!this.replaceId)this.kind='cert';this.updUI&&this.updUI();
+  const r=await opening;
+  {let k=0;const wait=setInterval(()=>{if(Cam.track||++k>40){clearInterval(wait);if(Cam.track)CamPro.setup()}},150)}                  /* enfoque, exposición y flash */
+  if(this.timer&&this.stream){clearInterval(this.timer);this.timer=setInterval(()=>this.detect(),240)}
+  if(S.v58hello&&Nav.isOpen('camera')){S.v58hello=false;saveS();toast('📸 Perfil recomendado: Lote automático. Lo cambiás en ⚙️ → Perfil',4500)}
+  {let k=0;const go=()=>{const v=$('#camVideo');if(this.stream&&v&&v.videoWidth)VisionEngine.start(v);else if(++k<60&&Nav.isOpen('camera'))setTimeout(go,150)};go()}   /* detector en segundo plano */
+  if(Nav.isOpen('camera'))camWake(true);
+  return r}}
 {const _r=camPanelRender;camPanelRender=function(){const r=_r.apply(this,arguments);try{const P=$('#camPanel');if(!P||P.hidden)return r;const m=P.querySelector('.cq .cq-more');
   if(m&&!P.querySelector('[data-ctm]')){const v=+S.camTimer||0;m.insertAdjacentHTML('beforebegin','<button class="cq-row'+(v?' on':'')+'" data-ctm="1"><span><b>Temporizador</b><small>'+CAM_TMR_L[v]+'</small></span><i class="cq-or">'+(v?v+'s':'–')+'</i></button>')}}catch(e){}return r}}
 $('#camera').addEventListener('click',e=>{const t=e.target.closest('#camPanel [data-ctm]');if(!t)return;e.stopPropagation();e.preventDefault();const n={0:3,3:5,5:0}[+S.camTimer||0];S.camTimer=n;saveS();toast('Temporizador: '+CAM_TMR_L[n].toLowerCase(),1600);const P=$('#camPanel');P._ck='';camPanelRender()},true);
 /* pantalla encendida: el teléfono no se apaga solo mientras escaneás un lote */
 let _camWL=null;
 async function camWake(on){try{if(on){if(_camWL||!('wakeLock' in navigator))return;_camWL=await navigator.wakeLock.request('screen');_camWL.addEventListener('release',()=>{_camWL=null})}else if(_camWL){const w=_camWL;_camWL=null;await w.release()}}catch(e){_camWL=null}}
-{const _o=Cam.open;Cam.open=async function(){const r=await _o.apply(this,arguments);if(Nav.isOpen('camera'))camWake(true);return r}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&typeof Cam!=='undefined'&&Nav.isOpen('camera')&&Cam.stream)camWake(true)});
 document.head.insertAdjacentHTML('beforeend','<style id="v93Css">.v93-pv{display:flex;justify-content:center;padding:10px;border-radius:16px;background:var(--stage,#E3E9F1);margin:6px 0 12px}.v93-prev{max-width:100%;height:auto;background:#fff;box-shadow:0 6px 18px -8px rgba(23,32,51,.45)}'
  +'.cam-count{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);z-index:7;width:120px;height:120px;border-radius:50%;display:grid;place-items:center;font:800 64px/1 system-ui,sans-serif;color:#fff;background:rgba(15,23,42,.55);box-shadow:0 0 0 4px rgba(255,255,255,.35)}.cam-count[hidden]{display:none}'

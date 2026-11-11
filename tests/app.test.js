@@ -1966,6 +1966,27 @@ await test('v97: las hojas se guardan más livianas sin perder nada, los documen
   assert.ok(!dg.rows.some(x=>/^error/.test(x)),dg.rows.filter(x=>/^error/.test(x)).join(' | '));assert.equal(dg.keys,0,'quedó la hoja de prueba guardada');assert.ok(!dg.rows.join(' ').includes('Liviano'),'el informe no debe llevar nombres de documentos');
 });
 
+await test('v98: la app abre desde la copia guardada (sin volver a bajarse) y la cámara quedó en una sola pieza por función',async pg=>{
+  const r=await pg.evaluate(async()=>{const src=await (await fetch('sw.js')).text();const ver=(src.match(/VERSION='([^']+)'/)||[])[1];const L={};const self={addEventListener:(t,f)=>L[t]=f,location,clients:{claim:async()=>{}},skipWaiting:()=>{}};
+    await new Promise((ok,ko)=>{const sc=document.createElement('script');sc.src=URL.createObjectURL(new Blob(['window.__swInit98=function(self){'+src+'\n}'],{type:'text/javascript'}));sc.onload=ok;sc.onerror=ko;document.head.appendChild(sc)});window.__swInit98(self);
+    const c=await caches.open(ver);await c.put(location.origin+'/index.html',new Response('COPIA GUARDADA'));await c.put(location.origin+'/config.js',new Response('/*cfg guardada*/'));
+    const _f=window.fetch;let net=[];window.fetch=function(u){net.push(String(u&&u.url||u).replace(location.origin,''));return _f.apply(this,arguments)};
+    const ask=async path=>{let P=null,bg=[];L.fetch({request:new Request(location.origin+path),respondWith:p=>{P=p},waitUntil:p=>bg.push(p)});const res=P?await P:null;await Promise.allSettled(bg);return res?await res.text():null};
+    const out={};net=[];out.index=await ask('/index.html');out.indexNet=net.length;
+    net=[];out.cfg=await ask('/config.js');out.cfgNet=net.length;                       /* responde con la copia y actualiza por detrás */
+    net=[];const kv=await ask('/knowledge/knowledge-version.json');out.kvOk=/version/.test(kv||'');out.kvNet=net.length;
+    await c.delete(location.origin+'/mod/word.js');net=[];const w=await ask('/mod/word.js');out.modOk=/uiWord/.test(w||'');out.modNet=net.length;await new Promise(r=>setTimeout(r,400));net=[];await ask('/mod/word.js');out.modNet2=net.length;
+    window.fetch=_f;await caches.delete(ver);
+    /* limpieza: una sola definición por función de la cámara */
+    const html=await (await fetch('index.html')).text();const n=re=>(html.match(re)||[]).length;
+    out.layers={stop:n(/Cam\.stop=function/g),open:n(/Cam\.open=(async )?function/g),detect:n(/Cam\.detect=function/g),make:n(/makePage=function/g),post:n(/camPostProcess=async function/g),grab:n(/camGrab=async function/g)};return out});
+  assert.equal(r.index,'COPIA GUARDADA');assert.equal(r.indexNet,0,'la app no debe volver a bajarse si está guardada');
+  assert.equal(r.cfg,'/*cfg guardada*/');assert.equal(r.cfgNet,1,'config.js se actualiza por detrás');
+  assert.ok(r.kvOk);assert.equal(r.kvNet,1,'lo que no es de la app va primero a internet');
+  assert.ok(r.modOk);assert.equal(r.modNet,1);assert.equal(r.modNet2,0,'un archivo de la app bajado una vez queda guardado');
+  assert.deepEqual(r.layers,{stop:1,open:1,detect:2,make:1,post:1,grab:2});
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();
