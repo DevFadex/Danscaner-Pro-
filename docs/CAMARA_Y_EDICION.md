@@ -916,3 +916,17 @@ Comparación de dos videos con la misma hoja. En CamScanner se sigue sacando sin
   - las cámaras profesionales usan controles claros sobre fondo oscuro y una franja translúcida detrás de los botones superiores;
   - Adobe Scan marca las esquinas en azul y muestra «Capturando… quedate quieto» (Danscanner ya lo hace);
   - Genius Scan recomienda fondo que contraste y las 4 esquinas a la vista.
+
+## v97 · Hojas más livianas, ofrecer el bloqueo y Diagnóstico
+- **Guardado liviano**:
+  - en la base (IndexedDB) cada foto se guarda como imagen binaria (`Blob`) y no como texto base64: ocupa un 25 % menos. En memoria sigue siendo `data:` URL (`docStoreForm` al guardar, `docMemForm` al leer), así el resto de la app no cambia;
+  - `DB.getDocRaw` devuelve lo guardado tal cual;
+  - los documentos viejos se convierten solos (`docsCompact`): de a uno, con la app quieta, leyendo y escribiendo en la misma transacción;
+  - si el navegador no deja guardar Blobs, se guarda como antes (`S.noBlobStore`);
+  - se pide almacenamiento persistente (`navigator.storage.persist`), para que el navegador no borre los documentos si falta espacio.
+- **No se bajó la resolución**: los 4200 px por defecto son la «calidad máxima» elegida en la v24 para igualar a CamScanner. Quien quiera ahorrar más puede elegir 3000 px en Ajustes.
+- **Bloqueo**: tarjeta en el inicio («Protegé tus documentos») cuando hay documentos y no hay PIN. «Activar» abre el bloqueo; la ✕ la esconde 30 días.
+- **Diagnóstico** (Ajustes → Diagnóstico):
+  - mide en el teléfono, con una hoja inventada, cuánto tarda detectar y recortar, mejorar, guardar y armar el PDF;
+  - muestra el espacio y qué funciones soporta el equipo;
+  - el informe se copia o se comparte y no lleva datos de documentos.

@@ -223,3 +223,8 @@ Tocá una imagen para cambiarle el tamaño o centrarla, y una tabla para sumarle
 - **Cámara más clara**: fondo oscuro con letras y botones bien visibles.
 - **Todas las herramientas en la foto**: tocá **«Todas»** (primer botón de abajo en el editor) o **«Herramientas»** en la vista hoja por hoja. Las de texto aparecen primero.
 - **Texto en la foto**: además de letra, color, negrita y cursiva, ahora hay subrayado, alineación, tamaño, cualquier color, resaltado y fondo blanco para tapar.
+
+## Novedades v97
+- **Las hojas ocupan menos**: se guardan de otra forma, con la misma calidad. Los documentos que ya tenías se convierten solos.
+- **Protegé tus documentos**: si no tenés bloqueo, el inicio te ofrece activar el PIN o la huella.
+- **Diagnóstico**: Ajustes → Diagnóstico prueba cómo anda la app en tu teléfono y arma un informe para compartir. No incluye datos de tus documentos.
