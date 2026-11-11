@@ -1146,7 +1146,6 @@ const t=e.target.closest('[data-cp]');if(t){const k=t.dataset.cp;if(k==='hd')$('
 const m=e.target.closest('[data-mc]');if(m){S.maxCap=+m.dataset.mc;saveS()}camPanelRender()};
 $('#camCfg').onclick=()=>{const P=$('#camPanel');P.hidden=!P.hidden;$('#camCfg').classList.toggle('on',!P.hidden);camPanelRender()};
 {const _u=Cam.updUI;Cam.updUI=function(){_u.call(this);camPanelRender()}}
-{const _stop=Cam.stop;Cam.stop=function(){$('#camPanel').hidden=true;$('#camCfg').classList.remove('on');return _stop.call(this)}}
 
 /* ---------- Firma: cargar desde el dispositivo con ajuste de fondo ---------- */
 
@@ -1875,7 +1874,6 @@ function replacePagePhoto(){const p=Ed.p;if(!p)return;const appCam=camSecure();
    if(!np)return toast('No se pudo leer la foto',4000);await replaceWithPage(p.id,np)});
   inp.addEventListener('cancel',cleanup);window.addEventListener('focus',()=>setTimeout(()=>{if(!done&&!inp.files.length)cleanup()},1500),{once:true});
   inp.click();Nav.back()}}
-{const _stop=Cam.stop;Cam.stop=function(){const r=_stop.apply(this,arguments);if(!this._shooting)this.replaceId=null;return r}}
 Cam.shoot=async function(){if(!this.stream){const m=this.mode;NativeCam.open(m);Nav.back();return}if(this.busy)return;this.busy=true;const fl=$('#camera .flash');fl.classList.remove('go');void fl.offsetWidth;fl.classList.add('go');
  try{let src=null;if(S.hd&&'ImageCapture' in window){try{const blob=await Promise.race([hiResPhoto(this.track),sleep(8000).then(()=>null)]);if(blob&&blob.size>1000)src=await imageBlobToSrc(blob)}catch(e){}}
  if(!src){const v=$('#camVideo');if(!v.videoWidth)throw new Error('La cámara no está lista');const c=canvas(v.videoWidth,v.videoHeight);c.getContext('2d').drawImage(v,0,0);src=c.toDataURL('image/jpeg',.95)}
@@ -2567,7 +2565,6 @@ document.head.insertAdjacentHTML('beforeend','<style id="nexaCss">'
 const SRC_OPTS={appcam:['📷','Cámara de la app','Encuadre automático, perspectiva y B/N'],natcam:['📱','Cámara del celular','La app de cámara del teléfono'],gallery:['🖼️','Galería del dispositivo','Fotos, PDF u otros archivos del teléfono'],saved:['📁','Documentos de la app','Lo que ya escaneaste y guardaste acá']};
 let _srcHook=null;
 {const _ap=addPages;addPages=async function(pages,single){if(_srcHook){const h=_srcHook;_srcHook=null;h(pages);return}return _ap(pages,single)}}
-{const _cs=Cam.stop;Cam.stop=function(){const had=this.batch&&this.batch.length;const r=_cs.apply(this,arguments);if(_srcHook&&!had)setTimeout(()=>{if(_srcHook){const h=_srcHook;_srcHook=null;h(null)}},400);return r}}
 const acceptOk=(f,accept)=>{if(!accept)return true;const n=(f.name||'').toLowerCase(),t=(f.type||'').toLowerCase();return accept.split(',').map(a=>a.trim().toLowerCase()).filter(Boolean).some(a=>a.startsWith('.')?n.endsWith(a):a.endsWith('/*')?t.startsWith(a.slice(0,-1)):t===a)};
 const acceptsPdf=a=>!a||acceptOk({name:'x.pdf',type:'application/pdf'},a);
 const acceptsImg=a=>!a||acceptOk({name:'x.jpg',type:'image/jpeg'},a);
@@ -3271,9 +3268,6 @@ const CamPro={flash:S.flashMode||'off',ev:0,caps:null,timer:null,level:null,lowL
  stop(){clearInterval(this.timer);this.timer=null},
  levelOn(){if(this._lv)return;this._lv=e=>{if(e.beta==null)return;this.level={b:e.beta,g:e.gamma};const el=$('#camLevel');if(!el)return;el.hidden=false;const ok=Math.abs(e.beta)<5&&Math.abs(e.gamma)<5;el.classList.toggle('ok',ok);el.firstChild.style.transform='translate('+Math.max(-18,Math.min(18,e.gamma))+'px,'+Math.max(-18,Math.min(18,e.beta))+'px)'};window.addEventListener('deviceorientation',this._lv)}};
 (function(){const st=$('#camera .cam-stage');if(st&&!$('#camWarn'))st.insertAdjacentHTML('beforeend','<div class="cam-warn" id="camWarn" hidden></div><div class="cam-level" id="camLevel" hidden><i></i></div>')})();
-{const _open=Cam.open.bind(Cam);Cam.open=async function(mode){try{if(window.DeviceOrientationEvent&&typeof DeviceOrientationEvent.requestPermission==='function')DeviceOrientationEvent.requestPermission().then(r=>{if(r==='granted')CamPro.levelOn()}).catch(()=>{});else CamPro.levelOn()}catch(e){}
-  const r=await _open(mode);let k=0;const wait=setInterval(()=>{if(Cam.track||++k>40){clearInterval(wait);if(Cam.track)CamPro.setup()}},150);return r}}
-{const _stop=Cam.stop;Cam.stop=function(){CamPro.stop();const w=$('#camWarn');if(w)w.hidden=true;return _stop.apply(this,arguments)}}
 /* flash: apagado → encendido → automático */
 {const tb=$('#camTorch');if(tb){const paint=()=>{tb.classList.toggle('on',CamPro.flash!=='off');tb.title='Flash: '+{off:'apagado',on:'encendido',auto:'automático'}[CamPro.flash];let b=tb.querySelector('.fl-a');if(CamPro.flash==='auto'){if(!b)tb.insertAdjacentHTML('beforeend','<b class="fl-a">A</b>')}else if(b)b.remove()};
  tb.onclick=async()=>{CamPro.flash={off:'on',on:'auto',auto:'off'}[CamPro.flash];S.flashMode=CamPro.flash;saveS();if(CamPro.flash==='on')await CamPro.torch(true);else if(CamPro.flash==='off')await CamPro.torch(false);else await CamPro.torch(CamPro.lowLight);paint();toast(tb.title)};paint()}}
@@ -3392,7 +3386,6 @@ Cam.kind='doc';
   if(k==='id'){await Nav.back();dniMode();return}
   Cam.kind=k;Cam.updUI();toast(k==='book'?'📖 Libro: encuadrá las dos páginas abiertas; se separan solas':k==='board'?'🧑‍🏫 Pizarra: fondo limpio y trazos nítidos':'📄 Documento',2600)}})();
 {const _u=Cam.updUI;Cam.updUI=function(){_u.apply(this,arguments);$$('#camKinds [data-kind]').forEach(b=>b.classList.toggle('on',b.dataset.kind===this.kind))}}
-{const _o=Cam.open;Cam.open=function(mode){if(!this.replaceId)this.kind=this.kind==='book'||this.kind==='board'?this.kind:'doc';return _o.apply(this,arguments)}}
 
 /* ---- captura: foto completa, filtro según el tipo, Libro separa en dos ---- */
 Cam.shoot=async function(){if(!this.stream){const m=this.mode;NativeCam.open(m);Nav.back();return}if(this.busy)return;this.busy=true;const fl=$('#camera .flash');fl.classList.remove('go');void fl.offsetWidth;fl.classList.add('go');$('#camShot').classList.remove('arming');
@@ -3422,7 +3415,6 @@ Cam.detect=function(){const v=$('#camVideo');if(!v.videoWidth||this.busy)return;
  /* después de una auto-captura espera otra hoja: que el marco desaparezca o cambie bastante, para no repetir la misma página */
  if(this._shotQ){if(!q||q.reduce((s2,p,i)=>s2+Math.hypot(p.x-this._shotQ[i].x,p.y-this._shotQ[i].y),0)>0.25)this._shotQ=null;else if(auto){shot.classList.remove('arming');hint.textContent='✓ Capturada · poné la hoja siguiente'+cnt;return}}
  if(q&&auto&&this._stable>=CAM_STEADY&&!this._cool){this._stable=0;this._cool=true;this._shotQ=q;setTimeout(()=>{this._cool=false},1500);toast('📸 Auto-captura',1200);this.shoot()}};
-{const _st=Cam.stop;Cam.stop=function(){this._shotQ=null;$('#camShot').classList.remove('arming');return _st.apply(this,arguments)}}
 
 document.head.insertAdjacentHTML('beforeend','<style id="cam2Css">.cam-stage video{object-fit:cover}'
 +'.cam-kinds{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding:6px 10px 0;justify-content:safe center}.cam-kinds button{flex:none;padding:6px 12px;border-radius:16px;color:#cbd5e1;font-size:12.5px;font-weight:600;letter-spacing:.02em}.cam-kinds button.on{color:#22d3ee;background:#22d3ee1f}'
@@ -4502,7 +4494,6 @@ function paperLbl(){const l=$('#editor [data-ed="paper"] .pp-l');if(l&&Ed.p)l.te
 CAM_KINDS.splice(2,0,['cert','Certificado']);
 (function(){const k=$('#camKinds');if(!k||k.querySelector('[data-kind="cert"]'))return;const ref=k.querySelector('[data-kind="id"]');const b=document.createElement('button');b.dataset.kind='cert';b.textContent='Certificado';if(ref)ref.before(b);else k.appendChild(b);
  k.addEventListener('click',e=>{const x=e.target.closest('[data-kind="cert"]');if(!x)return;e.stopImmediatePropagation();Cam.kind='cert';Cam.updUI();toast('Certificado: sale en su tamaño real, centrado en una hoja A4 blanca',3200)},true)})();
-{const _o=Cam.open;Cam.open=function(mode){const k=this.kind;const r=_o.apply(this,arguments);if(k==='cert'&&!this.replaceId)this.kind='cert';this.updUI&&this.updUI();return r}}
 {const _mp=makePage;makePage=function(src,o){return _mp.apply(this,arguments).then(p=>{if(p&&typeof Cam!=='undefined'&&Cam.kind==='cert'&&Nav.isOpen('camera')&&!p.paper)p.paper='a5';return p})}}
 
 /* ---- cámara: borrar la foto que salió mal ---- */
@@ -4521,7 +4512,6 @@ document.head.insertAdjacentHTML('beforeend','<style id="v43Css">.cam-undo{posit
 {const _sh=Cam.shoot;Cam.shoot=async function(){if(this.mode!=='single'||this.replaceId||!this.stream)return _sh.apply(this,arguments);
   this.mode='batch';const n0=this.batch.length;try{await _sh.apply(this,arguments)}finally{this.mode='single'}
   const got=this.batch.splice(n0);this.updUI();if(!got.length)return;this.review=got;this.busy=true;const im=$('#camRevImg');im.src=got[0].thumb||'';if(!got[0].thumb)renderPage(got[0],{maxSide:900}).then(c=>{im.src=c.toDataURL('image/jpeg',.85)}).catch(()=>{});$('#camRev').hidden=false}}
-{const _st=Cam.stop;Cam.stop=function(){if(this.review){this.batch.push(...this.review);this.review=null}$('#camRev')&&($('#camRev').hidden=true);this.busy=false;return _st.apply(this,arguments)}}
 
 /* enderezado: en hojas casi vacías o sin renglones claros no se inventa una inclinación (antes una hoja en blanco se giraba 6° y cambiaba de proporción) */
 {const _da=deskewAngle;deskewAngle=function(c){const a=_da.apply(this,arguments);if(!a)return 0;try{const w=c.width,h=c.height,s=Math.min(1,500/Math.max(w,h)),W=Math.max(20,Math.round(w*s)),H=Math.max(20,Math.round(h*s));const t=canvas(W,H);t.getContext('2d').drawImage(c,0,0,W,H);const d=t.getContext('2d',{willReadFrequently:true}).getImageData(0,0,W,H).data,g=new Uint8Array(W*H);let sum=0;for(let i=0,k=0;i<d.length;i+=4,k++){g[k]=d[i]*.299+d[i+1]*.587+d[i+2]*.114;sum+=g[k]}const mean=sum/(W*H);let dark=0;for(let k=0;k<g.length;k++)if(g[k]<mean*.8)dark++;if(dark/g.length<.004)return 0;
@@ -5114,9 +5104,6 @@ async function camGrab(){const v=$('#camVideo');
 
 /* lote: el procesado va en una cola; el disparador se libera apenas la foto está tomada */
 Cam._q=Promise.resolve();Cam._pend=0;Cam._sid=0;Cam._late=[];Cam._jobs=[];Cam._cancel=new Set();Cam._seq=0;
-{const _o=Cam.open;Cam.open=async function(mode){if(mode==='single'&&!this.replaceId&&!(typeof _srcHook!=='undefined'&&_srcHook)&&this._fromMain&&S.camPrefMode==='batch')mode='batch';this._fromMain=false;this._sid++;
- const r=await _o.call(this,mode);if(this.timer&&this.stream){clearInterval(this.timer);this.timer=setInterval(()=>this.detect(),240)}
- if(S.v58hello&&Nav.isOpen('camera')){S.v58hello=false;saveS();toast('📸 Perfil recomendado: Lote automático. Lo cambiás en ⚙️ → Perfil',4500)}return r}}
 {const _sh=Cam.shoot;Cam.shoot=async function(){
  if(!this.replaceId&&this.stream)this._shotHint=this._hintNow();
  if(this.mode!=='batch'||this.replaceId||!this.stream)return _sh.apply(this,arguments);
@@ -5132,10 +5119,6 @@ Cam._q=Promise.resolve();Cam._pend=0;Cam._sid=0;Cam._late=[];Cam._jobs=[];Cam._c
   if(this._closing)busy(this._pend?'Terminando de procesar '+this._pend+' foto(s)…':'Guardando…');this.updUI();await sleep(0)};
  this._q=this._q.then(job,job)}}
 /* al terminar con fotos todavía en proceso: se apaga la cámara, se esperan y se entregan todas juntas, en orden */
-{const _st=Cam.stop;Cam.stop=function(){if(!this._pend)return _st.apply(this,arguments);const args=arguments;
- clearInterval(this.timer);try{this.stream&&this.stream.getTracks().forEach(t=>t.stop())}catch(e){}
- const have=this.batch;this.batch=[];this._late=[];this._sid++;this._closing=true;busy('Terminando de procesar '+this._pend+' foto(s)…');
- this._q.then(()=>{this._closing=false;busy(false);this.batch=have.concat(this._late);this._late=[];_st.apply(this,args)})}}
 $('#camDone').onclick=async()=>{if(!Cam.batch.length&&!Cam._pend)return toast('Todavía no sacaste fotos');await Nav.back()};
 $('#camUndo').onclick=()=>{if(Cam._jobs.length){const n=Cam._jobs.pop();Cam._cancel.add(n);Cam._pend--;Cam.updUI();toast('Foto borrada');return}if(!Cam.batch.length)return;Cam.batch.pop();Cam.updUI();toast('Foto borrada')};
 {const _u=Cam.updUI;Cam.updUI=function(){const r=_u.apply(this,arguments);const pend=this._pend||0,c=$('#camCount');if(c)c.textContent=this.batch.length+pend;const d=$('#camDone');if(d)d.classList.toggle('working',pend>0);
@@ -5199,7 +5182,6 @@ function camAnalyze(){const v=$('#camVideo');if(!v||!v.videoWidth||Cam.busy||!Na
   b.c.getContext('2d').drawImage(v,0,0);b.s=camSharpCenter(b.c,vw,vh);b.t=performance.now()}
  if(!q)Cam._glare=false;else if(Cam._tick%2===1)Cam._glare=camGlareOf(v,q,vw,vh).glare;const el=$('#camGlare');if(el)el.hidden=!Cam._glare}
 {const _d=Cam.detect;Cam.detect=function(){const r=_d.apply(this,arguments);try{camAnalyze()}catch(e){}return r}}
-{const _o=Cam.open;Cam.open=function(){this._sharpHist=[];this._buf=[];this._glare=false;const g=$('#camGlare');if(g)g.hidden=true;return _o.apply(this,arguments)}}
 
 /* captura: la más nítida de una ráfaga (ultrarrápido) o la foto HD verificada, con una segunda toma automática */
 {const _g=camGrab;camGrab=async function(){const v=$('#camVideo'),ref=camSharpRef();
@@ -5247,7 +5229,6 @@ async function camPostProcess(pages,kind){for(const p of pages){const f={};try{l
   const sig=pageSig(c);let bs=0,bp=null;for(const e of Cam._sigs){const s=sigSim(sig,e.sig);if(s>bs){bs=s;bp=e.p}}if(bp&&bs>=CAM_DUP){f.dup=bp;f.dupSim=bs}Cam._sigs.push({p,sig});if(Cam._sigs.length>80)Cam._sigs.shift();c.width=c.height=1}catch(e){console.warn('revisión',e)}
  if(!p.quad)f.nob=true;Cam._flags.set(p,f);
  if(f.dup)toast('⚠️ Esta hoja parece repetida: la vas a ver marcada al terminar',3200);else if(f.rot)toast('↻ Hoja enderezada ('+(f.rot===180?'estaba al revés':'estaba de costado')+')',2200)}}
-{const _o=Cam.open;Cam.open=function(){if(!this.replaceId)this._sigs=[];return _o.apply(this,arguments)}}
 
 /* revisión del lote al tocar «Listo» */
 function camReviewSheet(){const pages=Cam.batch,del=new Set();const lbl=p=>{const f=Cam._flags.get(p)||{},t=[];if(f.dup){const k=pages.indexOf(f.dup);t.push('<span class="rv-w">⚠️ Repetida'+(k>=0?' de la '+(k+1):'')+'</span>')}if(f.rot)t.push('<span class="rv-i">↻ Enderezada</span>');if(f.nob)t.push('<span class="rv-w">✂️ Sin bordes</span>');if(f.fg)t.push('<span class="rv-i">🧽 Sin dedos</span>');if(f.dw)t.push('<span class="rv-i">📖 Aplanada</span>');return t.join('')};
@@ -5667,7 +5648,6 @@ $('#camPanel').addEventListener('click',e=>{const t=e.target.closest('[data-cq]'
  saveS();P._ck='';camPanelRender()},true);
 function camLevelUpd(){const c=$('#camera');if(c)c.classList.toggle('nolevel',S.camLevel===false)}
 camLevelUpd();
-{const _o=Cam.open;Cam.open=function(){const P=$('#camPanel');if(P){P._full=false;P._ck=''}camLevelUpd();return _o.apply(this,arguments)}}
 
 /* ---- carga giratoria (anillo azul, como Adobe Scan) ---- */
 document.head.insertAdjacentHTML('beforeend','<style id="v65Css">'+
@@ -5856,7 +5836,6 @@ function bookAutoOn(){return Cam.kind==='book'&&Cam.mode==='batch'&&S.bookAuto!=
   const h=$('#camHint');if(h&&!h.classList.contains('cap'))h.textContent=this._bkArmed?(this._bkStill?'📖 Quieto… ':'📖 Pasá la página')+' · '+(this.batch.length+(this._pend||0))+' foto(s)':'📖 Pasá la página para la siguiente foto';
   if(this._bkArmed&&this._bkStill>=BK_TICKS){this._bkArmed=false;this._bkStill=0;navigator.vibrate&&navigator.vibrate(30);this.shoot()}}catch(e){}
  return r}}
-{const _o=Cam.open;Cam.open=function(){this._bkArmed=true;this._bkStill=0;this._mprev=null;return _o.apply(this,arguments)}}
 (function(){const g=$('#camGuide');if(!g||$('#camBookAuto'))return;g.insertAdjacentHTML('beforeend','<button class="cg-auto" id="camBookAuto"></button>');
  const upd=()=>{const b=$('#camBookAuto');b.classList.toggle('on',S.bookAuto!==false);b.textContent=S.bookAuto!==false?'⚡ Automático':'✋ Manual'};upd();
  $('#camBookAuto').onclick=e=>{e.stopPropagation();S.bookAuto=S.bookAuto===false;saveS();upd();if(S.bookAuto!==false&&Cam.mode!=='batch'){Cam.mode='batch';Cam.updUI()}Cam._bkArmed=true;toast(S.bookAuto!==false?'📖 Pasá las páginas: saco cada foto sola cuando la hoja queda quieta':'Libro manual: tocá el disparador en cada página',3000)}})();
@@ -6062,8 +6041,6 @@ const VisionEngine={w:null,ok:null,active:false,busy:false,seq:0,last:null,lastA
   svg.querySelectorAll('circle').forEach((c,i)=>{if(i<4){c.setAttribute('cx',X(q[i]));c.setAttribute('cy',Y(q[i]))}});
   const ln=svg.querySelector('line');if(ln){const a={x:(q[0].x+q[1].x)/2,y:(q[0].y+q[1].y)/2},b={x:(q[3].x+q[2].x)/2,y:(q[3].y+q[2].y)/2};ln.setAttribute('x1',X(a));ln.setAttribute('y1',Y(a));ln.setAttribute('x2',X(b));ln.setAttribute('y2',Y(b))}}};
 function camQuadNow(v){const q=VisionEngine.quad();return q===undefined?detectQuad(v):q}
-{const _o=Cam.open;Cam.open=async function(){const r=await _o.apply(this,arguments);let k=0;const go=()=>{const v=$('#camVideo');if(this.stream&&v&&v.videoWidth)VisionEngine.start(v);else if(++k<60&&Nav.isOpen('camera'))setTimeout(go,150)};go();return r}}
-{const _st=Cam.stop;Cam.stop=function(){VisionEngine.stop();return _st.apply(this,arguments)}}
 
 /* Pilar 4: enfoque y flash automáticos con los datos del Worker */
 function autoFocusFlash(r){const C=VisionEngine.cfg(),t=performance.now(),V=self.DSVision;if(!V||!Cam.track)return;
@@ -6250,8 +6227,6 @@ const CamTilt={rot:null,on:false,h:null,
   this.h=e=>{const g=e.accelerationIncludingGravity;if(!g)return;const r=this.fromGravity(g.x,g.y,typeof IS_IOS!=='undefined'&&IS_IOS);if(r!==null){this.rot=r;this.flat=false}else if(g.x!=null&&Math.hypot(g.x,g.y)<4)this.flat=true};
   try{if(typeof DeviceMotionEvent!=='undefined'&&typeof DeviceMotionEvent.requestPermission==='function')DeviceMotionEvent.requestPermission().then(s=>{if(s==='granted'&&this.on)addEventListener('devicemotion',this.h)}).catch(()=>{});else addEventListener('devicemotion',this.h)}catch(e){}},
  stop(){if(this.h)removeEventListener('devicemotion',this.h);this.on=false;this.h=null}};
-{const _o=Cam.open;Cam.open=function(){try{CamTilt.start()}catch(e){}return _o.apply(this,arguments)}}
-{const _st=Cam.stop;Cam.stop=function(){CamTilt.stop();return _st.apply(this,arguments)}}
 Cam._tiltOf=new Map();
 {const _g=camGrab;camGrab=async function(){/* v83: con el teléfono acostado sobre la hoja no se usa una posición vieja: endereza el texto */const rot=CamTilt.flat?null:CamTilt.rot;const src=await _g.apply(this,arguments);if(typeof src==='string')Cam._tiltOf.set(src,rot);return src}}
 {const _mp=makePage;makePage=function(src,o){const has=typeof src==='string'&&Cam._tiltOf.has(src),rot=has?Cam._tiltOf.get(src):null;if(has)Cam._tiltOf.delete(src);
@@ -6311,7 +6286,6 @@ async function camShowRev2(p){const box=$('#camRev2');if(!box||!p)return;Cam._re
  if(want&&this._seq>n0&&Nav.isOpen('camera')){const box=$('#camRev2');if(box){this.busy=true;this._rev2='…';$('#rv2Msg').textContent='Procesando la foto…';$('#rv2Img').removeAttribute('src');box.classList.add('loading');box.hidden=false}
   const sid=this._sid;await this._q;if(this._sid!==sid||!Nav.isOpen('camera'))return r;const p=this.batch[this.batch.length-1];if(p)await camShowRev2(p);else{box&&(box.hidden=true);this._rev2=null;this.busy=false}}
  return r}}
-{const _st=Cam.stop;Cam.stop=function(){if(this._rev2){$('#camRev2')&&($('#camRev2').hidden=true);this._rev2=null;this.busy=false}return _st.apply(this,arguments)}}
 {const _r=camPanelRender;camPanelRender=function(){const r=_r.apply(this,arguments);const P=$('#camPanel');if(!P||P.hidden)return r;const m=P.querySelector('.cq .cq-more');
  if(m&&!P.querySelector('[data-crv]'))m.insertAdjacentHTML('beforebegin','<button class="cq-row on" data-crv="1"><span><b>Ver la foto al sacarla</b><small>'+CAM_REV_L[camRevMode()]+'</small></span><i class="cq-or">'+(camRevMode()==='no'?'–':camRevMode()==='all'?'∞':'1')+'</i></button>');return r}}
 $('#camPanel').addEventListener('click',e=>{const t=e.target.closest('[data-crv]');if(!t)return;e.stopImmediatePropagation();const n={first:'all',all:'no',no:'first'}[camRevMode()];S.camRevMode=n;saveS();
@@ -6796,7 +6770,6 @@ function camMiniDone(p,n){const m=$('#camMini');if(!m||m._n!==n||!Nav.isOpen('ca
  if(mini&&this._seq>n0&&Nav.isOpen('camera')){const n=this._seq,sid=this._sid;camMiniShow(snap,n);
   (this._q||Promise.resolve()).then(()=>{if(this._sid!==sid)return;const p=this.batch[this.batch.length-1];camMiniDone(p&&!p._miniSeen?(p._miniSeen=true,p):null,n)})}
  return r}}
-{const _st=Cam.stop;Cam.stop=function(){const m=$('#camMini');if(m){m.hidden=true;clearTimeout(m._t);m._p=null}return _st.apply(this,arguments)}}
 document.head.insertAdjacentHTML('beforeend','<style id="v87Css">'
  +'.cam-mini{position:absolute;right:14px;bottom:96px;z-index:4;width:76px;aspect-ratio:3/4;padding:0;border:3px solid #fff;border-radius:10px;overflow:hidden;background:#111;box-shadow:0 6px 20px rgba(0,0,0,.55)}'
  +'.cam-mini[hidden]{display:none}.cam-mini img{width:100%;height:100%;object-fit:cover;display:block}'
@@ -6895,8 +6868,6 @@ async function docAutoName(d){if(S.autoName===false||!d||!d.pages.length||!isAut
  try{refreshLists()}catch(e){}toast('📄 Nombre: '+title+' (lo cambiás con ✏️)',3800);return title}
 
 /* después de la cámara: A Word / Firmar siguen solos; el lote se ve hoja por hoja; y se pone el nombre */
-{const _st=Cam.stop;Cam.stop=function(){const k=this.kind;if(!this.replaceId&&!(typeof _srcHook!=='undefined'&&_srcHook))this._afterCam={t:Date.now(),kind:k};return _st.apply(this,arguments)}}
-{const _o=Cam.open;Cam.open=function(){this._afterCam=null;return _o.apply(this,arguments)}}
 {const _ap=addPages;addPages=async function(pages,single){const a=typeof Cam!=='undefined'&&Cam._afterCam&&Date.now()-Cam._afterCam.t<10*60e3&&!(typeof _srcHook!=='undefined'&&_srcHook)?Cam._afterCam:null;
  if(!a||!pages||!pages.length)return _ap.apply(this,arguments);Cam._afterCam=null;const k=a.kind;
  if(k==='word'||k==='sign'){Cam.kind='doc';const r=await _ap.call(this,pages,false);const d=DOC;
@@ -7139,14 +7110,56 @@ function camCountdown(){const sec=+S.camTimer||0;if(!sec)return false;const box=
   camCountStop();if(Nav.isOpen('camera')&&Cam.stream)Cam.shoot()},1000);return true}
 function camCountStop(){clearInterval(Cam._countT);Cam._counting=false;const b=$('#camTimerBox');if(b)b.hidden=true}
 $('#camShot').addEventListener('click',e=>{if(!(+S.camTimer)||!Nav.isOpen('camera')||!Cam.stream)return;e.stopImmediatePropagation();e.preventDefault();if(Cam._counting){camCountStop();toast('Temporizador cancelado',1400);return}camCountdown()},true);
-{const _st=Cam.stop;Cam.stop=function(){camCountStop();camWake(false);return _st.apply(this,arguments)}}
+/* ===== v98 · cámara: abrir y cerrar en una sola pieza =====
+ * Antes eran 13 capas (cerrar) y 12 (abrir) agregadas versión por versión. Hacen lo mismo y en el mismo orden; cada paso dice de qué se ocupa. */
+{const baseStop=Cam.stop,baseOpen=Cam.open;
+ /* lo que queda por cerrar cuando ya no hay fotos procesándose */
+ function camStopRest(args){
+  if(this.review){this.batch.push(...this.review);this.review=null}const rv=$('#camRev');if(rv)rv.hidden=true;this.busy=false;      /* revisión de Individual: lo revisado se entrega */
+  this._shotQ=null;$('#camShot').classList.remove('arming');                                                                       /* auto-captura */
+  CamPro.stop();const w=$('#camWarn');if(w)w.hidden=true;                                                                           /* avisos de luz y nivel */
+  const had=this.batch&&this.batch.length;
+  $('#camPanel').hidden=true;$('#camCfg').classList.remove('on');                                                                   /* panel de ajustes */
+  const r=baseStop.apply(this,args);                                                                                                /* apaga la cámara y entrega las fotos */
+  if(!this._shooting)this.replaceId=null;
+  if(_srcHook&&!had)setTimeout(()=>{if(_srcHook){const h=_srcHook;_srcHook=null;h(null)}},400);                                     /* una herramienta esperaba fotos y no hubo */
+  return r}
+ Cam.stop=function(){
+  camCountStop();camWake(false);                                                                                                    /* temporizador y pantalla encendida */
+  if(!this.replaceId&&!(typeof _srcHook!=='undefined'&&_srcHook))this._afterCam={t:Date.now(),kind:this.kind};                      /* qué hacer al guardar (A Word, Firmar, hoja por hoja) */
+  const m=$('#camMini');if(m){m.hidden=true;clearTimeout(m._t);m._p=null}                                                           /* miniatura del lote */
+  if(this._rev2){const b=$('#camRev2');if(b)b.hidden=true;this._rev2=null;this.busy=false}                                          /* revisión del lote */
+  CamTilt.stop();VisionEngine.stop();                                                                                               /* sensores y detector */
+  if(!this._pend)return camStopRest.call(this,arguments);
+  /* quedan fotos en proceso: se apaga la cámara, se esperan y se entregan todas juntas, en orden */
+  const args=arguments;clearInterval(this.timer);try{this.stream&&this.stream.getTracks().forEach(t=>t.stop())}catch(e){}
+  const have=this.batch;this.batch=[];this._late=[];this._sid++;this._closing=true;busy('Terminando de procesar '+this._pend+' foto(s)…');
+  this._q.then(()=>{this._closing=false;busy(false);this.batch=have.concat(this._late);this._late=[];camStopRest.call(this,args)})};
+ Cam.open=async function(mode){
+  /* estado limpio de la sesión de cámara */
+  this._afterCam=null;try{CamTilt.start()}catch(e){}
+  this._bkArmed=true;this._bkStill=0;this._mprev=null;                                                                               /* modo Libro */
+  const P=$('#camPanel');if(P){P._full=false;P._ck=''}camLevelUpd();
+  if(!this.replaceId)this._sigs=[];                                                                                                  /* firmas para detectar hojas repetidas */
+  this._sharpHist=[];this._buf=[];this._glare=false;const g=$('#camGlare');if(g)g.hidden=true;                                       /* nitidez y reflejos */
+  if(mode==='single'&&!this.replaceId&&!(typeof _srcHook!=='undefined'&&_srcHook)&&this._fromMain&&S.camPrefMode==='batch')mode='batch';this._fromMain=false;this._sid++;
+  const kind0=this.kind;if(!this.replaceId)this.kind=this.kind==='book'||this.kind==='board'?this.kind:'doc';
+  try{if(window.DeviceOrientationEvent&&typeof DeviceOrientationEvent.requestPermission==='function')DeviceOrientationEvent.requestPermission().then(r=>{if(r==='granted')CamPro.levelOn()}).catch(()=>{});else CamPro.levelOn()}catch(e){}
+  const opening=baseOpen.call(this,mode);                                                                                            /* pide la cámara y muestra la pantalla */
+  if(kind0==='cert'&&!this.replaceId)this.kind='cert';this.updUI&&this.updUI();
+  const r=await opening;
+  {let k=0;const wait=setInterval(()=>{if(Cam.track||++k>40){clearInterval(wait);if(Cam.track)CamPro.setup()}},150)}                  /* enfoque, exposición y flash */
+  if(this.timer&&this.stream){clearInterval(this.timer);this.timer=setInterval(()=>this.detect(),240)}
+  if(S.v58hello&&Nav.isOpen('camera')){S.v58hello=false;saveS();toast('📸 Perfil recomendado: Lote automático. Lo cambiás en ⚙️ → Perfil',4500)}
+  {let k=0;const go=()=>{const v=$('#camVideo');if(this.stream&&v&&v.videoWidth)VisionEngine.start(v);else if(++k<60&&Nav.isOpen('camera'))setTimeout(go,150)};go()}   /* detector en segundo plano */
+  if(Nav.isOpen('camera'))camWake(true);
+  return r}}
 {const _r=camPanelRender;camPanelRender=function(){const r=_r.apply(this,arguments);try{const P=$('#camPanel');if(!P||P.hidden)return r;const m=P.querySelector('.cq .cq-more');
   if(m&&!P.querySelector('[data-ctm]')){const v=+S.camTimer||0;m.insertAdjacentHTML('beforebegin','<button class="cq-row'+(v?' on':'')+'" data-ctm="1"><span><b>Temporizador</b><small>'+CAM_TMR_L[v]+'</small></span><i class="cq-or">'+(v?v+'s':'–')+'</i></button>')}}catch(e){}return r}}
 $('#camera').addEventListener('click',e=>{const t=e.target.closest('#camPanel [data-ctm]');if(!t)return;e.stopPropagation();e.preventDefault();const n={0:3,3:5,5:0}[+S.camTimer||0];S.camTimer=n;saveS();toast('Temporizador: '+CAM_TMR_L[n].toLowerCase(),1600);const P=$('#camPanel');P._ck='';camPanelRender()},true);
 /* pantalla encendida: el teléfono no se apaga solo mientras escaneás un lote */
 let _camWL=null;
 async function camWake(on){try{if(on){if(_camWL||!('wakeLock' in navigator))return;_camWL=await navigator.wakeLock.request('screen');_camWL.addEventListener('release',()=>{_camWL=null})}else if(_camWL){const w=_camWL;_camWL=null;await w.release()}}catch(e){_camWL=null}}
-{const _o=Cam.open;Cam.open=async function(){const r=await _o.apply(this,arguments);if(Nav.isOpen('camera'))camWake(true);return r}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&typeof Cam!=='undefined'&&Nav.isOpen('camera')&&Cam.stream)camWake(true)});
 document.head.insertAdjacentHTML('beforeend','<style id="v93Css">.v93-pv{display:flex;justify-content:center;padding:10px;border-radius:16px;background:var(--stage,#E3E9F1);margin:6px 0 12px}.v93-prev{max-width:100%;height:auto;background:#fff;box-shadow:0 6px 18px -8px rgba(23,32,51,.45)}'
  +'.cam-count{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);z-index:7;width:120px;height:120px;border-radius:50%;display:grid;place-items:center;font:800 64px/1 system-ui,sans-serif;color:#fff;background:rgba(15,23,42,.55);box-shadow:0 0 0 4px rgba(255,255,255,.35)}.cam-count[hidden]{display:none}'
