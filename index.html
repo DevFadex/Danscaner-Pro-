@@ -3358,7 +3358,6 @@ function refineQuad(src,q){try{if(!q)return q;const W0=src.naturalWidth||src.wid
  const out=[];for(let i=0;i<4;i++){const A=lines[(i+3)%4],B=lines[i],den=A.dx*B.dy-A.dy*B.dx;if(Math.abs(den)<1e-6)return q;const t=((B.mx-A.mx)*B.dy-(B.my-A.my)*B.dx)/den;const p={x:A.mx+A.dx*t,y:A.my+A.dy*t};
   if(Math.hypot(p.x-P[i].x,p.y-P[i].y)>R*1.6)return q;out.push({x:Math.max(0,Math.min(1,p.x/w)),y:Math.max(0,Math.min(1,p.y/h))})}
  return out}catch(e){console.warn('refineQuad',e);return q}}
-{const _mp=makePage;makePage=function(src,o={}){return (async()=>{const p=await _mp(src,o);if(p&&p.quad&&(o.auto??S.autoCrop)!==false){try{const img=await loadImg(p.orig);const r=refineQuad(img,p.quad);if(r!==p.quad){p.quad=r;await makeThumb(p)}}catch(e){}}return p})()}}
 $('#crAuto').onclick=async()=>{const img=await loadImg(Crop.p.orig);let q=detectQuad(img);if(q){Crop.q=refineQuad(img,q);cropLayout();toast('Bordes detectados')}else toast('No se detectaron bordes claros, ajustá a mano')};
 
 /* ---- recorte: manijas en la mitad de cada lado (mueven el lado entero) ---- */
@@ -4494,7 +4493,6 @@ function paperLbl(){const l=$('#editor [data-ed="paper"] .pp-l');if(l&&Ed.p)l.te
 CAM_KINDS.splice(2,0,['cert','Certificado']);
 (function(){const k=$('#camKinds');if(!k||k.querySelector('[data-kind="cert"]'))return;const ref=k.querySelector('[data-kind="id"]');const b=document.createElement('button');b.dataset.kind='cert';b.textContent='Certificado';if(ref)ref.before(b);else k.appendChild(b);
  k.addEventListener('click',e=>{const x=e.target.closest('[data-kind="cert"]');if(!x)return;e.stopImmediatePropagation();Cam.kind='cert';Cam.updUI();toast('Certificado: sale en su tamaño real, centrado en una hoja A4 blanca',3200)},true)})();
-{const _mp=makePage;makePage=function(src,o){return _mp.apply(this,arguments).then(p=>{if(p&&typeof Cam!=='undefined'&&Cam.kind==='cert'&&Nav.isOpen('camera')&&!p.paper)p.paper='a5';return p})}}
 
 /* ---- cámara: borrar la foto que salió mal ---- */
 document.head.insertAdjacentHTML('beforeend','<style id="v43Css">.cam-undo{position:absolute;left:12px;bottom:118px;z-index:4;display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:20px;background:#000a;color:#fff;font-size:13px;font-weight:600}.cam-undo .ico{width:17px;height:17px}.cam-undo[hidden]{display:none}'
@@ -4525,7 +4523,6 @@ PAPER_NAMES.cert='Certificado (centrado en A4)';PAGE_MM.cert=[210,297];
  const land=w>h;let [pw,ph]=PAGE_SIZES.a4,[bw,bh]=PAGE_SIZES.a5;if(land){[pw,ph]=[ph,pw];[bw,bh]=[bh,bw]}
  const s=Math.min(bw/Math.max(1,w),bh/Math.max(1,h));return {k:'cert',pw,ph,fill:false,dw:w*s,dh:h*s}}}
 /* la cámara en modo Certificado marca la página así (las páginas viejas en A5 quedan como estaban) */
-{const _mp=makePage;makePage=function(src,o){return _mp.apply(this,arguments).then(p=>{if(p&&p.paper==='a5'&&typeof Cam!=='undefined'&&Cam.kind==='cert'&&Nav.isOpen('camera'))p.paper='cert';return p})}}
 /* opción en la hoja de «Tamaño de la hoja» del editor y en Ajustes / Exportar */
 new MutationObserver(()=>{const g=document.querySelector('[data-pp="a5"]');if(g&&!document.querySelector('[data-pp="cert"]')){const b=g.cloneNode(true);b.dataset.pp='cert';b.textContent='Certificado centrado en hoja A4';b.classList.toggle('on',!!(Ed.p&&Ed.p.paper==='cert'));g.before(b)}
  for(const sel of document.querySelectorAll('.sSize,#exSize'))if(sel.querySelector('option[value="a5"]')&&!sel.querySelector('option[value="cert"]')){const o=document.createElement('option');o.value='cert';o.textContent='Certificado centrado en hoja A4';sel.querySelector('option[value="a5"]').before(o);if(sel.classList.contains('sSize')&&S.size==='cert')sel.value='cert'}}).observe(document.body,{childList:true,subtree:true});
@@ -5086,14 +5083,8 @@ if(S.v58cam!==true){camApplyProfile('lote',true);S.v58cam=true;S.v58hello=true;t
 /* el marco en vivo, llevado a la foto: el video suele ser un recorte centrado del sensor con otra proporción */
 function camMapHint(h,W,H){if(!h||!h.q||!h.vw||!h.vh||!W||!H)return null;const av=h.vw/h.vh,ap=W/H;if((av>1)!==(ap>1)&&Math.abs(av-1)>.05&&Math.abs(ap-1)>.05)return null;
  return h.q.map(p=>{let x=p.x,y=p.y;if(av>ap)y=.5+(y-.5)*ap/av;else if(av<ap)x=.5+(x-.5)*av/ap;return {x:Math.max(0,Math.min(1,x)),y:Math.max(0,Math.min(1,y))}})}
-{const _mp=makePage;makePage=function(src,o){if(!o||!o.hint)return _mp.apply(this,arguments);const h=o.hint,o2=Object.assign({},o);delete o2.hint;
- return _mp(src,o2).then(async p=>{try{if(!p||(o2.auto??S.autoCrop)===false)return p;const img=await loadImg(p.orig),hq=camMapHint(h,img.naturalWidth,img.naturalHeight);if(!hq)return p;
-  const dist=p.quad?p.quad.reduce((s2,c,i)=>s2+Math.hypot(c.x-hq[i].x,c.y-hq[i].y),0)/4:1;
-  const ar=q=>Math.abs(q.reduce((s3,c,i)=>{const n=q[(i+1)%4];return s3+c.x*n.y-n.x*c.y},0))/2;
-  if(!p.quad||(dist>.035&&ar(p.quad)<ar(hq)*.6)){p.quad=refineQuad(img,hq);p.hinted=true;await makeThumb(p)}}catch(e){console.warn('marco en vivo',e)}return p})}}
 Cam._hintNow=function(){const v=$('#camVideo');return this._lastQuad&&v&&v.videoWidth?{q:this._lastQuad.map(p=>({x:p.x,y:p.y})),vw:v.videoWidth,vh:v.videoHeight}:null};
 /* también en «Individual» y al reemplazar una página */
-{const _mp=makePage;makePage=function(src,o){if(typeof Cam!=='undefined'&&Cam._shotHint&&Nav.isOpen('camera')&&!(o&&o.hint)){const h=Cam._shotHint;Cam._shotHint=null;return _mp.call(this,src,Object.assign({},o||{},{hint:h}))}return _mp.apply(this,arguments)}}
 
 /* captura: foto del sensor (HD) o cuadro del video (ultrarrápido) */
 async function camGrab(){const v=$('#camVideo');
@@ -5325,8 +5316,6 @@ async function camFocusLock(){const tr=Cam.track,v=$('#camVideo');if(!tr||!v||!v
  Cam._locking=true;try{await tr.applyConstraints({advanced:[adv]})}catch(e){Cam._locking=false;return false}
  let best=s0,still=0;const t0=performance.now();while(performance.now()-t0<CAM_FOCUS_MS){await sleep(90);const s=sharp();if(s>best*1.03){best=s;still=0}else if(++still>=2&&(!ref||best>=ref*.8))break}
  return true}
-{const _g=camGrab;camGrab=async function(){let lk=false;if(S.hd&&!S.camFast&&S.camFocusLock!==false){try{lk=await camFocusLock()}catch(e){}}
- try{return await _g.apply(this,arguments)}finally{if(lk){const tr=Cam.track;Cam._locking=false;setTimeout(()=>{if(tr&&Cam.track===tr&&camCaps().focusMode&&camCaps().focusMode.includes('continuous'))tr.applyConstraints({advanced:[{focusMode:'continuous'}]}).catch(()=>{})},300)}}}}
 
 /* opciones en el panel ⚙️ */
 {const _r=camPanelRender;camPanelRender=function(){const r=_r.apply(this,arguments);const P=$('#camPanel');if(!P||P.hidden||P.querySelector('[data-cp4]'))return r;const g=P.querySelector('.cpgrid');
@@ -5445,10 +5434,6 @@ async function pageAutoClean(p,{dewarp=true,finger=true}={}){const k=pageKey(p),
 /* en la cámara: después de enderezar y revisar repetidas */
 /* v72: orientación de las hojas de la cámara: horizontal (por defecto), vertical o automática. Se gira acá, antes de limpiar, para que la limpieza use la hoja ya girada */
 const camOrient=()=>S.camOrient||'port';
-{const _pp=camPostProcess;camPostProcess=async function(pages,kind){const r=await _pp.apply(this,arguments);const o=camOrient();if(o==='auto'||o==='phone')return r;
- for(const p of pages){try{if(await camForceOrient(p,o)){await makeThumb(p);const f=Cam._flags.get(p);if(f)f.orient=o}}catch(e){console.warn('orientación',e)}}return r}}
-{const _pp=camPostProcess;camPostProcess=async function(pages,kind){const r=await _pp.apply(this,arguments);for(const p of pages){try{const o=await pageAutoClean(p,{dewarp:kind!=='board'});const f=Cam._flags.get(p)||{};if(o.dw)f.dw=true;if(o.fg)f.fg=true;Cam._flags.set(p,f);
-  if(o.fg)toast('🧽 Se borró un dedo del borde de la hoja',2200);else if(o.dw)toast('📖 Hoja curva aplanada',2000)}catch(e){console.warn('limpiar',e)}}return r}}
 
 /* editor: «Limpiar» — dedos, aplanar y borrar manchas con el dedo */
 async function cleanSheet(){const p=Ed.p;if(!p)return;const k=pageKey(p);const dwOn=!!(p.dw&&p.dw.k===k&&p.dw.on!==false),fgOn=!!(p.fg&&p.fg.k===k&&p.fg.on!==false);
@@ -5631,7 +5616,6 @@ function camFrameDraw(){if(S.camFrame==='lineas')return;const svg=$('#camSvg');i
  svg.innerHTML='<polygon class="cf cf-l'+(steady?' ok':'')+'" points="'+pts.map(p=>p.join(',')).join(' ')+'"/>'+pts.map(p=>'<circle class="cf cf-d'+(steady?' ok':'')+'" cx="'+p[0]+'" cy="'+p[1]+'" r="11"/>').join('')}
 /* píldora "Capturando, un momento…" y sonido de obturador opcional */
 let _camAC=null;function camClick(){if(S.camSound!==true)return;try{_camAC=_camAC||new (window.AudioContext||window.webkitAudioContext)();const a=_camAC,n=a.createBuffer(1,a.sampleRate*.06,a.sampleRate),d=n.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,3);const s=a.createBufferSource(),g=a.createGain();g.gain.value=.35;s.buffer=n;s.connect(g).connect(a.destination);s.start()}catch(e){}}
-{const _g=camGrab;camGrab=async function(){const h=$('#camHint');if(h){h.textContent='Capturando, un momento…';h.classList.add('cap')}camClick();try{return await _g.apply(this,arguments)}finally{if(h)h.classList.remove('cap')}}}
 
 /* ---- panel ⚙️ compacto (CamScanner) con «Más ajustes» para el panel completo ---- */
 {const _r=camPanelRender;camPanelRender=function(){const P=$('#camPanel');if(!P||P.hidden||P._full){const r=_r.apply(this,arguments);if(P&&!P.hidden&&P._full&&!P.querySelector('[data-cq="less"]'))P.insertAdjacentHTML('afterbegin','<button class="cq-back" data-cq="less">‹ Ajustes rápidos</button>');return r}
@@ -6228,9 +6212,13 @@ const CamTilt={rot:null,on:false,h:null,
   try{if(typeof DeviceMotionEvent!=='undefined'&&typeof DeviceMotionEvent.requestPermission==='function')DeviceMotionEvent.requestPermission().then(s=>{if(s==='granted'&&this.on)addEventListener('devicemotion',this.h)}).catch(()=>{});else addEventListener('devicemotion',this.h)}catch(e){}},
  stop(){if(this.h)removeEventListener('devicemotion',this.h);this.on=false;this.h=null}};
 Cam._tiltOf=new Map();
-{const _g=camGrab;camGrab=async function(){/* v83: con el teléfono acostado sobre la hoja no se usa una posición vieja: endereza el texto */const rot=CamTilt.flat?null:CamTilt.rot;const src=await _g.apply(this,arguments);if(typeof src==='string')Cam._tiltOf.set(src,rot);return src}}
-{const _mp=makePage;makePage=function(src,o){const has=typeof src==='string'&&Cam._tiltOf.has(src),rot=has?Cam._tiltOf.get(src):null;if(has)Cam._tiltOf.delete(src);
- return _mp.apply(this,arguments).then(async p=>{if(p&&has&&camOrient()==='phone'){p.camRot=rot;if(rot){p.rot=((p.rot||0)+rot)%360;await makeThumb(p)}}return p})}}
+/* v98: lo que rodea a la toma en una sola pieza (antes 3 capas): posición del teléfono → aviso «Capturando» → enfocar la hoja → foto */
+{const grabPhoto=camGrab;camGrab=async function(){const rot=CamTilt.flat?null:CamTilt.rot;   /* acostado sobre la hoja no se usa una posición vieja: endereza el texto */
+ const h=$('#camHint');if(h){h.textContent='Capturando, un momento…';h.classList.add('cap')}camClick();let src;
+ try{let lk=false;if(S.hd&&!S.camFast&&S.camFocusLock!==false){try{lk=await camFocusLock()}catch(e){}}
+  try{src=await grabPhoto.apply(this,arguments)}finally{if(lk){const tr=Cam.track;Cam._locking=false;setTimeout(()=>{if(tr&&Cam.track===tr&&camCaps().focusMode&&camCaps().focusMode.includes('continuous'))tr.applyConstraints({advanced:[{focusMode:'continuous'}]}).catch(()=>{})},300)}}}
+ finally{if(h)h.classList.remove('cap')}
+ if(typeof src==='string')Cam._tiltOf.set(src,rot);return src}}
 /* con la posición del teléfono clara no se adivina por el texto (era lo que a veces dejaba la hoja dada vuelta) */
 let _v77noAutoRot=false;
 {const _po=pageOrient;pageOrient=function(c){if(_v77noAutoRot)return {rot:0};return _po.apply(this,arguments)}}
@@ -6259,10 +6247,6 @@ async function camEdgeTrim(p){if(!p||!p.quad||p.quad.length!==4||S.camEdgeTrim==
  const nq=[{x:L[0],y:T[0]},{x:1-R[0],y:T[1]},{x:1-R[1],y:1-B[1]},{x:L[1],y:1-B[0]}];
  const hm=homography([{x:0,y:0},{x:1,y:0},{x:1,y:1},{x:0,y:1}],p.quad),map=q=>{const den=hm[6]*q.x+hm[7]*q.y+1;return {x:(hm[0]*q.x+hm[1]*q.y+hm[2])/den,y:(hm[3]*q.x+hm[4]*q.y+hm[5])/den}};
  p.quad=nq.map(map).map(q=>({x:Math.max(0,Math.min(1,q.x)),y:Math.max(0,Math.min(1,q.y))}));p.trim=true;return true}
-{const _pp=camPostProcess;camPostProcess=async function(pages,kind){
- for(const p of pages){try{if(kind!=='board'&&await camEdgeTrim(p))await makeThumb(p)}catch(e){console.warn('recorte parejo',e)}}
- _v77noAutoRot=camOrient()==='phone'&&pages.length>0&&pages.every(p=>p.camRot!=null);
- try{return await _pp.apply(this,arguments)}finally{_v77noAutoRot=false}}}
 
 /* ---- 3) la primera foto del lote se muestra grande para decidir si sirve (como CamScanner) ---- */
 const CAM_REV_L={first:'La primera, grande',all:'Todas, grandes',no:'No mostrar'};
@@ -6646,7 +6630,6 @@ async function camWholeSheet(p){await lazyMod('vision-core');const V=self.DSVisi
  if(quadArea(big)<quadArea(small)*1.2||quadCover(small,big)<.85)return false;
  const ringL=quadLuma(g,w,h,big,small),inL=quadLuma(g,w,h,small,null);if(ringL<Math.max(110,inL-45))return false;/* lo que se suma tiene que ser papel, no la mesa */
  p.quad=big;p.whole=true;return true}
-{const _mp=makePage;makePage=function(src,o){return _mp.apply(this,arguments).then(async p=>{try{if(p&&p.quad&&((o&&o.auto)??S.autoCrop)!==false&&typeof Cam!=='undefined'&&Nav.isOpen('camera')&&await camWholeSheet(p))await makeThumb(p)}catch(e){console.warn('hoja entera',e)}return p})}}
 /* ---- 3) Editar PDF: en la página abierta (Corregir) también se agrega firma, texto, fecha, imagen o se tapa ---- */
 (function(){const msg=$('#fxMsg');if(!msg||$('#fxTools'))return;msg.insertAdjacentHTML('afterend','<div class="fx-tools" id="fxTools" hidden role="toolbar" aria-label="Agregar a la página">'
   +[['sig','sign','Firma'],['txt','type','Texto'],['date','clock','Fecha'],['img','image','Imagen'],['white','eraser','Tapar']].map(([k,ic,n])=>'<button class="chip" data-ft="'+k+'">'+icoSvg(ic)+' '+n+'</button>').join('')+'</div>');
@@ -6683,8 +6666,28 @@ document.head.insertAdjacentHTML('beforeend','<style id="v85Css">'+
 /* ---- 1) cámara: la miniatura se arma una sola vez al final (antes se rehacía en cada ajuste del recorte) ---- */
 let _thHold=0;const _thPend=new Set();
 {const _mt=makeThumb;makeThumb=function(p){if(_thHold>0&&p){_thPend.add(p);return Promise.resolve()}return _mt.apply(this,arguments)};
- const _mp=makePage;makePage=function(src,o){if(typeof Cam==='undefined'||!Nav.isOpen('camera'))return _mp.apply(this,arguments);_thHold++;
-  return _mp.apply(this,arguments).finally(async()=>{if(--_thHold>0)return;const L=[..._thPend];_thPend.clear();for(const q of L){try{await _mt(q)}catch(e){}}})}}
+ /* v98: makePage en una sola pieza (antes 8 capas). Pasos, en orden: foto → recorte fino → tamaño de certificado → marco en vivo → posición del teléfono → hoja entera */
+ const baseMake=makePage;
+ const quadAreaN=q=>Math.abs(q.reduce((s3,c,i)=>{const n=q[(i+1)%4];return s3+c.x*n.y-n.x*c.y},0))/2;
+ async function makePageSteps(src,o){
+  /* cómo estaba el teléfono al disparar (solo vale para esta foto) */
+  const hasTilt=typeof src==='string'&&Cam._tiltOf.has(src),tilt=hasTilt?Cam._tiltOf.get(src):null;if(hasTilt)Cam._tiltOf.delete(src);
+  /* el marco que se veía en vivo al disparar */
+  let o1=o;if(typeof Cam!=='undefined'&&Cam._shotHint&&Nav.isOpen('camera')&&!(o&&o.hint)){const h=Cam._shotHint;Cam._shotHint=null;o1=Object.assign({},o||{},{hint:h})}
+  let hint=null,o2=o1;if(o1&&o1.hint){hint=o1.hint;o2=Object.assign({},o1);delete o2.hint}
+  const o3=o2===undefined?{}:o2;
+  const p=await baseMake(src,o3);                                                                  /* reduce la foto, detecta la hoja y arma la página */
+  if(p&&p.quad&&(o3.auto??S.autoCrop)!==false){try{const img=await loadImg(p.orig);const r=refineQuad(img,p.quad);if(r!==p.quad){p.quad=r;await makeThumb(p)}}catch(e){}}   /* bordes precisos */
+  if(p&&typeof Cam!=='undefined'&&Cam.kind==='cert'&&Nav.isOpen('camera')&&!p.paper)p.paper='a5';
+  if(p&&p.paper==='a5'&&typeof Cam!=='undefined'&&Cam.kind==='cert'&&Nav.isOpen('camera'))p.paper='cert';
+  if(hint){try{if(p&&(o2.auto??S.autoCrop)!==false){const img=await loadImg(p.orig),hq=camMapHint(hint,img.naturalWidth,img.naturalHeight);
+    if(hq){const dist=p.quad?p.quad.reduce((s2,c,i)=>s2+Math.hypot(c.x-hq[i].x,c.y-hq[i].y),0)/4:1;
+     if(!p.quad||(dist>.035&&quadAreaN(p.quad)<quadAreaN(hq)*.6)){p.quad=refineQuad(img,hq);p.hinted=true;await makeThumb(p)}}}}catch(e){console.warn('marco en vivo',e)}}   /* si el recorte quedó mucho más chico que el marco, vale el marco */
+  if(p&&hasTilt&&camOrient()==='phone'){p.camRot=tilt;if(tilt){p.rot=((p.rot||0)+tilt)%360;await makeThumb(p)}}
+  try{if(p&&p.quad&&((o&&o.auto)??S.autoCrop)!==false&&typeof Cam!=='undefined'&&Nav.isOpen('camera')&&await camWholeSheet(p))await makeThumb(p)}catch(e){console.warn('hoja entera',e)}   /* la hoja entera, no un recuadro de adentro */
+  return p}
+ makePage=function(src,o){if(typeof Cam==='undefined'||!Nav.isOpen('camera'))return makePageSteps(src,o);_thHold++;   /* con la cámara abierta la miniatura se arma una sola vez, al final */
+  return makePageSteps(src,o).finally(async()=>{if(--_thHold>0)return;const Lq=[..._thPend];_thPend.clear();for(const q of Lq){try{await _mt(q)}catch(e){}}})}}
 
 /* el revisado de cada foto (enderezar, orientación, limpieza) pedía la misma vista de 1000 px dos veces: se reusa mientras la página no cambie */
 let _rpMemo=null;
@@ -6693,7 +6696,16 @@ let _rpMemo=null;
   const dup=c=>{const d=canvas(c.width,c.height);d.getContext('2d').drawImage(c,0,0);return d};
   const hit=_rpMemo.get(p);if(hit&&hit.key===key)return Promise.resolve(dup(hit.c));
   return _rp.apply(this,arguments).then(c=>{if(_rpMemo&&c&&c.width>1)_rpMemo.set(p,{key,c:dup(c)});return c})}}
-{const _pp=camPostProcess;camPostProcess=async function(){const own=!_rpMemo;if(own)_rpMemo=new Map();try{return await _pp.apply(this,arguments)}finally{if(own){for(const v of _rpMemo.values())v.c.width=v.c.height=1;_rpMemo=null}}}}
+/* v98: el revisado de cada foto en una sola pieza (antes 5 capas). Pasos: emparejar bordes → enderezar y marcar repetidas → orientación elegida → aplanar y borrar dedos */
+{const basePost=camPostProcess;camPostProcess=async function(pages,kind){const own=!_rpMemo;if(own)_rpMemo=new Map();   /* la vista de 1000 px se reusa mientras la página no cambie */
+ try{for(const p of pages){try{if(kind!=='board'&&await camEdgeTrim(p))await makeThumb(p)}catch(e){console.warn('recorte parejo',e)}}
+  _v77noAutoRot=camOrient()==='phone'&&pages.length>0&&pages.every(p=>p.camRot!=null);   /* si ya se sabe cómo estaba el teléfono, no se gira por el texto */
+  try{const r=await basePost.call(this,pages,kind);
+   const o=camOrient();if(o!=='auto'&&o!=='phone'){for(const p of pages){try{if(await camForceOrient(p,o)){await makeThumb(p);const f=Cam._flags.get(p);if(f)f.orient=o}}catch(e){console.warn('orientación',e)}}}
+   for(const p of pages){try{const c=await pageAutoClean(p,{dewarp:kind!=='board'});const f=Cam._flags.get(p)||{};if(c.dw)f.dw=true;if(c.fg)f.fg=true;Cam._flags.set(p,f);
+     if(c.fg)toast('🧽 Se borró un dedo del borde de la hoja',2200);else if(c.dw)toast('📖 Hoja curva aplanada',2000)}catch(e){console.warn('limpiar',e)}}
+   return r}finally{_v77noAutoRot=false}}
+ finally{if(own){for(const v of _rpMemo.values())v.c.width=v.c.height=1;_rpMemo=null}}}}
 
 /* ---- 2) seguir con otra herramienta: el resultado (o el documento escaneado) entra directo en la herramienta elegida ---- */
 const CHAIN_P='.pdf,application/pdf';
