@@ -2996,8 +2996,13 @@ const Org={q:Promise.resolve(),busy:0,
 /* al cerrar un documento, se organiza solo en segundo plano */
 {const _open=openDocScreen;openDocScreen=function(){_open.apply(this,arguments);const id=DOC&&DOC.id;const top=Nav.stack[Nav.stack.length-1];if(top&&top.id==='docScreen'&&id){const oc=top.onClose;top.onClose=()=>{oc&&oc();setTimeout(()=>Org.enqueue(id),600)}}}}
 /* carpeta, etiquetas y favorito también en el índice (meta) */
-{const _put=DB.putDoc.bind(DB);DB.putDoc=function(d){let bytes=0;try{bytes=JSON.stringify(d).length}catch(e){}
- return new Promise((res,rej)=>{const t=this.db.transaction(['docs','meta'],'readwrite');t.objectStore('docs').put(d);t.objectStore('meta').put({id:d.id,name:d.name,created:d.created,updated:d.updated,count:d.pages.length,thumb:d.pages[0]?.thumb||'',text:(d.text||d.head||'').slice(0,4000),bytes,folder:d.folder||'',tags:Array.isArray(d.tags)?d.tags:[],fav:!!d.fav});t.oncomplete=res;t.onerror=()=>rej(t.error)})}}
+{const _put=DB.putDoc.bind(DB);DB.putDoc=function(d){
+ /* v97: las fotos se guardan como imagen binaria (Blob) y no como texto base64: ocupan un 25 % menos. Si el navegador no deja guardar Blobs, se guarda como antes. */
+ const meta=bytes=>({id:d.id,name:d.name,created:d.created,updated:d.updated,count:d.pages.length,thumb:d.pages[0]?.thumb||'',text:(d.text||d.head||'').slice(0,4000),bytes,folder:d.folder||'',tags:Array.isArray(d.tags)?d.tags:[],fav:!!d.fav});
+ const put=dd=>new Promise((res,rej)=>{const t=this.db.transaction(['docs','meta'],'readwrite');t.objectStore('docs').put(dd);t.objectStore('meta').put(meta(typeof docBytes==='function'?docBytes(dd):JSON.stringify(dd).length));t.oncomplete=res;t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error||new Error('guardado cancelado'))});
+ let light=null;try{if(typeof docStoreForm==='function'&&S.noBlobStore!==true)light=docStoreForm(d)}catch(e){light=null}
+ if(!light)return put(d);
+ return (()=>{try{return put(light)}catch(e){return Promise.reject(e)}})().catch(e=>{if(e&&e.name==='QuotaExceededError')throw e;console.warn('guardar como imagen binaria falló, sigo con texto',e);S.noBlobStore=true;try{saveS()}catch(_){}return put(d)})}}
 
 /* hoja "Carpeta y etiquetas" */
 async function orgSheet(id){const d=await DB.getDoc(id);if(!d)return toast('Documento no encontrado');const folders=[...new Set(_metas.map(m=>m.folder).filter(Boolean))].sort();const tags=new Set(d.tags||[]);
@@ -3459,7 +3464,7 @@ document.head.insertAdjacentHTML('beforeend','<style id="nxTopCss">.top .nx-top{
 requestAnimationFrame(()=>document.documentElement.classList.remove('boot'));
 
 /* ===================== v27: íconos profesionales (sin depender de internet), Nexa interactiva y "Mejorar imagen" ===================== */
-const NEXA_VER='Nexa 4.5',APP_VER='96';
+const NEXA_VER='Nexa 4.5',APP_VER='97';
 Object.assign(ICONS,{
  merge:'<path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M8 12h8M13 9l3 3-3 3"/>',
  split:'<path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
@@ -3577,7 +3582,7 @@ function deEmoji(root){if(!root||!root.nodeType)return;const skip=n=>{const p=n.
 document.head.insertAdjacentHTML('beforeend','<style id="emoCss">.emo-ic{display:inline-flex;vertical-align:-3px;margin:0 2px}.emo-ic .ico{width:1.1em;height:1.1em}</style>');
 
 /* ===================== v28: versión estable, Nexa más conversadora, IA local por procesador e internet gratis ===================== */
-const BUILD='96 · 09/11/2026';
+const BUILD='97 · 10/11/2026';
 /* Versión que ven los usuarios: se cambia a mano solo cuando se decide publicar una versión nueva para todos.
    El administrador ve la versión interna (BUILD) con cada cambio. */
 const PUBLIC_VER='1.2';
@@ -7270,6 +7275,67 @@ document.head.insertAdjacentHTML('beforeend','<style id="v96Css">.edt-grid{displ
  +'.tsx-row{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 10px}.tsx-row .chip{min-height:42px;min-width:44px;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:14px}'
  +'.tsx-sw{width:14px;height:14px;border-radius:50%;border:1px solid rgba(0,0,0,.25)}.tsx-pick{position:relative;cursor:pointer}.tsx-pick input{width:28px;height:24px;border:0;padding:0;background:none}'
  +'@media (max-width:380px){.edt-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}</style>');
+
+/* ===================== v97 · hojas más livianas, ofrecer el bloqueo y Diagnóstico ===================== */
+/* ---- 1) fotos como Blob en la base. En memoria siguen siendo data: URL, así el resto de la app no cambia ---- */
+const _blobOf=new WeakMap();
+function dataUrlToBlob(u){const i=u.indexOf(','),head=u.slice(0,i),mime=(head.match(/^data:([^;]+)/)||[])[1]||'image/jpeg';if(!/;base64/.test(head))return new Blob([decodeURIComponent(u.slice(i+1))],{type:mime});
+ const bin=atob(u.slice(i+1)),n=bin.length,a=new Uint8Array(n);for(let k=0;k<n;k++)a[k]=bin.charCodeAt(k);return new Blob([a],{type:mime})}
+function blobToDataUrl(b){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej(r.error);r.readAsDataURL(b)})}
+function docStoreForm(d){if(!d||!Array.isArray(d.pages))return d;return {...d,pages:d.pages.map(p=>{if(!p||typeof p.orig!=='string'||!p.orig.startsWith('data:image/'))return p;let c=_blobOf.get(p);if(!c||c.s!==p.orig){c={s:p.orig,b:dataUrlToBlob(p.orig)};_blobOf.set(p,c)}return {...p,orig:c.b}})}}
+function docBytes(d){let n=0;try{n=JSON.stringify(d,(k,v)=>{if(typeof Blob!=='undefined'&&v instanceof Blob){n+=v.size;return undefined}return v}).length+n}catch(e){}return n}
+async function docMemForm(d){if(!d||!Array.isArray(d.pages))return d;for(const p of d.pages){if(p&&typeof Blob!=='undefined'&&p.orig instanceof Blob){const b=p.orig;p.orig=await blobToDataUrl(b);_blobOf.set(p,{s:p.orig,b})}}return d}
+{const _gd=DB.getDoc.bind(DB);DB.getDocRaw=_gd;DB.getDoc=async function(id){return docMemForm(await _gd(id))}}
+/* los documentos que ya estaban guardados se pasan solos, de a uno y con la app quieta. Leer y escribir van en la misma transacción: no pisa nada que se esté guardando */
+async function docsCompact(){if(S.v97blob===true||S.noBlobStore===true)return 0;let done=0;let metas=[];try{metas=await DB.metas()}catch(e){return 0}
+ for(const m of metas){if(document.visibilityState!=='visible'||Nav.stack.length||(typeof DOC!=='undefined'&&DOC&&DOC.id===m.id))return done;
+  try{await new Promise((res,rej)=>{const t=DB.db.transaction(['docs','meta'],'readwrite'),st=t.objectStore('docs'),g=st.get(m.id);
+    g.onsuccess=()=>{const d=g.result;if(!d||!Array.isArray(d.pages)||!d.pages.some(p=>p&&typeof p.orig==='string'&&p.orig.startsWith('data:image/')))return;const dd=docStoreForm(d);st.put(dd);t.objectStore('meta').put({...m,bytes:docBytes(dd)});done++};
+    t.oncomplete=res;t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error)})}catch(e){console.warn('compactar',e);S.noBlobStore=true;saveS();return done}
+  await sleep(1200)}
+ S.v97blob=true;saveS();if(done)try{refreshLists()}catch(e){}return done}
+setTimeout(()=>{docsCompact().catch(()=>{})},6000);
+/* que el navegador no borre los documentos si falta espacio (lo concede solo; no muestra nada) */
+try{if(navigator.storage&&navigator.storage.persist&&navigator.storage.persisted)navigator.storage.persisted().then(ok=>{if(!ok)navigator.storage.persist().catch(()=>{})}).catch(()=>{})}catch(e){}
+
+/* ---- 2) ofrecer el bloqueo: una tarjeta en el inicio cuando ya hay documentos y la app no tiene PIN ---- */
+function refreshLockNag(){const home=$('#v-home');if(!home)return;(async()=>{let n=0;try{n=(await DB.metas()).length}catch(e){}let el=$('#lkNag');
+ const due=n>0&&!Lock.cfg&&!(S.lockNagOff&&Date.now()-S.lockNagOff<30*864e5);if(!due){if(el)el.remove();return}
+ if(!el){el=document.createElement('div');el.id='lkNag';el.className='bk-nag';const sec=$('#v-home .sec');(sec?sec.parentNode:home).insertBefore(el,$('#bkNag')||$('#aiCard')||sec)}
+ el.innerHTML='<span class="bk-ic">'+icoSvg('lock')+'</span><span class="bk-t"><b>Protegé tus documentos</b><small>Activá el bloqueo con PIN o huella: si prestás o perdés el teléfono, nadie los abre</small></span><button class="btn sm pri" id="lkNow">Activar</button><button class="bk-x" id="lkLater" aria-label="Ahora no">✕</button>';
+ $('#lkNow',el).onclick=()=>lockSheet();$('#lkLater',el).onclick=()=>{S.lockNagOff=Date.now();saveS();el.remove()}})()}
+{const _rl=refreshLists;refreshLists=function(){const r=_rl.apply(this,arguments);try{refreshLockNag()}catch(e){}return r}}
+{const _sp=Lock.setPin;Lock.setPin=async function(){const r=await _sp.apply(this,arguments);try{refreshLockNag()}catch(e){}return r}}
+setTimeout(refreshLockNag,900);
+
+/* ---- 3) Diagnóstico: mide este teléfono y arma un informe sin datos de documentos ---- */
+async function diagRun(onStep){const R={};const step=async(n,fn)=>{onStep&&onStep(n);try{await fn()}catch(e){R['error en '+n]=String(e&&e.message||e).slice(0,120)}};
+ await step('Datos del equipo',async()=>{R.version=typeof verLabel==='function'?verLabel():APP_VER;R.navegador=(navigator.userAgent.match(/(Chrome|Firefox|Safari|Edg)\/[\d.]+/g)||[navigator.userAgent.slice(0,60)]).join(' ');R.sistema=(navigator.userAgent.match(/Android [\d.]+|iPhone OS [\d_]+|Windows NT [\d.]+|Mac OS X [\d_]+|Linux/)||['?'])[0];
+  R.pantalla=screen.width+'×'+screen.height+' @'+(window.devicePixelRatio||1);R.memoriaGB=navigator.deviceMemory||'?';R.nucleos=navigator.hardwareConcurrency||'?';R.instalada=window.matchMedia('(display-mode: standalone)').matches?'sí':'no';R.conexion=navigator.onLine?'con internet':'sin internet';R.diseno=(D().look||D().skin||'')+' / '+(document.documentElement.dataset.theme||'')});
+ await step('Espacio',async()=>{const q=navigator.storage&&navigator.storage.estimate?await navigator.storage.estimate():{};R.espacioUsado=q.usage!=null?fmtSize(q.usage):'?';R.espacioDisponible=q.quota!=null?fmtSize(q.quota):'?';R.protegidoContraBorrado=navigator.storage&&navigator.storage.persisted?(await navigator.storage.persisted()?'sí':'no'):'?';
+  const ms=await DB.metas();R.documentos=ms.length;R.paginas=ms.reduce((t,m)=>t+(m.count||0),0);R.guardadoLiviano=S.noBlobStore===true?'no disponible en este navegador':S.v97blob===true?'sí':'convirtiendo'});
+ await step('Funciones del teléfono',async()=>{R.pantallaEncendida='wakeLock' in navigator?'sí':'no';R.compartirArchivos=navigator.canShare?'sí':'no';R.huella=window.PublicKeyCredential?'sí':'no';R.fotoHD='ImageCapture' in window?'sí':'no';R.segundoPlano=typeof Worker!=='undefined'&&typeof OffscreenCanvas!=='undefined'?'sí':'no';R.bloqueo=Lock.cfg?'activado':'apagado';
+  R.camara=navigator.mediaDevices&&navigator.mediaDevices.getUserMedia?(camSecure()?'disponible':'necesita https'):'no disponible';const v=$('#camVideo');if(v&&v.videoWidth)R.video=v.videoWidth+'×'+v.videoHeight});
+ /* una hoja inventada (texto de relleno) para medir cuánto tarda cada paso */
+ const W=2400,H=3200,c=canvas(W,H),x=c.getContext('2d');x.fillStyle='#5b4632';x.fillRect(0,0,W,H);x.fillStyle='#f3f2ee';x.fillRect(180,200,2040,2800);x.fillStyle='#1a1a1a';x.font='44px Arial';for(let i=0;i<42;i++)x.fillText('Renglón de prueba número '+(i+1)+' para medir la velocidad del teléfono',300,360+i*62);
+ let src='',pg=null;const T=async(k,fn)=>{const t=performance.now();const r=await fn();R[k]=Math.round(performance.now()-t)+' ms';return r};
+ await step('Foto de prueba',async()=>{src=await T('prepararFoto',async()=>c.toDataURL('image/jpeg',.92));c.width=c.height=1});
+ await step('Detectar la hoja',async()=>{pg=await T('detectarYRecortar',()=>makePage(src,{auto:true}));R.hojaDetectada=pg&&pg.quad?'sí':'no'});
+ await step('Mejorar la imagen',async()=>{const o=await T('filtroCalidadAlta',()=>renderPage(pg,{maxSide:3000}));R.tamanoSalida=o.width+'×'+o.height;o.width=o.height=1;const m=await T('miniatura',()=>renderPage(pg,{maxSide:520}));m.width=m.height=1});
+ await step('Guardar',async()=>{const d={id:'diag_'+uid(),name:'diagnóstico',created:Date.now(),updated:Date.now(),pages:[pg]};const dd=docStoreForm(d);R.pesoHoja=fmtSize(docBytes(dd))+' (antes '+fmtSize(JSON.stringify(d).length)+')';
+  await T('guardarYLeer',async()=>{await new Promise((res,rej)=>{const t=DB.db.transaction('docs','readwrite');t.objectStore('docs').put(S.noBlobStore===true?d:dd);t.oncomplete=res;t.onerror=()=>rej(t.error)});await DB.getDoc(d.id);await new Promise((res,rej)=>{const t=DB.db.transaction('docs','readwrite');t.objectStore('docs').delete(d.id);t.oncomplete=res;t.onerror=()=>rej(t.error)})})});
+ await step('PDF',async()=>{const b=await T('armarPDF',()=>buildPDF([pg],{size:S.size,orient:S.orient,margin:S.margin,quality:'alta',title:'diagnóstico'}));R.pesoPDF=fmtSize(b.length||b.byteLength||0)});
+ return R}
+const DIAG_L={version:'Versión',navegador:'Navegador',sistema:'Sistema',pantalla:'Pantalla',memoriaGB:'Memoria (GB)',nucleos:'Núcleos',instalada:'Instalada como app',conexion:'Conexión',diseno:'Diseño',espacioUsado:'Espacio usado',espacioDisponible:'Espacio disponible',protegidoContraBorrado:'Protegido contra borrado',documentos:'Documentos',paginas:'Páginas',guardadoLiviano:'Guardado liviano',
+ pantallaEncendida:'Pantalla siempre encendida',compartirArchivos:'Compartir archivos',huella:'Huella',fotoHD:'Foto HD',segundoPlano:'Procesar en segundo plano',bloqueo:'Bloqueo',camara:'Cámara',video:'Video de la cámara',prepararFoto:'Preparar la foto',detectarYRecortar:'Detectar y recortar',hojaDetectada:'Hoja detectada',filtroCalidadAlta:'Mejorar la imagen',tamanoSalida:'Tamaño de la hoja',miniatura:'Miniatura',pesoHoja:'Peso de una hoja',guardarYLeer:'Guardar y leer',armarPDF:'Armar el PDF',pesoPDF:'Peso del PDF'};
+function diagText(R){return 'Diagnóstico de Danscanner Pro · '+new Date().toLocaleString('es-AR')+'\n'+Object.entries(R).map(([k,v])=>(DIAG_L[k]||k)+': '+v).join('\n')}
+function diagSheet(){const b=openSheet('Diagnóstico','<p class="muted">Mide cómo anda la app <b>en este teléfono</b>: usa una hoja inventada, no tus documentos. El informe no lleva nombres ni datos de nadie.</p><button class="btn pri block" id="dgGo">'+icoSvg('zap')+' Empezar la prueba</button><div class="dg-st muted" id="dgSt" aria-live="polite"></div><div id="dgOut"></div>');
+ $('#dgGo',b).onclick=async()=>{const go=$('#dgGo',b);go.disabled=true;$('#dgOut',b).innerHTML='';let R;try{R=await diagRun(n=>{const s=$('#dgSt');if(s)s.textContent='Probando: '+n+'…'})}finally{go.disabled=false}const st=$('#dgSt');if(!st)return;st.textContent='Listo.';const txt=diagText(R);
+  $('#dgOut').innerHTML='<table class="dg-t">'+Object.entries(R).map(([k,v])=>'<tr><th scope="row">'+esc(DIAG_L[k]||k)+'</th><td>'+esc(v)+'</td></tr>').join('')+'</table><div class="row"><button class="btn block" id="dgCopy">'+icoSvg('files')+' Copiar el informe</button><button class="btn pri block" id="dgShare">'+icoSvg('share')+' Compartir</button></div>';
+  $('#dgCopy').onclick=async()=>{try{await navigator.clipboard.writeText(txt);toast('Informe copiado')}catch(e){const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('Informe copiado')}catch(_){toast('No se pudo copiar')}ta.remove()}};
+  $('#dgShare').onclick=async()=>{try{if(navigator.share){await navigator.share({title:'Diagnóstico de Danscanner Pro',text:txt});return}}catch(e){if(e&&e.name==='AbortError')return}download(new Blob([txt],{type:'text/plain'}),'diagnostico-danscanner.txt')}}}
+{const _ss=settingsSheet;settingsSheet=async function(){const r=await _ss.apply(this,arguments);try{const ab=$('#sAbout');if(ab&&!$('#sDiag')){ab.insertAdjacentHTML('beforebegin','<button class="set-row" id="sDiag"><span class="set-ic">'+icoSvg('zap')+'</span><span class="set-t"><b>Diagnóstico</b><small>Probá cómo anda la app en este teléfono</small></span><span class="set-chev">›</span></button>');$('#sDiag').onclick=async()=>{await Nav.back();diagSheet()}}}catch(e){}return r}}
+document.head.insertAdjacentHTML('beforeend','<style id="v97Css">.dg-st{margin:10px 0;min-height:1.3em}.dg-t{width:100%;border-collapse:collapse;margin:4px 0 14px;font-size:14px}.dg-t th{text-align:left;font-weight:400;color:var(--tx2);padding:7px 8px 7px 0;width:52%;vertical-align:top}.dg-t td{font-weight:700;padding:7px 0;font-variant-numeric:tabular-nums;word-break:break-word}.dg-t tr+tr th,.dg-t tr+tr td{border-top:1px solid var(--line)}#lkNag .bk-ic .ico{width:22px;height:22px;color:var(--tinta,#2563EB)}</style>');
 
 </script>
 </body>

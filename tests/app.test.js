@@ -1938,6 +1938,34 @@ await test('v96: la foto se procesa rápido (enderezar leyendo va en segundo pla
   assert.ok(tx.yel>500,'sin resaltado');assert.ok(tx.vio>100,'no usó el color elegido');
 });
 
+await test('v97: las hojas se guardan más livianas sin perder nada, los documentos viejos se convierten solos, se ofrece el bloqueo y hay Diagnóstico',async pg=>{
+  await seedPage(pg);
+  const r=await pg.evaluate(async()=>{const p=window._pg;DOC=newDoc();DOC.name='Liviano';DOC.pages.push(p);const orig=p.orig;await DB.putDoc(DOC);const full=JSON.stringify(DOC).length;
+    const raw=await DB.getDocRaw(DOC.id),back=await DB.getDoc(DOC.id);const meta=(await DB.metas()).find(m=>m.id===DOC.id);
+    /* un documento guardado con una versión vieja (foto como texto) se sigue leyendo y se convierte solo */
+    const old={id:'viejo1',name:'Viejo',created:1,updated:1,pages:[{...p,id:'pv'}]};await new Promise((res,rej)=>{const t=DB.db.transaction(['docs','meta'],'readwrite');t.objectStore('docs').put(old);t.objectStore('meta').put({id:'viejo1',name:'Viejo',created:1,updated:1,count:1,thumb:'',bytes:JSON.stringify(old).length});t.oncomplete=res;t.onerror=()=>rej(t.error)});
+    const oldRead=(await DB.getDoc('viejo1')).pages[0].orig===orig;DOC=null;S.v97blob=false;const n=await docsCompact();const rawOld=await DB.getDocRaw('viejo1');const m2=(await DB.metas()).find(m=>m.id==='viejo1');
+    return {liveStr:typeof p.orig==='string',rawBlob:raw.pages[0].orig instanceof Blob,rawSize:raw.pages[0].orig.size,strLen:orig.length,same:back.pages[0].orig===orig,thumb:back.pages[0].thumb===p.thumb,bytes:meta.bytes,full,
+      oldRead,n,oldBlob:rawOld.pages[0].orig instanceof Blob,oldSame:(await DB.getDoc('viejo1')).pages[0].orig===orig,oldBytes:m2.bytes<JSON.stringify(old).length,done:S.v97blob}});
+  assert.ok(r.liveStr,'el documento abierto no debe cambiar');assert.ok(r.rawBlob,'la foto no se guardó como imagen binaria');assert.ok(r.rawSize<r.strLen*.78,'no ocupa menos: '+r.rawSize+' / '+r.strLen);
+  assert.ok(r.same&&r.thumb,'al leer no vuelve la misma foto');assert.ok(r.bytes>r.rawSize&&r.bytes<r.full,'tamaño mal calculado: '+r.bytes+' de '+r.full);
+  assert.ok(r.oldRead,'no lee un documento viejo');assert.equal(r.n,1);assert.ok(r.oldBlob&&r.oldSame&&r.oldBytes,'el documento viejo no se convirtió bien');assert.equal(r.done,true);
+  /* si el navegador no deja guardar imágenes binarias, guarda como antes */
+  const fb=await pg.evaluate(async()=>{const _f=docStoreForm;docStoreForm=d=>({...d,pages:d.pages.map(p=>({...p,orig:()=>1}))});const d=newDoc();d.pages.push({...window._pg,id:'fb'});let err='';try{await DB.putDoc(d)}catch(e){err=e.message}docStoreForm=_f;
+    const raw=await DB.getDocRaw(d.id);const out={err,str:raw&&typeof raw.pages[0].orig==='string',flag:S.noBlobStore};S.noBlobStore=false;saveS();return out});
+  assert.equal(fb.err,'');assert.ok(fb.str,'no guardó como antes');assert.equal(fb.flag,true);
+  /* bloqueo: tarjeta en el inicio con documentos y sin PIN; se va al activarlo */
+  const lk=await pg.evaluate(async()=>{go('home');refreshLists();await new Promise(r=>setTimeout(r,700));const has=!!$('#lkNag');$('#lkNow').click();for(let i=0;i<40&&Nav.top()!=='sheet';i++)await new Promise(r=>setTimeout(r,100));const sheet=Nav.top()==='sheet'&&/Bloqueo|PIN|huella/i.test($('#sheetTitle').textContent+$('#sheetBody').textContent);await Nav.back();
+    await Lock.setPin('1234');await new Promise(r=>setTimeout(r,500));const gone=!$('#lkNag');Lock.clear();return {has,sheet,gone}});
+  assert.ok(lk.has,'no ofrece el bloqueo');assert.ok(lk.sheet,'«Activar» no abre el bloqueo');assert.ok(lk.gone,'la tarjeta sigue con el PIN activado');
+  /* diagnóstico: desde Ajustes, mide y arma el informe sin datos de documentos */
+  await pg.evaluate(()=>settingsSheet());await pg.waitForSelector('#sDiag');await pg.click('#sDiag');await pg.waitForSelector('#dgGo');await pg.click('#dgGo');await pg.waitForSelector('#dgCopy',{timeout:60000});
+  const dg=await pg.evaluate(async()=>{const rows=[...$$('#dgOut .dg-t tr')].map(tr=>tr.children[0].textContent+'='+tr.children[1].textContent);const left=(await DB.metas()).some(m=>/diagn/.test(m.name));const raw=await new Promise(res=>{const t=DB.db.transaction('docs','readonly'),g=t.objectStore('docs').getAllKeys();g.onsuccess=()=>res(g.result)});return {rows,left,keys:raw.filter(k=>/^diag_/.test(k)).length,txt:diagText({version:'97'})}});
+  const get=k=>(dg.rows.find(x=>x.startsWith(k+'='))||'').split('=')[1];
+  assert.match(get('Detectar y recortar'),/^\d+ ms$/);assert.match(get('Mejorar la imagen'),/^\d+ ms$/);assert.match(get('Armar el PDF'),/^\d+ ms$/);assert.equal(get('Hoja detectada'),'sí');assert.match(get('Peso de una hoja'),/antes/);
+  assert.ok(!dg.rows.some(x=>/^error/.test(x)),dg.rows.filter(x=>/^error/.test(x)).join(' | '));assert.equal(dg.keys,0,'quedó la hoja de prueba guardada');assert.ok(!dg.rows.join(' ').includes('Liviano'),'el informe no debe llevar nombres de documentos');
+});
+
 for(const [ok,name,err] of results)console.log(ok,name+(err?' → '+err:''));
 const fails=results.filter(r=>r[0]==='❌').length;console.log('\n'+(results.length-fails)+'/'+results.length+' pruebas OK');process.exit(fails?1:0);
 })();
