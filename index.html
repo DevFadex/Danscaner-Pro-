@@ -1874,13 +1874,6 @@ function replacePagePhoto(){const p=Ed.p;if(!p)return;const appCam=camSecure();
    if(!np)return toast('No se pudo leer la foto',4000);await replaceWithPage(p.id,np)});
   inp.addEventListener('cancel',cleanup);window.addEventListener('focus',()=>setTimeout(()=>{if(!done&&!inp.files.length)cleanup()},1500),{once:true});
   inp.click();Nav.back()}}
-Cam.shoot=async function(){if(!this.stream){const m=this.mode;NativeCam.open(m);Nav.back();return}if(this.busy)return;this.busy=true;const fl=$('#camera .flash');fl.classList.remove('go');void fl.offsetWidth;fl.classList.add('go');
- try{let src=null;if(S.hd&&'ImageCapture' in window){try{const blob=await Promise.race([hiResPhoto(this.track),sleep(8000).then(()=>null)]);if(blob&&blob.size>1000)src=await imageBlobToSrc(blob)}catch(e){}}
- if(!src){const v=$('#camVideo');if(!v.videoWidth)throw new Error('La cámara no está lista');const c=canvas(v.videoWidth,v.videoHeight);c.getContext('2d').drawImage(v,0,0);src=c.toDataURL('image/jpeg',.95)}
- $('#camHint').textContent='Procesando…';const p=await makePage(src);if(src.startsWith('blob:')){URL.revokeObjectURL(src);_imgCache.delete(src)}navigator.vibrate&&navigator.vibrate(40);
- if(this.replaceId){const rid=this.replaceId;this._shooting=true;this.busy=false;await Nav.back();this._shooting=false;this.replaceId=null;await replaceWithPage(rid,p);return}
- if(this.mode==='single'){this.busy=false;await Nav.back();await addPages([p],true);return}
- this.batch.push(p);this.updUI()}catch(e){toast('Error al capturar: '+e.message)}this.busy=false};
 $('#camShot').onclick=()=>Cam.shoot();
 
 /* ---------- 4. OCR: respeta los párrafos ---------- */
@@ -5172,7 +5165,6 @@ function camAnalyze(){const v=$('#camVideo');if(!v||!v.videoWidth||Cam.busy||!Na
  if(S.camFast&&q&&Cam._stable>=1&&Cam._tick%2===0){Cam._buf=Cam._buf||[];Cam._bi=((Cam._bi||0)+1)%2;let b=Cam._buf[Cam._bi];if(!b||b.c.width!==vw||b.c.height!==vh)b=Cam._buf[Cam._bi]={c:canvas(vw,vh)};
   b.c.getContext('2d').drawImage(v,0,0);b.s=camSharpCenter(b.c,vw,vh);b.t=performance.now()}
  if(!q)Cam._glare=false;else if(Cam._tick%2===1)Cam._glare=camGlareOf(v,q,vw,vh).glare;const el=$('#camGlare');if(el)el.hidden=!Cam._glare}
-{const _d=Cam.detect;Cam.detect=function(){const r=_d.apply(this,arguments);try{camAnalyze()}catch(e){}return r}}
 
 /* captura: la más nítida de una ráfaga (ultrarrápido) o la foto HD verificada, con una segunda toma automática */
 {const _g=camGrab;camGrab=async function(){const v=$('#camVideo'),ref=camSharpRef();
@@ -5306,7 +5298,6 @@ function camCaps(){const tr=Cam.track;if(!tr)return {};if(Cam._caps&&Cam._capsTr
 function camFollowFocus(){const tr=Cam.track;if(!tr||S.camFollow===false)return;const c=camQuadCenter();if(!c)return;const t=performance.now();
  if(t-(Cam._tapT||0)<4000||t-(Cam._poiT||0)<1200||Cam._locking)return;const p=Cam._poi;if(p&&Math.hypot(p.x-c.x,p.y-c.y)<.08)return;
  if(!('pointsOfInterest' in camCaps()))return;Cam._poi=c;Cam._poiT=t;tr.applyConstraints({advanced:[{pointsOfInterest:[c]}]}).catch(()=>{})}
-{const _d=Cam.detect;Cam.detect=function(){const r=_d.apply(this,arguments);try{camFollowFocus()}catch(e){}return r}}
 (function(){const st=$('#camera .cam-stage');if(st)st.addEventListener('click',e=>{if(e.target.id==='camVideo'||e.target.closest('#camSvg'))Cam._tapT=performance.now()},true)})();
 /* antes de la foto HD: si el cuadro no está nítido, enfoca una vez sobre la hoja y espera el punto de máxima nitidez (sin demora si ya estaba enfocado) */
 const CAM_FOCUS_MS=900;
@@ -5471,7 +5462,6 @@ function camPanelOpen(){const P=$('#camPanel');return !!(P&&!P.hidden)}
  let key='';try{key=JSON.stringify(S)+'|'+Cam.torch+'|'+(Cam.track&&Cam.track.label)+'|'+Cam.mode+'|'+(typeof CamPro!=='undefined'?CamPro.flash+'|'+CamPro.ev:'')}catch(e){}
  if(Cam._inUpd&&key&&P._key===key&&P.childElementCount)return;
  const st=P.scrollTop,r=_r.apply(this,arguments);P._key=key;P.scrollTop=st;return r}}
-{const _d=Cam.detect;Cam.detect=function(){if(camPanelOpen()){const s=$('#camSvg');if(s)s.innerHTML='';this._stable=0;this._lastQuad=null;const h=$('#camHint');if(h)h.textContent='⏸ Cámara en pausa mientras configurás';return}return _d.apply(this,arguments)}}
 function camPanelClose(){const P=$('#camPanel');if(!P||P.hidden)return false;P.hidden=true;const b=$('#camCfg');if(b)b.classList.remove('on');return true}
 (function(){const st=$('#camera .cam-stage');if(st)st.addEventListener('click',e=>{if(camPanelOpen()){e.stopImmediatePropagation();e.preventDefault();camPanelClose()}},true);
  const sh=$('#camShot');if(sh)sh.addEventListener('click',()=>camPanelClose(),true)})();
@@ -5608,7 +5598,6 @@ function camGuideUpd(){const g=$('#camGuide');if(!g)return;const k=Cam.kind;g.hi
 {const _ap=addPages;addPages=async function(pages,open){const card=typeof Cam!=='undefined'&&Cam.kind==='card';const r=await _ap.apply(this,arguments);if(card&&open!==false){Cam.kind='doc';setTimeout(()=>{if(DOC&&DOC.pages.length)cardSheet()},450)}return r}}
 
 /* ---- marco de cuatro puntos (Adobe Scan) ---- */
-{const _d=Cam.detect;Cam.detect=function(){const r=_d.apply(this,arguments);try{camFrameDraw()}catch(e){}return r}}
 function camFrameDraw(){if(S.camFrame==='lineas')return;const svg=$('#camSvg');if(!svg)return;const pg=svg.querySelector('polygon');
  if(!pg){if(svg.querySelector('.cf'))svg.innerHTML='';return}
  const pts=(pg.getAttribute('points')||'').trim().split(/\s+/).map(s=>s.split(',').map(Number));if(pts.length!==4||pts.some(p=>p.length!==2||!isFinite(p[0])))return;
@@ -5812,14 +5801,6 @@ const BK_MOVE=10,BK_STILL=2.6,BK_TICKS=4;
 function camMotion(v){const W=64,H=48;const c=Cam._mc||(Cam._mc=canvas(W,H)),x=c.getContext('2d',{willReadFrequently:true});x.drawImage(v,0,0,W,H);const d=x.getImageData(0,0,W,H).data,g=new Uint8Array(W*H);for(let i=0,j=0;i<g.length;i++,j+=4)g[i]=(d[j]*77+d[j+1]*150+d[j+2]*29)>>8;
  const p=Cam._mprev;Cam._mprev=g;if(!p)return null;let s=0;for(let i=0;i<g.length;i++)s+=Math.abs(g[i]-p[i]);return s/g.length}
 function bookAutoOn(){return Cam.kind==='book'&&Cam.mode==='batch'&&S.bookAuto!==false&&!Cam.replaceId&&!(typeof camPanelOpen==='function'&&camPanelOpen())}
-{const _d=Cam.detect;Cam.detect=function(){if(!bookAutoOn())return _d.apply(this,arguments);
- /* en libro automático manda el movimiento de la página, no la captura automática común */
- const ac=S.autoCapture;S.autoCapture=false;let r;try{r=_d.apply(this,arguments)}finally{S.autoCapture=ac}
- try{const v=$('#camVideo');if(!v||!v.videoWidth||this.busy)return r;const m=camMotion(v);if(m==null)return r;
-  if(m>BK_MOVE){this._bkArmed=true;this._bkStill=0}else if(m<BK_STILL)this._bkStill=(this._bkStill||0)+1;else this._bkStill=0;
-  const h=$('#camHint');if(h&&!h.classList.contains('cap'))h.textContent=this._bkArmed?(this._bkStill?'📖 Quieto… ':'📖 Pasá la página')+' · '+(this.batch.length+(this._pend||0))+' foto(s)':'📖 Pasá la página para la siguiente foto';
-  if(this._bkArmed&&this._bkStill>=BK_TICKS){this._bkArmed=false;this._bkStill=0;navigator.vibrate&&navigator.vibrate(30);this.shoot()}}catch(e){}
- return r}}
 (function(){const g=$('#camGuide');if(!g||$('#camBookAuto'))return;g.insertAdjacentHTML('beforeend','<button class="cg-auto" id="camBookAuto"></button>');
  const upd=()=>{const b=$('#camBookAuto');b.classList.toggle('on',S.bookAuto!==false);b.textContent=S.bookAuto!==false?'⚡ Automático':'✋ Manual'};upd();
  $('#camBookAuto').onclick=e=>{e.stopPropagation();S.bookAuto=S.bookAuto===false;saveS();upd();if(S.bookAuto!==false&&Cam.mode!=='batch'){Cam.mode='batch';Cam.updUI()}Cam._bkArmed=true;toast(S.bookAuto!==false?'📖 Pasá las páginas: saco cada foto sola cuando la hoja queda quieta':'Libro manual: tocá el disparador en cada página',3000)}})();
@@ -6038,8 +6019,6 @@ function autoFocusFlash(r){const C=VisionEngine.cfg(),t=performance.now(),V=self
  Cam._refocusN=(Cam._refocusN||0)+1;tr.applyConstraints({advanced:[adv]}).catch(()=>{});if(adv.focusMode==='single-shot')setTimeout(()=>{if(Cam.track===tr&&fm.includes('continuous'))tr.applyConstraints({advanced:[{focusMode:'continuous'}]}).catch(()=>{})},1500)}
 function camAutoTorch(fallback){const r=VisionEngine.fresh(),V=self.DSVision;return r&&V?V.torchDecision(r.luma,!!Cam.torch,VisionEngine.cfg()):fallback}
 /* no se auto-dispara con la imagen movida o desenfocada (varianza del laplaciano baja); a mano se puede igual */
-{const _d=Cam.detect;Cam.detect=function(){const r=VisionEngine.fresh(),V=self.DSVision;const blocked=!!(r&&r.quad&&V&&S.autoCapture&&!this.replaceId&&!V.captureAllowed(r,VisionEngine.cfg()));if(blocked)this._stable=Math.min(this._stable||0,0);
- const out=_d.apply(this,arguments);if(blocked&&this._lastQuad){this._stable=0;const h=$('#camHint');if(h&&!/Capturada/.test(h.textContent))h.textContent='📷 Imagen movida o desenfocada: quedate quieto';const s=$('#camShot');if(s)s.classList.remove('arming')}return out}}
 
 /* Pilar 2: corrección de perspectiva con salida de calidad OCR (lado mayor ≥ 2000 px cuando la foto lo permite) */
 function correctPerspective(src,q,maxSide){return warp(src,q,maxSide)}
@@ -6760,8 +6739,29 @@ function camShadowNow(v){const q=Cam._lastQuad;if(!q||!v||!v.videoWidth)return f
  /* solo si persiste: tres lecturas seguidas (≈2 s) */
  camShadowNow._n=sh?(camShadowNow._n||0)+1:0;return camShadowNow._n>=3}
 /* ---- 2) aviso corto: «Buscando documento…»; lo del fondo que contraste recién si pasan 4 s sin encontrar la hoja ---- */
-{const _d=Cam.detect;Cam.detect=function(){const r=_d.apply(this,arguments);try{const h=$('#camHint'),t=performance.now();if(this._lastQuad)this._noQT=0;else if(!this._noQT)this._noQT=t;
-  if(h&&/^Buscando documento… usá un fondo que contraste/.test(h.textContent)&&this._noQT&&t-this._noQT<4000)h.textContent=h.textContent.replace('Buscando documento… usá un fondo que contraste','Buscando documento…')}catch(e){}return r}}
+/* v98: la detección en vivo en una sola pieza (antes 8 capas). Cada vuelta: ¿imagen movida? → marco de la hoja → nitidez y reflejos → enfoque → dibujo → modo Libro → avisos */
+{const baseDetect=Cam.detect;
+ /* el marco y todo lo que lo acompaña; con el panel de ajustes abierto, la cámara queda en pausa */
+ function detectFrame(args){let r;
+  if(camPanelOpen()){const s=$('#camSvg');if(s)s.innerHTML='';this._stable=0;this._lastQuad=null;const h=$('#camHint');if(h)h.textContent='⏸ Cámara en pausa mientras configurás'}
+  else{r=baseDetect.apply(this,args);try{camAnalyze()}catch(e){}try{camFollowFocus()}catch(e){}}
+  try{camFrameDraw()}catch(e){}return r}
+ Cam.detect=function(){
+  /* no se auto-dispara con la imagen movida o desenfocada; a mano se puede igual */
+  const fr=VisionEngine.fresh(),V=self.DSVision;const blocked=!!(fr&&fr.quad&&V&&S.autoCapture&&!this.replaceId&&!V.captureAllowed(fr,VisionEngine.cfg()));if(blocked)this._stable=Math.min(this._stable||0,0);
+  let out;
+  if(!bookAutoOn())out=detectFrame.call(this,arguments);
+  else{/* en libro automático manda el movimiento de la página, no la captura automática común */
+   const ac=S.autoCapture;S.autoCapture=false;try{out=detectFrame.call(this,arguments)}finally{S.autoCapture=ac}
+   try{const v=$('#camVideo');if(v&&v.videoWidth&&!this.busy){const m=camMotion(v);if(m!=null){
+     if(m>BK_MOVE){this._bkArmed=true;this._bkStill=0}else if(m<BK_STILL)this._bkStill=(this._bkStill||0)+1;else this._bkStill=0;
+     const h=$('#camHint');if(h&&!h.classList.contains('cap'))h.textContent=this._bkArmed?(this._bkStill?'📖 Quieto… ':'📖 Pasá la página')+' · '+(this.batch.length+(this._pend||0))+' foto(s)':'📖 Pasá la página para la siguiente foto';
+     if(this._bkArmed&&this._bkStill>=BK_TICKS){this._bkArmed=false;this._bkStill=0;navigator.vibrate&&navigator.vibrate(30);this.shoot()}}}}catch(e){}}
+  if(blocked&&this._lastQuad){this._stable=0;const h=$('#camHint');if(h&&!/Capturada/.test(h.textContent))h.textContent='📷 Imagen movida o desenfocada: quedate quieto';const s=$('#camShot');if(s)s.classList.remove('arming')}
+  /* aviso corto: lo del fondo que contraste, recién si pasan 4 s sin encontrar la hoja */
+  try{const h=$('#camHint'),t=performance.now();if(this._lastQuad)this._noQT=0;else if(!this._noQT)this._noQT=t;
+   if(h&&/^Buscando documento… usá un fondo que contraste/.test(h.textContent)&&this._noQT&&t-this._noQT<4000)h.textContent=h.textContent.replace('Buscando documento… usá un fondo que contraste','Buscando documento…')}catch(e){}
+  return out}}
 /* ---- 3) lote sin frenar: la foto aparece chiquita en la esquina y se procesa sola mientras seguís sacando (tocala para verla grande) ---- */
 if(!S.v87rev){S.v87rev=true;if(!S.camRevMode||S.camRevMode==='first'||S.camRevMode==='all')S.camRevMode='mini';saveS()}
 CAM_REV_L.mini='Chiquita en la esquina, sin frenar';
