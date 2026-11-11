@@ -228,3 +228,7 @@ Tocá una imagen para cambiarle el tamaño o centrarla, y una tabla para sumarle
 - **Las hojas ocupan menos**: se guardan de otra forma, con la misma calidad. Los documentos que ya tenías se convierten solos.
 - **Protegé tus documentos**: si no tenés bloqueo, el inicio te ofrece activar el PIN o la huella.
 - **Diagnóstico**: Ajustes → Diagnóstico prueba cómo anda la app en tu teléfono y arma un informe para compartir. No incluye datos de tus documentos.
+
+## Novedades v98
+- **Abre al instante**: la app ya no se vuelve a bajar cada vez que la abrís. Con mala señal se nota mucho. Las versiones nuevas siguen llegando solas.
+- **Cámara ordenada por dentro**: no cambia nada de lo que ves; es para que no aparezcan errores nuevos.

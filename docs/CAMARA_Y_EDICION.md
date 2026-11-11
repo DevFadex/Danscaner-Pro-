@@ -930,3 +930,22 @@ Comparación de dos videos con la misma hoja. En CamScanner se sigue sacando sin
   - mide en el teléfono, con una hoja inventada, cuánto tarda detectar y recortar, mejorar, guardar y armar el PDF;
   - muestra el espacio y qué funciones soporta el equipo;
   - el informe se copia o se comparte y no lleva datos de documentos.
+
+## v98 · Limpieza de la cámara y arranque rápido
+- **Una sola pieza por función** (mismo comportamiento y mismo orden de ejecución; cada paso está comentado):
+  - `Cam.stop`: de 13 capas a 1 (`camStopRest` es lo que se cierra cuando ya no quedan fotos en proceso);
+  - `Cam.open`: de 12 a 1;
+  - `makePage`: de 8 a 1 (`makePageSteps`);
+  - `camPostProcess`: de 5 a 1 sobre la base;
+  - `camGrab`: las 3 capas de afuera en 1 (queda aparte la toma en sí);
+  - `Cam.detect`: de 8 a 1 sobre la base (`detectFrame`);
+  - se quitó la primera `Cam.shoot`, que era código muerto (la reemplazaba entera otra más abajo).
+- **Lo que no se tocó**: `Cam.shoot` sigue con sus 5 capas. Mezcla el modo Individual con el Lote cambiando el modo en el medio, y unirla sin probar en un teléfono real era más riesgo que beneficio.
+- **Regla desde ahora**: un cambio en estas funciones se hace dentro de la pieza, en el paso que corresponde, no con una capa nueva.
+- **Arranque** (`sw.js`):
+  - antes, la app iba primero a internet en cada apertura: bajaba `index.html` (1,1 MB) y esperaba `config.js` antes de mostrarse;
+  - ahora los archivos de la app (`SHELL`) y el arranque salen primero de la copia guardada de esta versión;
+  - `config.js` sale de la copia y se actualiza por detrás; al instalar se guardan también la letra y `libs/supabase.js`;
+  - lo que no es de la app (base de conocimiento) sigue yendo primero a internet;
+  - las versiones nuevas llegan igual que antes: cambia `VERSION`, el service worker nuevo guarda todo junto y la app se recarga sola (o avisa si hay algo abierto);
+  - medido con un servidor que tarda 1,5 s por pedido: abrir pasó de 4,6 s a 0,3 s.
